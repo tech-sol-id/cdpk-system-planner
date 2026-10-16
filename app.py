@@ -3,7 +3,9 @@
 CDPK System Planner — Cloud Web Server & API Gateway
 Port: 7860 (Render Cloud Docker Standard)
 Integrates:
-- Live Google Drive & Master Pricelist Sync (drive citradata)
+- Team Multi-User Authentication & Roles (server/auth.py)
+- Direct Google Drive Subfolder Save & Project Archive (Kalkulasi & Penawaran Tim)
+- Live Master Pricelist Sync (drive citradata)
 - Multi-Model AI Copilot (Google Gemini 3.8 Flash & Gemini 3.8 Pro)
 - Bilingual (ID / EN) SPA Frontend
 """
@@ -15,10 +17,22 @@ import os
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from server.auth import (
+    authenticate_user,
+    create_session,
+    get_session_user,
+    invalidate_session,
+    load_users,
+    add_team_member
+)
 from server.gdrive_sync import (
     DEFAULT_FOLDER_ID,
     DEFAULT_SPREADSHEET_ID,
+    OUTPUT_SUBFOLDER_ID,
     sync_from_gdrive,
+    save_project_to_gdrive,
+    list_saved_projects_from_gdrive,
+    load_project_data_from_gdrive
 )
 from server.ai_copilot import ALLOWED_MODELS, query_ai_copilot
 
@@ -37,6 +51,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         logger.info("%s - %s", self.address_string(), fmt % args)
 
+    def _get_auth_user(self):
+        auth_hdr = self.headers.get("Authorization", "")
+        token = ""
+        if auth_hdr.startswith("Bearer "):
+            token = auth_hdr[7:].strip()
+        elif "X-Session-Token" in self.headers:
+            token = self.headers.get("X-Session-Token", "").strip()
+        return get_session_user(token)
+
     def _send_json(self, payload: dict, status: int = 200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -51,7 +74,7 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Session-Token")
         self.end_headers()
 
     def do_GET(self):
@@ -62,12 +85,32 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             return self._send_json({
                 "status": "healthy",
                 "app": "CDPK System Planner",
-                "version": "8.0.0",
+                "version": "8.1.0",
                 "gdrive_folder_id": DEFAULT_FOLDER_ID,
+                "gdrive_output_subfolder_id": OUTPUT_SUBFOLDER_ID,
                 "gdrive_spreadsheet_id": DEFAULT_SPREADSHEET_ID,
                 "ai_models": list(ALLOWED_MODELS.keys())
             })
 
+        # ─── Auth Endpoints ───────────────────────────────────────────────
+        if path == "/api/auth/me":
+            user = self._get_auth_user()
+            if user:
+                return self._send_json({"status": "ok", "user": user})
+            return self._send_json({"status": "unauthenticated"}, status=401)
+
+        if path == "/api/auth/users":
+            user = self._get_auth_user()
+            if not user or user.get("role") != "admin":
+                return self._send_json({"status": "forbidden", "message": "Admin only"}, status=403)
+            all_users = load_users()
+            clean_users = [
+                {"username": u["username"], "email": u["email"], "name": u["name"], "role": u.get("role"), "title": u.get("title")}
+                for u in all_users
+            ]
+            return self._send_json({"status": "ok", "users": clean_users})
+
+        # ─── Knowledge & AI Models ────────────────────────────────────────
         if path == "/api/knowledge":
             qs = urllib.parse.parse_qs(parsed.query)
             force = qs.get("force", ["0"])[0] in ("1", "true", "yes")
@@ -80,7 +123,17 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 "models": list(ALLOWED_MODELS.values())
             })
 
-        # Serve static files
+        # ─── Cloud Project Archive ────────────────────────────────────────
+        if path == "/api/project/list-drive":
+            files = list_saved_projects_from_gdrive(OUTPUT_SUBFOLDER_ID)
+            return self._send_json({
+                "status": "ok",
+                "subfolder_id": OUTPUT_SUBFOLDER_ID,
+                "subfolder_url": f"https://drive.google.com/drive/folders/{OUTPUT_SUBFOLDER_ID}",
+                "files": files
+            })
+
+        # ─── Serve Static Files ───────────────────────────────────────────
         if path in ("/", "/index.html"):
             file_path = os.path.join(STATIC_DIR, "index.html")
         else:
@@ -114,12 +167,58 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
         except Exception:
             body = {}
 
+        # ─── Auth Endpoints ───────────────────────────────────────────────
+        if path == "/api/auth/login":
+            ident = body.get("identifier") or body.get("username") or body.get("email")
+            pwd = body.get("password") or ""
+            user = authenticate_user(ident, pwd)
+            if user:
+                token = create_session(user)
+                return self._send_json({"status": "ok", "token": token, "user": user})
+            return self._send_json({"status": "error", "message": "Username atau Password salah."}, status=401)
+
+        if path == "/api/auth/logout":
+            auth_hdr = self.headers.get("Authorization", "")
+            token = auth_hdr[7:].strip() if auth_hdr.startswith("Bearer ") else self.headers.get("X-Session-Token", "").strip()
+            if token:
+                invalidate_session(token)
+            return self._send_json({"status": "ok", "message": "Logged out"})
+
+        if path == "/api/auth/users":
+            cur_user = self._get_auth_user()
+            if not cur_user or cur_user.get("role") != "admin":
+                return self._send_json({"status": "forbidden", "message": "Admin role required"}, status=403)
+            res = add_team_member(cur_user.get("role"), body)
+            return self._send_json(res, status=200 if res["status"] == "ok" else 400)
+
+        # ─── Cloud Sync ───────────────────────────────────────────────────
         if path == "/api/pricing/sync":
             spreadsheet_id = body.get("spreadsheet_id") or DEFAULT_SPREADSHEET_ID
             folder_id = body.get("folder_id") or DEFAULT_FOLDER_ID
             sync_res = sync_from_gdrive(force=True, spreadsheet_id=spreadsheet_id, folder_id=folder_id)
             return self._send_json(sync_res)
 
+        # ─── Save Calculation Directly to Google Drive Subfolder ──────────
+        if path == "/api/project/save-to-drive":
+            cur_user = self._get_auth_user() or {
+                "username": body.get("creatorUsername") or "engineer",
+                "name": body.get("creatorName") or "Presales Engineer",
+                "email": body.get("creatorEmail") or "presales@citradata.id"
+            }
+            save_res = save_project_to_gdrive(body, cur_user)
+            return self._send_json(save_res)
+
+        # ─── Load Project File from Google Drive ──────────────────────────
+        if path == "/api/project/load-from-drive":
+            file_id = body.get("file_id")
+            if not file_id:
+                return self._send_json({"status": "error", "message": "file_id required"}, status=400)
+            proj_data = load_project_data_from_gdrive(file_id)
+            if proj_data:
+                return self._send_json({"status": "ok", "project": proj_data})
+            return self._send_json({"status": "error", "message": "Failed loading project file"}, status=404)
+
+        # ─── AI Copilot ───────────────────────────────────────────────────
         if path == "/api/ai/copilot":
             model_id = body.get("model", "gemini-3.8-flash")
             prompt = body.get("prompt", "")
@@ -141,8 +240,9 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
 
 
 def run_server():
-    # Pre-warm knowledge cache at startup
+    # Pre-warm users & knowledge cache at startup
     try:
+        load_users()
         res = sync_from_gdrive(force=False)
         logger.info("Initial knowledge loaded from: %s", res.get("source"))
     except Exception as e:

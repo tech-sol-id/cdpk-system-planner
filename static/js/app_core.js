@@ -93,13 +93,347 @@ window.cdpkSystemPlannerApp = function () {
         aiHistory: [],
         lastExtractedParams: null,
 
+        // ─── Team Authentication State ──────────────────────────────────
+        currentUser: null, // { username, email, name, role, title }
+        sessionToken: localStorage.getItem('cdpk_session_token') || '',
+        loginModalOpen: false,
+        loginIdentifier: '',
+        loginPassword: '',
+        loginError: '',
+        loginLoading: false,
+
+        // ─── Cloud Save & Project Archive State ──────────────────────────
+        outputSubfolderId: '11NLBY5EAPLb4q753r1TRVKgYRe0JpO8W',
+        isSavingToDrive: false,
+        saveSuccessModalOpen: false,
+        lastSavedResult: null,
+        archiveModalOpen: false,
+        archiveLoading: false,
+        archiveFiles: [],
+        compareModalOpen: false,
+
         // ─── Lifecycle Init ──────────────────────────────────────────────
         async init() {
+            await this.checkCurrentAuth();
             await this.loadCloudKnowledge(false);
             this.syncBoqFromSizing();
             this.$nextTick(() => {
                 this.runCoverageSimulation();
             });
+        },
+
+        // ─── Authentication Methods ──────────────────────────────────────
+        async checkCurrentAuth() {
+            if (!this.sessionToken) {
+                // If not logged in, auto-show login modal or allow quick demo login
+                this.currentUser = null;
+                return;
+            }
+            try {
+                const resp = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${this.sessionToken}` }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    this.currentUser = data.user;
+                    if (this.currentUser && this.currentUser.name) {
+                        this.salesPic = `${this.currentUser.name} (${this.currentUser.title || 'CDPK'})`;
+                    }
+                } else {
+                    this.logout(false);
+                }
+            } catch (e) {
+                console.warn('Auth check fallback:', e);
+            }
+        },
+
+        async login(identOverride, pwdOverride) {
+            const ident = identOverride || this.loginIdentifier;
+            const pwd = pwdOverride || this.loginPassword;
+            if (!ident || !pwd) {
+                this.loginError = this.lang === 'en' ? 'Please enter username and password' : 'Harap masukkan username dan password';
+                return;
+            }
+            this.loginLoading = true;
+            this.loginError = '';
+            try {
+                const resp = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: ident, password: pwd })
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    this.sessionToken = data.token;
+                    localStorage.setItem('cdpk_session_token', data.token);
+                    this.currentUser = data.user;
+                    this.loginModalOpen = false;
+                    this.loginPassword = '';
+                    this.salesPic = `${data.user.name} (${data.user.title || 'CDPK'})`;
+                } else {
+                    this.loginError = data.message || (this.lang === 'en' ? 'Invalid credentials' : 'Username atau password salah');
+                }
+            } catch (e) {
+                this.loginError = this.lang === 'en' ? 'Connection error' : 'Kendala koneksi ke server auth';
+            } finally {
+                this.loginLoading = false;
+            }
+        },
+
+        quickLogin(roleKey) {
+            const presets = {
+                adrian: { id: 'adrian', pwd: 'cdpk2026!' },
+                presales: { id: 'presales', pwd: 'cdpk2026!' },
+                sales: { id: 'sales', pwd: 'cdpk2026!' }
+            };
+            const p = presets[roleKey] || presets.adrian;
+            this.login(p.id, p.pwd);
+        },
+
+        async logout(callApi = true) {
+            if (callApi && this.sessionToken) {
+                try {
+                    await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${this.sessionToken}` }
+                    });
+                } catch (e) {}
+            }
+            this.sessionToken = '';
+            this.currentUser = null;
+            localStorage.removeItem('cdpk_session_token');
+        },
+
+        // ─── Direct Google Drive Project Save Engine ─────────────────────
+        async saveToGoogleDrive() {
+            if (!this.currentUser) {
+                this.loginModalOpen = true;
+                return;
+            }
+            this.isSavingToDrive = true;
+            try {
+                const payload = {
+                    projName: this.projName,
+                    clientName: this.clientName,
+                    projLocation: this.projLocation,
+                    salesPic: this.salesPic,
+                    creatorUsername: this.currentUser.username,
+                    creatorName: this.currentUser.name,
+                    creatorEmail: this.currentUser.email,
+                    lang: this.lang,
+                    exportMode: this.exportMode,
+                    currency: this.currency,
+                    exchangeRate: this.exchangeRate,
+                    sizingInputs: {
+                        industry: this.industry,
+                        areaInput: this.areaInput,
+                        areaUnit: this.areaUnit,
+                        userCount: this.userCount,
+                        terrain: this.terrain,
+                        freqBand: this.freqBand,
+                        towerHeight: this.towerHeight,
+                        buildingFloors: this.buildingFloors,
+                        powerSource: this.powerSource,
+                        backupHours: this.backupHours,
+                        backhaul: this.backhaul,
+                        needAtex: this.needAtex,
+                        needDispatch: this.needDispatch,
+                        needCctv: this.needCctv,
+                        cctvCount: this.cctvCount
+                    },
+                    sizingResult: this.sizingResult,
+                    boqItems: this.boqItems.map(it => ({
+                        category: it.category,
+                        name: it.name,
+                        sku: it.sku,
+                        qty: it.qty,
+                        unit: it.unit,
+                        unitPrice: Math.round(this.getEffectiveUnitPrice(it)),
+                        lineTotal: Math.round(this.getLineTotal(it)),
+                        notes: it.notes,
+                        isBundle: it.isBundle,
+                        children: it.children || []
+                    })),
+                    commercialTotals: {
+                        currency: this.currency,
+                        hardwareSubtotal: Math.round(this.hardwareSubtotal),
+                        serviceFeeTotal: Math.round(this.serviceFeeTotal),
+                        discountPercent: this.discountPercent,
+                        discountAmount: Math.round(this.discountAmount),
+                        netTaxableSubtotal: Math.round(this.netTaxableSubtotal),
+                        ppnPercent: this.ppnPercent,
+                        ppnAmount: Math.round(this.ppnAmount),
+                        grandTotal: Math.round(this.grandTotal)
+                    },
+                    mandaysResult: {
+                        totalMandays: this.mandaysResult.totalMandays,
+                        calendarDays: this.mandaysResult.calendarDays,
+                        tasks: this.mandaysResult.tasks
+                    }
+                };
+
+                const resp = await fetch('/api/project/save-to-drive', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.sessionToken}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const resData = await resp.json();
+                if (resData.status === 'ok') {
+                    this.lastSavedResult = resData;
+                    this.saveSuccessModalOpen = true;
+                } else {
+                    alert(this.lang === 'en' ? 'Failed saving project to Google Drive.' : 'Gagal menyimpan proyek ke Google Drive.');
+                }
+            } catch (e) {
+                console.error('Save to Drive error:', e);
+                alert(this.lang === 'en' ? 'Connection error saving to Google Drive.' : 'Kendala koneksi saat menyimpan ke Google Drive.');
+            } finally {
+                this.isSavingToDrive = false;
+            }
+        },
+
+        // ─── Cloud Project Archive (Load / Restore) ──────────────────────
+        async openProjectArchive() {
+            this.archiveModalOpen = true;
+            this.archiveLoading = true;
+            try {
+                const resp = await fetch('/api/project/list-drive', {
+                    headers: { 'Authorization': `Bearer ${this.sessionToken}` }
+                });
+                const data = await resp.json();
+                this.archiveFiles = (data.files || []).filter(f => f.name.endsWith('.cdpk.json') || f.name.endsWith('.xlsx'));
+            } catch (e) {
+                console.warn('Archive load error:', e);
+            } finally {
+                this.archiveLoading = false;
+            }
+        },
+
+        async loadProjectFromDrive(fileId) {
+            try {
+                const resp = await fetch('/api/project/load-from-drive', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.sessionToken}`
+                    },
+                    body: JSON.stringify({ file_id: fileId })
+                });
+                const data = await resp.json();
+                if (data.status === 'ok' && data.project) {
+                    const p = data.project;
+                    this.projName = p.projName || this.projName;
+                    this.clientName = p.clientName || this.clientName;
+                    this.projLocation = p.projLocation || this.projLocation;
+                    if (p.sizingInputs) {
+                        const si = p.sizingInputs;
+                        this.industry = si.industry || this.industry;
+                        this.areaInput = si.areaInput || this.areaInput;
+                        this.areaUnit = si.areaUnit || this.areaUnit;
+                        this.userCount = si.userCount || this.userCount;
+                        this.terrain = si.terrain || this.terrain;
+                        this.freqBand = si.freqBand || this.freqBand;
+                        this.towerHeight = si.towerHeight || this.towerHeight;
+                        this.buildingFloors = si.buildingFloors || this.buildingFloors;
+                        this.powerSource = si.powerSource || this.powerSource;
+                        this.backupHours = si.backupHours || this.backupHours;
+                        this.backhaul = si.backhaul || this.backhaul;
+                        this.needAtex = si.needAtex || false;
+                        this.needDispatch = si.needDispatch || false;
+                        this.needCctv = si.needCctv || false;
+                        this.cctvCount = si.cctvCount || 8;
+                    }
+                    this.syncBoqFromSizing();
+                    this.runCoverageSimulation();
+                    this.archiveModalOpen = false;
+                    this.activeTab = 'boq';
+                    alert(this.lang === 'en' ? 'Project successfully restored from Google Drive!' : 'Proyek berhasil dimuat kembali dari Google Drive!');
+                }
+            } catch (e) {
+                alert(this.lang === 'en' ? 'Error loading project file.' : 'Gagal memuat file proyek.');
+            }
+        },
+
+        // ─── Multi-Option Solution Comparison Matrix ─────────────────────
+        get comparisonOptions() {
+            const isEn = this.lang === 'en';
+            const s = this.sizingResult;
+            const users = s.userCount;
+
+            // Option 1: Conventional DMR (Entry)
+            const opt1Sites = s.outdoorSites;
+            const opt1Rpt = opt1Sites;
+            const opt1Capex = (opt1Rpt * 78050000) + (users * 5400000) + (opt1Sites * 4 * 3500000);
+
+            // Option 2: Capacity Plus Trunking (Recommended)
+            const opt2Sites = s.outdoorSites;
+            const opt2Rpt = s.totalOutdoorRepeaters;
+            const opt2Capex = (opt2Rpt * 78050000) + (opt2Rpt * 12500000) + (users * 14800000) + (s.totalOutdoorRepeaters * 5 * 3500000);
+
+            // Option 3: Turnkey Hybrid (Trunking + In-Building DAS + CCTV AI Avigilon)
+            const opt3Capex = opt2Capex + (s.dasNodes > 0 ? s.dasNodes * 60300000 : 60300000) + (8 * 24500000 + 145000000) + (10 * 3500000);
+
+            return [
+                {
+                    tier: 'opt1',
+                    title: this.t('optConventional'),
+                    badge: isEn ? 'Budget / Entry-Level' : 'Ekonomis / Standar',
+                    badgeColor: 'bg-slate-100 text-slate-800',
+                    topology: 'DMR Tier 2 Conventional',
+                    repeaters: `${opt1Rpt}x MOTOTRBO SLR 5300`,
+                    terminals: `${users}x MOTOTRBO R2 (Workhorse)`,
+                    timeSlots: `${opt1Rpt * 2} TDMA Slots`,
+                    cctv: isEn ? 'None' : 'Tidak Ada',
+                    dispatch: isEn ? 'Basic Desktop Mic' : 'Desktop Mic Sederhana',
+                    estCapex: opt1Capex,
+                    pros: isEn ? 'Lowest investment, simple maintenance' : 'Investasi paling hemat, pemeliharaan mudah',
+                    cons: isEn ? 'Static channel, higher queuing at peak' : 'Kanal statis, antrean saat trafik padat'
+                },
+                {
+                    tier: 'opt2',
+                    title: this.t('optCapPlus'),
+                    badge: isEn ? 'Recommended (Best Value)' : 'Rekomendasi Utama (Best Value)',
+                    badgeColor: 'bg-blue-100 text-blue-900 border border-blue-300 font-extrabold',
+                    topology: s.topologyName,
+                    repeaters: `${opt2Rpt}x MOTOTRBO SLR 5300`,
+                    terminals: `${s.htQty}x ${s.recommendedHtModel} + ${s.mobileQty}x Mobile`,
+                    timeSlots: `${s.totalTimeSlots} TDMA Slots`,
+                    cctv: isEn ? 'Optional Add-on' : 'Opsional Tambahan',
+                    dispatch: 'RadioPro Dispatch & GPS AVL',
+                    estCapex: opt2Capex,
+                    pros: isEn ? 'Dynamic pooling, zero waiting, crystal audio' : 'Pooling dinamis tanpa antre, audio jernih SINC+',
+                    cons: isEn ? 'Requires trunking licenses per repeater' : 'Memerlukan lisensi trunking per repeater'
+                },
+                {
+                    tier: 'opt3',
+                    title: this.t('optHybrid'),
+                    badge: isEn ? 'Enterprise Turnkey' : 'Solusi Menyeluruh (Turnkey)',
+                    badgeColor: 'bg-purple-100 text-purple-900',
+                    topology: 'MOTOTRBO LCP + Avigilon Unity Video 8',
+                    repeaters: `${opt2Rpt}x SLR 5300 + 1x SLR 1000 DAS`,
+                    terminals: `${s.htQty}x MOTOTRBO Ion/R7 + M8600i`,
+                    timeSlots: `${s.totalTimeSlots + 2} TDMA Slots`,
+                    cctv: '8x Avigilon AI Dome/Bullet + AI NVR',
+                    dispatch: 'MOTOTRBO WAVE PTX LTE + RadioPro',
+                    estCapex: opt3Capex,
+                    pros: isEn ? 'Total voice + AI video + LTE PTX convergence' : 'Konvergensi penuh suara radio + video AI + LTE PoC',
+                    cons: isEn ? 'Higher initial CAPEX budget' : 'Investasi modal awal lebih tinggi'
+                }
+            ];
+        },
+
+        // ─── Margin Guardrail ────────────────────────────────────────────
+        get effectiveMarginPercent() {
+            const baseMargin = Number(this.marginPercent || 15);
+            const disc = Number(this.discountPercent || 0);
+            return Math.max(-50, baseMargin - disc);
+        },
+
+        get isMarginAtRisk() {
+            return this.effectiveMarginPercent < 10.0;
         },
 
         t(key) {

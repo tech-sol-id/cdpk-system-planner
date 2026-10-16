@@ -128,7 +128,40 @@ window.CDPK_I18N = {
         covTitle: "Simulasi Propagasi RF & Deteksi Blind-Spot (60x60 Grid)",
         covRunBtn: "Jalankan Simulasi Propagasi",
         covExportPng: "Unduh Peta PNG",
-        covExportDocx: "Ekspor Laporan Word (.docx)"
+        covExportDocx: "Ekspor Laporan Word (.docx)",
+
+        // Team Login & Auth
+        loginModalTitle: "Login Portal Tim Presales & Engineering",
+        loginSubtitle: "Masuk untuk mengakses kalkulator sizing, konfigurasi harga, dan simpan dokumen ke Google Drive",
+        usernameLabel: "Username / Email",
+        passwordLabel: "Password",
+        loginBtn: "Masuk ke Sistem",
+        loggingInBtn: "Memverifikasi...",
+        logoutBtn: "Keluar (Logout)",
+        loggedInAs: "Masuk sebagai:",
+        quickDemoUsers: "Akun Tim Cepat:",
+
+        // Cloud Project Save & Archive
+        saveToDriveBtn: "☁️ Simpan ke Google Drive",
+        savingToDrive: "Menyimpan ke Google Drive...",
+        saveSuccessTitle: "Berhasil Disimpan ke Google Drive!",
+        saveSuccessDesc: "File Excel penawaran & data proyek telah tersimpan di sub-folder 'Kalkulasi & Penawaran Tim'",
+        openSavedFileBtn: "Buka File di Google Drive",
+        openSubfolderBtn: "Buka Sub-Folder Tim di Drive",
+        projectArchiveBtn: "📂 Arsip Proyek Tim",
+        projectArchiveTitle: "Arsip Kalkulasi & Penawaran Tim (Google Drive)",
+        projectArchiveSubtitle: "Daftar proyek yang tersimpan di sub-folder 'Kalkulasi & Penawaran Tim'",
+        refreshArchiveBtn: "Muat Ulang Arsip",
+        loadProjectBtn: "Buka / Muat Proyek",
+        loadingProject: "Memuat Proyek...",
+        noProjectsFound: "Belum ada proyek tersimpan di sub-folder ini.",
+
+        // Margin Guardrail & Multi-Option Comparison
+        marginGuardrailWarn: "⚠️ Peringatan Margin: Diskon tinggi menyebabkan margin di bawah 10%. Memerlukan persetujuan Manajemen.",
+        compareOptionsBtn: "⚖️ Bandingkan 3 Opsi Solusi",
+        optConventional: "Opsi 1: Konvensional (Ekonomis)",
+        optCapPlus: "Opsi 2: Capacity Plus (Rekomendasi Utama)",
+        optHybrid: "Opsi 3: Turnkey Hybrid (+ Avigilon CCTV)"
     },
     en: {
         appTitle: "CDPK System Planner",
@@ -258,6 +291,39 @@ window.CDPK_I18N = {
         covTitle: "RF Propagation & Dead-Zone Simulation (60x60 Grid)",
         covRunBtn: "Run Propagation Simulation",
         covExportPng: "Download Map PNG",
-        covExportDocx: "Export Word Report (.docx)"
+        covExportDocx: "Export Word Report (.docx)",
+
+        // Team Login & Auth
+        loginModalTitle: "Presales & Engineering Team Portal Login",
+        loginSubtitle: "Sign in to access sizing calculators, pricing configuration, and cloud project saving",
+        usernameLabel: "Username / Email",
+        passwordLabel: "Password",
+        loginBtn: "Sign In to System",
+        loggingInBtn: "Authenticating...",
+        logoutBtn: "Sign Out (Logout)",
+        loggedInAs: "Signed in as:",
+        quickDemoUsers: "Quick Team Accounts:",
+
+        // Cloud Project Save & Archive
+        saveToDriveBtn: "☁️ Save to Google Drive",
+        savingToDrive: "Saving to Google Drive...",
+        saveSuccessTitle: "Successfully Saved to Google Drive!",
+        saveSuccessDesc: "Quotation Excel workbook & project state saved in team sub-folder 'Kalkulasi & Penawaran Tim'",
+        openSavedFileBtn: "Open File in Google Drive",
+        openSubfolderBtn: "Open Team Sub-Folder in Drive",
+        projectArchiveBtn: "📂 Team Project Archive",
+        projectArchiveTitle: "Team Calculation & Quotation Archive (Google Drive)",
+        projectArchiveSubtitle: "Projects stored in Google Drive sub-folder 'Kalkulasi & Penawaran Tim'",
+        refreshArchiveBtn: "Refresh Archive",
+        loadProjectBtn: "Open / Load Project",
+        loadingProject: "Loading Project...",
+        noProjectsFound: "No saved projects found in this sub-folder yet.",
+
+        // Margin Guardrail & Multi-Option Comparison
+        marginGuardrailWarn: "⚠️ Margin Alert: High discount reduces net margin below 10%. Requires Management Approval.",
+        compareOptionsBtn: "⚖️ Compare 3 Solution Options",
+        optConventional: "Option 1: Conventional (Budget)",
+        optCapPlus: "Option 2: Capacity Plus (Primary Recommendation)",
+        optHybrid: "Option 3: Turnkey Hybrid (+ Avigilon CCTV)"
     }
 };

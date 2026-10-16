@@ -1,0 +1,29 @@
+[
+  {
+    "username": "adrian",
+    "email": "adrian@citradata.id",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "title": "Principal Lead & Solutions Architect",
+    "salt": "c9d058f727af0a4038d241c3e6c92f99",
+    "password_hash": "be89474d872479fba71b638248e29f717528e8a215c742125dac594a6933a694"
+  },
+  {
+    "username": "presales",
+    "email": "presales@citradata.id",
+    "name": "Presales Engineer",
+    "role": "engineer",
+    "title": "Senior Presales & RF Engineer",
+    "salt": "aef47ca3b59e5d0f9c8b8de021be5da3",
+    "password_hash": "d383a1704f7fc3eb309b33fe32e56fc9a424cd98e5b329423bc96f14a8ac0bbe"
+  },
+  {
+    "username": "sales",
+    "email": "sales@citradata.id",
+    "name": "Sales Account Manager",
+    "role": "sales",
+    "title": "Commercial Account Manager",
+    "salt": "c9e8758bddb026d63bed7b2b5c89cc7d",
+    "password_hash": "d0054b6eac40fc10317f24c32c28c30e760879488de75f87cf45867b8df30c1f"
+  }
+]
