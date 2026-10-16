@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: cdpk-system-planner
+    runtime: docker
+    region: singapore
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 7860
+      - key: GDRIVE_FOLDER_ID
+        value: 1OB_UaNyd65Ccb3lmdwJuw5raufCwhgbS
+      - key: GDRIVE_SPREADSHEET_ID
+        value: 1Kp85v81JXeRC5ti-ZXYBChgrj2ztnnwrCHokI02LX6U
+      - key: GDRIVE_CITRADATA_CRED
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CDPK System Planner — Solution Sizing, RF Simulation & Commercial Suite</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN for rapid modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF + AutoTable + SheetJS (XLSX) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Modular App Scripts -->
+    <script src="/js/logo_b64.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/engines.js"></script>
+    <script src="/js/exporters.js"></script>
+    <script src="/js/app_core.js"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #0f172a; }
+        [x-cloak] { display: none !important; }
+        .cdpk-gradient { background: linear-gradient(135deg, #002b5c 0%, #004b93 55%, #0284c7 100%); }
+        .card-shadow { box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04); }
+    </style>
+</head>
+<body x-data="cdpkSystemPlannerApp()" x-init="init()" x-cloak class="min-h-screen flex flex-col">
+
+    <!-- ═══════════════════ TOP HEADER & CLOUD SYNC BAR ═══════════════════ -->
+    <header class="cdpk-gradient text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand & Logo -->
+            <div class="flex items-center gap-3.5">
+                <div class="bg-white rounded-lg p-1.5 shadow flex items-center justify-center h-11 w-20 overflow-hidden">
+                    <img :src="window.CDPK_LOGO_B64" alt="CDPK Logo" class="max-h-9 object-contain" />
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg sm:text-xl font-extrabold tracking-tight" x-text="t('appTitle')"></h1>
+                        <span class="text-[11px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-400/20 border border-sky-300/40 text-sky-100">v8.0 Cloud</span>
+                    </div>
+                    <p class="text-xs text-sky-100/90 font-medium" x-text="t('appSubtitle')"></p>
+                </div>
+            </div>
+
+            <!-- Right Controls: Cloud Sync Links, AI Copilot, Bilingual Switcher -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Live Google Drive Links -->
+                <div class="hidden lg:flex items-center gap-1.5 bg-slate-900/35 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs">
+                    <span class="w-2 h-2 rounded-full" :class="syncStatus === 'ok' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'"></span>
+                    <span class="text-sky-100 font-medium" x-text="syncSource === 'google_drive_live' ? 'Drive Cloud Live' : 'Local Cache'"></span>
+                    <span class="text-white/40">|</span>
+                    <a :href="'https://drive.google.com/drive/folders/' + driveFolderId" target="_blank"
+                       class="text-sky-200 hover:text-white underline font-medium" x-text="t('openDriveFolder')"></a>
+                    <span class="text-white/40">•</span>
+                    <a :href="'https://docs.google.com/spreadsheets/d/' + masterSheetId + '/edit'" target="_blank"
+                       class="text-emerald-300 hover:text-white underline font-semibold" x-text="t('openMasterSheet')"></a>
+                </div>
+
+                <!-- Sync Cloud Pricelist Button -->
+                <button @click="syncCloudPricelistNow()" :disabled="isSyncing"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition">
+                    <svg class="w-3.5 h-3.5" :class="isSyncing ? 'animate-spin' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span x-text="isSyncing ? t('syncingBtn') : t('syncBtn')"></span>
+                </button>
+
+                <!-- AI Copilot Button (Gemini 3.8 Flash / Pro) -->
+                <button @click="aiModalOpen = true"
+                        class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-sm transition">
+                    <span>✨</span>
+                    <span x-text="t('aiCopilotBtn')"></span>
+                </button>
+
+                <!-- Instant Bilingual Switcher (ID / EN) -->
+                <div class="flex items-center bg-slate-900/50 p-0.5 rounded-lg border border-white/20 text-xs font-bold">
+                    <button @click="setLang('id')"
+                            :class="lang === 'id' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'"
+                            class="px-2.5 py-1 rounded-md transition">ID 🇮🇩</button>
+                    <button @click="setLang('en')"
+                            :class="lang === 'en' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'"
+                            class="px-2.5 py-1 rounded-md transition">EN 🇬🇧</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-slate-900/35 border-t border-white/10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto no-scrollbar gap-1 py-1.5">
+                <button @click="activeTab = 'sizing'"
+                        :class="activeTab === 'sizing' ? 'bg-white text-blue-950 font-bold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                        class="px-4 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition" x-text="t('navSizing')"></button>
+                <button @click="activeTab = 'boq'"
+                        :class="activeTab === 'boq' ? 'bg-white text-blue-950 font-bold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                        class="px-4 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5">
+                    <span x-text="t('navBoq')"></span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500 text-white font-bold" x-text="boqItems.length"></span>
+                </button>
+                <button @click="activeTab = 'catalog'"
+                        :class="activeTab === 'catalog' ? 'bg-white text-blue-950 font-bold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                        class="px-4 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition" x-text="t('navCatalog')"></button>
+                <button @click="activeTab = 'mandays'"
+                        :class="activeTab === 'mandays' ? 'bg-white text-blue-950 font-bold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                        class="px-4 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition" x-text="t('navMandays')"></button>
+                <button @click="activeTab = 'coverage'; $nextTick(() => runCoverageSimulation())"
+                        :class="activeTab === 'coverage' ? 'bg-white text-blue-950 font-bold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                        class="px-4 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition" x-text="t('navCoverage')"></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══════════════════ MAIN WORKSPACE CONTENT ═══════════════════ -->
+    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 space-y-6">
+
+        <!-- Project Metadata Banner (Always visible for context) -->
+        <section class="bg-white rounded-xl p-4 card-shadow border border-slate-200/80">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('projName')"></label>
+                    <input type="text" x-model="projName" :placeholder="t('projNamePh')"
+                           class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 focus:border-blue-600 focus:outline-none font-medium" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('clientName')"></label>
+                    <input type="text" x-model="clientName" :placeholder="t('clientNamePh')"
+                           class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 focus:border-blue-600 focus:outline-none font-medium" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('projLocation')"></label>
+                    <input type="text" x-model="projLocation" :placeholder="t('projLocationPh')"
+                           class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 focus:border-blue-600 focus:outline-none font-medium" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('salesPic')"></label>
+                    <input type="text" x-model="salesPic" :placeholder="t('salesPicPh')"
+                           class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 focus:border-blue-600 focus:outline-none font-medium" />
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <!-- MODULE 1: RF & SYSTEM SIZING CALCULATOR                           -->
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <div x-show="activeTab === 'sizing'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Left Column: Sizing Parameters Input (5 cols) -->
+            <div class="lg:col-span-5 bg-white rounded-xl p-5 card-shadow border border-slate-200 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h2 class="text-base font-bold text-slate-800" x-text="t('sizingInputTitle')"></h2>
+                    <button @click="aiModalOpen = true" class="text-xs font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-1">
+                        <span>✨</span> <span x-text="lang === 'en' ? 'Fill via AI' : 'Isi dengan AI'"></span>
+                    </button>
+                </div>
+
+                <!-- Industry Sector -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('industryLabel')"></label>
+                    <select x-model="industry" @change="if(industry === 'oil_gas') needAtex = true; syncBoqFromSizing()"
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-slate-50 font-medium">
+                        <template x-for="ind in industryParams" :key="ind.key">
+                            <option :value="ind.key" x-text="lang === 'en' ? ind.label_en : ind.label_id"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- Area Size & Unit + User Count -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('areaSizeLabel')"></label>
+                        <div class="flex">
+                            <input type="number" min="0.1" step="0.5" x-model.number="areaInput" @change="syncBoqFromSizing()"
+                                   class="w-full px-3 py-2 text-sm rounded-l-lg border border-slate-300 font-semibold" />
+                            <select x-model="areaUnit" @change="syncBoqFromSizing()"
+                                    class="px-2 py-2 text-xs font-bold bg-slate-100 border border-l-0 border-slate-300 rounded-r-lg">
+                                <option value="km2">km²</option>
+                                <option value="ha">Ha</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('userCountLabel')"></label>
+                        <input type="number" min="1" max="5000" x-model.number="userCount" @change="syncBoqFromSizing()"
+                               class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-semibold" />
+                    </div>
+                </div>
+
+                <!-- Terrain & Frequency Band -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('terrainLabel')"></label>
+                        <select x-model="terrain" @change="syncBoqFromSizing()"
+                                class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-slate-50 font-medium">
+                            <option value="flat" x-text="t('terrainFlat')"></option>
+                            <option value="hilly" x-text="t('terrainHilly')"></option>
+                            <option value="mountainous" x-text="t('terrainMountain')"></option>
+                            <option value="dense" x-text="t('terrainDense')"></option>
+                            <option value="indoor" x-text="t('terrainIndoor')"></option>
+                            <option value="mixed_inout" x-text="t('terrainMixed')"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('freqBandLabel')"></label>
+                        <select x-model="freqBand" @change="syncBoqFromSizing()"
+                                class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-slate-50 font-medium">
+                            <option value="vhf">VHF (136–174 MHz)</option>
+                            <option value="uhf">UHF (403–470 MHz)</option>
+                            <option value="800">800/900 MHz Trunking</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tower Height & Building Floors -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('towerHeightLabel')"></label>
+                        <input type="number" min="5" max="120" x-model.number="towerHeight" @change="syncBoqFromSizing()"
+                               class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-semibold" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('buildingFloorsLabel')"></label>
+                        <input type="number" min="1" max="80" x-model.number="buildingFloors" @change="syncBoqFromSizing()"
+                               class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-semibold" />
+                    </div>
+                </div>
+
+                <!-- Power Source, Backup Hours & Backhaul -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('powerSourceLabel')"></label>
+                        <select x-model="powerSource" @change="syncBoqFromSizing()"
+                                class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-slate-50 font-medium">
+                            <option value="pln_ups" x-text="t('powerPln')"></option>
+                            <option value="solar" x-text="t('powerSolar')"></option>
+                            <option value="genset_ups" x-text="t('powerGen')"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('backhaulLabel')"></label>
+                        <select x-model="backhaul" @change="syncBoqFromSizing()"
+                                class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-slate-50 font-medium">
+                            <option value="fiber" x-text="t('bhFiber')"></option>
+                            <option value="radio_ip" x-text="t('bhRadioIp')"></option>
+                            <option value="starlink" x-text="t('bhStarlink')"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Special Compliance & Add-on Checkboxes -->
+                <div class="pt-2 border-t border-slate-100 space-y-2">
+                    <label class="block text-xs font-bold text-slate-700" x-text="t('specialReqLabel')"></label>
+                    <label class="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                        <input type="checkbox" x-model="needAtex" @change="syncBoqFromSizing()" class="rounded text-blue-600" />
+                        <span x-text="t('reqAtex')"></span>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                        <input type="checkbox" x-model="needDispatch" @change="syncBoqFromSizing()" class="rounded text-blue-600" />
+                        <span x-text="t('reqDispatch')"></span>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                        <input type="checkbox" x-model="needCctv" @change="syncBoqFromSizing()" class="rounded text-blue-600" />
+                        <span x-text="t('reqCctv')"></span>
+                    </label>
+                    <div x-show="needCctv" class="pl-6 pt-1 flex items-center gap-2">
+                        <span class="text-xs text-slate-600 font-medium" x-text="t('cctvCountLabel')"></span>
+                        <input type="number" min="1" max="500" x-model.number="cctvCount" @change="syncBoqFromSizing()"
+                               class="w-20 px-2 py-1 text-xs rounded border border-slate-300 font-bold" />
+                    </div>
+                </div>
+
+                <!-- Action CTA Buttons -->
+                <div class="pt-3 flex flex-col sm:flex-row gap-2">
+                    <button @click="syncBoqFromSizing(); activeTab = 'boq'"
+                            class="flex-1 py-2.5 px-4 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow transition flex items-center justify-center gap-2">
+                        <span>📋</span> <span x-text="t('pushToBoqBtn')"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Sizing Results, SVGs & 8-Slide Analysis (7 cols) -->
+            <div class="lg:col-span-7 space-y-5">
+
+                <!-- Top Architecture Banner & 6 KPI Cards -->
+                <div class="bg-white rounded-xl p-5 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600" x-text="t('recommendedTopology')"></span>
+                            <h3 class="text-lg font-extrabold text-slate-900" x-text="sizingResult.topologyName"></h3>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[11px] font-bold uppercase text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full"
+                                  x-text="sizingResult.primaryRepeaterModel"></span>
+                        </div>
+                    </div>
+
+                    <!-- KPI Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <div class="text-[11px] font-semibold text-slate-500" x-text="t('totalSitesLabel')"></div>
+                            <div class="text-xl font-extrabold text-slate-900 mt-0.5">
+                                <span x-text="sizingResult.outdoorSites"></span> <span class="text-xs font-semibold text-slate-500">Site</span>
+                            </div>
+                            <div class="text-[11px] text-blue-700 font-medium" x-text="'Radius ~' + sizingResult.effRadiusKm.toFixed(1) + ' km/site'"></div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <div class="text-[11px] font-semibold text-slate-500" x-text="t('totalRepeatersLabel')"></div>
+                            <div class="text-xl font-extrabold text-blue-800 mt-0.5">
+                                <span x-text="sizingResult.totalOutdoorRepeaters"></span> <span class="text-xs font-semibold">Unit</span>
+                            </div>
+                            <div class="text-[11px] text-slate-600 font-medium">MOTOTRBO SLR 5300 / 8000</div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <div class="text-[11px] font-semibold text-slate-500" x-text="t('dasNodesLabel')"></div>
+                            <div class="text-xl font-extrabold text-sky-700 mt-0.5">
+                                <span x-text="sizingResult.dasNodes"></span> <span class="text-xs font-semibold">Set DAS</span>
+                            </div>
+                            <div class="text-[11px] text-slate-600 font-medium">MOTOTRBO SLR 1000</div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <div class="text-[11px] font-semibold text-slate-500" x-text="t('recommendedHtLabel')"></div>
+                            <div class="text-sm font-extrabold text-slate-900 mt-0.5" x-text="sizingResult.htQty + 'x ' + sizingResult.recommendedHtModel"></div>
+                            <div class="text-[11px] text-emerald-700 font-medium" x-text="sizingResult.needAtex ? 'ATEX Zone 1/21 Certified' : '85% Portable Allocation'"></div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <div class="text-[11px] font-semibold text-slate-500" x-text="t('recommendedMobileLabel')"></div>
+                            <div class="text-sm font-extrabold text-slate-900 mt-0.5" x-text="sizingResult.mobileQty + 'x ' + sizingResult.recommendedMobileModel"></div>
+                            <div class="text-[11px] text-slate-500 font-medium">15% Vehicle / Fixed Base</div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <div class="text-[11px] font-semibold text-slate-500" x-text="t('estPowerLabel')"></div>
+                            <div class="text-sm font-extrabold text-slate-900 mt-0.5" x-text="sizingResult.upsRecommendedVA + ' VA UPS'"></div>
+                            <div class="text-[11px] text-amber-700 font-medium" x-text="sizingResult.batteryAh + ' Ah Battery (' + sizingResult.backupHours + 'h)'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topology & Coverage SVG Diagrams -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div class="md:col-span-7 bg-white rounded-xl p-4 card-shadow border border-slate-200">
+                        <h4 class="text-xs font-bold uppercase text-slate-600 mb-2" x-text="t('topoDiagramTitle')"></h4>
+                        <div x-html="sizingResult.topoSvg"></div>
+                    </div>
+                    <div class="md:col-span-5 bg-white rounded-xl p-4 card-shadow border border-slate-200">
+                        <h4 class="text-xs font-bold uppercase text-slate-600 mb-2" x-text="t('covDiagramTitle')"></h4>
+                        <div x-html="sizingResult.covSvg"></div>
+                    </div>
+                </div>
+
+                <!-- 8-Slide Deep Engineering Analysis Carousel -->
+                <div class="bg-white rounded-xl p-5 card-shadow border border-slate-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold text-slate-800" x-text="t('techCarouselTitle')"></h3>
+                        <div class="flex items-center gap-1">
+                            <template x-for="(sl, idx) in sizingResult.techSlides" :key="idx">
+                                <button @click="activeTechSlide = idx"
+                                        :class="activeTechSlide === idx ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                        class="w-6 h-6 rounded-md text-xs font-bold transition" x-text="idx + 1"></button>
+                            </template>
+                        </div>
+                    </div>
+                    <template x-if="sizingResult.techSlides[activeTechSlide]">
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-sm font-extrabold text-blue-950" x-text="sizingResult.techSlides[activeTechSlide].title"></h4>
+                                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800"
+                                      x-text="sizingResult.techSlides[activeTechSlide].badge"></span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed"
+                               x-html="sizingResult.techSlides[activeTechSlide].body.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <!-- MODULE 2: SYSTEM BUNDLE & BOQ PRICING CONFIGURATOR                -->
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <div x-show="activeTab === 'boq'" class="space-y-5">
+
+            <!-- Commercial Control Bar -->
+            <div class="bg-white rounded-xl p-5 card-shadow border border-slate-200 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-lg font-extrabold text-slate-900" x-text="t('boqTitle')"></h2>
+                        <p class="text-xs text-slate-500 mt-0.5" x-text="t('boqSubtitle')"></p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button @click="syncBoqFromSizing()"
+                                class="px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+                                x-text="t('resetBoqBtn')"></button>
+                        <button @click="exportPdf()"
+                                class="px-4 py-2 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-sm transition flex items-center gap-1.5">
+                            <span>📄</span> <span x-text="t('exportPdfBtn')"></span>
+                        </button>
+                        <button @click="exportXlsx()"
+                                class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center gap-1.5">
+                            <span>📊</span> <span x-text="t('exportXlsxBtn')"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Commercial Parameters Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <!-- Export Mode (Technical vs Commercial) -->
+                    <div class="col-span-2">
+                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('exportModeLabel')"></label>
+                        <div class="grid grid-cols-2 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-bold">
+                            <button @click="exportMode = 'commercial'"
+                                    :class="exportMode === 'commercial' ? 'bg-blue-700 text-white shadow-sm' : 'text-slate-600'"
+                                    class="py-1.5 px-2 rounded-md transition truncate" x-text="t('modeCommercial')"></button>
+                            <button @click="exportMode = 'technical'"
+                                    :class="exportMode === 'technical' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-600'"
+                                    class="py-1.5 px-2 rounded-md transition truncate" x-text="t('modeTechnical')"></button>
+                        </div>
+                    </div>
+
+                    <!-- Currency & Exchange Rate -->
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('currencyLabel')"></label>
+                        <select x-model="currency" class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-slate-50">
+                            <option value="IDR">IDR (Rupiah)</option>
+                            <option value="USD">USD (US Dollar)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('exchangeRateLabel')"></label>
+                        <input type="number" step="50" x-model.number="exchangeRate"
+                               class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300" />
+                    </div>
+
+                    <!-- Discount % & PPN % -->
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('discountLabel')"></label>
+                        <input type="number" min="0" max="80" step="0.5" x-model.number="discountPercent"
+                               class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300" />
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('ppnLabel')"></label>
+                        <select x-model.number="ppnPercent" class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-slate-50">
+                            <option :value="11">PPN 11%</option>
+                            <option :value="12">PPN 12%</option>
+                            <option :value="0">0% (Tax Exempt / Non-PKP)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Add System Bundle OR Individual Item Bar -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+                    <!-- Add Composite System Bundle -->
+                    <div class="p-3 rounded-xl bg-blue-50/70 border border-blue-200 flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+                        <div class="flex-1">
+                            <label class="block text-[11px] font-bold text-blue-900 mb-1" x-text="t('addBundleTitle')"></label>
+                            <select x-model="selectedBundleToAdd" class="w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-blue-300 bg-white">
+                                <template x-for="b in systemBundles" :key="b.bundle_id">
+                                    <option :value="b.bundle_id" x-text="lang === 'en' ? b.name_en : b.name_id"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <button @click="addSelectedBundleToBoq()"
+                                class="px-3.5 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold whitespace-nowrap transition">
+                            + Bundle Sistem
+                        </button>
+                    </div>
+
+                    <!-- Add Single Catalog Item -->
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+                        <div class="flex-1">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1" x-text="t('addCustomItemTitle')"></label>
+                            <select x-model="selectedProductSkuToAdd" class="w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 bg-white">
+                                <template x-for="p in productsCatalog" :key="p.sku">
+                                    <option :value="p.sku" x-text="`[${p.cat}] ${p.model} (${formatCurrency(convertPrice(p.price_idr, p.price_usd))})`"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <button @click="addProductSkuToBoq()"
+                                class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold whitespace-nowrap transition">
+                            + Item Satuan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Parent-Child BoQ Table -->
+            <div class="bg-white rounded-xl card-shadow border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
+                                <th class="py-3 px-3 w-10 text-center" x-text="t('colNo')"></th>
+                                <th class="py-3 px-3 w-36" x-text="t('colCategory')"></th>
+                                <th class="py-3 px-3" x-text="t('colItemName')"></th>
+                                <th class="py-3 px-3 w-24 text-center" x-text="t('colQty')"></th>
+                                <th class="py-3 px-3 w-20 text-center" x-text="t('colUnit')"></th>
+                                <th x-show="exportMode === 'commercial'" class="py-3 px-3 w-36 text-right" x-text="t('colUnitPrice')"></th>
+                                <th x-show="exportMode === 'commercial'" class="py-3 px-3 w-40 text-right" x-text="t('colTotalPrice')"></th>
+                                <th class="py-3 px-3 w-48" x-text="t('colNotes')"></th>
+                                <th class="py-3 px-3 w-14 text-center" x-text="t('colAction')"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-xs">
+                            <template x-for="(item, idx) in boqItems" :key="item.id">
+                                <tr class="hover:bg-slate-50/80 align-top">
+                                    <td class="py-3 px-3 text-center font-bold text-slate-600" x-text="idx + 1"></td>
+                                    <td class="py-3 px-3">
+                                        <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold"
+                                              :class="item.isBundle ? 'bg-blue-100 text-blue-900 border border-blue-300' : 'bg-slate-100 text-slate-700'"
+                                              x-text="item.category"></span>
+                                        <div class="text-[10px] font-mono text-slate-400 mt-1" x-text="item.sku"></div>
+                                    </td>
+                                    <td class="py-3 px-3">
+                                        <div class="font-bold text-slate-900 text-xs sm:text-sm" x-text="item.name"></div>
+
+                                        <!-- Expandable Parent-Child System Bundle BOM Drawer -->
+                                        <template x-if="item.isBundle && item.children && item.children.length">
+                                            <div class="mt-2">
+                                                <button @click="item.expanded = !item.expanded"
+                                                        class="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md border border-blue-200 transition">
+                                                    <span x-text="item.expanded ? '▼' : '▶'"></span>
+                                                    <span x-text="lang === 'en' ? `System Sub-Components BOM (${item.children.filter(c => c.enabled !== false).length} active items)` : `Rincian Komponen Pembentuk Sistem (${item.children.filter(c => c.enabled !== false).length} sub-item aktif)`"></span>
+                                                </button>
+
+                                                <div x-show="item.expanded" class="mt-2.5 bg-slate-50 rounded-xl p-3 border border-slate-200/90 space-y-2">
+                                                    <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex justify-between">
+                                                        <span x-text="lang === 'en' ? 'Sub-Component (Per 1 System Set)' : 'Sub-Komponen Pembentuk (Per 1 Set Sistem)'"></span>
+                                                        <span x-show="exportMode === 'commercial'" x-text="lang === 'en' ? 'Sub-Item Price' : 'Harga Sub-Item'"></span>
+                                                    </div>
+                                                    <template x-for="(sub, sIdx) in item.children" :key="sub.sku + '-' + sIdx">
+                                                        <div class="flex flex-wrap items-center justify-between gap-2 py-1.5 px-2.5 rounded-lg bg-white border border-slate-200 text-xs"
+                                                             :class="sub.enabled === false ? 'opacity-45' : ''">
+                                                            <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+                                                                <input type="checkbox" x-model="sub.enabled" class="rounded text-blue-600" />
+                                                                <div>
+                                                                    <div class="font-semibold text-slate-800" x-text="sub.model"></div>
+                                                                    <div class="text-[10px] text-slate-500" x-text="(lang === 'en' ? sub.role_en : sub.role_id) + ' • SKU: ' + sub.sku"></div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="number" min="1" x-model.number="sub.qtyPerBundle"
+                                                                       class="w-16 px-2 py-1 text-center text-xs font-bold rounded border border-slate-300" />
+                                                                <span class="text-[11px] text-slate-500 w-12" x-text="sub.unit + '/set'"></span>
+                                                                <span x-show="exportMode === 'commercial'" class="font-bold text-slate-800 w-28 text-right"
+                                                                      x-text="formatCurrency(convertPrice(sub.price_idr, sub.price_usd) * sub.qtyPerBundle)"></span>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </td>
+                                    <td class="py-3 px-3 text-center">
+                                        <input type="number" min="1" x-model.number="item.qty"
+                                               class="w-16 px-2 py-1.5 text-center font-extrabold text-slate-900 rounded-lg border border-slate-300 focus:border-blue-600" />
+                                    </td>
+                                    <td class="py-3 px-3 text-center font-medium text-slate-600" x-text="item.unit"></td>
+                                    <td x-show="exportMode === 'commercial'" class="py-3 px-3 text-right font-semibold text-slate-700">
+                                        <template x-if="!item.isBundle && currency === 'IDR'">
+                                            <input type="number" step="50000" x-model.number="item.price_idr"
+                                                   class="w-32 px-2 py-1 text-right font-semibold rounded border border-slate-200 hover:border-slate-400" />
+                                        </template>
+                                        <template x-if="item.isBundle || currency === 'USD'">
+                                            <span x-text="formatCurrency(getEffectiveUnitPrice(item))"></span>
+                                        </template>
+                                    </td>
+                                    <td x-show="exportMode === 'commercial'" class="py-3 px-3 text-right font-extrabold text-blue-900"
+                                        x-text="formatCurrency(getLineTotal(item))"></td>
+                                    <td class="py-3 px-3">
+                                        <input type="text" x-model="item.notes"
+                                               class="w-full px-2 py-1 text-xs text-slate-600 rounded border border-transparent hover:border-slate-300 focus:border-blue-500" />
+                                    </td>
+                                    <td class="py-3 px-3 text-center">
+                                        <button @click="removeBoqItem(idx)" class="text-red-500 hover:text-red-700 font-bold p-1" title="Remove">✕</button>
+                                    </td>
+                                </tr>
+                            </template>
+
+                            <!-- Optional Mandays Engineering Service Row -->
+                            <tr x-show="includeMandaysInBoq" class="bg-emerald-50/50">
+                                <td class="py-3 px-3 text-center font-bold text-emerald-800" x-text="boqItems.length + 1"></td>
+                                <td class="py-3 px-3">
+                                    <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-900">Services</span>
+                                    <div class="text-[10px] font-mono text-slate-400 mt-1">SVC-CDPK-MANDAYS</div>
+                                </td>
+                                <td class="py-3 px-3 font-bold text-slate-800" x-text="t('serviceFeeRow')"></td>
+                                <td class="py-3 px-3 text-center font-extrabold text-emerald-900" x-text="mandaysResult.totalMandays"></td>
+                                <td class="py-3 px-3 text-center font-medium text-slate-600">Mandays</td>
+                                <td x-show="exportMode === 'commercial'" class="py-3 px-3 text-right font-semibold text-slate-700"
+                                    x-text="formatCurrency(convertPrice(mandaysRateIdr, mandaysRateIdr / exchangeRate))"></td>
+                                <td x-show="exportMode === 'commercial'" class="py-3 px-3 text-right font-extrabold text-emerald-900"
+                                    x-text="formatCurrency(serviceFeeTotal)"></td>
+                                <td class="py-3 px-3 text-xs text-slate-600" x-text="`${mandaysResult.calendarDays} Hari Kalender (Tim ${mdTeamSize} Engineer)`"></td>
+                                <td class="py-3 px-3 text-center">
+                                    <input type="checkbox" x-model="includeMandaysInBoq" class="rounded text-emerald-600" />
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <!-- Commercial Summary Footer -->
+                        <tfoot x-show="exportMode === 'commercial'" class="bg-slate-900 text-white text-xs">
+                            <tr>
+                                <td colspan="6" class="py-2.5 px-4 text-right font-semibold text-slate-300" x-text="t('subtotalHardware')"></td>
+                                <td class="py-2.5 px-3 text-right font-bold" x-text="formatCurrency(hardwareSubtotal)"></td>
+                                <td colspan="2"></td>
+                            </tr>
+                            <tr x-show="discountPercent > 0">
+                                <td colspan="6" class="py-2 px-4 text-right font-semibold text-amber-300" x-text="t('discountRow') + ' (' + discountPercent + '%)'"></td>
+                                <td class="py-2 px-3 text-right font-bold text-amber-300" x-text="'-' + formatCurrency(discountAmount)"></td>
+                                <td colspan="2"></td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" class="py-2 px-4 text-right font-semibold text-slate-300" x-text="t('ppnRow') + ' (' + ppnPercent + '%)'"></td>
+                                <td class="py-2 px-3 text-right font-bold" x-text="formatCurrency(ppnAmount)"></td>
+                                <td colspan="2"></td>
+                            </tr>
+                            <tr class="border-t border-slate-700 bg-blue-950 text-sm">
+                                <td colspan="6" class="py-3.5 px-4 text-right font-extrabold text-sky-300" x-text="t('grandTotalRow')"></td>
+                                <td class="py-3.5 px-3 text-right font-extrabold text-emerald-400" x-text="formatCurrency(grandTotal)"></td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <!-- MODULE 3: PRODUCT CATALOG & SMART RECOMMENDATION ENGINE           -->
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <div x-show="activeTab === 'catalog'" class="space-y-5">
+            <div class="bg-white rounded-xl p-5 card-shadow border border-slate-200 space-y-4">
+                <h2 class="text-lg font-extrabold text-slate-900" x-text="t('catTitle')"></h2>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" x-model="catSearchQuery" :placeholder="t('catSearchPh')"
+                           class="flex-1 px-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none" />
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                    <template x-for="c in catalogCategories" :key="c">
+                        <button @click="catSelectedCategory = c"
+                                :class="catSelectedCategory === c ? 'bg-blue-700 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'"
+                                class="px-3 py-1.5 rounded-lg text-xs transition"
+                                x-text="c === 'ALL' ? t('catAllCategories') : c"></button>
+                    </template>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <template x-for="prod in filteredCatalog" :key="prod.sku">
+                    <div class="bg-white rounded-xl p-4 card-shadow border border-slate-200 flex flex-col justify-between space-y-3 hover:border-blue-400 transition">
+                        <div class="space-y-2">
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-700" x-text="prod.cat"></span>
+                                    <h3 class="text-sm font-extrabold text-slate-900 mt-1" x-text="prod.model"></h3>
+                                    <div class="text-[10px] font-mono text-slate-400" x-text="prod.sku + ' • ' + prod.series"></div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs font-extrabold text-blue-800" x-text="formatCurrency(convertPrice(prod.price_idr, prod.price_usd))"></div>
+                                    <div class="text-[10px] text-slate-400" x-text="'per ' + (prod.unit || 'Unit')"></div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-600 leading-relaxed" x-text="lang === 'en' ? prod.desc_en : prod.desc_id"></p>
+                            <div class="flex flex-wrap gap-1 pt-1">
+                                <template x-for="f in (prod.features || [])" :key="f">
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 font-semibold" x-text="f"></span>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                            <span class="text-[11px] text-emerald-700 font-medium truncate" x-text="lang === 'en' ? prod.best_for_en : prod.best_for_id"></span>
+                            <button @click="addProductSkuToBoq(prod.sku)"
+                                    class="px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold whitespace-nowrap transition"
+                                    x-text="t('addToBoqBtn')"></button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <!-- MODULE 4: MANDAYS ESTIMATOR (WES METHOD)                          -->
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <div x-show="activeTab === 'mandays'" class="space-y-5">
+            <div class="bg-white rounded-xl p-5 card-shadow border border-slate-200 space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                    <h2 class="text-lg font-extrabold text-slate-900" x-text="t('mdTitle')"></h2>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 text-xs font-semibold">
+                            <span x-text="lang === 'en' ? 'Engineer Team Size:' : 'Jumlah Tim Engineer:'"></span>
+                            <input type="number" min="1" max="12" x-model.number="mdTeamSize" class="w-16 px-2 py-1 rounded border border-slate-300 font-bold text-center" />
+                        </div>
+                        <select x-model="mdSiteComplexity" class="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-slate-50">
+                            <option value="low">Standard Access (0.85x)</option>
+                            <option value="medium">Moderate Industrial (1.0x)</option>
+                            <option value="high">Remote / HazLoc Mining (1.3x)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Summary KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="p-4 rounded-xl bg-blue-50 border border-blue-200">
+                        <div class="text-xs font-bold text-blue-800" x-text="t('mdTotalMandays')"></div>
+                        <div class="text-2xl font-extrabold text-blue-950 mt-1" x-text="mandaysResult.totalMandays + ' Mandays'"></div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                        <div class="text-xs font-bold text-emerald-800" x-text="t('mdTeamDuration')"></div>
+                        <div class="text-2xl font-extrabold text-emerald-950 mt-1" x-text="mandaysResult.calendarDays + (lang === 'en' ? ' Working Days' : ' Hari Kerja')"></div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-amber-50 border border-amber-200">
+                        <div class="text-xs font-bold text-amber-800" x-text="t('mdTotalServiceCost')"></div>
+                        <div class="text-2xl font-extrabold text-amber-950 mt-1" x-text="formatCurrency(serviceFeeTotal)"></div>
+                    </div>
+                </div>
+
+                <!-- Phase Table -->
+                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead>
+                        <tr class="bg-slate-900 text-white text-xs uppercase">
+                            <th class="py-2.5 px-4">Work Breakdown Phase (WES)</th>
+                            <th class="py-2.5 px-4">Scope Details</th>
+                            <th class="py-2.5 px-4 text-right">Mandays</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        <template x-for="tRow in mandaysResult.tasks" :key="tRow.phase">
+                            <tr>
+                                <td class="py-3 px-4 font-bold text-slate-900" x-text="tRow.phase"></td>
+                                <td class="py-3 px-4 text-slate-600" x-text="tRow.desc"></td>
+                                <td class="py-3 px-4 text-right font-extrabold text-blue-900" x-text="tRow.mandays + ' MD'"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <!-- MODULE 5: RF COVERAGE SIMULATION (60x60 GRID PATH LOSS)           -->
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <div x-show="activeTab === 'coverage'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-4 bg-white rounded-xl p-5 card-shadow border border-slate-200 space-y-4">
+                <h2 class="text-base font-extrabold text-slate-900" x-text="t('covTitle')"></h2>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('projLocation')"></label>
+                    <div class="flex gap-1.5">
+                        <input type="text" x-model="covSearchLocation" class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-300" />
+                        <button @click="geocodeLocation()" class="px-3 py-1.5 bg-blue-700 text-white text-xs font-bold rounded-lg">Cari</button>
+                    </div>
+                    <div class="text-[11px] text-slate-400 mt-1" x-text="`Lat: ${covLat}, Lon: ${covLon}`"></div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1" x-text="`Repeater TX Power: ${covTxWatts} W`"></label>
+                    <input type="range" min="5" max="100" step="5" x-model.number="covTxWatts" @input="runCoverageSimulation()" class="w-full" />
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1" x-text="`Antenna Gain: ${covAntGainDbi} dBi`"></label>
+                    <input type="range" min="2" max="12" step="0.5" x-model.number="covAntGainDbi" @input="runCoverageSimulation()" class="w-full" />
+                </div>
+
+                <!-- Coverage Breakdown -->
+                <div class="grid grid-cols-3 gap-2 pt-2">
+                    <div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-center">
+                        <div class="text-lg font-extrabold text-emerald-700" x-text="covMetrics.strongPct + '%'"></div>
+                        <div class="text-[10px] font-bold text-emerald-900">Strong (≥-85dBm)</div>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-center">
+                        <div class="text-lg font-extrabold text-amber-700" x-text="covMetrics.fairPct + '%'"></div>
+                        <div class="text-[10px] font-bold text-amber-900">Fair (-86..-102)</div>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-red-50 border border-red-200 text-center">
+                        <div class="text-lg font-extrabold text-red-700" x-text="covMetrics.weakPct + '%'"></div>
+                        <div class="text-[10px] font-bold text-red-900">Weak/DeadZone</div>
+                    </div>
+                </div>
+
+                <button @click="exportCoveragePng()"
+                        class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition"
+                        x-text="t('covExportPng')"></button>
+            </div>
+
+            <div class="lg:col-span-8 bg-white rounded-xl p-5 card-shadow border border-slate-200 space-y-4">
+                <canvas id="cdpkCoverageCanvas" class="w-full rounded-xl border border-slate-800"></canvas>
+                <div class="space-y-1.5">
+                    <h4 class="text-xs font-bold uppercase text-slate-500">Dead-Zone & Fill-In Recommendations</h4>
+                    <template x-for="dz in covMetrics.deadZones" :key="dz.id">
+                        <div class="text-xs p-2.5 rounded-lg bg-red-50 border border-red-200 flex items-center justify-between">
+                            <span class="font-bold text-red-900" x-text="`${dz.id} (${dz.rssi})`"></span>
+                            <span class="text-slate-700 font-medium" x-text="dz.rec"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ═══════════════════ MULTI-MODEL AI COPILOT DRAWER ═══════════════════ -->
+    <div x-show="aiModalOpen" class="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-xs">
+        <div @click.away="aiModalOpen = false" class="w-full max-w-xl bg-white h-full shadow-2xl flex flex-col justify-between overflow-hidden">
+            <!-- Modal Header -->
+            <div class="cdpk-gradient text-white p-4 flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">✨</span>
+                        <h3 class="font-extrabold text-base">CDPK Multi-Model AI Copilot</h3>
+                    </div>
+                    <p class="text-xs text-sky-100 mt-0.5" x-text="lang === 'en' ? 'Powered by Google Gemini 3.8 Flash & Gemini 3.8 Pro' : 'Didukung oleh Google Gemini 3.8 Flash & Gemini 3.8 Pro'"></p>
+                </div>
+                <button @click="aiModalOpen = false" class="text-white/80 hover:text-white text-lg font-bold px-2">✕</button>
+            </div>
+
+            <!-- Model Selector (Strictly Gemini 3.8 Flash & Pro) -->
+            <div class="p-3.5 bg-slate-100 border-b border-slate-200 space-y-2">
+                <label class="block text-[11px] font-bold uppercase text-slate-600"
+                       x-text="lang === 'en' ? 'Select Active AI Model' : 'Pilih Model AI Aktif'"></label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="aiModel = 'gemini-3.8-flash'"
+                            :class="aiModel === 'gemini-3.8-flash' ? 'bg-blue-700 text-white border-blue-800 shadow-sm' : 'bg-white text-slate-700 border-slate-300'"
+                            class="p-2.5 rounded-xl border text-left transition">
+                        <div class="text-xs font-extrabold flex items-center justify-between">
+                            <span>⚡ Gemini 3.8 Flash</span>
+                            <span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 font-bold">Fast</span>
+                        </div>
+                        <div class="text-[10px] opacity-85 mt-0.5" x-text="lang === 'en' ? 'Quick Sizing & BoQ Math' : 'Kalkulasi Cepat Sizing & BoQ'"></div>
+                    </button>
+                    <button @click="aiModel = 'gemini-3.8-pro'"
+                            :class="aiModel === 'gemini-3.8-pro' ? 'bg-indigo-700 text-white border-indigo-800 shadow-sm' : 'bg-white text-slate-700 border-slate-300'"
+                            class="p-2.5 rounded-xl border text-left transition">
+                        <div class="text-xs font-extrabold flex items-center justify-between">
+                            <span>🧠 Gemini 3.8 Pro</span>
+                            <span class="text-[10px] px-1.5 py-0.2 rounded bg-sky-300 text-slate-950 font-bold">Deep</span>
+                        </div>
+                        <div class="text-[10px] opacity-85 mt-0.5" x-text="lang === 'en' ? 'Deep RF & Executive Proposal' : 'Analisa Arsitektur & Proposal'"></div>
+                    </button>
+                </div>
+
+                <!-- Quick Scenario Chips -->
+                <div class="flex flex-wrap gap-1.5 pt-1">
+                    <button @click="setQuickAiPrompt('Tambang batubara 4500 hektar, 160 user, kontur berbukit, butuh dispatch')"
+                            class="text-[11px] bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 px-2.5 py-1 rounded-full font-semibold">
+                        ⛏️ Tambang 4.500 Ha (160 User)
+                    </button>
+                    <button @click="setQuickAiPrompt('Kilang Oil & Gas 12 km2, 90 user, wajib ATEX Intrinsically Safe')"
+                            class="text-[11px] bg-white hover:bg-red-50 text-red-800 border border-red-200 px-2.5 py-1 rounded-full font-semibold">
+                        🔥 Migas Wajib ATEX (90 User)
+                    </button>
+                    <button @click="setQuickAiPrompt('Mall & Hotel 8 lantai mixed indoor outdoor, 85 user')"
+                            class="text-[11px] bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full font-semibold">
+                        🏢 Mall 8 Lantai Mixed DAS
+                    </button>
+                </div>
+            </div>
+
+            <!-- Conversation Feed -->
+            <div class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50">
+                <template x-if="aiHistory.length === 0">
+                    <div class="p-4 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 space-y-2">
+                        <p class="font-bold text-slate-900" x-text="lang === 'en' ? 'Welcome to CDPK AI Copilot!' : 'Selamat datang di AI Copilot CDPK System Planner!'"></p>
+                        <p x-text="lang === 'en' ? 'Describe your project in natural language (area, user count, industry, floors, or budget) and I will calculate the exact MOTOTRBO SLR 5300 / SLR 1000 architecture and live BoQ pricing.' : 'Ketik skenario proyek Anda (luas area, jumlah pengguna, industri, jumlah lantai, atau target budget) dan AI akan menghitung kebutuhan sistem MOTOTRBO SLR 5300 / SLR 1000 beserta rincian harga BoQ.'"></p>
+                    </div>
+                </template>
+
+                <template x-for="(msg, mIdx) in aiHistory" :key="mIdx">
+                    <div :class="msg.role === 'user' ? 'ml-8 bg-blue-700 text-white' : 'mr-4 bg-white text-slate-800 border border-slate-200'"
+                         class="p-3.5 rounded-xl shadow-xs text-xs space-y-2">
+                        <div class="flex items-center justify-between text-[10px] opacity-75 font-bold">
+                            <span x-text="msg.role === 'user' ? 'You' : msg.model"></span>
+                            <span x-text="msg.time"></span>
+                        </div>
+                        <div class="leading-relaxed whitespace-pre-line"
+                             x-html="msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/### (.*)/g, '<div class=\'text-sm font-extrabold text-blue-900 mt-1\'>$1</div>').replace(/#### (.*)/g, '<div class=\'font-bold text-slate-900 mt-2\'>$1</div>')"></div>
+                        <template x-if="msg.extracted && Object.keys(msg.extracted).length > 0">
+                            <button @click="applyAiParamsToApp(msg.extracted)"
+                                    class="mt-2 w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition">
+                                ✅ <span x-text="lang === 'en' ? 'Apply Parameters to Sizing & BoQ Now' : 'Terapkan Parameter ke Sizing & BoQ Sekarang'"></span>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Input Footer -->
+            <div class="p-3.5 bg-white border-t border-slate-200 space-y-2">
+                <div class="flex gap-2">
+                    <input type="text" x-model="aiPrompt" @keydown.enter="sendAiCopilotMessage()"
+                           :placeholder="lang === 'en' ? 'Ask Gemini 3.8 to size or optimize a system...' : 'Tulis skenario proyek atau minta rekomendasi harga...'"
+                           class="flex-1 px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none" />
+                    <button @click="sendAiCopilotMessage()" :disabled="aiLoading"
+                            class="px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold transition">
+                        <span x-text="aiLoading ? '...' : (lang === 'en' ? 'Send' : 'Kirim')"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
