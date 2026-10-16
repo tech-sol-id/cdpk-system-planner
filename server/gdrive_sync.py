@@ -35,6 +35,13 @@ _KNOWLEDGE_CACHE: Dict[str, Any] = {
 }
 
 
+_DIAGNOSTIC_INFO: Dict[str, Any] = {
+    "last_parse_err": None,
+    "last_keys": [],
+    "last_token_err": None
+}
+
+
 def get_gdrive_credential(account_key: str = "citradata") -> Optional[Dict[str, str]]:
     """
     Retrieve OAuth2 credentials from environment variable (Render production)
@@ -49,23 +56,44 @@ def get_gdrive_credential(account_key: str = "citradata") -> Optional[Dict[str, 
     raw = os.environ.get(env_name)
     if raw:
         raw = raw.strip()
+        raw = raw.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'")
         if (raw.startswith("'") and raw.endswith("'")) or (raw.startswith('"') and raw.endswith('"')):
             raw = raw[1:-1].strip()
-        try:
-            d = json.loads(raw)
-            if isinstance(d, str):
-                d = json.loads(d)
-            tok = d.get("token", {})
-            rt = tok.get("refresh_token") if isinstance(tok, dict) else d.get("refresh_token")
-            if d.get("client_id") and d.get("client_secret") and rt:
+
+        attempts = [
+            raw,
+            raw.replace(r'\"', '"'),
+            raw.replace(r'\\"', '"')
+        ]
+        parsed_dict = None
+        for cand in attempts:
+            try:
+                d = json.loads(cand)
+                if isinstance(d, str):
+                    d = json.loads(d)
+                if isinstance(d, dict):
+                    parsed_dict = d
+                    break
+            except Exception as e:
+                _DIAGNOSTIC_INFO["last_parse_err"] = str(e)
+
+        if parsed_dict:
+            _DIAGNOSTIC_INFO["last_keys"] = list(parsed_dict.keys())
+            tok = parsed_dict.get("token", {})
+            rt = tok.get("refresh_token") if isinstance(tok, dict) else parsed_dict.get("refresh_token")
+            cid = parsed_dict.get("client_id")
+            csec = parsed_dict.get("client_secret")
+            if cid and csec and rt:
                 return {
-                    "client_id": d["client_id"],
-                    "client_secret": d["client_secret"],
+                    "client_id": cid,
+                    "client_secret": csec,
                     "refresh_token": rt,
-                    "email": d.get("email", "adrian@citradata.id")
+                    "email": parsed_dict.get("email", "adrian@citradata.id")
                 }
-        except Exception as e:
-            logger.warning(f"Failed parsing {env_name}: {e}")
+            else:
+                _DIAGNOSTIC_INFO["last_parse_err"] = f"Missing keys. Found: {list(parsed_dict.keys())}"
+        else:
+            logger.warning(f"Failed parsing {env_name}: {_DIAGNOSTIC_INFO.get('last_parse_err')}")
 
     local_files = [
         os.path.expanduser("~/.gemini/antigravity/plugin_data/gdrive/token_adrian@citradata.id.json"),
@@ -131,19 +159,21 @@ def get_diagnostics() -> Dict[str, Any]:
     raw_gemini = os.environ.get("GEMINI_API_KEY", "")
     cred = get_gdrive_credential("citradata")
     token_ok = False
-    token_err = None
     if cred:
         try:
             t = get_access_token("citradata")
             token_ok = bool(t)
         except Exception as ex:
-            token_err = str(ex)
+            _DIAGNOSTIC_INFO["last_token_err"] = str(ex)
     return {
         "gdrive_env_present": bool(raw_citra.strip()),
         "gdrive_env_len": len(raw_citra.strip()),
+        "raw_preview": (raw_citra[:25] + "..." + raw_citra[-15:]) if len(raw_citra) > 40 else raw_citra,
         "gdrive_cred_parsed": bool(cred),
         "gdrive_token_ok": token_ok,
-        "token_err": token_err,
+        "parse_error": _DIAGNOSTIC_INFO.get("last_parse_err"),
+        "parsed_keys": _DIAGNOSTIC_INFO.get("last_keys"),
+        "token_err": _DIAGNOSTIC_INFO.get("last_token_err"),
         "gemini_key_present": bool(raw_gemini.strip()),
         "gemini_key_len": len(raw_gemini.strip())
     }
