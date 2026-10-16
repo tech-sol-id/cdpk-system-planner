@@ -86,7 +86,7 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             return self._send_json({
                 "status": "healthy",
                 "app": "CDPK System Planner",
-                "version": "8.1.2",
+                "version": "8.1.3",
                 "gdrive_folder_id": DEFAULT_FOLDER_ID,
                 "gdrive_output_subfolder_id": OUTPUT_SUBFOLDER_ID,
                 "gdrive_spreadsheet_id": DEFAULT_SPREADSHEET_ID,

@@ -79,8 +79,9 @@ def get_gdrive_credential(account_key: str = "citradata") -> Optional[Dict[str, 
 
         if parsed_dict:
             _DIAGNOSTIC_INFO["last_keys"] = list(parsed_dict.keys())
-            tok = parsed_dict.get("token", {})
-            rt = tok.get("refresh_token") if isinstance(tok, dict) else parsed_dict.get("refresh_token")
+            rt = parsed_dict.get("refresh_token")
+            if not rt and isinstance(parsed_dict.get("token"), dict):
+                rt = parsed_dict["token"].get("refresh_token")
             cid = parsed_dict.get("client_id")
             csec = parsed_dict.get("client_secret")
             if cid and csec and rt:
@@ -91,7 +92,7 @@ def get_gdrive_credential(account_key: str = "citradata") -> Optional[Dict[str, 
                     "email": parsed_dict.get("email", "adrian@citradata.id")
                 }
             else:
-                _DIAGNOSTIC_INFO["last_parse_err"] = f"Missing keys. Found: {list(parsed_dict.keys())}"
+                _DIAGNOSTIC_INFO["last_parse_err"] = f"Missing keys. Found: {list(parsed_dict.keys())}, cid={bool(cid)}, csec={bool(csec)}, rt={bool(rt)}"
         else:
             logger.warning(f"Failed parsing {env_name}: {_DIAGNOSTIC_INFO.get('last_parse_err')}")
 
@@ -106,8 +107,9 @@ def get_gdrive_credential(account_key: str = "citradata") -> Optional[Dict[str, 
             try:
                 with open(fp, "r", encoding="utf-8") as f:
                     d = json.load(f)
-                tok = d.get("token", {})
-                rt = tok.get("refresh_token") if isinstance(tok, dict) else d.get("refresh_token")
+                rt = d.get("refresh_token")
+                if not rt and isinstance(d.get("token"), dict):
+                    rt = d["token"].get("refresh_token")
                 if d.get("client_id") and d.get("client_secret") and rt:
                     return {
                         "client_id": d["client_id"],
