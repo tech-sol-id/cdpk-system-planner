@@ -46,9 +46,15 @@ def get_gdrive_credential(account_key: str = "citradata") -> Optional[Dict[str, 
         "adrian": "GDRIVE_PERSONAL_CRED"
     }
     env_name = env_map.get(account_key, "GDRIVE_CITRADATA_CRED")
-    if os.environ.get(env_name):
+    raw = os.environ.get(env_name)
+    if raw:
+        raw = raw.strip()
+        if (raw.startswith("'") and raw.endswith("'")) or (raw.startswith('"') and raw.endswith('"')):
+            raw = raw[1:-1].strip()
         try:
-            d = json.loads(os.environ[env_name])
+            d = json.loads(raw)
+            if isinstance(d, str):
+                d = json.loads(d)
             tok = d.get("token", {})
             rt = tok.get("refresh_token") if isinstance(tok, dict) else d.get("refresh_token")
             if d.get("client_id") and d.get("client_secret") and rt:
@@ -118,6 +124,29 @@ def get_access_token(account_key: str = "citradata") -> Optional[str]:
     except Exception as e:
         logger.warning(f"OAuth token refresh failed: {e}")
         return None
+
+
+def get_diagnostics() -> Dict[str, Any]:
+    raw_citra = os.environ.get("GDRIVE_CITRADATA_CRED", "")
+    raw_gemini = os.environ.get("GEMINI_API_KEY", "")
+    cred = get_gdrive_credential("citradata")
+    token_ok = False
+    token_err = None
+    if cred:
+        try:
+            t = get_access_token("citradata")
+            token_ok = bool(t)
+        except Exception as ex:
+            token_err = str(ex)
+    return {
+        "gdrive_env_present": bool(raw_citra.strip()),
+        "gdrive_env_len": len(raw_citra.strip()),
+        "gdrive_cred_parsed": bool(cred),
+        "gdrive_token_ok": token_ok,
+        "token_err": token_err,
+        "gemini_key_present": bool(raw_gemini.strip()),
+        "gemini_key_len": len(raw_gemini.strip())
+    }
 
 
 def load_local_fallback() -> Dict[str, Any]:

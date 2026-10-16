@@ -32,7 +32,8 @@ from server.gdrive_sync import (
     sync_from_gdrive,
     save_project_to_gdrive,
     list_saved_projects_from_gdrive,
-    load_project_data_from_gdrive
+    load_project_data_from_gdrive,
+    get_diagnostics
 )
 from server.ai_copilot import ALLOWED_MODELS, query_ai_copilot
 
@@ -85,11 +86,12 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             return self._send_json({
                 "status": "healthy",
                 "app": "CDPK System Planner",
-                "version": "8.1.0",
+                "version": "8.1.1",
                 "gdrive_folder_id": DEFAULT_FOLDER_ID,
                 "gdrive_output_subfolder_id": OUTPUT_SUBFOLDER_ID,
                 "gdrive_spreadsheet_id": DEFAULT_SPREADSHEET_ID,
-                "ai_models": list(ALLOWED_MODELS.keys())
+                "ai_models": list(ALLOWED_MODELS.keys()),
+                "diagnostics": get_diagnostics()
             })
 
         # ─── Auth Endpoints ───────────────────────────────────────────────
