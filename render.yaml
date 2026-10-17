@@ -12,6 +12,8 @@ services:
         value: 1OB_UaNyd65Ccb3lmdwJuw5raufCwhgbS
       - key: GDRIVE_SPREADSHEET_ID
         value: 1Kp85v81JXeRC5ti-ZXYBChgrj2ztnnwrCHokI02LX6U
+      - key: GOOGLE_CLIENT_ID
+        value: 423480156983-n52244lq61g7u3qub5p2khlfvtd3hs0f.apps.googleusercontent.com
       - key: GDRIVE_CITRADATA_CRED
         sync: false
       - key: GEMINI_API_KEY

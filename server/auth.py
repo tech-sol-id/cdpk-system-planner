@@ -342,6 +342,13 @@ def authenticate_google_user(id_token: str) -> Tuple[Optional[Dict[str, Any]], O
     if not email or not email_verified:
         return None, "Email Google tidak terverifikasi atau tidak valid."
 
+    # Validate Audience (Client ID) to prevent cross-app token replay
+    aud = (data.get("aud") or "").strip()
+    expected_client_id = os.environ.get("GOOGLE_CLIENT_ID", "423480156983-n52244lq61g7u3qub5p2khlfvtd3hs0f.apps.googleusercontent.com")
+    if expected_client_id and aud and aud != expected_client_id:
+        logger.warning(f"Google ID token aud mismatch: {aud} != {expected_client_id}")
+        return None, "Akses ditolak: Token Google tidak diotorisasi untuk aplikasi ini."
+
     # Tier 1: Check enterprise domain
     user_domain = email.split("@")[1] if "@" in email else ""
     is_domain_approved = any(user_domain == d or hd == d for d in ALLOWED_DOMAINS)
