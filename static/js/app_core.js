@@ -84,6 +84,11 @@ window.cdpkSystemPlannerApp = function () {
         covAntGainDbi: 6.5,
         covCableLossDb: 2.1,
         covMetrics: { strongPct: 68, fairPct: 24, weakPct: 8, deadZones: [] },
+        coverageViewMode: 'grid', // 'grid' | 'gis'
+        gisBasemap: 'osm', // 'osm' | 'sat'
+        gisMap: null,
+        gisTileLayer: null,
+        gisOverlayLayers: [],
 
         // ─── Module 6: Multi-Model AI Copilot State ──────────────────────
         aiModel: 'gemini-3.8-flash', // Exclusively 'gemini-3.8-flash' | 'gemini-3.8-pro'
@@ -546,6 +551,9 @@ window.cdpkSystemPlannerApp = function () {
 
         // ─── Team User Management Methods (Admin & Overseer) ────────────
         async openUserManagementModal() {
+            if (!this.currentUser || (this.currentUser.role !== 'admin' && this.currentUser.role !== 'overseer')) {
+                return;
+            }
             this.userMgmtModalOpen = true;
             await this.loadTeamUsers(false);
         },
@@ -1841,21 +1849,168 @@ window.cdpkSystemPlannerApp = function () {
             };
         },
 
-        // ─── Module 5: RF Coverage Simulation (60x60 Path Loss Grid) ─────
+        // ─── Module 5: RF Coverage Simulation (60x60 Path Loss Grid & GIS Map) ──
         runCoverageSimulation() {
             const canvas = document.getElementById('cdpkCoverageCanvas');
-            if (!canvas) return;
+            if (canvas) {
+                const s = this.sizingResult;
+                this.covMetrics = window.CDPK_ENGINES.renderCoverageSimulationCanvas(canvas, {
+                    terrain: this.terrain,
+                    freqBand: this.freqBand,
+                    txWatts: this.covTxWatts,
+                    antennaGainDbi: this.covAntGainDbi,
+                    cableLossDb: this.covCableLossDb,
+                    sites: Math.max(1, s.outdoorSites),
+                    areaKm2: s.areaKm2,
+                    towerHeight: s.towerHeight
+                });
+            }
+            if (this.coverageViewMode === 'gis') {
+                this.$nextTick(() => this.initOrUpdateGisMap());
+            }
+        },
+
+        initOrUpdateGisMap() {
+            if (typeof L === 'undefined') return;
+            const mapContainer = document.getElementById('cdpkLeafletMap');
+            if (!mapContainer) return;
+
+            const lat = parseFloat(this.covLat) || -1.2379;
+            const lon = parseFloat(this.covLon) || 116.8529;
+
+            if (!this.gisMap) {
+                this.gisMap = L.map('cdpkLeafletMap', {
+                    zoomControl: true,
+                    attributionControl: false
+                }).setView([lat, lon], 12);
+
+                this.updateGisTileLayer();
+            } else {
+                this.gisMap.setView([lat, lon], this.gisMap.getZoom());
+                setTimeout(() => { if (this.gisMap) this.gisMap.invalidateSize(); }, 150);
+            }
+
+            // Remove existing overlay layers
+            if (this.gisOverlayLayers && this.gisOverlayLayers.length > 0) {
+                this.gisOverlayLayers.forEach(layer => {
+                    try { this.gisMap.removeLayer(layer); } catch (e) {}
+                });
+            }
+            this.gisOverlayLayers = [];
+
             const s = this.sizingResult;
-            this.covMetrics = window.CDPK_ENGINES.renderCoverageSimulationCanvas(canvas, {
-                terrain: this.terrain,
-                freqBand: this.freqBand,
-                txWatts: this.covTxWatts,
-                antennaGainDbi: this.covAntGainDbi,
-                cableLossDb: this.covCableLossDb,
-                sites: Math.max(1, s.outdoorSites),
-                areaKm2: s.areaKm2,
-                towerHeight: s.towerHeight
+            const txWatt = Number(this.covTxWatts || 50);
+            const txDbm = 10 * Math.log10(txWatt * 1000);
+            const antGainDbi = Number(this.covAntGainDbi || 6.5);
+            const cableLossDb = Number(this.covCableLossDb || 2.1);
+            const towerHeight = Number(s.towerHeight || 35);
+            const eirpDbm = txDbm + antGainDbi - cableLossDb;
+
+            // Propagation radii calculation (Okumura-Hata approximation for DMR)
+            const terrainFactor = this.terrain === 'mountainous' ? 0.65 : (this.terrain === 'hilly' ? 0.82 : (this.terrain === 'dense' ? 0.75 : 1.15));
+            const baseRadiusKm = (eirpDbm / 38) * (towerHeight / 30) * 8.5 * terrainFactor;
+            const strongRadiusMeters = Math.max(800, Math.round(baseRadiusKm * 0.45 * 1000));
+            const fairRadiusMeters = Math.max(1500, Math.round(baseRadiusKm * 0.85 * 1000));
+            const fringeRadiusMeters = Math.max(2200, Math.round(baseRadiusKm * 1.25 * 1000));
+
+            const numSites = Math.max(1, Math.min(8, parseInt(s.outdoorSites || 1, 10)));
+            const sites = [];
+
+            if (numSites === 1) {
+                sites.push({ name: 'Site 1 (Main Base Station)', lat: lat, lon: lon });
+            } else {
+                const spreadKm = (Math.sqrt(Math.max(10, s.areaKm2)) * 0.35) / 111.32;
+                for (let i = 0; i < numSites; i++) {
+                    const angle = (2 * Math.PI * i) / numSites - Math.PI / 4;
+                    sites.push({
+                        name: `Site ${i + 1} (${s.primaryRepeaterModel})`,
+                        lat: lat + spreadKm * Math.cos(angle) * 0.8,
+                        lon: lon + spreadKm * Math.sin(angle) * 1.1
+                    });
+                }
+            }
+
+            sites.forEach((site, idx) => {
+                // 1. Fringe / Weak Ring (Orange)
+                const fringeCircle = L.circle([site.lat, site.lon], {
+                    radius: fringeRadiusMeters,
+                    color: '#ea580c',
+                    fillColor: '#f97316',
+                    fillOpacity: 0.12,
+                    weight: 1.5,
+                    dashArray: '5, 5'
+                }).addTo(this.gisMap);
+                this.gisOverlayLayers.push(fringeCircle);
+
+                // 2. Fair Coverage Ring (Yellow)
+                const fairCircle = L.circle([site.lat, site.lon], {
+                    radius: fairRadiusMeters,
+                    color: '#eab308',
+                    fillColor: '#fde047',
+                    fillOpacity: 0.22,
+                    weight: 1.5
+                }).addTo(this.gisMap);
+                this.gisOverlayLayers.push(fairCircle);
+
+                // 3. Strong Coverage Core (Green)
+                const strongCircle = L.circle([site.lat, site.lon], {
+                    radius: strongRadiusMeters,
+                    color: '#16a34a',
+                    fillColor: '#22c55e',
+                    fillOpacity: 0.35,
+                    weight: 2
+                }).addTo(this.gisMap);
+                this.gisOverlayLayers.push(strongCircle);
+
+                // 4. Site Marker
+                const siteIcon = L.divIcon({
+                    className: 'cdpk-gis-marker',
+                    html: `<div style="background: linear-gradient(135deg, #0284c7, #0369a1); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.35);">R${idx + 1}</div>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                });
+
+                const marker = L.marker([site.lat, site.lon], { icon: siteIcon }).addTo(this.gisMap);
+                marker.bindPopup(`
+                    <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4; min-width: 180px;">
+                        <strong style="color: #0369a1; font-size: 13px;">📡 ${site.name}</strong><br/>
+                        <span style="color: #64748b;">Repeater:</span> <strong>${s.primaryRepeaterModel}</strong><br/>
+                        <span style="color: #64748b;">TX Power:</span> <strong>${this.covTxWatts} W (EIRP ${eirpDbm.toFixed(1)} dBm)</strong><br/>
+                        <span style="color: #64748b;">Tinggi Tower:</span> <strong>${towerHeight} m</strong><br/>
+                        <span style="color: #64748b;">Radius Kuat:</span> <strong style="color: #16a34a;">~${(strongRadiusMeters/1000).toFixed(1)} km</strong><br/>
+                        <span style="color: #64748b;">Radius Maksimal:</span> <strong style="color: #ea580c;">~${(fringeRadiusMeters/1000).toFixed(1)} km</strong>
+                    </div>
+                `);
+                this.gisOverlayLayers.push(marker);
             });
+
+            if (this.gisOverlayLayers.length > 0) {
+                const group = new L.featureGroup(this.gisOverlayLayers);
+                this.gisMap.fitBounds(group.getBounds().pad(0.15));
+            }
+        },
+
+        updateGisTileLayer() {
+            if (!this.gisMap || typeof L === 'undefined') return;
+            if (this.gisTileLayer) {
+                try { this.gisMap.removeLayer(this.gisTileLayer); } catch (e) {}
+            }
+            if (this.gisBasemap === 'sat') {
+                this.gisTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 18,
+                    attribution: 'Esri World Imagery'
+                }).addTo(this.gisMap);
+            } else {
+                this.gisTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: 'OpenStreetMap'
+                }).addTo(this.gisMap);
+            }
+        },
+
+        setGisBasemap(type) {
+            this.gisBasemap = type;
+            this.updateGisTileLayer();
         },
 
         async geocodeLocation() {
@@ -1869,6 +2024,9 @@ window.cdpkSystemPlannerApp = function () {
                     this.covLon = parseFloat(d[0].lon).toFixed(4);
                     this.projLocation = d[0].display_name.split(',').slice(0, 3).join(',');
                     this.runCoverageSimulation();
+                    if (this.coverageViewMode === 'gis') {
+                        this.initOrUpdateGisMap();
+                    }
                 }
             } catch (e) {
                 console.warn('Geocode error:', e);
