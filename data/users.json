@@ -196,5 +196,16 @@
     "salt": "cd51818ab08f7506f7e4bf5a16b10108",
     "status": "active",
     "created_at": "2026-10-17 07:15:28"
+  },
+  {
+    "username": "tech_hq",
+    "name": "TECH HQ",
+    "email": "hq@techsolutions.id",
+    "role": "admin",
+    "title": "Admin Tech",
+    "password_hash": "690e0f2d90c093a627a9a470724fb2a81ac1964d6cbdc3232cb7e26d70819102",
+    "salt": "e18199df461ac9ff63f80a09a1c117a8",
+    "status": "active",
+    "created_at": "2026-10-17 17:37:11"
   }
 ]

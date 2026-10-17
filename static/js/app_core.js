@@ -85,8 +85,28 @@ window.cdpkSystemPlannerApp = function () {
 
             // 6. Product Selector Filter
             prodCatFilter: 'all',
-            prodSearch: ''
+            prodSearch: '',
+
+            // 7. Optical Link Budget & Combiner IM3 Inputs
+            optWavelength: 1310,
+            optFiberKm: 2.0,
+            optConnectorCount: 4,
+            optSpliceCount: 2,
+            optSplitRatio: '1:1',
+            optSafetyMargin: 3.0,
+            optTxPowerDbm: 3.0,
+            optRxSensDbm: -15.0,
+            imFrequencies: '420.125, 420.375, 420.625, 420.875',
+            imMinSpacingKhz: 150
         },
+
+        // ─── Module 1B: DMR Trunking (Erlang-B) & Backup Power Sizing ───
+        dmrBhca: 2.0,
+        dmrCallDurationSec: 20,
+        dmrTargetGos: 0.02,
+        dmrTxDutyCycle: 0.20,
+        dmrBatteryVoltage: 24,
+        dmrBatteryType: 'lifepo4',
 
         // ─── Cloud Sync State (Google Drive & Master Pricelist) ──────────
         syncStatus: 'ok',
@@ -2132,14 +2152,25 @@ window.cdpkSystemPlannerApp = function () {
             const isEn = this.lang === 'en';
             const compMult = { low: 0.85, medium: 1.0, high: 1.30 }[this.mdSiteComplexity] || 1.0;
 
-            const surveyDays = Math.max(2, Math.ceil((s.outdoorSites * 1.5 + (s.dasNodes > 0 ? 1.5 : 0)) * compMult));
+            // RFoF DAS by FMTCS Integration
+            const dasFloors = Array.isArray(this.das.floors) ? this.das.floors.length : 0;
+            const dasAntennas = Array.isArray(this.das.floors)
+                ? this.das.floors.reduce((acc, fl) => acc + (parseInt(fl.q, 10) || 0), 0)
+                : 0;
+            const dasOrus = dasAntennas > 0 ? Math.ceil(dasAntennas / (this.das.r_oru || 30)) : 0;
+            const dasOmus = dasOrus > 0 ? Math.ceil(dasOrus / (this.das.r_omu || 32)) : 0;
+            const installRfofDasDays = dasAntennas > 0
+                ? Math.ceil((dasFloors * 1.5 + dasAntennas * 0.12 + (dasOrus + dasOmus) * 1.0) * compMult)
+                : 0;
+
+            const surveyDays = Math.max(2, Math.ceil((s.outdoorSites * 1.5 + (s.dasNodes > 0 || dasAntennas > 0 ? 1.5 : 0)) * compMult));
             const installOutdoorDays = Math.ceil(s.totalOutdoorRepeaters * 2.5 * compMult);
             const installDasDays = Math.ceil(s.dasNodes * 3.0 * compMult);
             const programmingDays = Math.max(1, Math.ceil(s.userCount / 60.0));
             const dispatchCctvDays = (this.needDispatch ? 2 : 0) + (this.needCctv ? Math.ceil(this.cctvCount / 4.0) : 0);
-            const commissioningDays = Math.max(2, Math.ceil((s.outdoorSites + (s.dasNodes > 0 ? 1 : 0)) * 1.0));
+            const commissioningDays = Math.max(2, Math.ceil((s.outdoorSites + (s.dasNodes > 0 || dasAntennas > 0 ? 1 : 0)) * 1.0));
 
-            const rawTotal = surveyDays + installOutdoorDays + installDasDays + programmingDays + dispatchCctvDays + commissioningDays + Number(this.mdCustomAdjustment || 0);
+            const rawTotal = surveyDays + installOutdoorDays + installDasDays + installRfofDasDays + programmingDays + dispatchCctvDays + commissioningDays + Number(this.mdCustomAdjustment || 0);
             const totalMandays = Math.max(3, rawTotal);
             const team = Math.max(1, parseInt(this.mdTeamSize || 3, 10));
             const calendarDays = Math.max(2, Math.ceil(totalMandays / Math.min(team, 4)) + 1);
@@ -2147,7 +2178,7 @@ window.cdpkSystemPlannerApp = function () {
             const tasks = [
                 {
                     phase: isEn ? '1. RF Site Survey, Propagation & LOS Test' : '1. Site Survey RF, Uji Propagasi & Line-of-Sight',
-                    desc: isEn ? `Field survey across ${s.outdoorSites} outdoor site(s) & ${s.dasNodes} indoor DAS zone(s)` : `Survey lapangan pada ${s.outdoorSites} site outdoor & ${s.dasNodes} area indoor DAS`,
+                    desc: isEn ? `Field survey across ${s.outdoorSites} outdoor site(s) & ${s.dasNodes || dasFloors} indoor DAS zone(s)` : `Survey lapangan pada ${s.outdoorSites} site outdoor & ${s.dasNodes || dasFloors} area indoor DAS`,
                     mandays: surveyDays
                 },
                 {
@@ -2159,7 +2190,18 @@ window.cdpkSystemPlannerApp = function () {
                     phase: isEn ? '3. In-Building DAS (MOTOTRBO SLR 1000 & Splitters)' : '3. Instalasi In-Building DAS (MOTOTRBO SLR 1000 & Antena Indoor)',
                     desc: s.dasNodes > 0 ? `${s.dasNodes}x MOTOTRBO SLR 1000 + Ceiling Antennas` : (isEn ? 'Not required (Outdoor only)' : 'Tidak diperlukan (Khusus Outdoor)'),
                     mandays: installDasDays
-                },
+                }
+            ];
+
+            if (dasAntennas > 0) {
+                tasks.push({
+                    phase: isEn ? '3b. FMTCS RFoF DAS Optical Cabling & Antenna Deployment' : '3b. Instalasi RFoF DAS FMTCS (Kabel Fiber Optik, ORU/OMU, Antena & Splicing)',
+                    desc: `${dasFloors} ${isEn ? 'Floors' : 'Lantai'}, ${dasAntennas}x ${isEn ? 'Antennas' : 'Antena Plafon'}, ${dasOrus}x DORU/AORU, ${dasOmus}x DOMU/AOMU + Splicing OTDR`,
+                    mandays: installRfofDasDays
+                });
+            }
+
+            tasks.push(
                 {
                     phase: isEn ? '4. Fleet Codeplug Programming & OTAP Setup' : '4. Programming Codeplug Radio User (HT & Mobile)',
                     desc: `${s.userCount} Units (${s.htQty} HT + ${s.mobileQty} Mobile)`,
@@ -2175,7 +2217,7 @@ window.cdpkSystemPlannerApp = function () {
                     desc: isEn ? 'End-to-end acceptance testing & BAST documentation' : 'Pengujian penerimaan sistem & dokumentasi BAST resmi',
                     mandays: commissioningDays
                 }
-            ];
+            );
 
             return {
                 tasks,
@@ -3824,6 +3866,51 @@ window.cdpkSystemPlannerApp = function () {
                 return window.CDPK_DAS_ENGINE.calcOkumuraHataOutdoor(this.das);
             }
             return { isValid: false, results: [] };
+        },
+
+        getDasOpticalResult() {
+            if (!window.CDPK_DAS_ENGINE || typeof window.CDPK_DAS_ENGINE.calcOpticalLinkBudget !== 'function') return null;
+            return window.CDPK_DAS_ENGINE.calcOpticalLinkBudget({
+                wavelength: this.das.optWavelength,
+                fiberKm: this.das.optFiberKm,
+                connectorCount: this.das.optConnectorCount,
+                spliceCount: this.das.optSpliceCount,
+                splitRatio: this.das.optSplitRatio,
+                safetyMargin: this.das.optSafetyMargin,
+                txOpticalPowerDbm: this.das.optTxPowerDbm,
+                rxOpticalSensDbm: this.das.optRxSensDbm
+            });
+        },
+
+        getDasIntermodResult() {
+            if (!window.CDPK_DAS_ENGINE || typeof window.CDPK_DAS_ENGINE.calcIntermodAndCombiner !== 'function') return null;
+            const raw = (this.das.imFrequencies || '').toString();
+            const freqs = raw.split(/[\s,;]+/).map(f => parseFloat(f)).filter(f => !isNaN(f) && f > 0);
+            return window.CDPK_DAS_ENGINE.calcIntermodAndCombiner(freqs, this.das.imMinSpacingKhz || 150);
+        },
+
+        getDmrTrunkingResult() {
+            if (!window.CDPK_ENGINES || typeof window.CDPK_ENGINES.calcDmrTrunkingCapacity !== 'function') return null;
+            const s = this.sizingResult;
+            return window.CDPK_ENGINES.calcDmrTrunkingCapacity({
+                userCount: this.userCount,
+                bhca: this.dmrBhca,
+                callDurationSec: this.dmrCallDurationSec,
+                targetGos: this.dmrTargetGos,
+                repeaters: (s && (s.totalOutdoorRepeaters || s.totalRepeaters)) || 1
+            });
+        },
+
+        getDmrPowerSizingResult() {
+            if (!window.CDPK_ENGINES || typeof window.CDPK_ENGINES.calcBackupPowerSizing !== 'function') return null;
+            const s = this.sizingResult;
+            return window.CDPK_ENGINES.calcBackupPowerSizing({
+                repeaters: (s && (s.totalOutdoorRepeaters || s.totalRepeaters)) || 1,
+                txDutyCycle: this.dmrTxDutyCycle,
+                backupHours: this.backupHours,
+                batteryVoltage: this.dmrBatteryVoltage,
+                batteryType: this.dmrBatteryType
+            });
         },
 
         getDasPowerConvResult() {

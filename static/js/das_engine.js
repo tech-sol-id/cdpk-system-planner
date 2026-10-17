@@ -4690,10 +4690,158 @@ var qrcode = function() {
     }
 
     /* =========================================================================
+     * 7B. OPTICAL LINK BUDGET & COMBINER INTERMODULATION (IM3) ENGINES
+     * ========================================================================= */
+
+    /**
+     * High-Precision Optical Link Budget Calculator for RFoF DAS (OMU <-> ORU)
+     * Computes fiber attenuation (1310/1550nm), connector/splice loss, passive split loss,
+     * optical received power (dBo), safety margin, and receiver dynamic range status.
+     */
+    function calcOpticalLinkBudget(params) {
+        params = params || {};
+        var wavelength = parseInt(params.wavelength || 1310, 10);
+        var fiberKm = Math.max(0.01, parseFloat(params.fiberKm !== undefined ? params.fiberKm : 2.0));
+        var attenuationPerKm = wavelength === 1550 ? 0.22 : 0.35; // ITU-T G.652 Single-Mode Fiber
+        var fiberLoss = fiberKm * attenuationPerKm;
+
+        var connectorCount = Math.max(0, parseInt(params.connectorCount !== undefined ? params.connectorCount : 4, 10));
+        var connectorLoss = connectorCount * 0.5; // 0.5 dB per FC/APC mated pair
+
+        var spliceCount = Math.max(0, parseInt(params.spliceCount !== undefined ? params.spliceCount : 2, 10));
+        var spliceLoss = spliceCount * 0.1; // 0.1 dB per fusion splice
+
+        var splitRatio = params.splitRatio || '1:1';
+        var splitLoss = 0;
+        if (splitRatio === '1:2') splitLoss = 3.5;
+        else if (splitRatio === '1:4') splitLoss = 7.2;
+        else if (splitRatio === '1:8') splitLoss = 10.5;
+
+        var safetyMargin = Math.max(0, parseFloat(params.safetyMargin !== undefined ? params.safetyMargin : 3.0));
+
+        var txPowerDbm = parseFloat(params.txOpticalPowerDbm !== undefined ? params.txOpticalPowerDbm : 3.0); // DFB Laser
+        var rxSensDbm = parseFloat(params.rxOpticalSensDbm !== undefined ? params.rxOpticalSensDbm : -15.0); // PIN Receiver
+
+        var totalPassiveLoss = fiberLoss + connectorLoss + spliceLoss + splitLoss;
+        var totalWithMargin = totalPassiveLoss + safetyMargin;
+        var rxReceivedPowerDbm = txPowerDbm - totalPassiveLoss;
+        var netMarginDbo = rxReceivedPowerDbm - rxSensDbm;
+
+        var status = 'pass';
+        var verdictId = 'Sinyal optik sangat prima. Link margin sehat & redaman optik rendah.';
+        var verdictEn = 'Optical signal is excellent. Healthy link margin and low attenuation.';
+
+        if (rxReceivedPowerDbm > -1.0) {
+            status = 'warn';
+            verdictId = 'Daya optik terlalu tinggi (> -1 dBm). Pasang optical attenuator 3-5 dB agar receiver tidak saturasi.';
+            verdictEn = 'Optical power too high (> -1 dBm). Install a 3-5 dB optical attenuator to prevent photodiode saturation.';
+        } else if (netMarginDbo < 3.0 && netMarginDbo >= 0) {
+            status = 'warn';
+            verdictId = 'Margin optik tipis (< 3 dBo). Waspada penuaan kabel atau tekukan mikro (macro-bending).';
+            verdictEn = 'Tight optical margin (< 3 dBo). Beware of fiber aging or micro-bending.';
+        } else if (netMarginDbo < 0) {
+            status = 'fail';
+            verdictId = 'Redaman optik melebihi sensitivitas receiver! Perlu OMU High-Power atau kurangi split optik.';
+            verdictEn = 'Optical path loss exceeds receiver sensitivity! High-power OMU or reduced splitting required.';
+        }
+
+        var maxReachKm = (txPowerDbm - rxSensDbm - connectorLoss - spliceLoss - splitLoss - safetyMargin) / attenuationPerKm;
+        if (maxReachKm < 0) maxReachKm = 0;
+
+        return {
+            wavelength: wavelength,
+            fiberKm: fiberKm,
+            attenuationPerKm: attenuationPerKm,
+            fiberLoss: +fiberLoss.toFixed(2),
+            connectorCount: connectorCount,
+            connectorLoss: +connectorLoss.toFixed(2),
+            spliceCount: spliceCount,
+            spliceLoss: +spliceLoss.toFixed(2),
+            splitRatio: splitRatio,
+            splitLoss: +splitLoss.toFixed(2),
+            safetyMargin: +safetyMargin.toFixed(2),
+            totalOpticalLoss: +totalPassiveLoss.toFixed(2),
+            totalWithMargin: +totalWithMargin.toFixed(2),
+            txOpticalPowerDbm: +txPowerDbm.toFixed(2),
+            rxOpticalSensDbm: +rxSensDbm.toFixed(2),
+            rxReceivedPowerDbm: +rxReceivedPowerDbm.toFixed(2),
+            netMarginDbo: +netMarginDbo.toFixed(2),
+            maxReachKm: +maxReachKm.toFixed(2),
+            status: status,
+            verdictId: verdictId,
+            verdictEn: verdictEn
+        };
+    }
+
+    /**
+     * Multi-Carrier RF Cavity Combiner & 3rd-Order Intermodulation (IM3) Validator
+     * Validates minimum frequency spacing (>= 150 kHz) and checks if 2*f1 - f2 falls on active victim channels.
+     */
+    function calcIntermodAndCombiner(frequencies, minSpacingKhz) {
+        minSpacingKhz = minSpacingKhz || 150;
+        var rawFreqs = Array.isArray(frequencies) ? frequencies : [frequencies];
+        var freqs = rawFreqs.map(function(f) { return parseFloat(f); }).filter(function(f) { return !isNaN(f) && f > 0; });
+        freqs.sort(function(a, b) { return a - b; });
+
+        var spacingWarnings = [];
+        for (var i = 0; i < freqs.length - 1; i++) {
+            var diffKhz = Math.round((freqs[i + 1] - freqs[i]) * 1000);
+            if (diffKhz < minSpacingKhz) {
+                spacingWarnings.push({
+                    f1: freqs[i],
+                    f2: freqs[i + 1],
+                    spacingKhz: diffKhz,
+                    limitKhz: minSpacingKhz
+                });
+            }
+        }
+
+        var im3Products = [];
+        var im3Collisions = [];
+        for (var a = 0; a < freqs.length; a++) {
+            for (var b = 0; b < freqs.length; b++) {
+                if (a === b) continue;
+                var im3 = +(2 * freqs[a] - freqs[b]).toFixed(4);
+                im3Products.push({
+                    formula: '2*(' + freqs[a] + ') - ' + freqs[b],
+                    im3Freq: im3,
+                    fA: freqs[a],
+                    fB: freqs[b]
+                });
+                for (var c = 0; c < freqs.length; c++) {
+                    if (Math.abs(im3 - freqs[c]) <= 0.0125) { // within 12.5 kHz channel raster
+                        im3Collisions.push({
+                            victim: freqs[c],
+                            im3Freq: im3,
+                            fA: freqs[a],
+                            fB: freqs[b],
+                            formula: '2*(' + freqs[a] + ') - ' + freqs[b]
+                        });
+                    }
+                }
+            }
+        }
+
+        var isClean = spacingWarnings.length === 0 && im3Collisions.length === 0;
+        var status = isClean ? 'clean' : (im3Collisions.length > 0 ? 'danger' : 'warn');
+
+        return {
+            freqs: freqs,
+            channelCount: freqs.length,
+            minSpacingKhz: minSpacingKhz,
+            spacingWarnings: spacingWarnings,
+            im3Products: im3Products,
+            im3Collisions: im3Collisions,
+            isClean: isClean,
+            status: status
+        };
+    }
+
+    /* =========================================================================
      * 8. EXPOSE GLOBAL WINDOW OBJECT
      * ========================================================================= */
     var CDPK_DAS_ENGINE = {
-        version: "8.5.0",
+        version: "8.5.2",
         i18n: I18N,
         devices: DEVICES,
         cables: CABLES,
@@ -4710,6 +4858,8 @@ var qrcode = function() {
         calcAntennaPlanner: calcAntennaPlanner,
         calcOkumuraHataOutdoor: calcOkumuraHataOutdoor,
         calcDasBoq: calcDasBoq,
+        calcOpticalLinkBudget: calcOpticalLinkBudget,
+        calcIntermodAndCombiner: calcIntermodAndCombiner,
 
         // SVG Visualizer
         buildDasTopologySVG: buildDasTopologySVG,

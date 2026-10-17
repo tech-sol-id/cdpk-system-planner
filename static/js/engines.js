@@ -325,5 +325,139 @@ window.CDPK_ENGINES = {
                     : 'Naikkan antena +10m / Tambah Fill-in Repeater SLR 5300'
             }))
         };
+    },
+
+    /**
+     * Erlang-B Blocking Probability Formula (Iterative implementation for numerical stability)
+     * B(c, A) = [A * B(c-1, A)] / [c + A * B(c-1, A)]
+     */
+    calcErlangB(trafficErlang, channels) {
+        const A = Math.max(0.0001, parseFloat(trafficErlang || 0.1));
+        const C = Math.max(1, parseInt(channels || 1, 10));
+        let B = 1.0;
+        for (let c = 1; c <= C; c++) {
+            B = (A * B) / (c + A * B);
+        }
+        return Math.max(0, Math.min(1, B));
+    },
+
+    /**
+     * MOTOTRBO Voice/Data Traffic & Trunking Dimensioning Engine
+     * Evaluates IP Site Connect (Conventional 2 slots/site) vs MOTOTRBO Capacity Plus
+     */
+    calcDmrTrunkingCapacity(params) {
+        params = params || {};
+        const userCount = Math.max(1, parseInt(params.userCount || 60, 10));
+        const bhca = Math.max(0.1, parseFloat(params.bhca !== undefined ? params.bhca : 2.0)); // Busy hour call attempts per user
+        const callDurationSec = Math.max(5, parseFloat(params.callDurationSec !== undefined ? params.callDurationSec : 20.0));
+        const targetGos = Math.max(0.005, parseFloat(params.targetGos !== undefined ? params.targetGos : 0.02)); // 2% GoS
+        const currentRepeaters = Math.max(1, parseInt(params.repeaters || 1, 10));
+        const availableChannels = currentRepeaters * 2; // TDMA 2 slots per repeater
+
+        // Total offered traffic in Erlangs (A = N * BHCA * T / 3600)
+        const offeredTrafficErlang = (userCount * bhca * callDurationSec) / 3600.0;
+        const currentBlocking = this.calcErlangB(offeredTrafficErlang, availableChannels);
+
+        // Find required channels to satisfy target GoS
+        let requiredChannels = 1;
+        while (requiredChannels < 64) {
+            const b = this.calcErlangB(offeredTrafficErlang, requiredChannels);
+            if (b <= targetGos) break;
+            requiredChannels++;
+        }
+        const requiredRepeaters = Math.ceil(requiredChannels / 2.0);
+
+        let systemRecommendation = 'conventional_ipsc';
+        let recTitleId = 'IP Site Connect / Konvensional Memadai';
+        let recTitleEn = 'IP Site Connect / Conventional Sufficient';
+        let recDescId = `Kapasitas ${availableChannels} slot TDMA mencukupi untuk ${userCount} pengguna dengan GoS ${(currentBlocking * 100).toFixed(1)}%.`;
+        let recDescEn = `Capacity of ${availableChannels} TDMA slots is sufficient for ${userCount} users with ${(currentBlocking * 100).toFixed(1)}% GoS.`;
+
+        if (currentBlocking > targetGos) {
+            if (requiredRepeaters <= 8) {
+                systemRecommendation = 'capacity_plus_single';
+                recTitleId = 'Direkomendasikan MOTOTRBO Capacity Plus (Single-Site Trunking)';
+                recTitleEn = 'Recommended MOTOTRBO Capacity Plus (Single-Site Trunking)';
+                recDescId = `Trafik tinggi (${offeredTrafficErlang.toFixed(2)} Erlang). Butuh minimal ${requiredRepeaters} Repeater (${requiredChannels} voice slots) dengan trunking dinamis untuk menjaga antrean panggilan < ${(targetGos * 100)}%.`;
+                recDescEn = `High traffic load (${offeredTrafficErlang.toFixed(2)} Erlangs). Minimum ${requiredRepeaters} Repeaters (${requiredChannels} voice slots) with dynamic trunking needed to keep blocking < ${(targetGos * 100)}%.`;
+            } else {
+                systemRecommendation = 'capacity_plus_multi';
+                recTitleId = 'Direkomendasikan MOTOTRBO Capacity Plus Multi-Site / Capacity Max';
+                recTitleEn = 'Recommended MOTOTRBO Capacity Plus Multi-Site / Capacity Max';
+                recDescId = `Trafik sangat masif (${offeredTrafficErlang.toFixed(2)} Erlang). Dibutuhkan multi-site trunking arsitektur enterprise untuk armada > ${userCount} unit.`;
+                recDescEn = `Massive traffic (${offeredTrafficErlang.toFixed(2)} Erlangs). Enterprise multi-site trunking architecture required for fleet > ${userCount} units.`;
+            }
+        }
+
+        return {
+            userCount,
+            bhca,
+            callDurationSec,
+            targetGos,
+            offeredTrafficErlang: +offeredTrafficErlang.toFixed(3),
+            availableChannels,
+            currentRepeaters,
+            currentBlocking: +currentBlocking.toFixed(4),
+            currentBlockingPct: +(currentBlocking * 100).toFixed(2),
+            requiredChannels,
+            requiredRepeaters,
+            systemRecommendation,
+            recTitleId,
+            recTitleEn,
+            recDescId,
+            recDescEn
+        };
+    },
+
+    /**
+     * Backup Power & Off-Grid Solar Sizing Calculator
+     * Computes DC load, battery bank capacity (Ah), and solar PV array (Wp) for repeater sites.
+     */
+    calcBackupPowerSizing(params) {
+        params = params || {};
+        const repeaters = Math.max(1, parseInt(params.repeaters || 1, 10));
+        const txWattsDc = parseFloat(params.txWattsDc !== undefined ? params.txWattsDc : 150.0); // SLR 5300 50W RF -> ~150W DC
+        const rxWattsDc = parseFloat(params.rxWattsDc !== undefined ? params.rxWattsDc : 18.0);  // Idle / Rx ~18W DC
+        const txDutyCycle = Math.max(0.05, Math.min(0.8, parseFloat(params.txDutyCycle !== undefined ? params.txDutyCycle : 0.20)));
+        const rxDutyCycle = 1.0 - txDutyCycle;
+        const backupHours = Math.max(1, parseFloat(params.backupHours !== undefined ? params.backupHours : 8.0));
+        const batteryVoltage = parseInt(params.batteryVoltage || 24, 10); // 12V, 24V, or 48V DC
+        const batteryType = params.batteryType || 'lifepo4'; // 'lead_acid' (DoD 50%) or 'lifepo4' (DoD 80%)
+        const dod = batteryType === 'lifepo4' ? 0.80 : 0.50;
+        const inverterEfficiency = parseFloat(params.inverterEfficiency || 0.88);
+        const peakSunHours = parseFloat(params.peakSunHours || 4.2); // Average Indonesia PSH ~4.0 - 4.5 hrs
+
+        // Continuous average power per repeater and total
+        const avgPowerWattsPerRpt = (txWattsDc * txDutyCycle) + (rxWattsDc * rxDutyCycle);
+        const totalAvgPowerWatts = avgPowerWattsPerRpt * repeaters;
+
+        // Daily energy consumption (Wh)
+        const dailyEnergyWh = totalAvgPowerWatts * 24.0;
+
+        // Backup energy needed during outage
+        const requiredBackupWh = (totalAvgPowerWatts * backupHours) / inverterEfficiency;
+
+        // Battery capacity in Ampere-Hours (Ah)
+        const requiredBatteryAh = requiredBackupWh / (batteryVoltage * dod);
+
+        // Off-Grid Solar PV sizing (including 30% system loss factor)
+        const solarPvWattsPeak = (dailyEnergyWh * 1.30) / peakSunHours;
+        const mpptAmps = solarPvWattsPeak / batteryVoltage;
+
+        return {
+            repeaters,
+            txDutyCyclePct: Math.round(txDutyCycle * 100),
+            rxDutyCyclePct: Math.round(rxDutyCycle * 100),
+            totalAvgPowerWatts: +totalAvgPowerWatts.toFixed(1),
+            dailyEnergyWh: Math.round(dailyEnergyWh),
+            backupHours,
+            batteryVoltage,
+            batteryType,
+            dodPct: Math.round(dod * 100),
+            requiredBackupWh: Math.round(requiredBackupWh),
+            requiredBatteryAh: Math.round(requiredBatteryAh),
+            solarPvWattsPeak: Math.round(solarPvWattsPeak),
+            mpptAmps: Math.round(mpptAmps)
+        };
     }
 };

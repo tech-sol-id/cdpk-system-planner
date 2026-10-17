@@ -37,12 +37,32 @@ window.CDPK_EXPORTERS = {
 
         // Sizing Summary Box
         doc.setTextColor(15, 23, 42);
-        doc.setFontSize(9);
+        doc.setFontSize(8.8);
         doc.setFont('helvetica', 'bold');
         doc.text(
             `${isEn ? 'Topology' : 'Topologi'}: ${s.topologyName}   |   ${isEn ? 'Outdoor Sites' : 'Site Outdoor'}: ${s.outdoorSites} (${s.totalOutdoorRepeaters}x SLR 5300)   |   DAS: ${s.dasNodes}x SLR 1000   |   ${isEn ? 'Subscribers' : 'Total User'}: ${app.userCount} (${s.htQty} HT + ${s.mobileQty} Mobile)`,
-            12, 35
+            12, 34
         );
+
+        // Turnkey RFoF DAS by FMTCS Architecture Summary
+        const dasFloorsArr = (app.das && Array.isArray(app.das.floors)) ? app.das.floors : [];
+        const dasAntTotal = dasFloorsArr.reduce((acc, fl) => acc + (Number(fl.q) || 0), 0);
+        let tableStartY = 39;
+        if (dasAntTotal > 0) {
+            const dasOrus = Math.ceil(dasAntTotal / ((app.das && app.das.r_oru) || 30));
+            const dasOmus = Math.ceil(dasOrus / ((app.das && app.das.r_omu) || 32));
+            const arch = ((app.das && app.das.archMode) || 'digital').toUpperCase();
+            const topo = ((app.das && app.das.fiberTopo) || 'star').toUpperCase();
+            doc.setFontSize(8.2);
+            doc.setTextColor(2, 132, 199);
+            doc.text(
+                isEn
+                    ? `FMTCS RFoF DAS: ${arch} Mode (${topo} Topology)   |   ${dasFloorsArr.length} Floors (${dasAntTotal} Indoor Antennas)   |   ${dasOrus}x DORU/AORU   |   ${dasOmus}x DOMU/AOMU Master Units`
+                    : `FMTCS RFoF DAS: Mode ${arch} (Topologi Fiber ${topo})   |   ${dasFloorsArr.length} Lantai (${dasAntTotal} Antena Indoor)   |   ${dasOrus}x DORU/AORU   |   ${dasOmus}x DOMU/AOMU Master Unit`,
+                12, 39
+            );
+            tableStartY = 44;
+        }
 
         // Build Table Rows (including expanded child BOM sub-items for bundles)
         const rows = [];
@@ -145,7 +165,7 @@ window.CDPK_EXPORTERS = {
             ]];
 
         doc.autoTable({
-            startY: 39,
+            startY: tableStartY,
             head: head,
             body: rows,
             theme: 'grid',

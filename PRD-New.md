@@ -319,6 +319,58 @@ Project Calculator - CDPK/
         ├── app_core.js               # Alpine.js Controller, State Management & Two-Way DMR<->DAS Bridge
         ├── das_engine.js             # Engine Rekayasa RFoF Distributed Antenna System (FMTCS)
         ├── i18n.js                   # Kamus Bahasa Indonesia (ID) & English (EN)
-        ├── exporters.js              # PDF, Excel (.xlsx), & PNG Coverage Exporters
-        └── engines.js                # Engine Sizing Geometrik RF, Canvas Propagasi & Mandays WES
 ```
+
+---
+
+## 11. Modul Rekayasa Lanjutan: Optical Link Budget, IM3, Erlang-B & Daya Cadangan (v8.5.2)
+
+### 11.1. Optical Link Budget Calculator (OMU ↔ ORU)
+- **Dasar Rekayasa:** Menghitung *Path Loss* optik pada jaringan C-RAN serat optik Single-Mode (ITU-T G.652) antara Master OMU (DOMU/AOMU) dan Remote Unit (DORU/AORU).
+- **Formula & Variabel:**
+  - Redaman Serat Optik: $0.35\text{ dB/km}$ (@ $1310\text{ nm}$) atau $0.22\text{ dB/km}$ (@ $1550\text{ nm}$).
+  - Konektor FC/APC: $0.5\text{ dB}$ per mated pair.
+  - Sambungan Fusion Splice: $0.1\text{ dB}$ per sambungan.
+  - Redaman Splitter Optik: $1:2$ ($3.5\text{ dB}$), $1:4$ ($7.2\text{ dB}$), $1:8$ ($10.5\text{ dB}$).
+  - Safety / Aging Margin: $3.0\text{ dB}$.
+  - Tingkat Sinyal Diterima ($P_{\text{rx}}$): $P_{\text{tx}} - \text{Total Loss}$.
+  - Net Margin (dBo): $P_{\text{rx}} - \text{Sensitivitas Receiver}$ (default: $-15\text{ dBm}$).
+- **Status Verdict:**
+  - `Pass`: Sinyal optik prima ($> 3\text{ dBo}$).
+  - `Warning`: Margin tipis ($0 \le \text{Margin} < 3\text{ dBo}$) atau daya saturasi ($P_{\text{rx}} > -1\text{ dBm}$).
+  - `Fail`: Redaman melampaui ambang batas sensitivitas receiver.
+
+### 11.2. Validator Intermodulasi (IM3) & Cavity Combiner
+- **Tujuan:** Mencegah interferensi antar-repeater saat digabungkan ke satu antena outdoor melalui Combiner `BCFH400-8` dan Multicoupler `PDJF400-8`.
+- **Algoritma:**
+  - Evaluasi Spasi Kanal: Memvalidasi $\Delta f = |f_{i+1} - f_i| \ge 150\text{ kHz}$ (spasi minimum cavity filter).
+  - Evaluasi Produk Intermodulasi Orde Ke-3: Menghitung $f_{\text{IM3}} = 2f_a - f_b$ untuk seluruh pasangan frekuensi aktif.
+  - Deteksi Tabrakan Korban (*Victim Collision*): Memeriksa apakah $f_{\text{IM3}}$ jatuh pada frekuensi kerja repeater aktif dalam toleransi raster $\pm 12.5\text{ kHz}$.
+  - Status: `Clean` (Aman), `Spacing Warning` (Spasi rapat), `IM3 Collision` (Tabrakan frekuensi).
+
+### 11.3. Kalkulator Kapasitas Trafik Erlang-B (Trunking Advisor)
+- **Tujuan:** Memberikan rekomendasi ilmiah kapan pelanggan cukup menggunakan arsitektur Konvensional / IP Site Connect (IPSC) vs harus beralih ke MOTOTRBO Capacity Plus (Single-Site / Multi-Site Trunking).
+- **Formula Rekursif Erlang-B:**
+  $$B(c, A) = \frac{A \cdot B(c-1, A)}{c + A \cdot B(c-1, A)}, \quad B(0, A) = 1$$
+  - $A = \frac{N \times \text{BHCA} \times T}{3600}$ (Trafik ditawarkan dalam Erlang).
+  - $c = \text{Jumlah Repeater} \times 2$ (Slot suara TDMA).
+- **Rekomendasi Dinamis:**
+  - Jika $B(c, A) \le \text{Target GoS}$ (default 2%): Arsitektur IPSC konvensional dinyatakan memadai.
+  - Jika $B(c, A) > \text{Target GoS}$: Sistem merekomendasikan migrasi ke MOTOTRBO Capacity Plus lengkap dengan jumlah repeater minimum yang dibutuhkan.
+
+### 11.4. Kalkulator Sizing Daya Cadangan & Solar Panel Off-Grid
+- **Beban Arus Repeater:** Konsumsi DC saat transmit ($150\text{W}$ untuk RF $50\text{W}$) dan standby/idle ($18\text{W}$) berdasarkan *Duty Cycle* (10%, 20%, 30%).
+- **Kebutuhan Kapasitas Baterai (Ah):**
+  $$\text{Ah} = \frac{P_{\text{avg}} \times \text{Backup Hours}}{\eta_{\text{inverter}} \times V_{\text{batt}} \times \text{DoD}}$$
+  (DoD: 80% untuk LiFePO4, 50% untuk VRLA Lead-Acid).
+- **Dimensi Panel Surya Off-Grid ($W_p$):**
+  $$W_p = \frac{E_{\text{daily}} \times 1.30}{\text{Peak Sun Hours (PSH)}}$$
+  (Default PSH Indonesia: 4.2 jam; efisiensi sistem cadangan 70%).
+
+### 11.5. Sinkronisasi Otomatis Mandays & Turnkey Proposal PDF
+- Estimasi Mandays (WES) di Tab 4 secara otomatis mendeteksi keberadaan komponen RFoF DAS FMTCS dan menyertakan fase pekerjaan:
+  - *Penarikan kabel serat optik & Fusion Splicing OTDR*.
+  - *Instalasi kabel koaksial 1/2" & Pemasangan Antena Plafon (`ANTI400R.M`)*.
+  - *Pemasangan Master Unit DOMU/AOMU & Remote Unit DORU/AORU*.
+- Ekspor PDF Penawaran Komersial dan BoQ Teknis otomatis mencantumkan ringkasan topologi RFoF DAS dan rincian multi-lantai di bawah kotak ringkasan DMR.
+

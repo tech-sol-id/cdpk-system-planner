@@ -10,8 +10,8 @@ android {
         applicationId "id.citradata.cdpkplanner"
         minSdk 24
         targetSdk 34
-        versionCode 851
-        versionName "8.5.0"
+        versionCode 852
+        versionName "8.5.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -876,6 +876,103 @@
                         </div>
                     </template>
                 </div>
+
+                <!-- Erlang-B Trunking Dimensioning & Backup Power Sizing Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Card 1: Erlang-B Trunking Advisor -->
+                    <div class="bg-white rounded-xl p-5 card-shadow border border-slate-200 space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-blue-600">Trunking Dimensioning</span>
+                                <h4 class="text-sm font-extrabold text-slate-900" x-text="lang === 'en' ? 'Erlang-B Traffic & Capacity Advisor' : 'Kapasitas Trafik Erlang-B & Trunking'"></h4>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+                                  :class="getDmrTrunkingResult()?.systemRecommendation === 'conventional_ipsc' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                                  x-text="getDmrTrunkingResult()?.systemRecommendation === 'conventional_ipsc' ? 'IPSC Ok' : 'Cap+ Recommended'"></span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">BHCA / User</label>
+                                <input type="number" step="0.5" min="0.1" x-model.number="dmrBhca" class="w-full px-2 py-1 rounded border border-slate-300 font-bold" />
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1" x-text="lang === 'en' ? 'Duration (sec)' : 'Durasi (detik)'"></label>
+                                <input type="number" step="5" min="5" x-model.number="dmrCallDurationSec" class="w-full px-2 py-1 rounded border border-slate-300 font-bold" />
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Target GoS</label>
+                                <select x-model.number="dmrTargetGos" class="w-full px-1.5 py-1 rounded border border-slate-300 font-bold bg-white">
+                                    <option value="0.02">2% (P.02)</option>
+                                    <option value="0.05">5% (P.05)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-blue-50/60 border border-blue-200 text-xs space-y-1">
+                            <div class="flex justify-between font-bold text-slate-700">
+                                <span>Offered Traffic:</span>
+                                <span class="text-blue-900" x-text="(getDmrTrunkingResult()?.offeredTrafficErlang || 0) + ' Erlang'"></span>
+                            </div>
+                            <div class="flex justify-between font-bold text-slate-700">
+                                <span>Current Blocking:</span>
+                                <span :class="getDmrTrunkingResult()?.currentBlockingPct > 2 ? 'text-amber-700' : 'text-emerald-700'"
+                                      x-text="(getDmrTrunkingResult()?.currentBlockingPct || 0) + '%'"></span>
+                            </div>
+                            <p class="text-[11px] font-bold text-blue-950 pt-1" x-text="lang === 'en' ? getDmrTrunkingResult()?.recTitleEn : getDmrTrunkingResult()?.recTitleId"></p>
+                            <p class="text-[10px] text-slate-600" x-text="lang === 'en' ? getDmrTrunkingResult()?.recDescEn : getDmrTrunkingResult()?.recDescId"></p>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Backup Power Sizing -->
+                    <div class="bg-white rounded-xl p-5 card-shadow border border-slate-200 space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600">Power Infrastructure</span>
+                                <h4 class="text-sm font-extrabold text-slate-900" x-text="lang === 'en' ? 'Backup Battery & Solar Sizing' : 'Sizing Daya Cadangan & Solar Panel'"></h4>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800"
+                                  x-text="(getDmrPowerSizingResult()?.requiredBatteryAh || 0) + ' Ah (' + dmrBatteryVoltage + 'V)'"></span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Tx Duty Cycle</label>
+                                <select x-model.number="dmrTxDutyCycle" class="w-full px-1.5 py-1 rounded border border-slate-300 font-bold bg-white">
+                                    <option value="0.10">10% Tx / 90% Rx</option>
+                                    <option value="0.20">20% Tx / 80% Rx</option>
+                                    <option value="0.30">30% Tx / 70% Rx</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Battery Voltage</label>
+                                <select x-model.number="dmrBatteryVoltage" class="w-full px-1.5 py-1 rounded border border-slate-300 font-bold bg-white">
+                                    <option value="12">12V DC</option>
+                                    <option value="24">24V DC</option>
+                                    <option value="48">48V DC</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Battery Chemistry</label>
+                                <select x-model="dmrBatteryType" class="w-full px-1.5 py-1 rounded border border-slate-300 font-bold bg-white">
+                                    <option value="lifepo4">LiFePO4 (80% DoD)</option>
+                                    <option value="lead_acid">VRLA (50% DoD)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-emerald-50/60 border border-emerald-200 text-xs space-y-1">
+                            <div class="flex justify-between font-bold text-slate-700">
+                                <span>Continuous Load:</span>
+                                <span class="text-emerald-900" x-text="(getDmrPowerSizingResult()?.totalAvgPowerWatts || 0) + ' Watt Avg'"></span>
+                            </div>
+                            <div class="flex justify-between font-bold text-slate-700">
+                                <span>Battery Bank Needed:</span>
+                                <span class="text-emerald-900 font-extrabold" x-text="(getDmrPowerSizingResult()?.requiredBatteryAh || 0) + ' Ah @ ' + dmrBatteryVoltage + 'V (' + (backupHours || 8) + ' jam)'"></span>
+                            </div>
+                            <div class="flex justify-between font-bold text-slate-700">
+                                <span>Off-Grid Solar PV Array:</span>
+                                <span class="text-blue-900 font-extrabold" x-text="(getDmrPowerSizingResult()?.solarPvWattsPeak || 0) + ' Wp (' + (getDmrPowerSizingResult()?.mpptAmps || 0) + 'A MPPT)'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -3031,6 +3128,130 @@
                     <p class="text-[10px] text-slate-400 text-center leading-normal">
                         Mendistribusikan total titik antena yang direkomendasikan secara merata ke seluruh lantai proyek.
                     </p>
+                </div>
+
+                <!-- Row 2: Optical Link Budget (7 cols) + Intermod IM3 Validator (5 cols) -->
+                <div class="lg:col-span-7 bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-purple-600">Optical C-RAN Link Budget</span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Fiber Optic Path Loss (OMU ↔ ORU)' : 'Link Budget Serat Optik (OMU ↔ ORU)'"></h3>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider"
+                              :class="getDasOpticalResult()?.status === 'pass' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (getDasOpticalResult()?.status === 'warn' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-rose-100 text-rose-800 border border-rose-300')"
+                              x-text="getDasOpticalResult()?.status === 'pass' ? 'Pass' : (getDasOpticalResult()?.status === 'warn' ? 'Warning' : 'Fail')"></span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Wavelength' : 'Panjang Gelombang'"></label>
+                            <select x-model.number="das.optWavelength" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-bold bg-white">
+                                <option value="1310">1310 nm (0.35 dB/km)</option>
+                                <option value="1550">1550 nm (0.22 dB/km)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Fiber Distance (km)' : 'Jarak Fiber (km)'"></label>
+                            <input type="number" step="0.1" min="0.1" x-model.number="das.optFiberKm" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-bold" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">FC/APC Connectors</label>
+                            <input type="number" min="0" x-model.number="das.optConnectorCount" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-bold" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Fusion Splices</label>
+                            <input type="number" min="0" x-model.number="das.optSpliceCount" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-bold" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Optical Split</label>
+                            <select x-model="das.optSplitRatio" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-bold bg-white">
+                                <option value="1:1">1:1 Direct (0 dB)</option>
+                                <option value="1:2">1:2 Split (3.5 dB)</option>
+                                <option value="1:4">1:4 Split (7.2 dB)</option>
+                                <option value="1:8">1:8 Split (10.5 dB)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Safety Margin (dB)</label>
+                            <input type="number" step="0.5" min="0" x-model.number="das.optSafetyMargin" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-bold" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Tx Power (dBm)</label>
+                            <input type="number" step="0.5" x-model.number="das.optTxPowerDbm" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-bold" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Rx Sens (dBm)</label>
+                            <input type="number" step="0.5" x-model.number="das.optRxSensDbm" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-bold" />
+                        </div>
+                    </div>
+
+                    <!-- KPI Results -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-xl bg-purple-50/60 border border-purple-200 text-xs">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-slate-500">Total Optical Loss</span>
+                            <div class="text-sm font-black text-purple-900 mt-0.5" x-text="(getDasOpticalResult()?.totalOpticalLoss || 0) + ' dBo'"></div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-slate-500">Rx Received Power</span>
+                            <div class="text-sm font-black text-indigo-900 mt-0.5" x-text="(getDasOpticalResult()?.rxReceivedPowerDbm || 0) + ' dBm'"></div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-slate-500">Optical Margin</span>
+                            <div class="text-sm font-black text-emerald-900 mt-0.5" x-text="(getDasOpticalResult()?.netMarginDbo || 0) + ' dBo'"></div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-slate-500">Max Reach (Fiber)</span>
+                            <div class="text-sm font-black text-blue-900 mt-0.5" x-text="(getDasOpticalResult()?.maxReachKm || 0) + ' km'"></div>
+                        </div>
+                    </div>
+                    <p class="text-[11px] font-semibold text-slate-600 italic" x-text="lang === 'en' ? getDasOpticalResult()?.verdictEn : getDasOpticalResult()?.verdictId"></p>
+                </div>
+
+                <div class="lg:col-span-5 bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-rose-600">Cavity Combiner & PIM/IM3</span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Intermodulation & Spacing' : 'Validator Intermodulasi (IM3)'"></h3>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider"
+                              :class="getDasIntermodResult()?.status === 'clean' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (getDasIntermodResult()?.status === 'warn' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-rose-100 text-rose-800 border border-rose-300')"
+                              x-text="getDasIntermodResult()?.status === 'clean' ? (lang === 'en' ? 'Clean' : 'Aman (Clean)') : (getDasIntermodResult()?.status === 'warn' ? 'Spacing Warn' : 'IM3 Collision')"></span>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Tx Repeater Frequencies (MHz, comma separated)' : 'Daftar Frekuensi Tx Repeater (MHz, pisahkan koma)'"></label>
+                            <input type="text" x-model="das.imFrequencies" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold" />
+                            <span class="text-[10px] text-slate-400">Contoh: 420.125, 420.375, 420.625, 420.875</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Min Cavity Spacing (kHz)' : 'Spasi Minimum Cavity (kHz)'"></label>
+                            <input type="number" step="25" min="50" x-model.number="das.imMinSpacingKhz" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold" />
+                        </div>
+                    </div>
+
+                    <!-- Intermod Results -->
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-600">Active Channels:</span>
+                            <span class="font-extrabold text-slate-900" x-text="(getDasIntermodResult()?.channelCount || 0) + ' Frekuensi'"></span>
+                        </div>
+                        <template x-if="getDasIntermodResult()?.spacingWarnings?.length > 0">
+                            <div class="p-2 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-semibold">
+                                ⚠️ Spasi antar kanal terlalu rapat (&lt; <span x-text="das.imMinSpacingKhz"></span> kHz)! Resiko desensitisasi receiver.
+                            </div>
+                        </template>
+                        <template x-if="getDasIntermodResult()?.im3Collisions?.length > 0">
+                            <div class="p-2 rounded bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-bold">
+                                🚨 Tabrakan Produk IM3 Terdeteksi! 2*f1 - f2 mengenai frekuensi operasional aktif. Ubah alokasi frekuensi.
+                            </div>
+                        </template>
+                        <template x-if="getDasIntermodResult()?.isClean">
+                            <div class="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
+                                ✅ Alokasi frekuensi bersih! Bebas tabrakan IM3 dan memenuhi spasi minimum cavity combiner (BCFH400-8).
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
             </div>

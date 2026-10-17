@@ -345,4 +345,43 @@ CDPK System Planner dioptimalkan secara penuh untuk survei lapangan menggunakan 
 
 ---
 
-*CDPK System Planner v8.5.0 — Solusi Rekayasa Komunikasi Radio Motorola Solutions, Keamanan Avigilon & RFoF Distributed Antenna System (FMTCS).*
+## 17. Panduan Fitur Rekayasa Lanjutan: Optical Link Budget, IM3, Erlang-B & Daya Cadangan (v8.5.2)
+
+### 17.1. Kalkulator Optical Link Budget (OMU ↔ ORU)
+- **Lokasi:** Tab **2. Link Budget & Planner Antena** pada Workspace **`🏢 RFoF Distributed Antenna System`**.
+- **Cara Penggunaan:**
+  1. Pilih panjang gelombang laser (`1310 nm` standar redaman $0.35\text{ dB/km}$ atau `1550 nm` redaman $0.22\text{ dB/km}$).
+  2. Masukkan estimasi jarak kabel serat optik dari Master OMU di ruang kontrol ke Remote Unit (ORU) terjauh (dalam kilometer).
+  3. Tentukan jumlah konektor `FC/APC` (redaman $0.5\text{ dB}$ per pasang) dan jumlah sambungan *fusion splice* ($0.1\text{ dB}$ per titik).
+  4. Pilih rasio *Optical Splitter* (1:1 direct, 1:2, 1:4, atau 1:8).
+  5. Sistem seketika menyajikan **Total Optical Loss (dBo)**, **Daya Diterima di Photodiode ORU (dBm)**, **Net Optical Margin (dBo)**, serta lencana evaluasi `Pass` / `Warning` / `Fail`.
+
+### 17.2. Validator Intermodulasi (IM3) & Frequency Combiner
+- **Lokasi:** Tab **2. Link Budget & Planner Antena** pada Workspace **`🏢 RFoF Distributed Antenna System`**.
+- **Cara Penggunaan:**
+  1. Masukkan seluruh frekuensi pancar (Tx) repeater yang akan dimasukkan ke Combiner `BCFH400-8` (contoh: `420.125, 420.375, 420.625, 420.875`), dipisahkan tanda koma atau spasi.
+  2. Tentukan batasan spasi minimum cavity filter (standar $150\text{ kHz}$).
+  3. Sistem otomatis menghitung selisih frekuensi antar-kanal serta menghitung seluruh produk intermodulasi orde ke-3 ($2f_a - f_b$).
+  4. Jika terdapat produk IM3 yang menabrak frekuensi operasional aktif lainnya dalam rentang $\pm 12.5\text{ kHz}$, sistem memunculkan peringatan darurat `🚨 Tabrakan Produk IM3 Terdeteksi!` agar frekuensi dapat ditata ulang sebelum instalasi fisik.
+
+### 17.3. Kalkulator Kapasitas Trafik Erlang-B & Trunking Advisor
+- **Lokasi:** Tab **1. Rekomendasi Solusi & Sizing** pada Workspace **`📡 DMR System`**.
+- **Cara Penggunaan:**
+  1. Masukkan estimasi panggilan sibuk per radio (*Busy Hour Call Attempts / BHCA*, default `2.0`), rata-rata durasi panggilan (*Call Duration*, default `20 detik`), dan ambang toleransi antrean (*Grade of Service / GoS*, default `2%`).
+  2. Sistem menghitung total beban trafik (*Offered Traffic* dalam Erlang) dan probabilitas *Call Blocking* saat ini pada jumlah kanal TDMA repeater aktif.
+  3. Sistem memberikan rekomendasi resmi: apakah topologi konvensional **IP Site Connect (IPSC)** masih mencukupi atau sudah saatnya pelanggan di-*upgrade* ke sistem trunking dinamis **MOTOTRBO Capacity Plus (Single-Site)** atau **Capacity Plus Multi-Site / Capacity Max**.
+
+### 17.4. Kalkulator Sizing Daya Cadangan & Solar Panel Off-Grid
+- **Lokasi:** Tab **1. Rekomendasi Solusi & Sizing** pada Workspace **`📡 DMR System`**.
+- **Cara Penggunaan:**
+  1. Pilih siklus beban transmit (*Tx Duty Cycle*, misal `20% Tx / 80% Rx`).
+  2. Pilih tegangan sistem baterai (`12V`, `24V`, atau `48V DC`) dan kimia baterai (`LiFePO4` DoD 80% atau `VRLA Lead-Acid` DoD 50%).
+  3. Tentukan durasi cadangan darurat (*Backup Hours*, misal `8`, `12`, atau `24 jam`).
+  4. Sistem otomatis menghitung:
+     - **Beban Daya Rata-Rata Kontinu (Watt)**
+     - **Kapasitas Bank Baterai yang Dibutuhkan (Ampere-Hour / Ah)**
+     - **Dimensi Array Panel Surya Off-Grid (Watt-peak / Wp)** dan kapasitas Solar Charge Controller MPPT (Ampere).
+
+---
+
+*CDPK System Planner v8.5.2 — Solusi Rekayasa Komunikasi Radio Motorola Solutions, Keamanan Avigilon & RFoF Distributed Antenna System (FMTCS).*
