@@ -618,12 +618,20 @@ def save_project_to_gdrive(project_payload: Dict[str, Any], user_info: Dict[str,
     project_payload["saved_at"] = datetime.now(timezone.utc).isoformat()
 
     # 1. Prepare Google Drive metadata properties
+    comm = project_payload.get("commercialTotals", {})
+    margin_val = project_payload.get("marginPercent") if project_payload.get("marginPercent") is not None else comm.get("marginPercent", 20)
+    grand_tot_val = comm.get("grandTotal") if comm.get("grandTotal") is not None else project_payload.get("grandTotal", 0)
+    curr_val = project_payload.get("currency", "IDR")
+
     app_props = {
         "creator_username": str(user_info.get("username", "user")),
         "creator_name": str(user_info.get("name", "")),
         "creator_email": str(user_info.get("email", "")),
         "client_name": str(project_payload.get("clientName", ""))[:50],
-        "project_name": str(project_payload.get("projName", ""))[:50]
+        "project_name": str(project_payload.get("projName", ""))[:50],
+        "margin_percent": str(margin_val),
+        "grand_total": str(grand_tot_val),
+        "currency": str(curr_val)
     }
 
     # 2. Generate & Upload Excel (.xlsx)

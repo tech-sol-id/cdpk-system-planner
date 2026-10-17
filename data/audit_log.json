@@ -1,0 +1,13 @@
+[
+  {
+    "id": "aud_init",
+    "timestamp": "2026-10-17 00:00:00",
+    "username": "system",
+    "name": "CDPK System Planner",
+    "role": "admin",
+    "action": "system",
+    "detail": "Inisialisasi sistem audit trail terdesentralisasi CDPK Planner",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  }
+]

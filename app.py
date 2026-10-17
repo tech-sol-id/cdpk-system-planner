@@ -55,6 +55,7 @@ from server.notifications import (
     add_notification
 )
 from server.ai_copilot import ALLOWED_MODELS, query_ai_copilot
+from server.audit import log_audit_event, get_audit_logs
 
 logging.basicConfig(
     level=logging.INFO,
@@ -235,6 +236,19 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 is_creator = (creator.strip().lower() == cur_username_lower)
                 is_collab = (cur_username_lower in collaborators)
 
+                margin_val = None
+                if app_props.get("margin_percent"):
+                    try:
+                        margin_val = float(app_props.get("margin_percent"))
+                    except Exception:
+                        margin_val = None
+                grand_total_val = None
+                if app_props.get("grand_total"):
+                    try:
+                        grand_total_val = float(app_props.get("grand_total"))
+                    except Exception:
+                        grand_total_val = None
+
                 f["creator_username"] = creator
                 f["creator_name"] = creator_name or creator.title()
                 f["file_type"] = parsed.get("type", "json")
@@ -243,6 +257,9 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 f["collaborators"] = collaborators
                 f["is_creator"] = is_creator
                 f["is_collaborator"] = is_collab
+                f["margin_percent"] = margin_val
+                f["grand_total"] = grand_total_val
+                f["currency"] = app_props.get("currency", "IDR")
 
                 # Access Control: Admin & Overseer get full team view; regular user sees their creations AND shared files
                 if can_view_all or is_creator or is_collab:
@@ -257,6 +274,20 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 "subfolder_id": OUTPUT_SUBFOLDER_ID,
                 "subfolder_url": f"https://drive.google.com/drive/folders/{OUTPUT_SUBFOLDER_ID}" if is_admin else "",
                 "files": enriched_files
+            })
+
+        # ─── Audit Trail Logs (Admin & Overseer) ──────────────────────────
+        if path == "/api/audit/logs":
+            cur_user = self._get_auth_user()
+            if not cur_user or cur_user.get("role") not in ("admin", "overseer"):
+                return self._send_json({"status": "forbidden", "message": "Akses ditolak: Hanya Administrator atau Overseer"}, status=403)
+            qs = urllib.parse.parse_qs(parsed.query)
+            limit = int(qs.get("limit", [100])[0])
+            action_filter = qs.get("action", ["all"])[0]
+            logs = get_audit_logs(limit=limit, action_filter=action_filter)
+            return self._send_json({
+                "status": "ok",
+                "logs": logs
             })
 
         # ─── Serve Static Files ───────────────────────────────────────────
@@ -302,6 +333,14 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             user, err = authenticate_google_user(id_token)
             if user:
                 token = create_session(user)
+                log_audit_event(
+                    user.get("username", ""),
+                    user.get("name", ""),
+                    user.get("role", "engineer"),
+                    "login",
+                    f"Login sukses via Google Workspace ({user.get('email', '')})",
+                    ip=self.address_string()
+                )
                 return self._send_json({"status": "ok", "token": token, "user": user})
             return self._send_json({"status": "error", "message": err or "Google Workspace authentication failed."}, status=401)
 
@@ -311,12 +350,28 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             user, err = authenticate_user(ident, pwd)
             if user:
                 token = create_session(user)
+                log_audit_event(
+                    user.get("username", ""),
+                    user.get("name", ""),
+                    user.get("role", "engineer"),
+                    "login",
+                    f"Login sukses via Kredensial (@{user.get('username', '')})",
+                    ip=self.address_string()
+                )
                 return self._send_json({"status": "ok", "token": token, "user": user})
             return self._send_json({"status": "error", "message": err or "Username atau Password salah."}, status=401)
 
         if path == "/api/auth/register":
             user, err = register_self_user(body)
             if user:
+                log_audit_event(
+                    user.get("username", ""),
+                    user.get("name", ""),
+                    user.get("role", "engineer"),
+                    "register",
+                    f"Pengajuan registrasi mandiri: {user.get('name')} (@{user.get('username')}, {user.get('email')})",
+                    ip=self.address_string()
+                )
                 return self._send_json({
                     "status": "ok",
                     "pending": True,
@@ -328,6 +383,16 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/auth/logout":
             auth_hdr = self.headers.get("Authorization", "")
             token = auth_hdr[7:].strip() if auth_hdr.startswith("Bearer ") else self.headers.get("X-Session-Token", "").strip()
+            cur_user = self._get_auth_user()
+            if cur_user:
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "engineer"),
+                    "logout",
+                    f"Logout sesi (@{cur_user.get('username')})",
+                    ip=self.address_string()
+                )
             if token:
                 invalidate_session(token)
             return self._send_json({"status": "ok", "message": "Logged out"})
@@ -337,6 +402,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             if not cur_user or cur_user.get("role") != "admin":
                 return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat menambah pengguna"}, status=403)
             res = add_team_member(cur_user.get("role"), body)
+            if res.get("status") == "ok":
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "admin"),
+                    "user_mgmt",
+                    f"Menambah pengguna baru: {body.get('name')} (@{body.get('username')}) peran {body.get('role')}",
+                    ip=self.address_string()
+                )
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
 
         if path == "/api/auth/users/update":
@@ -345,6 +419,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat mengubah pengguna"}, status=403)
             username = body.get("username")
             res = update_team_member(cur_user.get("role"), username, body)
+            if res.get("status") == "ok":
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "admin"),
+                    "user_mgmt",
+                    f"Memperbarui profil anggota tim @{username}",
+                    ip=self.address_string()
+                )
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
 
         if path == "/api/auth/users/toggle-status":
@@ -353,6 +436,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat mengubah status pengguna"}, status=403)
             username = body.get("username")
             res = toggle_user_status(cur_user.get("role"), username)
+            if res.get("status") == "ok":
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "admin"),
+                    "user_mgmt",
+                    f"Mengubah status akun pengguna @{username} menjadi {res.get('new_status')}",
+                    ip=self.address_string()
+                )
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
 
         if path == "/api/auth/users/approve":
@@ -361,6 +453,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat menyetujui pendaftaran"}, status=403)
             username = body.get("username")
             res = approve_team_member(cur_user.get("role"), username)
+            if res.get("status") == "ok":
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "admin"),
+                    "user_mgmt",
+                    f"Menyetujui permohonan akun @{username}",
+                    ip=self.address_string()
+                )
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
 
         if path == "/api/auth/users/reject":
@@ -369,6 +470,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat menolak pendaftaran"}, status=403)
             username = body.get("username")
             res = reject_team_member(cur_user.get("role"), username)
+            if res.get("status") == "ok":
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "admin"),
+                    "user_mgmt",
+                    f"Menolak pendaftaran akun @{username}",
+                    ip=self.address_string()
+                )
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
 
         if path == "/api/auth/users/promote":
@@ -377,6 +487,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat mengangkat Administrator baru"}, status=403)
             username = body.get("username")
             res = promote_team_member(cur_user.get("role"), username)
+            if res.get("status") == "ok":
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "admin"),
+                    "user_mgmt",
+                    f"Mengangkat @{username} menjadi Administrator",
+                    ip=self.address_string()
+                )
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
 
         if path == "/api/auth/users/demote":
@@ -385,6 +504,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat mengubah peran"}, status=403)
             username = body.get("username")
             res = demote_team_member(cur_user.get("role"), username)
+            if res.get("status") == "ok":
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "admin"),
+                    "user_mgmt",
+                    f"Menurunkan peran Administrator @{username} menjadi Engineer",
+                    ip=self.address_string()
+                )
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
 
         if path == "/api/auth/users/reset-password":
@@ -394,6 +522,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             username = body.get("username")
             new_pwd = body.get("password") or body.get("new_password") or "cdpk2026!"
             res = reset_user_password(cur_user.get("role"), username, new_pwd)
+            if res.get("status") == "ok":
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "admin"),
+                    "user_mgmt",
+                    f"Reset password akun pengguna @{username}",
+                    ip=self.address_string()
+                )
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
 
         if path == "/api/auth/users/sync":
@@ -432,9 +569,22 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             cur_user = self._get_auth_user() or {
                 "username": body.get("creatorUsername") or "engineer",
                 "name": body.get("creatorName") or "Presales Engineer",
-                "email": body.get("creatorEmail") or "presales@citradata.id"
+                "email": body.get("creatorEmail") or "presales@citradata.id",
+                "role": "engineer"
             }
             save_res = save_project_to_gdrive(body, cur_user)
+            if save_res.get("status") == "ok":
+                proj_title = body.get("projName") or body.get("projectName") or "Proyek CDPK"
+                client_title = body.get("clientName") or "Klien"
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "engineer"),
+                    "save_project",
+                    f"Menyimpan kalkulasi proyek '{proj_title}' (Klien: {client_title}) ke Google Drive",
+                    ip=self.address_string(),
+                    metadata={"file_id": save_res.get("file_id")}
+                )
             return self._send_json(save_res)
 
         # ─── Notifications: Mark as Read ──────────────────────────────────
@@ -520,6 +670,16 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                     action_data={"file_id": file_id, "project_name": project_name, "client_name": client_name}
                 )
 
+            log_audit_event(
+                cur_user.get("username", ""),
+                cur_user.get("name", ""),
+                cur_user.get("role", "engineer"),
+                "handover",
+                f"Handover proyek '{project_name}' (Klien: {client_name}) ke rekan: {', '.join(valid_targets)}",
+                ip=self.address_string(),
+                metadata={"file_id": file_id, "targets": valid_targets, "note": note}
+            )
+
             return self._send_json({
                 "status": "ok",
                 "message": f"Proyek '{project_name}' berhasil diserahkan kepada {len(valid_targets)} rekan tim.",
@@ -549,7 +709,38 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                         "message": "Akses ditolak: Anda hanya memiliki izin untuk membuka proyek yang Anda buat atau dibagikan kepada Anda."
                     }, status=403)
 
+            proj_title = proj_data.get("projName") or "Proyek CDPK"
+            client_title = proj_data.get("clientName") or "Klien"
+            log_audit_event(
+                cur_user.get("username", ""),
+                cur_user.get("name", ""),
+                cur_user.get("role", "engineer"),
+                "load_project",
+                f"Membuka berkas proyek '{proj_title}' (Klien: {client_title}) dari Google Drive",
+                ip=self.address_string(),
+                metadata={"file_id": file_id}
+            )
+
             return self._send_json({"status": "ok", "project": proj_data})
+
+        # ─── Client Audit Event Logger (PDF, Excel, Custom Activity) ───────
+        if path == "/api/audit/log":
+            cur_user = self._get_auth_user()
+            if not cur_user:
+                return self._send_json({"status": "unauthorized", "message": "Autentikasi diperlukan"}, status=401)
+            action = body.get("action", "activity")
+            detail = body.get("detail", "")
+            metadata = body.get("metadata", {})
+            entry = log_audit_event(
+                username=cur_user.get("username", ""),
+                name=cur_user.get("name", ""),
+                role=cur_user.get("role", "engineer"),
+                action=action,
+                detail=detail,
+                ip=self.address_string(),
+                metadata=metadata
+            )
+            return self._send_json({"status": "ok", "entry": entry})
 
         # ─── AI Copilot ───────────────────────────────────────────────────
         if path == "/api/ai/copilot":

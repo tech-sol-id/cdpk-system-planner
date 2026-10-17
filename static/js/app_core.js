@@ -148,12 +148,19 @@ window.cdpkSystemPlannerApp = function () {
         saveSuccessModalOpen: false,
         lastSavedResult: null,
         archiveModalOpen: false,
+        archiveActiveTab: 'files', // 'files' | 'audit'
         archiveLoading: false,
         archiveFiles: [],
         archiveSearchQuery: '',
         archiveCreatorFilter: 'all',
         archiveTypeFilter: 'all',
         archiveIsAdmin: false,
+        archiveIsOverseer: false,
+        archiveCanViewAll: false,
+        auditLogs: [],
+        auditLoading: false,
+        auditActionFilter: 'all',
+        auditSearchQuery: '',
         userGuideOpen: false,
         userGuideTab: 'workflow',
         compareModalOpen: false,
@@ -909,6 +916,7 @@ window.cdpkSystemPlannerApp = function () {
         // ─── Cloud Project Archive (Load / Restore) ──────────────────────
         async openProjectArchive() {
             this.archiveModalOpen = true;
+            this.archiveActiveTab = 'files';
             this.archiveLoading = true;
             try {
                 const resp = await fetch('/api/project/list-drive', {
@@ -919,6 +927,9 @@ window.cdpkSystemPlannerApp = function () {
                 this.archiveIsOverseer = !!data.is_overseer;
                 this.archiveCanViewAll = !!(data.is_admin || data.is_overseer || data.can_view_all);
                 this.archiveFiles = (data.files || []).filter(f => f.name.endsWith('.cdpk.json') || f.name.endsWith('.xlsx'));
+                if (this.archiveCanViewAll) {
+                    this.fetchAuditLogs();
+                }
             } catch (e) {
                 console.warn('Archive load error:', e);
             } finally {
@@ -971,6 +982,79 @@ window.cdpkSystemPlannerApp = function () {
                 xlsxCount: xlsxFiles.length,
                 creatorsCount: creators.size
             };
+        },
+
+        getPortfolioSummary() {
+            const files = this.archiveFiles || [];
+            const jsonFiles = files.filter(f => f.name.endsWith('.cdpk.json'));
+            let totalPipelineIdr = 0;
+            let validMarginCount = 0;
+            let marginSum = 0;
+            let lowMarginCount = 0;
+            let compliantCount = 0;
+
+            jsonFiles.forEach(f => {
+                if (f.grand_total) {
+                    totalPipelineIdr += Number(f.grand_total);
+                }
+                if (f.margin_percent !== null && f.margin_percent !== undefined) {
+                    const m = Number(f.margin_percent);
+                    marginSum += m;
+                    validMarginCount++;
+                    if (m < 15) {
+                        lowMarginCount++;
+                    } else {
+                        compliantCount++;
+                    }
+                }
+            });
+
+            const avgMargin = validMarginCount > 0 ? (marginSum / validMarginCount).toFixed(1) : '20.0';
+            return {
+                totalProjects: jsonFiles.length,
+                totalPipelineIdr: totalPipelineIdr,
+                avgMargin: avgMargin,
+                lowMarginCount: lowMarginCount,
+                compliantCount: compliantCount,
+                hasWarning: lowMarginCount > 0
+            };
+        },
+
+        async fetchAuditLogs() {
+            if (!this.currentUser || (this.currentUser.role !== 'admin' && this.currentUser.role !== 'overseer')) return;
+            this.auditLoading = true;
+            try {
+                const qs = new URLSearchParams({ limit: '150', action: this.auditActionFilter || 'all' });
+                const resp = await fetch(`/api/audit/logs?${qs.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${this.sessionToken}` }
+                });
+                const data = await resp.json();
+                if (data.status === 'ok') {
+                    this.auditLogs = data.logs || [];
+                }
+            } catch (e) {
+                console.warn('Audit fetch error:', e);
+            } finally {
+                this.auditLoading = false;
+            }
+        },
+
+        getFilteredAuditLogs() {
+            let logs = this.auditLogs || [];
+            if (this.auditActionFilter && this.auditActionFilter !== 'all') {
+                logs = logs.filter(l => (l.action || '').toLowerCase() === this.auditActionFilter.toLowerCase());
+            }
+            if (this.auditSearchQuery && this.auditSearchQuery.trim()) {
+                const q = this.auditSearchQuery.toLowerCase().trim();
+                logs = logs.filter(l =>
+                    (l.name || '').toLowerCase().includes(q) ||
+                    (l.username || '').toLowerCase().includes(q) ||
+                    (l.detail || '').toLowerCase().includes(q) ||
+                    (l.action || '').toLowerCase().includes(q) ||
+                    (l.ip || '').toLowerCase().includes(q)
+                );
+            }
+            return logs;
         },
 
         async loadProjectFromDrive(fileId) {
@@ -2727,16 +2811,46 @@ window.cdpkSystemPlannerApp = function () {
             alert(`Berhasil! Paket Kustom "${cfg.name}" dengan ${children.length} rincian komponen telah dimasukkan ke Tabel BoQ Utama.`);
         },
 
-        // ─── Document Exporters ──────────────────────────────────────────
+        // ─── Document Exporters & Client Audit Logging ───────────────────
+        async recordClientAuditEvent(action, detail, metadata = {}) {
+            try {
+                if (!this.sessionToken) return;
+                await fetch('/api/audit/log', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.sessionToken}`
+                    },
+                    body: JSON.stringify({ action, detail, metadata })
+                });
+            } catch (e) {
+                console.warn('Audit record warning:', e);
+            }
+        },
+
         exportPdf() {
+            this.recordClientAuditEvent('export_pdf', `Ekspor Dokumen Penawaran PDF Resmi: "${this.projName}" (Klien: ${this.clientName})`, {
+                project: this.projName,
+                client: this.clientName,
+                grandTotal: this.commercialTotals ? this.commercialTotals.grandTotal : 0
+            });
             window.CDPK_EXPORTERS.exportBoqPDF(this);
         },
 
         exportXlsx() {
+            this.recordClientAuditEvent('export_xlsx', `Ekspor Lembar Kerja BoQ Excel (.xlsx): "${this.projName}" (Klien: ${this.clientName})`, {
+                project: this.projName,
+                client: this.clientName,
+                grandTotal: this.commercialTotals ? this.commercialTotals.grandTotal : 0
+            });
             window.CDPK_EXPORTERS.exportBoqXLSX(this);
         },
 
         exportCoveragePng() {
+            this.recordClientAuditEvent('export_coverage', `Ekspor Peta Simulasi Jangkauan RF (PNG): "${this.projName}"`, {
+                project: this.projName,
+                location: this.covSearchLocation
+            });
             window.CDPK_EXPORTERS.exportCoveragePNG('cdpkCoverageCanvas', this.projName);
         }
     };

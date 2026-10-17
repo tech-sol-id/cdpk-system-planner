@@ -862,6 +862,17 @@
                                class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300" />
                     </div>
 
+                    <!-- Target Margin % -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-[11px] font-bold uppercase text-slate-500">Margin Target (%)</label>
+                            <span x-show="Number(marginPercent || 0) < 15" class="text-[10px] text-amber-700 font-extrabold bg-amber-100 border border-amber-300 px-1 rounded">⚠️ &lt;15%</span>
+                        </div>
+                        <input type="number" min="0" max="80" step="1" x-model.number="marginPercent"
+                               class="w-full px-3 py-2 text-xs font-bold rounded-lg border focus:ring-2 focus:ring-blue-200"
+                               :class="Number(marginPercent || 0) < 15 ? 'border-amber-400 bg-amber-50/50 text-amber-900' : 'border-slate-300'" />
+                    </div>
+
                     <!-- Discount % & PPN % -->
                     <div>
                         <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('discountLabel')"></label>
@@ -876,6 +887,14 @@
                             <option :value="12">PPN 12%</option>
                             <option :value="0">0% (Tax Exempt / Non-PKP)</option>
                         </select>
+                    </div>
+                </div>
+
+                <!-- Margin Guardrail Warning Banner -->
+                <div x-show="Number(marginPercent || 0) < 15" class="mb-3 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center gap-2.5">
+                    <span class="text-base shrink-0">⚠️</span>
+                    <div class="flex-1">
+                        <strong>Kebijakan Guardrail Margin CDPK:</strong> Target margin BoQ saat ini (<span x-text="marginPercent || 0"></span>%) berada di bawah standar minimum perusahaan (≥15%). Proyek dengan margin rendah memerlukan persetujuan Administrator atau Overseer sebelum diajukan ke klien.
                     </div>
                 </div>
 
@@ -1545,6 +1564,13 @@
                                     <span>Standar (20%)</span>
                                     <span>Premium (35%)</span>
                                 </div>
+                                <!-- Margin Guardrail Warning Pill -->
+                                <div x-show="Number(customConfig.marginPercent || 0) < 15" class="mt-2 p-2 rounded-lg bg-amber-100 border border-amber-300 text-amber-950 text-xs flex items-center gap-2">
+                                    <span class="text-base shrink-0">⚠️</span>
+                                    <div>
+                                        <strong>Guardrail Margin:</strong> Margin paket kustom (<span x-text="customConfig.marginPercent || 0"></span>%) di bawah standar perusahaan (&lt;15%). Perlu persetujuan Admin/Overseer.
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Grand Selling Price Highlight -->
@@ -1982,7 +2008,10 @@
 
                                 <!-- Commercial Margin Override -->
                                 <div class="flex items-center justify-between p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs">
-                                    <span class="font-bold text-amber-900">Target Profit Margin Paket (%):</span>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="font-bold text-amber-900">Target Profit Margin Paket (%):</span>
+                                        <span x-show="Number(pkg.marginPercent || 0) < 15" class="text-[10px] text-amber-700 font-extrabold bg-amber-100 border border-amber-300 px-1 rounded">⚠️ &lt;15%</span>
+                                    </div>
                                     <div class="flex items-center gap-1.5">
                                         <input type="number" min="0" max="60" step="1" x-model.number="pkg.marginPercent"
                                                class="w-20 px-2 py-1 text-xs font-bold rounded border border-amber-300 bg-white text-center" />
@@ -2230,21 +2259,21 @@
 
     <!-- ═══════════════════ MODAL 3: FULL ARCHIVE DASHBOARD ═══════════════════ -->
     <div x-show="archiveModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-3 sm:p-5">
-        <div @click.away="archiveModalOpen = false" class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]">
+        <div @click.away="archiveModalOpen = false" class="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[94vh]">
             <!-- Dashboard Header -->
             <div class="cdpk-gradient text-white p-4 sm:p-5 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="p-2.5 rounded-xl bg-white/15 backdrop-blur-xs text-xl">📂</div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h3 class="text-base sm:text-lg font-extrabold" x-text="archiveIsAdmin ? 'Dashboard Arsip Proyek Tim (Google Drive)' : 'Arsip Proyek &amp; Kalkulasi Saya'"></h3>
+                            <h3 class="text-base sm:text-lg font-extrabold" x-text="(archiveIsAdmin || archiveIsOverseer) ? 'Dashboard Arsip Proyek Tim (Google Drive)' : 'Arsip Proyek &amp; Kalkulasi Saya'"></h3>
                             <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full"
-                                  :class="archiveIsAdmin ? 'bg-amber-400 text-slate-950 shadow-xs' : 'bg-sky-400/30 text-sky-100 border border-sky-300/40'"
-                                  x-text="archiveIsAdmin ? 'Admin Full Access' : 'Akses Terisolasi'"></span>
+                                  :class="archiveIsAdmin ? 'bg-amber-400 text-slate-950 shadow-xs' : (archiveIsOverseer ? 'bg-purple-300 text-purple-950 shadow-xs' : 'bg-sky-400/30 text-sky-100 border border-sky-300/40')"
+                                  x-text="archiveIsAdmin ? 'Admin Full Access' : (archiveIsOverseer ? 'Overseer Full View' : 'Akses Terisolasi')"></span>
                         </div>
                         <p class="text-xs text-sky-100 mt-0.5">
-                            <span x-show="archiveIsAdmin">Akses penuh seluruh dokumen kalkulasi, BoQ, dan quotation yang disimpan oleh tim.</span>
-                            <span x-show="!archiveIsAdmin">Daftar dokumen kalkulasi dan penawaran yang dibuat oleh akun Anda.</span>
+                            <span x-show="archiveIsAdmin || archiveIsOverseer">Akses menyeluruh terhadap arsip dokumen kalkulasi, BoQ, quotation, dan jejak audit aktivitas tim.</span>
+                            <span x-show="!archiveIsAdmin && !archiveIsOverseer">Daftar dokumen kalkulasi dan penawaran yang dibuat oleh akun Anda atau dibagikan melalui handover.</span>
                         </p>
                     </div>
                 </div>
@@ -2257,173 +2286,389 @@
                 </div>
             </div>
 
-            <!-- Dashboard Stats Summary Cards -->
-            <div class="bg-slate-50 px-4 sm:px-6 py-3 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5">
-                    <span class="text-lg">📁</span>
-                    <div>
-                        <div class="text-[10px] text-slate-500 font-bold uppercase">Total Arsip</div>
-                        <div class="text-sm font-extrabold text-slate-900" x-text="getArchiveStats().total"></div>
+            <!-- Executive Portfolio & Margin Summary Bar (Admin & Overseer) -->
+            <template x-if="archiveIsAdmin || archiveIsOverseer">
+                <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white px-4 sm:px-6 py-3 border-b border-indigo-900/60 shadow-inner">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black tracking-wider uppercase text-amber-400 flex items-center gap-1.5">
+                                <span>👑</span>
+                                <span>Executive Portfolio &amp; Margin Guardrail Summary</span>
+                            </span>
+                            <span class="text-[10px] font-bold px-2 py-0.2 rounded-full bg-indigo-800 text-indigo-200 border border-indigo-700">Tingkat Eksekutif</span>
+                        </div>
+                        <div class="text-[11px] text-slate-400 font-medium hidden sm:block">
+                            Ambang Batas Standar Margin CDPK: <strong class="text-emerald-400">≥ 15.0%</strong>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                        <!-- Total Pipeline Value -->
+                        <div class="p-2.5 rounded-xl bg-white/10 border border-white/10 backdrop-blur-xs flex items-center gap-2.5">
+                            <span class="text-xl">💰</span>
+                            <div class="min-w-0">
+                                <div class="text-[10px] text-slate-300 font-bold uppercase truncate">Total Pipeline Nilai Proyek</div>
+                                <div class="text-sm font-extrabold text-white truncate" x-text="'Rp ' + (getPortfolioSummary().totalPipelineIdr).toLocaleString('id-ID')"></div>
+                            </div>
+                        </div>
+                        <!-- Average Margin % -->
+                        <div class="p-2.5 rounded-xl bg-white/10 border border-white/10 backdrop-blur-xs flex items-center gap-2.5">
+                            <span class="text-xl">📈</span>
+                            <div>
+                                <div class="text-[10px] text-slate-300 font-bold uppercase">Rata-rata Margin Tim</div>
+                                <div class="text-sm font-extrabold flex items-center gap-1"
+                                     :class="Number(getPortfolioSummary().avgMargin) >= 15 ? 'text-emerald-400' : 'text-amber-400'">
+                                    <span x-text="getPortfolioSummary().avgMargin + '%'"></span>
+                                    <span class="text-[10px]" x-text="Number(getPortfolioSummary().avgMargin) >= 15 ? '✓ Sehat' : '⚠️ Rendah'"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Guardrail Compliance -->
+                        <div class="p-2.5 rounded-xl bg-white/10 border border-white/10 backdrop-blur-xs flex items-center gap-2.5">
+                            <span class="text-xl">🛡️</span>
+                            <div>
+                                <div class="text-[10px] text-slate-300 font-bold uppercase">Kepatuhan Guardrail (≥15%)</div>
+                                <div class="text-sm font-extrabold text-emerald-300" x-text="getPortfolioSummary().compliantCount + ' Proyek Patuh'"></div>
+                            </div>
+                        </div>
+                        <!-- Low Margin Alert Projects -->
+                        <div class="p-2.5 rounded-xl border backdrop-blur-xs flex items-center gap-2.5 transition"
+                             :class="getPortfolioSummary().lowMarginCount > 0 ? 'bg-amber-500/20 border-amber-400/50 text-amber-200' : 'bg-white/10 border-white/10 text-slate-300'">
+                            <span class="text-xl" x-text="getPortfolioSummary().lowMarginCount > 0 ? '⚠️' : '✅'"></span>
+                            <div>
+                                <div class="text-[10px] font-bold uppercase" :class="getPortfolioSummary().lowMarginCount > 0 ? 'text-amber-300' : 'text-slate-300'">Perlu Perhatian Margin</div>
+                                <div class="text-sm font-extrabold"
+                                     :class="getPortfolioSummary().lowMarginCount > 0 ? 'text-amber-300' : 'text-slate-300'"
+                                     x-text="getPortfolioSummary().lowMarginCount > 0 ? (getPortfolioSummary().lowMarginCount + ' Proyek &lt; 15%') : '0 Proyek (Optimal)'"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5">
-                    <span class="text-lg">⚡</span>
-                    <div>
-                        <div class="text-[10px] text-blue-600 font-bold uppercase">JSON Proyek (Loadable)</div>
-                        <div class="text-sm font-extrabold text-blue-900" x-text="getArchiveStats().jsonCount"></div>
-                    </div>
-                </div>
-                <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5">
-                    <span class="text-lg">📊</span>
-                    <div>
-                        <div class="text-[10px] text-emerald-600 font-bold uppercase">Dokumen Excel BoQ</div>
-                        <div class="text-sm font-extrabold text-emerald-900" x-text="getArchiveStats().xlsxCount"></div>
-                    </div>
-                </div>
-                <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5" x-show="archiveIsAdmin">
-                    <span class="text-lg">👥</span>
-                    <div>
-                        <div class="text-[10px] text-indigo-600 font-bold uppercase">Kontributor Tim</div>
-                        <div class="text-sm font-extrabold text-indigo-900" x-text="getArchiveStats().creatorsCount"></div>
-                    </div>
-                </div>
-                <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5" x-show="!archiveIsAdmin">
-                    <span class="text-lg">👤</span>
-                    <div>
-                        <div class="text-[10px] text-indigo-600 font-bold uppercase">Pemilik Akun</div>
-                        <div class="text-xs font-extrabold text-indigo-900 truncate" x-text="currentUser ? currentUser.name : '-'"></div>
-                    </div>
-                </div>
-            </div>
+            </template>
 
-            <!-- Search & Filters Bar -->
-            <div class="p-3 sm:p-4 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
-                <!-- Search Input -->
-                <div class="relative flex-1 min-w-[200px]">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">🔍</span>
-                    <input type="text" x-model="archiveSearchQuery" placeholder="Cari nama proyek, nama klien, atau file..."
-                           class="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-medium" />
+            <!-- Sub-tab Switcher for Admin & Overseer -->
+            <template x-if="archiveIsAdmin || archiveIsOverseer">
+                <div class="px-4 sm:px-6 pt-2.5 bg-slate-100 border-b border-slate-200 flex items-center gap-2 text-xs">
+                    <button @click="archiveActiveTab = 'files'"
+                            class="px-4 py-2 font-extrabold rounded-t-xl transition border-b-2 flex items-center gap-2 cursor-pointer"
+                            :class="archiveActiveTab === 'files' ? 'bg-white text-blue-700 border-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900 border-transparent'">
+                        <span>📂</span>
+                        <span>Berkas Proyek Tim</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-blue-100 text-blue-800" x-text="getFilteredArchiveFiles().length"></span>
+                    </button>
+                    <button @click="archiveActiveTab = 'audit'; fetchAuditLogs()"
+                            class="px-4 py-2 font-extrabold rounded-t-xl transition border-b-2 flex items-center gap-2 cursor-pointer"
+                            :class="archiveActiveTab === 'audit' ? 'bg-white text-indigo-700 border-indigo-600 shadow-xs' : 'text-slate-600 hover:text-slate-900 border-transparent'">
+                        <span>📜</span>
+                        <span>Jejak Audit Aktivitas (Audit Trail)</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-indigo-100 text-indigo-800" x-text="auditLogs.length"></span>
+                    </button>
+                </div>
+            </template>
+
+            <!-- SUB-VIEW 1: FILES ARCHIVE -->
+            <div x-show="archiveActiveTab === 'files'" class="flex-1 overflow-y-auto flex flex-col">
+                <!-- Dashboard Stats Summary Cards -->
+                <div class="bg-slate-50 px-4 sm:px-6 py-3 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                    <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5">
+                        <span class="text-lg">📁</span>
+                        <div>
+                            <div class="text-[10px] text-slate-500 font-bold uppercase">Total Arsip</div>
+                            <div class="text-sm font-extrabold text-slate-900" x-text="getArchiveStats().total"></div>
+                        </div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5">
+                        <span class="text-lg">⚡</span>
+                        <div>
+                            <div class="text-[10px] text-blue-600 font-bold uppercase">JSON Proyek (Loadable)</div>
+                            <div class="text-sm font-extrabold text-blue-900" x-text="getArchiveStats().jsonCount"></div>
+                        </div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5">
+                        <span class="text-lg">📊</span>
+                        <div>
+                            <div class="text-[10px] text-emerald-600 font-bold uppercase">Dokumen Excel BoQ</div>
+                            <div class="text-sm font-extrabold text-emerald-900" x-text="getArchiveStats().xlsxCount"></div>
+                        </div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5" x-show="archiveIsAdmin || archiveIsOverseer">
+                        <span class="text-lg">👥</span>
+                        <div>
+                            <div class="text-[10px] text-indigo-600 font-bold uppercase">Kontributor Tim</div>
+                            <div class="text-sm font-extrabold text-indigo-900" x-text="getArchiveStats().creatorsCount"></div>
+                        </div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5" x-show="!archiveIsAdmin && !archiveIsOverseer">
+                        <span class="text-lg">👤</span>
+                        <div>
+                            <div class="text-[10px] text-indigo-600 font-bold uppercase">Pemilik Akun</div>
+                            <div class="text-xs font-extrabold text-indigo-900 truncate" x-text="currentUser ? currentUser.name : '-'"></div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Filter by Type -->
-                <div class="flex items-center gap-1.5 shrink-0">
-                    <label class="font-bold text-slate-600 hidden sm:inline">Tipe:</label>
-                    <select x-model="archiveTypeFilter" class="px-3 py-2 rounded-xl border border-slate-300 bg-white font-medium focus:border-blue-600">
-                        <option value="all">Semua Tipe File</option>
-                        <option value="json">⚡ JSON Proyek (.cdpk.json)</option>
-                        <option value="excel">📊 Excel Quotation (.xlsx)</option>
-                    </select>
-                </div>
+                <!-- Search & Filters Bar -->
+                <div class="p-3 sm:p-4 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                    <!-- Search Input -->
+                    <div class="relative flex-1 min-w-[200px]">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">🔍</span>
+                        <input type="text" x-model="archiveSearchQuery" placeholder="Cari nama proyek, nama klien, atau file..."
+                               class="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-medium" />
+                    </div>
 
-                <!-- Filter by Creator (Admin Only) -->
-                <template x-if="archiveIsAdmin">
+                    <!-- Filter by Type -->
                     <div class="flex items-center gap-1.5 shrink-0">
-                        <label class="font-bold text-slate-600 hidden sm:inline">Dibuat Oleh:</label>
-                        <select x-model="archiveCreatorFilter" class="px-3 py-2 rounded-xl border border-slate-300 bg-white font-medium focus:border-blue-600">
-                            <option value="all">Semua Pembuat (All)</option>
-                            <template x-for="c in getArchiveCreatorsList()" :key="c.username">
-                                <option :value="c.username" x-text="c.name + ' (@' + c.username + ')'"></option>
-                            </template>
+                        <label class="font-bold text-slate-600 hidden sm:inline">Tipe:</label>
+                        <select x-model="archiveTypeFilter" class="px-3 py-2 rounded-xl border border-slate-300 bg-white font-medium focus:border-blue-600">
+                            <option value="all">Semua Tipe File</option>
+                            <option value="json">⚡ JSON Proyek (.cdpk.json)</option>
+                            <option value="excel">📊 Excel Quotation (.xlsx)</option>
                         </select>
                     </div>
-                </template>
-            </div>
 
-            <!-- File List Container -->
-            <div class="p-4 sm:p-5 flex-1 overflow-y-auto space-y-2.5 bg-slate-100/50">
-                <template x-if="archiveLoading">
-                    <div class="py-16 text-center text-xs text-slate-500 font-bold flex flex-col items-center gap-2">
-                        <svg class="w-6 h-6 animate-spin text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                        <span>Menghubungkan &amp; memuat arsip proyek dari Google Drive...</span>
-                    </div>
-                </template>
+                    <!-- Filter by Creator (Admin & Overseer) -->
+                    <template x-if="archiveIsAdmin || archiveIsOverseer">
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <label class="font-bold text-slate-600 hidden sm:inline">Dibuat Oleh:</label>
+                            <select x-model="archiveCreatorFilter" class="px-3 py-2 rounded-xl border border-slate-300 bg-white font-medium focus:border-blue-600">
+                                <option value="all">Semua Pembuat (All)</option>
+                                <template x-for="c in getArchiveCreatorsList()" :key="c.username">
+                                    <option :value="c.username" x-text="c.name + ' (@' + c.username + ')'"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </template>
+                </div>
 
-                <template x-if="!archiveLoading && getFilteredArchiveFiles().length === 0">
-                    <div class="py-16 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200 p-8">
-                        <span class="text-3xl block mb-2">📭</span>
-                        <div class="font-bold text-slate-700 text-sm">Tidak ada dokumen arsip yang sesuai</div>
-                        <p class="text-slate-400 mt-1">Coba ubah kata kunci pencarian atau sesuaikan filter di atas.</p>
-                    </div>
-                </template>
+                <!-- File List Container -->
+                <div class="p-4 sm:p-5 flex-1 overflow-y-auto space-y-2.5 bg-slate-100/50">
+                    <template x-if="archiveLoading">
+                        <div class="py-16 text-center text-xs text-slate-500 font-bold flex flex-col items-center gap-2">
+                            <svg class="w-6 h-6 animate-spin text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span>Menghubungkan &amp; memuat arsip proyek dari Google Drive...</span>
+                        </div>
+                    </template>
 
-                <template x-for="f in getFilteredArchiveFiles()" :key="f.id">
-                    <div class="p-3.5 sm:p-4 rounded-xl bg-white hover:bg-blue-50/40 border border-slate-200/90 shadow-xs transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="flex items-start gap-3 flex-1 min-w-0">
-                            <!-- File Icon -->
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-base shadow-xs"
-                                 :class="f.name.endsWith('.cdpk.json') ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'">
-                                <span x-text="f.name.endsWith('.cdpk.json') ? '⚡' : '📊'"></span>
+                    <template x-if="!archiveLoading && getFilteredArchiveFiles().length === 0">
+                        <div class="py-16 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200 p-8">
+                            <span class="text-3xl block mb-2">📭</span>
+                            <div class="font-bold text-slate-700 text-sm">Tidak ada dokumen arsip yang sesuai</div>
+                            <p class="text-slate-400 mt-1">Coba ubah kata kunci pencarian atau sesuaikan filter di atas.</p>
+                        </div>
+                    </template>
+
+                    <template x-for="f in getFilteredArchiveFiles()" :key="f.id">
+                        <div class="p-3.5 sm:p-4 rounded-xl bg-white hover:bg-blue-50/40 border border-slate-200/90 shadow-xs transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-start gap-3 flex-1 min-w-0">
+                                <!-- File Icon -->
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-base shadow-xs"
+                                     :class="f.name.endsWith('.cdpk.json') ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'">
+                                    <span x-text="f.name.endsWith('.cdpk.json') ? '⚡' : '📊'"></span>
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-extrabold text-xs sm:text-sm text-slate-900 truncate" x-text="f.summary || f.name"></span>
+                                        <span class="text-[10px] font-bold uppercase px-2 py-0.2 rounded-full"
+                                              :class="f.name.endsWith('.cdpk.json') ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'"
+                                              x-text="f.name.endsWith('.cdpk.json') ? 'JSON Proyek' : 'Excel BoQ'"></span>
+
+                                        <!-- Margin Guardrail Badge on File Row -->
+                                        <template x-if="f.margin_percent !== null && f.margin_percent !== undefined">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[10px]"
+                                                  :class="Number(f.margin_percent) < 15 ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-50 text-emerald-800 border border-emerald-300'">
+                                                <span x-text="Number(f.margin_percent) < 15 ? '⚠️ Margin:' : '✓ Margin:'"></span>
+                                                <span x-text="f.margin_percent + '%'"></span>
+                                                <span x-show="Number(f.margin_percent) < 15">(&lt;15%)</span>
+                                            </span>
+                                        </template>
+
+                                        <!-- Grand Total Badge on File Row -->
+                                        <template x-if="f.grand_total">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-800 font-extrabold text-[10px]"
+                                                  x-text="'💰 ' + (f.currency || 'IDR') + ' ' + Number(f.grand_total).toLocaleString('id-ID')"></span>
+                                        </template>
+                                    </div>
+                                    <div class="font-mono text-[11px] text-slate-500 truncate mt-0.5" x-text="f.name"></div>
+
+                                    <!-- Metadata info: Creator, Collaborators & Timestamp -->
+                                    <div class="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500 flex-wrap">
+                                        <!-- Creator Badge -->
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 font-semibold text-slate-700">
+                                            <span>👤</span>
+                                            <span x-text="f.creator_name || f.creator_username || 'Admin'"></span>
+                                            <span class="text-slate-400 font-mono text-[10px]" x-text="'(@' + (f.creator_username || 'admin') + ')'"></span>
+                                        </span>
+
+                                        <!-- Collaborators Badge -->
+                                        <template x-if="f.collaborators && f.collaborators.length > 0">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold">
+                                                <span>🤝 Kolaborator:</span>
+                                                <span x-text="f.collaborators.join(', ')"></span>
+                                            </span>
+                                        </template>
+
+                                        <!-- Received from Handover Badge -->
+                                        <template x-if="f.is_collaborator">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-amber-800 font-bold">
+                                                <span>📥 Dari Handover</span>
+                                            </span>
+                                        </template>
+
+                                        <span class="inline-flex items-center gap-1 text-slate-400">
+                                            <span>🕒</span>
+                                            <span x-text="new Date(f.modifiedTime).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })"></span>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="font-extrabold text-xs sm:text-sm text-slate-900 truncate" x-text="f.summary || f.name"></span>
-                                    <span class="text-[10px] font-bold uppercase px-2 py-0.2 rounded-full"
-                                          :class="f.name.endsWith('.cdpk.json') ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'"
-                                          x-text="f.name.endsWith('.cdpk.json') ? 'JSON Proyek' : 'Excel BoQ'"></span>
-                                </div>
-                                <div class="font-mono text-[11px] text-slate-500 truncate mt-0.5" x-text="f.name"></div>
-
-                                <!-- Metadata info: Creator, Collaborators & Timestamp -->
-                                <div class="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500 flex-wrap">
-                                    <!-- Creator Badge -->
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 font-semibold text-slate-700">
-                                        <span>👤</span>
-                                        <span x-text="f.creator_name || f.creator_username || 'Admin'"></span>
-                                        <span class="text-slate-400 font-mono text-[10px]" x-text="'(@' + (f.creator_username || 'admin') + ')'"></span>
-                                    </span>
-
-                                    <!-- Collaborators Badge -->
-                                    <template x-if="f.collaborators && f.collaborators.length > 0">
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold">
-                                            <span>🤝 Kolaborator:</span>
-                                            <span x-text="f.collaborators.join(', ')"></span>
-                                        </span>
-                                    </template>
-
-                                    <!-- Received from Handover Badge -->
-                                    <template x-if="f.is_collaborator">
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-amber-800 font-bold">
-                                            <span>📥 Dari Handover</span>
-                                        </span>
-                                    </template>
-
-                                    <span class="inline-flex items-center gap-1 text-slate-400">
-                                        <span>🕒</span>
-                                        <span x-text="new Date(f.modifiedTime).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })"></span>
-                                    </span>
-                                </div>
+                            <!-- Action Buttons -->
+                            <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                                <a :href="f.webViewLink" target="_blank"
+                                   class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-300 transition flex items-center gap-1 cursor-pointer">
+                                    <span>Drive</span>
+                                    <span>↗</span>
+                                </a>
+                                <template x-if="f.name.endsWith('.cdpk.json')">
+                                    <button @click="openHandoverModal(f)"
+                                            class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200 transition flex items-center gap-1 cursor-pointer"
+                                            title="Handover atau bagikan proyek ke rekan tim lain">
+                                        <span>🤝</span>
+                                        <span>Handover</span>
+                                    </button>
+                                </template>
+                                <template x-if="f.name.endsWith('.cdpk.json')">
+                                    <button @click="loadProjectFromDrive(f.id)"
+                                            class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-extrabold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                                        <span>⚡</span>
+                                        <span>Buka Proyek</span>
+                                    </button>
+                                </template>
                             </div>
                         </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                            <a :href="f.webViewLink" target="_blank"
-                               class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-300 transition flex items-center gap-1 cursor-pointer">
-                                <span>Drive</span>
-                                <span>↗</span>
-                            </a>
-                            <template x-if="f.name.endsWith('.cdpk.json')">
-                                <button @click="openHandoverModal(f)"
-                                        class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200 transition flex items-center gap-1 cursor-pointer"
-                                        title="Handover atau bagikan proyek ke rekan tim lain">
-                                    <span>🤝</span>
-                                    <span>Handover</span>
-                                </button>
-                            </template>
-                            <template x-if="f.name.endsWith('.cdpk.json')">
-                                <button @click="loadProjectFromDrive(f.id)"
-                                        class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-extrabold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-                                    <span>⚡</span>
-                                    <span>Buka Proyek</span>
-                                </button>
-                            </template>
-                        </div>
-                    </div>
-                </template>
+                    </template>
+                </div>
             </div>
 
-            <!-- Footer: Drive Folder Link for Admin -->
+            <!-- SUB-VIEW 2: AUDIT TRAIL LOGS (ADMIN & OVERSEER) -->
+            <div x-show="archiveActiveTab === 'audit'" class="flex-1 overflow-y-auto flex flex-col bg-slate-50">
+                <!-- Audit Filter Bar -->
+                <div class="p-3 sm:p-4 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                    <div class="relative flex-1 min-w-[200px]">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">🔍</span>
+                        <input type="text" x-model="auditSearchQuery" placeholder="Cari nama pengguna, aksi, detail, atau alamat IP..."
+                               class="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 font-medium" />
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <label class="font-bold text-slate-600 hidden sm:inline">Kategori Aksi:</label>
+                        <select x-model="auditActionFilter" @change="fetchAuditLogs()" class="px-3 py-2 rounded-xl border border-slate-300 bg-white font-medium focus:border-indigo-600">
+                            <option value="all">Semua Kategori Aksi</option>
+                            <option value="login">🔐 Login &amp; Autentikasi</option>
+                            <option value="save_project">💾 Penyimpanan Proyek</option>
+                            <option value="load_project">⚡ Pembukaan Proyek</option>
+                            <option value="handover">🤝 Handover Proyek</option>
+                            <option value="export_pdf">📄 Ekspor Dokumen PDF</option>
+                            <option value="export_xlsx">📊 Ekspor Lembar Excel</option>
+                            <option value="user_mgmt">👥 Pengelolaan Pengguna</option>
+                        </select>
+                    </div>
+                    <button @click="fetchAuditLogs()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 border border-slate-300 transition flex items-center gap-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" :class="auditLoading ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Segarkan Log</span>
+                    </button>
+                </div>
+
+                <!-- Audit List Container -->
+                <div class="p-4 sm:p-5 flex-1 overflow-y-auto space-y-2">
+                    <template x-if="auditLoading">
+                        <div class="py-16 text-center text-xs text-slate-500 font-bold flex flex-col items-center gap-2">
+                            <svg class="w-6 h-6 animate-spin text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span>Mengambil riwayat audit trail...</span>
+                        </div>
+                    </template>
+
+                    <template x-if="!auditLoading && getFilteredAuditLogs().length === 0">
+                        <div class="py-16 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200 p-8">
+                            <span class="text-3xl block mb-2">📜</span>
+                            <div class="font-bold text-slate-700 text-sm">Tidak ada catatan audit yang sesuai kriteria</div>
+                            <p class="text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau ubah filter aksi di atas.</p>
+                        </div>
+                    </template>
+
+                    <template x-for="log in getFilteredAuditLogs()" :key="log.id">
+                        <div class="p-3 sm:p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs hover:border-indigo-200 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+                            <div class="flex items-start gap-3 flex-1 min-w-0">
+                                <!-- Action Badge Icon -->
+                                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-base"
+                                     :class="{
+                                         'bg-emerald-100 text-emerald-800': log.action === 'login',
+                                         'bg-blue-100 text-blue-800': log.action === 'save_project',
+                                         'bg-cyan-100 text-cyan-800': log.action === 'load_project',
+                                         'bg-purple-100 text-purple-800': log.action === 'handover',
+                                         'bg-rose-100 text-rose-800': log.action === 'export_pdf',
+                                         'bg-teal-100 text-teal-800': log.action === 'export_xlsx',
+                                         'bg-amber-100 text-amber-800': log.action === 'user_mgmt'
+                                     }">
+                                    <span x-text="{
+                                        'login': '🔐',
+                                        'logout': '🚪',
+                                        'register': '📝',
+                                        'save_project': '💾',
+                                        'load_project': '⚡',
+                                        'handover': '🤝',
+                                        'export_pdf': '📄',
+                                        'export_xlsx': '📊',
+                                        'export_coverage': '📡',
+                                        'user_mgmt': '👥'
+                                    }[log.action] || '📌'"></span>
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-bold text-slate-900" x-text="log.detail"></span>
+                                        <span class="px-2 py-0.2 rounded-full text-[10px] font-mono font-extrabold uppercase"
+                                              :class="{
+                                                  'bg-emerald-100 text-emerald-800': log.action === 'login',
+                                                  'bg-blue-100 text-blue-800': log.action === 'save_project',
+                                                  'bg-cyan-100 text-cyan-800': log.action === 'load_project',
+                                                  'bg-purple-100 text-purple-800': log.action === 'handover',
+                                                  'bg-rose-100 text-rose-800': log.action === 'export_pdf',
+                                                  'bg-teal-100 text-teal-800': log.action === 'export_xlsx',
+                                                  'bg-amber-100 text-amber-800': log.action === 'user_mgmt'
+                                              }"
+                                              x-text="log.action"></span>
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-500 flex-wrap">
+                                        <!-- Actor Badge -->
+                                        <span class="inline-flex items-center gap-1 font-semibold text-slate-700">
+                                            <span>👤</span>
+                                            <span x-text="log.name"></span>
+                                            <span class="font-mono text-slate-400" x-text="'(@' + log.username + ')'"></span>
+                                        </span>
+                                        <span class="px-1.5 py-0.2 rounded text-[10px] font-extrabold"
+                                              :class="{
+                                                  'bg-amber-100 text-amber-900': log.role === 'admin',
+                                                  'bg-purple-100 text-purple-900': log.role === 'overseer',
+                                                  'bg-blue-100 text-blue-900': log.role === 'engineer',
+                                                  'bg-emerald-100 text-emerald-900': log.role === 'sales'
+                                              }"
+                                              x-text="getRoleBadge(log.role).label"></span>
+                                        <span class="text-slate-300">•</span>
+                                        <span class="text-slate-400 font-mono text-[10px]" x-text="'IP: ' + (log.ip || 'Internal')"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="shrink-0 self-end sm:self-center font-mono text-[11px] text-slate-400 flex items-center gap-1">
+                                <span>🕒</span>
+                                <span x-text="log.timestamp + ' UTC'"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Footer: Drive Folder Link strictly for Admin -->
             <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs px-5">
                 <span class="text-slate-500">
                     Menampilkan <strong x-text="getFilteredArchiveFiles().length"></strong> dari <span x-text="archiveFiles.length"></span> dokumen
