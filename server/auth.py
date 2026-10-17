@@ -288,6 +288,8 @@ def authenticate_user(identifier: str, password: str) -> Tuple[Optional[Dict[str
     users = load_users()
     for u in users:
         if u.get("username", "").lower() == ident_clean or u.get("email", "").lower() == ident_clean:
+            if u.get("status") == "pending":
+                return None, "Akun Anda sedang menunggu persetujuan Administrator. Silakan hubungi Admin untuk verifikasi & aktivasi akun."
             if u.get("status", "active") != "active":
                 return None, "Akun Anda telah dinonaktifkan oleh Administrator."
 
@@ -356,6 +358,9 @@ def authenticate_google_user(id_token: str) -> Tuple[Optional[Dict[str, Any]], O
 
     if not matched_user:
         return None, "Akses ditolak: email Anda belum terdaftar"
+
+    if matched_user.get("status") == "pending":
+        return None, "Akun Anda sedang menunggu persetujuan Administrator. Silakan hubungi Admin untuk verifikasi & aktivasi akun."
 
     if matched_user.get("status", "active") != "active":
         return None, "Akses ditolak: Akun Anda telah dinonaktifkan oleh Administrator."
@@ -542,7 +547,7 @@ def register_self_user(reg_data: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any
         "title": title,
         "salt": salt,
         "password_hash": pwd_hash,
-        "status": "active",
+        "status": "pending",  # Requires Admin Approval!
         "created_at": now_str
     }
     users.append(new_user)
@@ -557,7 +562,7 @@ def register_self_user(reg_data: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any
             url_append = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A:J:append?valueInputOption=USER_ENTERED"
             row_vals = [
                 username, name, email, role, title,
-                password, pwd_hash, salt, "active", now_str
+                password, pwd_hash, salt, "pending", now_str
             ]
             req_append = urllib.request.Request(
                 url_append,
@@ -575,7 +580,7 @@ def register_self_user(reg_data: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any
         "name": name,
         "role": role,
         "title": title,
-        "status": "active"
+        "status": "pending"
     }, None
 
 
@@ -606,7 +611,7 @@ def update_team_member(creator_role: str, username: str, update_data: Dict[str, 
         u["role"] = str(update_data["role"]).strip()
     if "title" in update_data:
         u["title"] = str(update_data["title"]).strip()
-    if "status" in update_data and update_data["status"] in ("active", "inactive"):
+    if "status" in update_data and update_data["status"] in ("active", "inactive", "pending", "rejected"):
         # Prevent deactivating self or only admin
         if username_clean == "adrian" and update_data["status"] == "inactive":
             return {"status": "error", "message": "Akun administrator utama tidak dapat dinonaktifkan"}
@@ -733,3 +738,82 @@ def reset_user_password(creator_role: str, username: str, new_password: str) -> 
             logger.warning(f"Error updating password in GSheet: {e}")
 
     return {"status": "ok", "message": f"Password untuk @{username_clean} berhasil di-reset"}
+
+
+def approve_team_member(creator_role: str, username: str) -> Dict[str, Any]:
+    """Approve a pending self-registered user and activate account."""
+    if creator_role != "admin":
+        return {"status": "error", "message": "Hanya Administrator yang dapat menyetujui pendaftaran"}
+    res = update_team_member(creator_role, username, {"status": "active"})
+    if res.get("status") == "ok":
+        res["message"] = f"Pendaftaran @{username} berhasil disetujui. Akun sekarang aktif."
+    return res
+
+
+def reject_team_member(creator_role: str, username: str) -> Dict[str, Any]:
+    """Reject a pending registration by removing user from local cache and updating status in GSheet."""
+    if creator_role != "admin":
+        return {"status": "error", "message": "Hanya Administrator yang dapat menolak pendaftaran"}
+    username_clean = (username or "").strip().lower()
+    if username_clean == "adrian":
+        return {"status": "error", "message": "Akun administrator utama tidak dapat ditolak"}
+
+    users = load_users()
+    users = [u for u in users if u["username"].lower() != username_clean]
+    save_local_users(users)
+    _USERS_CACHE["users"] = users
+
+    # Update in Google Sheet: mark status as 'rejected'
+    token = _get_gdrive_token()
+    if token:
+        try:
+            spreadsheet_id = _get_spreadsheet_id()
+            url_get = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A1:A200"
+            req = urllib.request.Request(url_get, headers={"Authorization": f"Bearer {token}"})
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                d = json.loads(resp.read().decode("utf-8"))
+            rows = d.get("values", [])
+            sheet_row_num = None
+            for idx, r in enumerate(rows):
+                if r and r[0].strip().lower() == username_clean:
+                    sheet_row_num = idx + 1
+                    break
+            if sheet_row_num:
+                url_put = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!I{sheet_row_num}?valueInputOption=USER_ENTERED"
+                req_put = urllib.request.Request(
+                    url_put,
+                    data=json.dumps({"range": f"Team_Users!I{sheet_row_num}", "values": [["rejected"]]}).encode("utf-8"),
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    method="PUT"
+                )
+                with urllib.request.urlopen(req_put, timeout=12) as resp_put:
+                    pass
+        except Exception as e:
+            logger.warning(f"Error marking user as rejected in GSheet: {e}")
+
+    return {"status": "ok", "message": f"Pendaftaran pengguna @{username_clean} telah ditolak."}
+
+
+def promote_team_member(creator_role: str, username: str) -> Dict[str, Any]:
+    """Promote an existing registered user to Admin role."""
+    if creator_role != "admin":
+        return {"status": "error", "message": "Hanya Administrator yang dapat mengangkat Admin baru"}
+    username_clean = (username or "").strip().lower()
+    res = update_team_member(creator_role, username_clean, {"role": "admin"})
+    if res.get("status") == "ok":
+        res["message"] = f"Pengguna @{username_clean} berhasil diangkat menjadi Administrator."
+    return res
+
+
+def demote_team_member(creator_role: str, username: str) -> Dict[str, Any]:
+    """Demote an Admin to Engineer role (cannot demote primary admin 'adrian')."""
+    if creator_role != "admin":
+        return {"status": "error", "message": "Hanya Administrator yang dapat mengubah role"}
+    username_clean = (username or "").strip().lower()
+    if username_clean == "adrian":
+        return {"status": "error", "message": "Akun administrator utama (@adrian) tidak dapat diturunkan perannya"}
+    res = update_team_member(creator_role, username_clean, {"role": "engineer"})
+    if res.get("status") == "ok":
+        res["message"] = f"Peran @{username_clean} telah diturunkan menjadi Engineer / Presales."
+    return res
+

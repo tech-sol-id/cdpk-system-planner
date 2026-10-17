@@ -342,14 +342,12 @@ window.cdpkSystemPlannerApp = function () {
                 });
                 const data = await resp.json();
                 if (resp.ok && data.status === 'ok') {
-                    this.sessionToken = data.token;
-                    localStorage.setItem('cdpk_session_token', data.token);
-                    this.currentUser = data.user;
-                    this.regSuccess = data.message || 'Pendaftaran berhasil!';
-                    this.salesPic = `${data.user.name} (${data.user.title || 'CDPK'})`;
+                    this.regSuccess = data.message || 'Pendaftaran berhasil diajukan dan sedang menunggu persetujuan Administrator.';
+                    this.regForm = { name: '', email: '', username: '', role: 'engineer', title: '', password: '', confirmPassword: '' };
                     setTimeout(() => {
                         this.authMode = 'login';
-                    }, 1500);
+                        this.loginError = 'Pendaftaran Anda berhasil dikirim dan sedang menunggu persetujuan Administrator. Hubungi Admin (@adrian) untuk aktivasi akun.';
+                    }, 3000);
                 } else {
                     this.regError = data.message || 'Pendaftaran gagal';
                 }
@@ -602,6 +600,99 @@ window.cdpkSystemPlannerApp = function () {
                 }
             } catch (e) {
                 alert(this.lang === 'en' ? 'Connection error toggling status' : 'Kendala koneksi saat mengubah status');
+            }
+        },
+
+        async approveUser(u) {
+            try {
+                const resp = await fetch('/api/auth/users/approve', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.sessionToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username: u.username })
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    await this.loadTeamUsers(false);
+                } else {
+                    alert(data.message || 'Gagal menyetujui pendaftaran');
+                }
+            } catch (e) {
+                alert('Kendala koneksi saat menyetujui pendaftaran');
+            }
+        },
+
+        async rejectUser(u) {
+            if (!confirm(`Tolak dan hapus pendaftaran dari @${u.username} (${u.name} - ${u.email})?`)) {
+                return;
+            }
+            try {
+                const resp = await fetch('/api/auth/users/reject', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.sessionToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username: u.username })
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    await this.loadTeamUsers(false);
+                } else {
+                    alert(data.message || 'Gagal menolak pendaftaran');
+                }
+            } catch (e) {
+                alert('Kendala koneksi saat menolak pendaftaran');
+            }
+        },
+
+        async promoteToAdmin(u) {
+            if (!confirm(`Angkat @${u.username} (${u.name}) menjadi Administrator? Pengguna akan memiliki akses penuh ke seluruh pengelolaan sistem dan pengguna.`)) {
+                return;
+            }
+            try {
+                const resp = await fetch('/api/auth/users/promote', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.sessionToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username: u.username })
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    await this.loadTeamUsers(false);
+                } else {
+                    alert(data.message || 'Gagal mengangkat Administrator');
+                }
+            } catch (e) {
+                alert('Kendala koneksi saat mengangkat Administrator');
+            }
+        },
+
+        async demoteAdmin(u) {
+            if (!confirm(`Turunkan peran @${u.username} (${u.name}) dari Administrator menjadi Engineer?`)) {
+                return;
+            }
+            try {
+                const resp = await fetch('/api/auth/users/demote', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.sessionToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username: u.username })
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    await this.loadTeamUsers(false);
+                } else {
+                    alert(data.message || 'Gagal menurunkan peran');
+                }
+            } catch (e) {
+                alert('Kendala koneksi saat menurunkan peran');
             }
         },
 

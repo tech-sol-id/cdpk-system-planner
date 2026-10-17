@@ -29,6 +29,10 @@ from server.auth import (
     update_team_member,
     toggle_user_status,
     reset_user_password,
+    approve_team_member,
+    reject_team_member,
+    promote_team_member,
+    demote_team_member,
     sync_users_from_gsheet
 )
 from server.gdrive_sync import (
@@ -213,8 +217,12 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/auth/register":
             user, err = register_self_user(body)
             if user:
-                token = create_session(user)
-                return self._send_json({"status": "ok", "token": token, "user": user, "message": "Pendaftaran berhasil. Akun Anda telah aktif dan tersinkron ke Google Sheet."})
+                return self._send_json({
+                    "status": "ok",
+                    "pending": True,
+                    "user": user,
+                    "message": "Pendaftaran berhasil diajukan! Akun Anda sedang menunggu verifikasi dan persetujuan dari Administrator sebelum dapat digunakan."
+                })
             return self._send_json({"status": "error", "message": err or "Pendaftaran akun gagal."}, status=400)
 
         if path == "/api/auth/logout":
@@ -245,6 +253,38 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat mengubah status pengguna"}, status=403)
             username = body.get("username")
             res = toggle_user_status(cur_user.get("role"), username)
+            return self._send_json(res, status=200 if res["status"] == "ok" else 400)
+
+        if path == "/api/auth/users/approve":
+            cur_user = self._get_auth_user()
+            if not cur_user or cur_user.get("role") != "admin":
+                return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat menyetujui pendaftaran"}, status=403)
+            username = body.get("username")
+            res = approve_team_member(cur_user.get("role"), username)
+            return self._send_json(res, status=200 if res["status"] == "ok" else 400)
+
+        if path == "/api/auth/users/reject":
+            cur_user = self._get_auth_user()
+            if not cur_user or cur_user.get("role") != "admin":
+                return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat menolak pendaftaran"}, status=403)
+            username = body.get("username")
+            res = reject_team_member(cur_user.get("role"), username)
+            return self._send_json(res, status=200 if res["status"] == "ok" else 400)
+
+        if path == "/api/auth/users/promote":
+            cur_user = self._get_auth_user()
+            if not cur_user or cur_user.get("role") != "admin":
+                return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat mengangkat Administrator baru"}, status=403)
+            username = body.get("username")
+            res = promote_team_member(cur_user.get("role"), username)
+            return self._send_json(res, status=200 if res["status"] == "ok" else 400)
+
+        if path == "/api/auth/users/demote":
+            cur_user = self._get_auth_user()
+            if not cur_user or cur_user.get("role") != "admin":
+                return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat mengubah peran"}, status=403)
+            username = body.get("username")
+            res = demote_team_member(cur_user.get("role"), username)
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
 
         if path == "/api/auth/users/reset-password":
