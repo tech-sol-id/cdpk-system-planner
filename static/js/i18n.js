@@ -29,6 +29,8 @@ window.CDPK_I18N = {
 
         // Sizing Inputs
         sizingInputTitle: "Parameter Teknis & Lingkungan Operasi",
+        resetInputsBtn: "Reset Isian",
+        resetInputsTitle: "Kembalikan isian ke nilai awal",
         industryLabel: "Sektor Industri",
         areaSizeLabel: "Luas Area Cakupan",
         userCountLabel: "Jumlah Pengguna Radio (Total User)",
@@ -235,6 +237,8 @@ window.CDPK_I18N = {
 
         // Sizing Inputs
         sizingInputTitle: "Technical Parameters & Operating Environment",
+        resetInputsBtn: "Reset Inputs",
+        resetInputsTitle: "Reset all inputs to baseline defaults",
         industryLabel: "Industry Sector",
         areaSizeLabel: "Coverage Area Size",
         userCountLabel: "Total Radio Subscribers (Users)",

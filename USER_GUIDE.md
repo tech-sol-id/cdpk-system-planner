@@ -47,7 +47,7 @@ Buka peramban (*web browser*) Anda ke: **[https://cdpk-system-planner.onrender.c
    - *Keunggulan:* Tidak memerlukan password manual, terenkripsi penuh oleh Google Identity Services.
    - *Catatan:* Email publik seperti `@gmail.com` atau domain di luar whitelist akan ditolak otomatis oleh sistem keamanan.
 2. **Jalur Sekunder: Masuk dengan Kredensial Khusus (Username & Password):**
-   - Khusus akun lokal yang didaftarkan secara manual oleh Administrator (misal akun `@adrian`).
+   - Khusus akun lokal yang didaftarkan secara manual oleh Administrator.
    - Masukkan *Username / Email* dan *Password*, lalu klik **"Masuk dengan Password"**.
 
 ### 1.3. Pendaftaran Pengguna Baru & Penetapan Role oleh Admin
@@ -59,6 +59,7 @@ Sistem menyediakan dua jalur orientasi anggota tim baru:
 2. **Jalur Registrasi Mandiri (Self-Initiated Google SSO):**
    - Karyawan baru yang langsung menekan tombol Google Workspace SSO akan dicatat dalam antrean **`⏳ Pending Approval`**.
    - Administrator menerima notifikasi verifikasi pendaftar baru dan dapat **memilih peran yang diinginkan** (*Product Expert, Engineer / Technician, Overseer, atau Administrator*) langsung pada menu verifikasi sebelum menekan tombol **"Setujui & Aktifkan"**.
+   - *Tips:* Pengguna baru yang memerlukan percepatan aktivasi akun cukup hubungi Admin.
 
 ---
 
@@ -105,6 +106,9 @@ flowchart LR
    - **In-Building DAS Node:** Menghitung jumlah node penguat sinyal indoor kompak (**MOTOTRBO SLR 1000**).
    - **Alokasi Radio:** Membagi kuantitas radio HT (85%), radio kendaraan Mobile (10%), dan radio supervisor (5%).
    - **Daya & UPS:** Merekomendasikan kapasitas UPS (*VA*) dan kapasitas bank baterai (*Ah*) untuk ketahanan operasional sesuai jam backup yang dipilih.
+4. **Fitur Reset Isian (Mulai Baru):**
+   - Jika Anda ingin memulai rancangan kalkulasi baru atau mengembalikan parameter yang telah diubah ke konfigurasi standar, klik tombol **`🔄 Reset Isian`** pada bagian atas kartu *Parameter Teknis & Lingkungan Operasi* (di samping tombol *'✨ Isi dengan AI'*).
+   - Seluruh isian teknis akan dikembalikan secara bersih ke konfigurasi baseline default awal, dan sistem secara otomatis memperbarui rekomendasi topologi, BoQ, serta simulasi propagasi.
 
 ---
 

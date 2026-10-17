@@ -459,9 +459,16 @@
             <div class="lg:col-span-5 bg-white rounded-xl p-5 card-shadow border border-slate-200 space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <h2 class="text-base font-bold text-slate-800" x-text="t('sizingInputTitle')"></h2>
-                    <button @click="aiModalOpen = true" class="text-xs font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-1">
-                        <span>✨</span> <span x-text="lang === 'en' ? 'Fill via AI' : 'Isi dengan AI'"></span>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button @click="resetSizingInputs()" 
+                                class="text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer"
+                                :title="t('resetInputsTitle')">
+                            <span>🔄</span> <span x-text="t('resetInputsBtn')"></span>
+                        </button>
+                        <button @click="aiModalOpen = true" class="text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer">
+                            <span>✨</span> <span x-text="lang === 'en' ? 'Fill via AI' : 'Isi dengan AI'"></span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Industry Sector -->
@@ -2097,7 +2104,7 @@
                 </template>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('usernameLabel')"></label>
-                    <input type="text" x-model="loginIdentifier" placeholder="adrian@citradata.id"
+                    <input type="text" x-model="loginIdentifier" placeholder="user@citradata.id"
                            class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none" />
                 </div>
                 <div>
@@ -2666,197 +2673,498 @@
     </div>
 
     <!-- ═══════════════════ MODAL 3B: INTERACTIVE USER GUIDE ═══════════════════ -->
-    <div x-show="userGuideOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-3 sm:p-5">
-        <div @click.away="userGuideOpen = false" class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]">
-            <!-- Header -->
-            <div class="cdpk-gradient text-white p-4 sm:p-5 flex items-center justify-between">
+    <div x-show="userGuideOpen" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 transform scale-95"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 transform scale-100"
+         x-transition:leave-end="opacity-0 transform scale-95"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-2 sm:p-4 md:p-6"
+         style="display: none;">
+        <div @click.away="userGuideOpen = false" 
+             class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col h-[90vh] max-h-[90vh]">
+            
+            <!-- Header (Fixed / Shrink-0) -->
+            <div class="cdpk-gradient text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="p-2.5 rounded-xl bg-white/15 backdrop-blur-xs text-xl">📖</div>
+                    <div class="p-2.5 rounded-xl bg-white/15 backdrop-blur-xs text-xl shadow-inner">📖</div>
                     <div>
-                        <h3 class="text-base sm:text-lg font-extrabold">Panduan Pengguna (User Guide)</h3>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-base sm:text-lg font-extrabold tracking-tight">Panduan Pengguna Interaktif</h3>
+                            <span class="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-bold uppercase tracking-wider text-white">v8.4.0</span>
+                        </div>
                         <p class="text-xs text-sky-100 mt-0.5">Dokumentasi Operasional Solusi Radio Komunikasi &amp; Sizing RF CDPK</p>
                     </div>
                 </div>
-                <button @click="userGuideOpen = false" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white font-bold text-base cursor-pointer">✕</button>
+                <button @click="userGuideOpen = false" 
+                        class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white font-bold text-base cursor-pointer transition">✕</button>
             </div>
 
-            <!-- Navigation Tabs in Guide -->
-            <div class="bg-slate-100 border-b border-slate-200 px-4 sm:px-6 flex overflow-x-auto gap-2 py-2 text-xs">
-                <button @click="userGuideTab = 'workflow'"
-                        :class="userGuideTab === 'workflow' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">1. Alur Kerja (Workflow)</button>
-                <button @click="userGuideTab = 'sizing'"
-                        :class="userGuideTab === 'sizing' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">2. Sizing RF &amp; Topologi</button>
-                <button @click="userGuideTab = 'configurator'"
-                        :class="userGuideTab === 'configurator' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">3. Kalkulator Produk &amp; Sistem</button>
-                <button @click="userGuideTab = 'sync_archive'"
-                        :class="userGuideTab === 'sync_archive' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">4. Sinkronisasi &amp; Arsip Drive</button>
-                <button @click="userGuideTab = 'security'"
-                        :class="userGuideTab === 'security' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">5. Hak Akses &amp; Keamanan</button>
-                <button @click="userGuideTab = 'audit_handover'"
-                        :class="userGuideTab === 'audit_handover' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">6. Handover, Notifikasi &amp; Jejak Audit</button>
+            <!-- Toolbar & Navigation Bar (Fixed / Shrink-0) -->
+            <div class="bg-slate-100 border-b border-slate-200 px-4 sm:px-6 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0">
+                <!-- Search Filter Input -->
+                <div class="relative flex-1 sm:max-w-xs">
+                    <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400 text-xs">🔍</span>
+                    <input type="text" x-model="guideSearchQuery" 
+                           placeholder="Cari topik... (reset, sizing, role, handover)"
+                           class="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition" />
+                    <button x-show="guideSearchQuery" @click="guideSearchQuery = ''" 
+                            class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 text-xs cursor-pointer">✕</button>
+                </div>
+
+                <!-- Tab Navigation Buttons -->
+                <div class="flex overflow-x-auto gap-1.5 py-0.5 text-xs no-scrollbar">
+                    <button @click="userGuideTab = 'workflow'"
+                            :class="userGuideTab === 'workflow' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">1. Alur Kerja</button>
+                    <button @click="userGuideTab = 'sizing'"
+                            :class="userGuideTab === 'sizing' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">2. Sizing &amp; Reset</button>
+                    <button @click="userGuideTab = 'configurator'"
+                            :class="userGuideTab === 'configurator' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">3. Kalkulator Produk</button>
+                    <button @click="userGuideTab = 'sync_archive'"
+                            :class="userGuideTab === 'sync_archive' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">4. Sinkronisasi &amp; Arsip</button>
+                    <button @click="userGuideTab = 'security'"
+                            :class="userGuideTab === 'security' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">5. Hak Akses (RBAC)</button>
+                    <button @click="userGuideTab = 'audit_handover'"
+                            :class="userGuideTab === 'audit_handover' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">6. Handover &amp; Audit</button>
+                    <button @click="userGuideTab = 'faq'"
+                            :class="userGuideTab === 'faq' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">7. FAQ &amp; Tips</button>
+                </div>
             </div>
 
-            <!-- Content Area -->
-            <div class="p-5 sm:p-6 flex-1 overflow-y-auto text-xs leading-relaxed space-y-4 text-slate-700">
-                <!-- TAB 1: WORKFLOW -->
-                <div x-show="userGuideTab === 'workflow'" class="space-y-4">
-                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
-                        <span>🔄</span>
-                        <span>Alur Kerja Rekayasa &amp; Penawaran Sistem (End-to-End)</span>
-                    </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 space-y-1.5">
-                            <div class="font-extrabold text-blue-900 flex items-center gap-1.5">
-                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span>
-                                <span>Input Sizing RF</span>
+            <!-- Content Area (Scrollable with min-h-0 and overscroll-contain) -->
+            <div class="p-5 sm:p-7 flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y text-xs leading-relaxed space-y-6 text-slate-700 bg-white" style="-webkit-overflow-scrolling: touch;">
+                
+                <!-- Quick Search Notification Banner -->
+                <div x-show="guideSearchQuery" class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span>🔍</span>
+                        <span>Mencari topik: <strong class="font-extrabold" x-text="guideSearchQuery"></strong></span>
+                    </div>
+                    <button @click="guideSearchQuery = ''" class="underline font-bold text-amber-900 cursor-pointer">Hapus Pencarian</button>
+                </div>
+
+                <!-- ══════════ TAB 1: WORKFLOW ══════════ -->
+                <div x-show="userGuideTab === 'workflow'" class="space-y-5">
+                    <div class="border-b border-slate-200 pb-3">
+                        <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>🔄</span>
+                            <span>Alur Kerja Rekayasa &amp; Penawaran Sistem (End-to-End Workflow)</span>
+                        </h4>
+                        <p class="text-slate-500 mt-1 text-[11px]">Proses perancangan sistem terstruktur dari input spesifikasi lapangan hingga penyerahan tugas (handover) dan proposal tender resmi.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3.5">
+                        <div class="p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-2 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <div class="font-extrabold text-blue-900 flex items-center gap-2">
+                                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">1</span>
+                                    <span>Input Sizing RF</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600">Pilih sektor industri, masukkan luas area (km² / Ha), kontur medan, estimasi total pengguna radio aktif, dan media backhaul.</p>
                             </div>
-                            <p class="text-[11px] text-slate-600">Isi data industri, luas coverage (km² atau Ha), kontur medan (flat, rolling, mountainous), jumlah pengguna aktif radio, dan tipe backhaul.</p>
+                            <button @click="jumpFromGuide('sizing')" class="w-full py-1.5 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] cursor-pointer transition text-center">
+                                👉 Buka Modul Sizing RF
+                            </button>
                         </div>
-                        <div class="p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-200 space-y-1.5">
-                            <div class="font-extrabold text-indigo-900 flex items-center gap-1.5">
-                                <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">2</span>
-                                <span>Engine Kalkulasi</span>
+
+                        <div class="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200 space-y-2 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <div class="font-extrabold text-indigo-900 flex items-center gap-2">
+                                    <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                                    <span>Engine Kalkulasi</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600">Sistem otomatis menghitung arsitektur topologi optimal (Conventional, IP Site Connect, atau Capacity Plus), unit repeater outdoor, node DAS indoor, dan kapasitas UPS.</p>
                             </div>
-                            <p class="text-[11px] text-slate-600">Sistem otomatis menghitung rekomendasi topologi (Conventional vs IP Site Connect vs Capacity Plus), repeater outdoor SLR 5300, node DAS SLR 1000, radio HT &amp; mobile, serta kapasitas UPS daya.</p>
+                            <button @click="jumpFromGuide(null, 'compare')" class="w-full py-1.5 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] cursor-pointer transition text-center">
+                                👉 Lihat Matriks Solusi
+                            </button>
                         </div>
-                        <div class="p-3.5 rounded-xl bg-purple-50/60 border border-purple-200 space-y-1.5">
-                            <div class="font-extrabold text-purple-900 flex items-center gap-1.5">
-                                <span class="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px]">3</span>
-                                <span>BoQ &amp; Komersial</span>
+
+                        <div class="p-4 rounded-xl bg-purple-50/70 border border-purple-200 space-y-2 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <div class="font-extrabold text-purple-900 flex items-center gap-2">
+                                    <span class="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold">3</span>
+                                    <span>BoQ &amp; Komersial</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600">Periksa rincian BoQ bertingkat, sesuaikan mandays engineering, atur target margin (standar &ge;15%), diskon, dan tarif PPN 11%.</p>
                             </div>
-                            <p class="text-[11px] text-slate-600">Review rincian BoQ, sesuaikan mandays jasa engineering, sesuaikan target margin (standar &ge;15%), diskon, dan PPN 11%.</p>
+                            <button @click="jumpFromGuide('boq')" class="w-full py-1.5 px-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-[10px] cursor-pointer transition text-center">
+                                👉 Buka Bill of Quantity
+                            </button>
                         </div>
-                        <div class="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-1.5">
-                            <div class="font-extrabold text-emerald-900 flex items-center gap-1.5">
-                                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">4</span>
-                                <span>Simpan &amp; Handover</span>
+
+                        <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-2 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <div class="font-extrabold text-emerald-900 flex items-center gap-2">
+                                    <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">4</span>
+                                    <span>Simpan &amp; Handover</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600">Simpan kalkulasi ke Google Drive (.cdpk.json &amp; .xlsx), serahkan ke tim via Handover, atau cetak proposal penawaran PDF/Excel resmi.</p>
                             </div>
-                            <p class="text-[11px] text-slate-600">Klik "Simpan ke Drive" untuk arsip otomatis di cloud, serahkan tugas via fitur Handover antardivisi, atau ekspor Proposal PDF dan Excel BoQ resmi siap kirim ke klien.</p>
+                            <button @click="jumpFromGuide(null, 'archive')" class="w-full py-1.5 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] cursor-pointer transition text-center">
+                                👉 Buka Arsip Proyek Tim
+                            </button>
                         </div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                        <strong class="text-slate-900 font-extrabold flex items-center gap-1.5">
+                            <span>💡</span> <span>Tips Kolaborasi Efektif:</span>
+                        </strong>
+                        <p class="text-slate-600 text-[11px]">
+                            Product Expert dapat memulai perakitan paket radio HT &amp; aksesoris di Tab 7 atau Tab 2, kemudian menyerahkan proyek ke Engineer / Technician untuk validasi teknis RF melalui fitur <strong>🤝 Handover</strong>. Rekan tim akan langsung menerima notifikasi lonceng kuning dan dapat melanjutkan kalkulasi dengan satu klik.
+                        </p>
                     </div>
                 </div>
 
-                <!-- TAB 2: SIZING RF -->
-                <div x-show="userGuideTab === 'sizing'" class="space-y-4">
-                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
-                        <span>📡</span>
-                        <span>Panduan Pemilihan Topologi &amp; Sizing RF</span>
-                    </h4>
+                <!-- ══════════ TAB 2: SIZING RF & RESET ISIAN ══════════ -->
+                <div x-show="userGuideTab === 'sizing'" class="space-y-5">
+                    <div class="border-b border-slate-200 pb-3">
+                        <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>📡</span>
+                            <span>Panduan Sizing RF, Penentuan Topologi &amp; Fitur Reset Isian</span>
+                        </h4>
+                        <p class="text-slate-500 mt-1 text-[11px]">Memandu kalkulasi kebutuhan infrastruktur radio outdoor &amp; indoor berdasarkan karakteristik geografis lokasi proyek.</p>
+                    </div>
+
+                    <!-- Highlight: Reset Isian Feature -->
+                    <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <strong class="text-rose-900 font-extrabold flex items-center gap-2">
+                                <span>🔄</span> <span>Fitur Baru: Tombol Reset Isian (Mulai Rancangan Baru)</span>
+                            </strong>
+                            <span class="px-2 py-0.5 rounded-full bg-rose-200 text-rose-800 text-[10px] font-bold">Baru di Tab Sizing</span>
+                        </div>
+                        <p class="text-rose-900/80 text-[11px]">
+                            Jika Anda telah selesai merancang atau ingin memulai kalkulasi proyek dari awal tanpa data sisa sebelumnya, gunakan tombol <strong>"🔄 Reset Isian"</strong> yang terletak di pojok kanan atas kartu <em>Parameter Teknis &amp; Lingkungan Operasi</em> (di sebelah tombol <em>"✨ Isi dengan AI"</em>).
+                        </p>
+                        <div class="bg-white/80 p-2.5 rounded-lg border border-rose-200 text-[11px] space-y-1">
+                            <div class="font-bold text-slate-800">Karakteristik Reset Isian:</div>
+                            <ul class="list-disc pl-4 space-y-0.5 text-slate-600">
+                                <li>Dilengkapi konfirmasi pencegahan untuk menghindari penghapusan data secara tidak sengaja.</li>
+                                <li>Mengembalikan sektor industri, luas area (35 km²), medan (Hilly), jumlah user (120), frekuensi (UHF), dan media backhaul (Fiber) ke baseline default.</li>
+                                <li>Menyinkronkan ulang BoQ dan simulasi propagasi secara instan tanpa perlu memuat ulang (*refresh*) browser.</li>
+                            </ul>
+                        </div>
+                        <button @click="jumpFromGuide('sizing')" class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] cursor-pointer transition shadow-xs">
+                            <span>👉 Buka Tab Sizing untuk Mencoba Reset</span>
+                        </button>
+                    </div>
+
+                    <!-- Topologies Explanation -->
                     <div class="space-y-3">
-                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                            <strong class="text-blue-900">1. Single Site Conventional (Repeater Tunggal):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Cocok untuk plant industri tunggal, gudang, atau site tambang terpusat (coverage radius &lt; 8 km, pengguna &lt; 60 unit). Menggunakan repeater Motorola SLR 5300 dengan duplexer cavity.</p>
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                            <strong class="text-blue-900 font-extrabold">1. Single Site Conventional (Repeater Tunggal):</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Direkomendasikan untuk pabrik, gudang, kawasan industri terpusat, atau site tambang tunggal (radius &le; 8 km, jumlah pengguna &lt; 60 unit). Menggunakan repeater Motorola MOTOTRBO SLR 5300 dengan duplexer cavity.</p>
                         </div>
-                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                            <strong class="text-indigo-900">2. IP Site Connect (Multi-Site Tersebar):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Digunakan bila cakupan area luas melintasi lembah/perbukitan atau beberapa site terpisah (perkebunan sawit, konsesi tambang, jalan haulage). Tiap site dihubungkan via IP/LAN, Microwave, atau Radio Link.</p>
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                            <strong class="text-indigo-900 font-extrabold">2. IP Site Connect (Multi-Site Tersebar):</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Diterapkan bila cakupan area membentang luas melintasi lembah/perbukitan atau beberapa site terpisah (perkebunan kelapa sawit, konsesi tambang, jalan haulage, pelabuhan multi-dermaga). Site dihubungkan melalui jaringan LAN/WAN korporat, link microwave radio IP, atau satelit Starlink.</p>
                         </div>
-                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                            <strong class="text-purple-900">3. Capacity Plus Trunking (High Traffic):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Diterapkan ketika pengguna radio sangat padat (&gt; 120 HT) pada area tunggal atau multi-site agar talkgroup tidak saling berebut kanal. Memanfaatkan trunking digital tanpa dedicated control channel.</p>
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                            <strong class="text-purple-900 font-extrabold">3. Capacity Plus Trunking (High Traffic Density):</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Wajib digunakan jika kuantitas pengguna radio padat (&gt; 120 HT) pada site tunggal atau jam sibuk tinggi agar talkgroup tidak saling bertabrakan atau sibuk. Memanfaatkan trunking dinamis tanpa memerlukan kanal kontrol khusus (*no dedicated control channel*).</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB 3: CONFIGURATOR -->
-                <div x-show="userGuideTab === 'configurator'" class="space-y-4">
-                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
-                        <span>⚡</span>
-                        <span>Kalkulator Produk &amp; Sistem Custom</span>
-                    </h4>
-                    <p class="text-slate-600">Tab "Kalkulator Produk dan Sistem" memungkinkan Engineer &amp; Product Expert merakit paket penawaran spesifik secara modular:</p>
-                    <ul class="list-disc pl-5 space-y-1.5 text-slate-600">
-                        <li><strong>Paket Base Station Repeater (SLR 5300 / SLR 1000):</strong> Otomatis menghitung kebutuhan duplexer cavity (termasuk tuning lab), antena omni atau yagi directional, kabel feeder coaxial 7/8" atau 1/2", lightning arrester grounding, rack cabinet 19", dan online UPS backup power.</li>
-                        <li><strong>Paket Terminal Radio Komunikasi:</strong> Menghitung paket HT Motorola (R7 Series, XiR P6620i TIA ATEX, atau XiR P8668i) beserta multi-unit charger 6-gang dan remote speaker mic (RSM).</li>
-                        <li><strong>Konfigurator Kustom Lisensi &amp; Aksesoris:</strong> Pengguna dapat memilih produk utama, menambahkan lisensi resmi yang relevan, serta menambahkan aksesoris penunjang dengan kalkulasi margin instan sebelum ditransfer ke BoQ.</li>
-                    </ul>
+                <!-- ══════════ TAB 3: CONFIGURATOR ══════════ -->
+                <div x-show="userGuideTab === 'configurator'" class="space-y-5">
+                    <div class="border-b border-slate-200 pb-3">
+                        <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>⚡</span>
+                            <span>Kalkulator Produk, Paket Sistem &amp; Aksesoris Kustom</span>
+                        </h4>
+                        <p class="text-slate-500 mt-1 text-[11px]">Memungkinkan tim Engineer &amp; Product Expert menyusun paket perangkat modular beserta lisensi fitur dan aksesoris penunjang.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                            <div class="font-extrabold text-slate-900 flex items-center gap-1.5">
+                                <span>📡</span> <span>Paket Repeater Base Station</span>
+                            </div>
+                            <p class="text-[11px] text-slate-600">Mencakup unit SLR 5300 / SLR 1000, duplexer cavity + tuning lab, antena omni fiberglass/yagi, kabel feeder coaxial 7/8" atau 1/2", lightning arrester surge protector, rak kabinet 19", dan online UPS backup power.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                            <div class="font-extrabold text-slate-900 flex items-center gap-1.5">
+                                <span>📻</span> <span>Paket Radio Komunikasi HT</span>
+                            </div>
+                            <p class="text-[11px] text-slate-600">Menghitung paket HT Motorola MOTOTRBO (R7 Series, XiR P6620i TIA ATEX, atau XiR P8668i), baterai IMPRES li-ion pintar, multi-unit charger 6-gang, dan remote speaker microphone (RSM).</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                            <div class="font-extrabold text-slate-900 flex items-center gap-1.5">
+                                <span>🔑</span> <span>Lisensi &amp; Aksesoris Kustom</span>
+                            </div>
+                            <p class="text-[11px] text-slate-600">Pengguna dapat memilih perangkat utama lalu menambahkan lisensi resmi yang relevan (Capacity Plus, IP Site Connect, AES-256 Privacy, Man-Down) serta aksesoris dengan kalkulasi margin instan sebelum ditransfer ke BoQ.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3.5 bg-blue-50 border border-blue-200 rounded-xl">
+                        <div class="text-[11px] text-blue-900">
+                            <strong>Ingin menyusun paket kustom sekarang?</strong> Akses langsung modul perakitan paket perangkat melalui tab Kalkulator Produk.
+                        </div>
+                        <button @click="jumpFromGuide('catalog')" class="py-1.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] cursor-pointer transition">
+                            👉 Buka Tab Katalog &amp; Paket
+                        </button>
+                    </div>
                 </div>
 
-                <!-- TAB 4: SYNC & ARCHIVE -->
-                <div x-show="userGuideTab === 'sync_archive'" class="space-y-4">
-                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
-                        <span>☁️</span>
-                        <span>Sinkronisasi Harga Cloud, Arsip Drive &amp; Portofolio Eksekutif</span>
-                    </h4>
+                <!-- ══════════ TAB 4: SYNC & ARCHIVE ══════════ -->
+                <div x-show="userGuideTab === 'sync_archive'" class="space-y-5">
+                    <div class="border-b border-slate-200 pb-3">
+                        <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>☁️</span>
+                            <span>Sinkronisasi Harga Cloud, Arsip Drive &amp; Portofolio Eksekutif</span>
+                        </h4>
+                        <p class="text-slate-500 mt-1 text-[11px]">Mekanisme integrasi langsung dengan Google Drive dan Google Sheets untuk keandalan data komersial.</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200">
+                            <strong class="text-blue-900 font-extrabold">🔄 Sinkronisasi Master Harga Cloud:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Master harga perangkat Motorola, jasa mandays, dan hardware diambil dari tab Google Spreadsheet master. Klik tombol <em>"Sinkronisasi Harga Cloud"</em> untuk memperbarui harga real-time tanpa perlu redeploy server.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                            <strong class="text-emerald-900 font-extrabold">💾 Simpan &amp; Muat Proyek (.cdpk.json &amp; .xlsx):</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Setiap kali Anda mengklik <em>"Simpan ke Drive"</em>, sistem secara otomatis mengunggah dokumen kalkulasi (.cdpk.json) dan lembar kerja Excel Quotation (.xlsx) resmi ke subfolder Google Drive. File tersebut dapat Anda buka kembali kapan saja melalui menu <em>"Arsip Proyek Tim"</em>.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200">
+                            <strong class="text-indigo-900 font-extrabold">📊 Ringkasan Portofolio Eksekutif &amp; Guardrail Margin:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Bagi Administrator dan Overseer, modal arsip dilengkapi 4 metrik finansial: total pipeline nilai proyek (IDR), rata-rata margin tim, kepatuhan guardrail (&ge;15%), serta deteksi dini proyek berisiko margin rendah (&lt;15%).</p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                        <div class="text-[11px] text-slate-700">
+                            <strong>Kelola berkas proyek tim:</strong> Buka dashboard arsip untuk memuat proyek sebelumnya atau meninjau portofolio.
+                        </div>
+                        <button @click="jumpFromGuide(null, 'archive')" class="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] cursor-pointer transition">
+                            👉 Buka Arsip Proyek Tim
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ══════════ TAB 5: ROLES & SECURITY ══════════ -->
+                <div x-show="userGuideTab === 'security'" class="space-y-5">
+                    <div class="border-b border-slate-200 pb-3">
+                        <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>🛡️</span>
+                            <span>Kebijakan Hak Akses &amp; Keamanan Akun (RBAC)</span>
+                        </h4>
+                        <p class="text-slate-500 mt-1 text-[11px]">Sesuai standar CDPK Security Policy &amp; Threat Modeling: Zero Trust, Least Privilege, dan Domain Whitelisting.</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200">
+                            <strong class="text-amber-900 font-extrabold flex items-center gap-1.5">
+                                <span>👑</span> <span>Administrator:</span>
+                            </strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Pemilik sistem dengan hak akses mutlak: menyetujui (approve) pendaftaran pengguna baru, mengelola akun tim, mengakses folder master Google Drive &amp; master pricelist Spreadsheet, serta melihat dan mengelola seluruh arsip tim, portofolio eksekutif, dan jejak audit.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-teal-50/70 border border-teal-200">
+                            <strong class="text-teal-900 font-extrabold flex items-center gap-1.5">
+                                <span>👁️</span> <span>Overseer (Pemantau &amp; Peninjau Eksekutif):</span>
+                            </strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Diperuntukkan bagi Direksi, General Manager, dan Head of Department. Memiliki hak akses lihat menyeluruh seperti Administrator terhadap akun tim, seluruh dokumen arsip proyek tim, ringkasan portofolio, dan jejak audit (*audit trail*). Dapat menggunakan seluruh kalkulator, namun tautan folder master Google Drive &amp; Spreadsheet master disembunyikan untuk menjaga integritas data.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200">
+                            <strong class="text-blue-900 font-extrabold flex items-center gap-1.5">
+                                <span>🛠️</span> <span>Engineer / Technician:</span>
+                            </strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Tim teknis dan rekayasa sistem: fokus pada kalkulasi sizing RF, perakitan BoQ, estimasi mandays jasa, penyimpanan berkas ke Google Drive, dan menerima serah terima (handover) dari tim Product Expert.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                            <strong class="text-emerald-900 font-extrabold flex items-center gap-1.5">
+                                <span>💼</span> <span>Product Expert:</span>
+                            </strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Tim penjualan dan konsultan produk komersial: fokus pada konfigurasi penawaran klien, perakitan paket radio HT &amp; aksesoris, pengaturan diskon/margin, ekspor proposal tender PDF/Excel resmi, dan melakukan serah terima ke tim Engineer.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200 space-y-1.5">
+                            <strong class="text-indigo-900 font-extrabold flex items-center gap-1.5">
+                                <span>🔒</span> <span>Domain Whitelisting &amp; Verifikasi Akun Baru:</span>
+                            </strong>
+                            <p class="text-[11px] text-slate-600">
+                                Akses sistem dibatasi secara ketat hanya untuk domain resmi <strong>@citradata.id</strong> dan <strong>@techsolutions.id</strong>. Karyawan yang mendaftar mandiri via Google SSO akan tercatat dalam antrean <em>"Pending Approval"</em>.
+                            </p>
+                            <p class="text-[11px] text-indigo-950 font-bold bg-white/70 p-2 rounded-lg border border-indigo-200">
+                                💡 Catatan: Untuk mempercepat verifikasi akun dan penetapan peran, anggota tim baru cukup <u>hubungi Admin</u>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════ TAB 6: AUDIT TRAIL & HANDOVER ══════════ -->
+                <div x-show="userGuideTab === 'audit_handover'" class="space-y-5">
+                    <div class="border-b border-slate-200 pb-3">
+                        <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>🤝</span>
+                            <span>Kolaborasi Handover, Notifikasi Lonceng &amp; Jejak Audit</span>
+                        </h4>
+                        <p class="text-slate-500 mt-1 text-[11px]">Mendukung kerja sama lintas divisi antara tim komersial (Product Expert) dan tim teknis (Engineer / Technician).</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="p-3.5 rounded-xl bg-purple-50/70 border border-purple-200 space-y-1.5">
+                            <strong class="text-purple-900 font-extrabold flex items-center gap-1.5">
+                                <span>🤝</span> <span>Fitur Handover Proyek Antardivisi:</span>
+                            </strong>
+                            <p class="text-[11px] text-slate-600">Untuk menyerahkan proyek (misal: dari Product Expert ke Engineer), buka <em>"Arsip Proyek Tim"</em>, klik tombol <strong>"🤝 Handover"</strong> pada proyek, pilih rekan tim penerima, dan berikan memo kerja. Dokumen otomatis dibagikan dan riwayat serah terima tersimpan permanen.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 space-y-1.5">
+                            <strong class="text-amber-900 font-extrabold flex items-center gap-1.5">
+                                <span>🔔</span> <span>Pusat Notifikasi Interaktif (Lonceng Kuning):</span>
+                            </strong>
+                            <p class="text-[11px] text-slate-600">Terletak di bilah navigasi kanan atas. Setiap ada serah terima proyek, tanda titik merah akan muncul. Buka notifikasi dan klik <strong>"⚡ Buka Proyek"</strong> untuk langsung melanjutkan pekerjaan rekan Anda di layar kerja.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-300 space-y-1.5">
+                            <strong class="text-slate-900 font-extrabold flex items-center gap-1.5">
+                                <span>📜</span> <span>Jejak Audit Aktivitas (Audit Trail) bagi Admin &amp; Overseer:</span>
+                            </strong>
+                            <p class="text-[11px] text-slate-600">Tersedia pada sub-tab di modal Arsip Proyek. Sistem merekam setiap aksi secara <em>tamper-evident</em>: login pengguna, penyimpanan berkas ke Drive, pembukaan proyek, aktivitas handover, ekspor PDF/Excel resmi, hingga pengelolaan akun tim.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════ TAB 7: FAQ & PANDUAN PRAKTIS ══════════ -->
+                <div x-show="userGuideTab === 'faq'" class="space-y-4">
+                    <div class="border-b border-slate-200 pb-3">
+                        <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>💡</span>
+                            <span>Tanya Jawab (FAQ) &amp; Panduan Praktis Lapangan</span>
+                        </h4>
+                        <p class="text-slate-500 mt-1 text-[11px]">Klik pertanyaan di bawah ini untuk membuka jawaban dan tips operasional.</p>
+                    </div>
+
                     <div class="space-y-2.5">
-                        <div class="p-3 rounded-xl bg-blue-50/70 border border-blue-200">
-                            <strong>🔄 Sinkronisasi Harga Cloud:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Master harga perangkat, jasa mandays, dan hardware diambil dari tab Google Spreadsheet master. Klik tombol <em>"Sinkronisasi Harga Cloud"</em> untuk memperbarui harga real-time tanpa perlu redeploy server.</p>
+                        <!-- FAQ 1 -->
+                        <div class="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 transition">
+                            <button @click="activeFaqIdx = (activeFaqIdx === 0 ? null : 0)" 
+                                    class="w-full p-3.5 text-left font-bold text-slate-900 flex items-center justify-between hover:bg-slate-100 cursor-pointer">
+                                <span class="flex items-center gap-2">
+                                    <span class="text-blue-600">Q1:</span>
+                                    <span>Bagaimana cara melakukan reset isian jika ingin memulai kalkulasi proyek baru?</span>
+                                </span>
+                                <span class="text-slate-400 font-bold" x-text="activeFaqIdx === 0 ? '▲' : '▼'"></span>
+                            </button>
+                            <div x-show="activeFaqIdx === 0" class="p-3.5 pt-0 text-slate-600 border-t border-slate-200 bg-white text-[11px] space-y-2">
+                                <p>Buka <strong>Tab 1 (Sizing RF &amp; Penentuan Topologi)</strong>. Pada bagian atas kartu <em>"Parameter Teknis &amp; Lingkungan Operasi"</em>, klik tombol merah <strong>"🔄 Reset Isian"</strong> (di samping tombol <em>"✨ Isi dengan AI"</em>).</p>
+                                <p>Sistem akan menampilkan konfirmasi untuk mencegah hilangnya data secara tidak sengaja. Setelah Anda menyetujui, seluruh input dikembalikan ke nilai awal baseline (35 km², Hilly, 120 user, UHF, PLN Backup, Fiber Optic) dan BoQ diperbarui secara otomatis.</p>
+                            </div>
                         </div>
-                        <div class="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200">
-                            <strong>💾 Simpan &amp; Muat Proyek:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Setiap kali Anda mengklik <em>"Simpan ke Drive"</em>, sistem mengunggah dokumen kalkulasi (.cdpk.json) dan Excel Quotation (.xlsx) ke subfolder resmi. File tersebut dapat Anda muat kembali kapan saja melalui menu <em>"Arsip Proyek Tim"</em>.</p>
+
+                        <!-- FAQ 2 -->
+                        <div class="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 transition">
+                            <button @click="activeFaqIdx = (activeFaqIdx === 1 ? null : 1)" 
+                                    class="w-full p-3.5 text-left font-bold text-slate-900 flex items-center justify-between hover:bg-slate-100 cursor-pointer">
+                                <span class="flex items-center gap-2">
+                                    <span class="text-blue-600">Q2:</span>
+                                    <span>Mengapa akun baru saya berstatus 'Pending Approval' dan tidak bisa langsung login?</span>
+                                </span>
+                                <span class="text-slate-400 font-bold" x-text="activeFaqIdx === 1 ? '▲' : '▼'"></span>
+                            </button>
+                            <div x-show="activeFaqIdx === 1" class="p-3.5 pt-0 text-slate-600 border-t border-slate-200 bg-white text-[11px] space-y-2">
+                                <p>Sesuai dengan <strong>CDPK Security Policy (Zero Trust)</strong>, seluruh akun baru yang mendaftar mandiri melalui Google Workspace SSO wajib melalui audit dan verifikasi persetujuan sebelum diberikan hak akses ke dalam aplikasi dan data komersial.</p>
+                                <p>Jika Anda memerlukan percepatan aktivasi akun dan penetapan peran (misal sebagai <em>Product Expert</em> atau <em>Engineer / Technician</em>), Anda cukup <strong>hubungi Admin</strong> untuk melakukan verifikasi instan.</p>
+                            </div>
                         </div>
-                        <div class="p-3 rounded-xl bg-indigo-50/70 border border-indigo-200">
-                            <strong>📊 Ringkasan Portofolio Eksekutif &amp; Guardrail:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Bagi Administrator dan Overseer, modal arsip dilengkapi metrik total pipeline nilai proyek (IDR), rata-rata margin tim, tingkat kepatuhan guardrail, serta deteksi dini proyek dengan margin rendah (&lt;15%).</p>
+
+                        <!-- FAQ 3 -->
+                        <div class="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 transition">
+                            <button @click="activeFaqIdx = (activeFaqIdx === 2 ? null : 2)" 
+                                    class="w-full p-3.5 text-left font-bold text-slate-900 flex items-center justify-between hover:bg-slate-100 cursor-pointer">
+                                <span class="flex items-center gap-2">
+                                    <span class="text-blue-600">Q3:</span>
+                                    <span>Bagaimana cara menyerahkan (handover) kalkulasi proyek ke rekan kerja?</span>
+                                </span>
+                                <span class="text-slate-400 font-bold" x-text="activeFaqIdx === 2 ? '▲' : '▼'"></span>
+                            </button>
+                            <div x-show="activeFaqIdx === 2" class="p-3.5 pt-0 text-slate-600 border-t border-slate-200 bg-white text-[11px] space-y-2">
+                                <p>1. Simpan proyek Anda terlebih dahulu dengan mengklik tombol <strong>"💾 Simpan ke Drive"</strong>.</p>
+                                <p>2. Buka menu <strong>"📂 Arsip Proyek Tim"</strong> di bilah atas.</p>
+                                <p>3. Temukan proyek yang bersangkutan, lalu klik tombol <strong>"🤝 Handover"</strong>.</p>
+                                <p>4. Pilih rekan tim penerima (bisa 1 orang atau lebih), sertakan memo instruksi kerja, lalu klik <strong>"Kirim Handover"</strong>. Penerima akan langsung menerima notifikasi lonceng kuning dengan tombol pintas buka proyek.</p>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 4 -->
+                        <div class="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 transition">
+                            <button @click="activeFaqIdx = (activeFaqIdx === 3 ? null : 3)" 
+                                    class="w-full p-3.5 text-left font-bold text-slate-900 flex items-center justify-between hover:bg-slate-100 cursor-pointer">
+                                <span class="flex items-center gap-2">
+                                    <span class="text-blue-600">Q4:</span>
+                                    <span>Apakah aplikasi ini dapat dibuka melalui smartphone atau tablet (iOS &amp; Android)?</span>
+                                </span>
+                                <span class="text-slate-400 font-bold" x-text="activeFaqIdx === 3 ? '▲' : '▼'"></span>
+                            </button>
+                            <div x-show="activeFaqIdx === 3" class="p-3.5 pt-0 text-slate-600 border-t border-slate-200 bg-white text-[11px] space-y-2">
+                                <p>Ya, 100%! CDPK System Planner dirancang responsif penuh dengan standar target sentuh minimum 44px ramah jari. Aplikasi dapat dibuka langsung melalui Safari di iPhone &amp; iPad (iOS/iPadOS) serta Google Chrome di smartphone &amp; tablet Android.</p>
+                                <p>Navigasi atas, tabel BoQ, kartu ringkasan, dan modal otomatis menyesuaikan orientasi portrait maupun landscape.</p>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 5 -->
+                        <div class="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 transition">
+                            <button @click="activeFaqIdx = (activeFaqIdx === 4 ? null : 4)" 
+                                    class="w-full p-3.5 text-left font-bold text-slate-900 flex items-center justify-between hover:bg-slate-100 cursor-pointer">
+                                <span class="flex items-center gap-2">
+                                    <span class="text-blue-600">Q5:</span>
+                                    <span>Bagaimana cara menghasilkan BoQ tanpa harga untuk tender vs penawaran komersial lengkap?</span>
+                                </span>
+                                <span class="text-slate-400 font-bold" x-text="activeFaqIdx === 4 ? '▲' : '▼'"></span>
+                            </button>
+                            <div x-show="activeFaqIdx === 4" class="p-3.5 pt-0 text-slate-600 border-t border-slate-200 bg-white text-[11px] space-y-2">
+                                <p>Buka <strong>Tab 2 (Bill of Quantity &amp; Finansial)</strong>. Di bagian atas tabel terdapat toggle <strong>"Mode Ekspor"</strong>:</p>
+                                <ul class="list-disc pl-4 space-y-1 text-slate-600">
+                                    <li><strong>Mode Technical BoQ:</strong> Menghilangkan kolom harga satuan, diskon, margin, dan total harga. Sangat ideal untuk lampiran teknis tender / RFP pengadaan.</li>
+                                    <li><strong>Mode Commercial Quotation:</strong> Menampilkan kalkulasi harga lengkap, subtotal perangkat, mandays instalasi, margin komersial, PPN 11%, dan grand total siap kirim ke klien.</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB 5: ROLES & SECURITY -->
-                <div x-show="userGuideTab === 'security'" class="space-y-4">
-                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
-                        <span>🛡️</span>
-                        <span>Kebijakan Hak Akses &amp; Keamanan Akun (RBAC)</span>
-                    </h4>
-                    <div class="space-y-2.5">
-                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                            <strong class="text-amber-800">👑 Administrator (Adrian Kansil):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Memiliki hak akses penuh untuk: menyetujui (approve) pendaftaran karyawan baru, mengelola akun tim, mengakses folder master Google Drive &amp; Spreadsheet pricelist, serta melihat dan mengelola seluruh dashboard arsip tim dan jejak audit.</p>
-                        </div>
-                        <div class="p-3 rounded-xl bg-teal-50/50 border border-teal-200">
-                            <strong class="text-teal-900">👁️ Overseer (Pemantau &amp; Peninjau Eksekutif):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Memiliki hak akses lihat menyeluruh seperti Administrator terhadap akun tim, seluruh dokumen arsip proyek tim, ringkasan portofolio, dan jejak audit (*audit trail*). Dapat menggunakan seluruh modul kalkulator layaknya tim teknis &amp; komersial, namun tidak memiliki hak modifikasi akun tim dan tautan edit folder master Google Drive &amp; Spreadsheet pricelist disembunyikan.</p>
-                        </div>
-                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                            <strong class="text-blue-800">🛠️ Engineer / Technician:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Fokus pada rekayasa teknis: kalkulasi sizing RF, perakitan BoQ, estimasi mandays, penyimpanan berkas ke Google Drive, dan menerima serah terima proyek dari Product Expert. Tautan folder master cloud disembunyikan untuk menjaga integritas data.</p>
-                        </div>
-                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                            <strong class="text-emerald-800">💼 Product Expert:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Fokus pada penyusunan penawaran komersial: konfigurator paket kustom, pengaturan diskon &amp; margin, ekspor penawaran resmi PDF/Excel, serta handover penugasan ke tim Engineer / Technician.</p>
-                        </div>
-                        <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200">
-                            <strong class="text-indigo-900">🔒 Domain Whitelisting &amp; Pending Approval:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Akses sistem dibatasi secara ketat hanya untuk domain resmi <strong>@citradata.id</strong> dan <strong>@techsolutions.id</strong>. Setiap pengguna baru wajib disetujui terlebih dahulu oleh Administrator sebelum dapat membuka aplikasi.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 6: AUDIT TRAIL & HANDOVER -->
-                <div x-show="userGuideTab === 'audit_handover'" class="space-y-4">
-                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
-                        <span>🤝</span>
-                        <span>Kolaborasi Handover, Notifikasi &amp; Jejak Audit (Audit Trail)</span>
-                    </h4>
-                    <div class="space-y-2.5">
-                        <div class="p-3 rounded-xl bg-purple-50/70 border border-purple-200">
-                            <strong class="text-purple-900">🤝 Fitur Handover Proyek Antardivisi:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Untuk menyerahkan penugasan proyek (misal: dari Product Expert ke Engineer), buka menu <em>"Arsip Proyek Tim"</em>, klik tombol <strong>"🤝 Handover"</strong> pada proyek, pilih rekan tim penerima, dan tambahkan catatan memo kerja. Proyek otomatis dibagikan dan riwayat serah terima tersimpan permanen.</p>
-                        </div>
-                        <div class="p-3 rounded-xl bg-amber-50/70 border border-amber-200">
-                            <strong class="text-amber-900">🔔 Pusat Notifikasi (Lonceng Kuning):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Setiap kali Anda menerima serah terima proyek, lonceng kuning di bilah navigasi atas akan menampilkan tanda merah. Buka notifikasi dan klik <strong>"⚡ Buka Proyek"</strong> untuk langsung melanjutkan pekerjaan rekan Anda.</p>
-                        </div>
-                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-300">
-                            <strong class="text-slate-900">📜 Jejak Audit (Audit Trail) bagi Admin &amp; Overseer:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Tersedia pada sub-tab di modal Arsip Proyek. Sistem merekam setiap aksi secara <em>tamper-evident</em>: login pengguna, penyimpanan berkas, pembukaan proyek, aktivitas handover, ekspor dokumen resmi PDF/Excel, hingga pengelolaan hak akses akun.</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            <!-- Footer -->
-            <div class="p-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs px-6">
-                <span class="text-slate-500 font-medium">CDPK System Planner v8.4.0 Cloud • Solusi Motorola Solutions &amp; Avigilon</span>
-                <button @click="userGuideOpen = false" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer transition">Tutup Panduan</button>
+            <!-- Footer (Fixed / Shrink-0) -->
+            <div class="p-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs px-6 shrink-0">
+                <!-- Navigation Stepper Buttons -->
+                <div class="flex items-center gap-2">
+                    <button @click="
+                        const tabs = ['workflow', 'sizing', 'configurator', 'sync_archive', 'security', 'audit_handover', 'faq'];
+                        let idx = tabs.indexOf(userGuideTab);
+                        if (idx > 0) userGuideTab = tabs[idx - 1];
+                    " :disabled="userGuideTab === 'workflow'"
+                    :class="userGuideTab === 'workflow' ? 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-slate-200 hover:bg-slate-300 text-slate-800 cursor-pointer'"
+                    class="px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 shadow-xs">
+                        <span>◀</span> <span>Sebelumnya</span>
+                    </button>
+
+                    <button @click="
+                        const tabs = ['workflow', 'sizing', 'configurator', 'sync_archive', 'security', 'audit_handover', 'faq'];
+                        let idx = tabs.indexOf(userGuideTab);
+                        if (idx < tabs.length - 1) userGuideTab = tabs[idx + 1];
+                    " :disabled="userGuideTab === 'faq'"
+                    :class="userGuideTab === 'faq' ? 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'"
+                    class="px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 shadow-xs">
+                        <span>Selanjutnya</span> <span>▶</span>
+                    </button>
+                </div>
+
+                <!-- Close CTA -->
+                <div class="flex items-center gap-3">
+                    <span class="text-slate-400 font-medium hidden sm:inline">CDPK System Planner v8.4.0 Cloud</span>
+                    <button @click="userGuideOpen = false" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold cursor-pointer transition shadow-xs">
+                        Tutup Panduan
+                    </button>
+                </div>
             </div>
         </div>
     </div>

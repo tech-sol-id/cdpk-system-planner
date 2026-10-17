@@ -165,6 +165,15 @@ window.cdpkSystemPlannerApp = function () {
         auditSearchQuery: '',
         userGuideOpen: false,
         userGuideTab: 'workflow',
+        guideSearchQuery: '',
+        activeFaqIdx: null,
+        jumpFromGuide(tabName, modalToOpen = null) {
+            this.userGuideOpen = false;
+            if (tabName) this.activeTab = tabName;
+            if (modalToOpen === 'archive') this.openArchiveDashboard();
+            if (modalToOpen === 'users') this.usersModalOpen = true;
+            if (modalToOpen === 'compare') this.compareModalOpen = true;
+        },
         compareModalOpen: false,
 
         // ─── Module 7: Product & System Configurator State ───────────────
@@ -423,7 +432,7 @@ window.cdpkSystemPlannerApp = function () {
                     this.regForm = { name: '', email: '', username: '', role: 'engineer', title: '', password: '', confirmPassword: '' };
                     setTimeout(() => {
                         this.authMode = 'login';
-                        this.loginError = 'Pendaftaran Anda berhasil dikirim dan sedang menunggu persetujuan Administrator. Hubungi Admin (@adrian) untuk aktivasi akun.';
+                        this.loginError = 'Pendaftaran Anda berhasil dikirim dan sedang menunggu persetujuan Administrator. Silakan hubungi Admin untuk aktivasi akun.';
                     }, 3000);
                 } else {
                     this.regError = data.message || 'Pendaftaran gagal';
@@ -724,7 +733,7 @@ window.cdpkSystemPlannerApp = function () {
 
         async deleteUser(u) {
             if (u.username === 'adrian') {
-                alert('Akun administrator utama (@adrian) tidak dapat dihapus');
+                alert('Akun administrator utama tidak dapat dihapus');
                 return;
             }
             if (!confirm(`Hapus pengguna @${u.username} (${u.name} - ${u.email}) secara permanen? Data yang telah dihapus tidak dapat dipulihkan.`)) {
@@ -1554,6 +1563,36 @@ window.cdpkSystemPlannerApp = function () {
                 notes: isEn ? (notesEn || p.best_for_en || '') : (notesId || p.best_for_id || ''),
                 children: []
             };
+        },
+
+        resetSizingInputs() {
+            const confirmMsg = this.lang === 'en'
+                ? 'Reset all technical sizing parameters to default baseline values?'
+                : 'Kembalikan seluruh isian parameter sizing ke nilai default awal?';
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            this.industry = 'mining';
+            this.areaInput = 35;
+            this.areaUnit = 'km2';
+            this.userCount = 120;
+            this.terrain = 'hilly';
+            this.freqBand = 'uhf';
+            this.towerHeight = 35;
+            this.buildingFloors = 4;
+            this.powerSource = 'pln_ups';
+            this.backupHours = 8;
+            this.backhaul = 'fiber';
+            this.needAtex = false;
+            this.needEncryption = false;
+            this.needGps = true;
+            this.needManDown = true;
+            this.needDispatch = true;
+            this.needCctv = false;
+            this.cctvCount = 8;
+            this.activeTechSlide = 0;
+            this.syncBoqFromSizing();
+            this.runCoverageSimulation();
         },
 
         syncBoqFromSizing() {

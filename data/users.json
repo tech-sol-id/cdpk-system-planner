@@ -9,5 +9,16 @@
     "salt": "8716e6a13a307eac250e74d14fa43363",
     "status": "active",
     "created_at": "2026-10-17 00:00:00"
+  },
+  {
+    "username": "gama",
+    "name": "Gama Waney",
+    "email": "gama@citradata.id",
+    "role": "engineer",
+    "title": "Presales Engineer",
+    "password_hash": "cffcf4615d324c393ab8acef6ee59c2539ded6050caaf7947ff39b40a51fc3fc",
+    "salt": "c7d8982a9f7f714d1d5c4b8e70f839aa",
+    "status": "pending",
+    "created_at": "2026-10-17 05:27:31"
   }
 ]
