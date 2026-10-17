@@ -39,21 +39,26 @@ Buka peramban (*web browser*) Anda ke: **[https://cdpk-system-planner.onrender.c
 > Halaman depan aplikasi diproteksi secara ketat. Sebelum berhasil masuk (*login*), seluruh lembar kalkulator dan data proyek terisolasi dan tidak dapat diakses publik.
 
 ### 1.2. Opsi Masuk (Login)
-1. **Opsi A: Masuk 1-Klik dengan Google Workspace:**
-   - Klik tombol **"Sign in with Google"**.
+1. **Jalur Utama: Masuk / Daftar 1-Klik dengan Google Workspace:**
+   - Klik tombol **"Masuk / Daftar dengan Google Workspace"**.
    - Pilih akun email resmi perusahaan Anda:
      - `@citradata.id` (Karyawan PT Citradata Purnakharisma)
      - `@techsolutions.id` (Tim Engineering & Mitra Resmi)
+   - *Keunggulan:* Tidak memerlukan password manual, terenkripsi penuh oleh Google Identity Services.
    - *Catatan:* Email publik seperti `@gmail.com` atau domain di luar whitelist akan ditolak otomatis oleh sistem keamanan.
-2. **Opsi B: Masuk dengan Kredensial (Username & Password):**
-   - Masukkan *Username* atau *Email* terdaftar Anda.
-   - Masukkan *Password*.
-   - Klik tombol **"Masuk ke Sistem"**.
+2. **Jalur Sekunder: Masuk dengan Kredensial Khusus (Username & Password):**
+   - Khusus akun lokal yang didaftarkan secara manual oleh Administrator (misal akun `@adrian`).
+   - Masukkan *Username / Email* dan *Password*, lalu klik **"Masuk dengan Password"**.
 
-### 1.3. Pendaftaran Pengguna Baru & Persetujuan Admin
-- Karyawan baru dapat mengajukan akun mandiri melalui tab **"Daftar Akun Baru"**.
-- Setelah form dikirim, akun akan berada dalam status **`⏳ Pending Approval`**.
-- Akun baru dapat digunakan setelah diverifikasi dan disetujui (*approve*) oleh **Administrator**.
+### 1.3. Pendaftaran Pengguna Baru & Penetapan Role oleh Admin
+Sistem menyediakan dua jalur orientasi anggota tim baru:
+1. **Jalur Rekomendasi: Pre-Provisioning oleh Admin (Tanpa Password)**
+   - Administrator mendaftarkan email resmi karyawan (`@citradata.id` / `@techsolutions.id`) dan langsung menetapkan perannya melalui panel *Kelola Pengguna Tim*.
+   - Password manual tidak diperlukan. Status akun langsung **`🟢 Aktif`**.
+   - Ketika karyawan tersebut login pertama kali via Google Workspace SSO, sistem langsung mengenali emailnya dan memberikan akses instan tanpa menunggu approval.
+2. **Jalur Registrasi Mandiri (Self-Initiated Google SSO):**
+   - Karyawan baru yang langsung menekan tombol Google Workspace SSO akan dicatat dalam antrean **`⏳ Pending Approval`**.
+   - Administrator menerima notifikasi verifikasi pendaftar baru dan dapat **memilih peran yang diinginkan** (*Product Expert, Engineer / Technician, Overseer, atau Administrator*) langsung pada menu verifikasi sebelum menekan tombol **"Setujui & Aktifkan"**.
 
 ---
 

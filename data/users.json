@@ -5,8 +5,8 @@
     "email": "adrian@citradata.id",
     "role": "admin",
     "title": "Principal Lead & Solutions Architect",
-    "password_hash": "be89474d872479fba71b638248e29f717528e8a215c742125dac594a6933a694",
-    "salt": "c9d058f727af0a4038d241c3e6c92f99",
+    "password_hash": "3fe9030320edd05f7965f021bc32e9d0a7e7ee333fa2c01875b0d8b206542bb1",
+    "salt": "8716e6a13a307eac250e74d14fa43363",
     "status": "active",
     "created_at": "2026-10-17 00:00:00"
   }

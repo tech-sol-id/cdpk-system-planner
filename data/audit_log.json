@@ -1,5 +1,60 @@
 [
   {
+    "id": "aud_ece329eb3420",
+    "timestamp": "2026-10-17 05:25:48",
+    "username": "adrian",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "action": "login",
+    "detail": "Login sukses via Kredensial (@adrian)",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  },
+  {
+    "id": "aud_f80dede506e0",
+    "timestamp": "2026-10-17 05:25:30",
+    "username": "adrian",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "action": "user_mgmt",
+    "detail": "Menghapus pengguna @budi secara permanen",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  },
+  {
+    "id": "aud_8394d54a371a",
+    "timestamp": "2026-10-17 05:25:29",
+    "username": "adrian",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "action": "user_mgmt",
+    "detail": "Memperbarui profil anggota tim @budi",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  },
+  {
+    "id": "aud_1ab51e394854",
+    "timestamp": "2026-10-17 05:25:28",
+    "username": "adrian",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "action": "user_mgmt",
+    "detail": "Menambah pengguna baru: Budi Santoso (@None) peran sales",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  },
+  {
+    "id": "aud_5c45e6b61189",
+    "timestamp": "2026-10-17 05:25:27",
+    "username": "adrian",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "action": "login",
+    "detail": "Login sukses via Kredensial (@adrian)",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  },
+  {
     "id": "aud_init",
     "timestamp": "2026-10-17 00:00:00",
     "username": "system",

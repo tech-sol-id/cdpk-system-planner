@@ -32,6 +32,7 @@ from server.auth import (
     reset_user_password,
     approve_team_member,
     reject_team_member,
+    delete_team_member,
     promote_team_member,
     demote_team_member,
     sync_users_from_gsheet
@@ -455,14 +456,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             if not cur_user or cur_user.get("role") != "admin":
                 return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat menyetujui pendaftaran"}, status=403)
             username = body.get("username")
-            res = approve_team_member(cur_user.get("role"), username)
+            assigned_role = body.get("role")
+            res = approve_team_member(cur_user.get("role"), username, assigned_role=assigned_role)
             if res.get("status") == "ok":
                 log_audit_event(
                     cur_user.get("username", ""),
                     cur_user.get("name", ""),
                     cur_user.get("role", "admin"),
                     "user_mgmt",
-                    f"Menyetujui permohonan akun @{username}",
+                    f"Menyetujui permohonan akun @{username} (Peran: {assigned_role or 'engineer'})",
                     ip=self.address_string()
                 )
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
@@ -480,6 +482,23 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                     cur_user.get("role", "admin"),
                     "user_mgmt",
                     f"Menolak pendaftaran akun @{username}",
+                    ip=self.address_string()
+                )
+            return self._send_json(res, status=200 if res["status"] == "ok" else 400)
+
+        if path == "/api/auth/users/delete":
+            cur_user = self._get_auth_user()
+            if not cur_user or cur_user.get("role") != "admin":
+                return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat menghapus pengguna"}, status=403)
+            username = body.get("username")
+            res = delete_team_member(cur_user.get("role"), username)
+            if res.get("status") == "ok":
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "admin"),
+                    "user_mgmt",
+                    f"Menghapus pengguna @{username} secara permanen",
                     ip=self.address_string()
                 )
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)

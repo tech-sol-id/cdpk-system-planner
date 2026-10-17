@@ -472,18 +472,37 @@ def add_team_member(creator_role: str, new_user_data: Dict[str, Any]) -> Dict[st
     if creator_role != "admin":
         return {"status": "error", "message": "Hanya Administrator yang memiliki akses untuk menambah pengguna"}
 
-    username = (new_user_data.get("username") or "").strip().lower()
     email = (new_user_data.get("email") or "").strip().lower()
-    password = new_user_data.get("password") or "cdpk2026!"
+    if not email:
+        return {"status": "error", "message": "Email perusahaan wajib diisi"}
+
+    # Validate enterprise domain (@citradata.id or @techsolutions.id)
+    user_domain = email.split("@")[1] if "@" in email else ""
+    if not any(user_domain == d for d in ALLOWED_DOMAINS):
+        allowed_str = ", ".join([f"@{d}" for d in ALLOWED_DOMAINS])
+        return {"status": "error", "message": f"Hanya email dengan domain perusahaan resmi yang diizinkan ({allowed_str})"}
+
+    username = (new_user_data.get("username") or "").strip().lower()
+    if not username:
+        raw_prefix = email.split("@")[0].replace(".", "_").replace("-", "_")
+        username = "".join(c for c in raw_prefix if c.isalnum() or c == "_")
+        if not username:
+            username = "user_" + secrets.token_hex(4)
+
     name = (new_user_data.get("name") or "").strip()
+    if not name:
+        name = email.split("@")[0].replace(".", " ").replace("_", " ").title()
+
     role = new_user_data.get("role") or "engineer"
     if role not in ("admin", "overseer", "engineer", "sales"):
         role = "engineer"
-    title = (new_user_data.get("title") or "").strip()
-    default_title = "Overseer / Executive Auditor" if role == "overseer" else ("Engineer / Technician" if role == "engineer" else "Product Expert")
 
-    if not username or not email or not name:
-        return {"status": "error", "message": "Username, email, dan nama lengkap wajib diisi"}
+    title = (new_user_data.get("title") or "").strip()
+    default_title = "Overseer / Executive Auditor" if role == "overseer" else ("Engineer / Technician" if role == "engineer" else ("Product Expert" if role == "sales" else "Administrator"))
+
+    password = (new_user_data.get("password") or "").strip()
+    if not password:
+        password = "google_sso_" + secrets.token_hex(8)
 
     users = load_users()
     for u in users:
@@ -797,14 +816,88 @@ def reset_user_password(creator_role: str, username: str, new_password: str) -> 
     return {"status": "ok", "message": f"Password untuk @{username_clean} berhasil di-reset"}
 
 
-def approve_team_member(creator_role: str, username: str) -> Dict[str, Any]:
-    """Approve a pending self-registered user and activate account."""
+def approve_team_member(creator_role: str, username: str, assigned_role: Optional[str] = None) -> Dict[str, Any]:
+    """Approve a pending self-registered user and activate account with optional assigned role."""
     if creator_role != "admin":
         return {"status": "error", "message": "Hanya Administrator yang dapat menyetujui pendaftaran"}
-    res = update_team_member(creator_role, username, {"status": "active"})
+    update_data: Dict[str, Any] = {"status": "active"}
+    if assigned_role and assigned_role in ("admin", "overseer", "engineer", "sales"):
+        update_data["role"] = assigned_role
+        default_title = "Overseer / Executive Auditor" if assigned_role == "overseer" else ("Engineer / Technician" if assigned_role == "engineer" else ("Product Expert" if assigned_role == "sales" else "Administrator"))
+        update_data["title"] = default_title
+    res = update_team_member(creator_role, username, update_data)
     if res.get("status") == "ok":
-        res["message"] = f"Pendaftaran @{username} berhasil disetujui. Akun sekarang aktif."
+        role_label = "Administrator" if assigned_role == "admin" else ("Overseer" if assigned_role == "overseer" else ("Product Expert" if assigned_role == "sales" else "Engineer / Technician"))
+        res["message"] = f"Pendaftaran @{username} berhasil disetujui ({role_label}). Akun sekarang aktif."
     return res
+
+
+def delete_team_member(creator_role: str, username: str) -> Dict[str, Any]:
+    """Permanently delete a team member (cannot delete primary admin 'adrian')."""
+    if creator_role != "admin":
+        return {"status": "error", "message": "Hanya Administrator yang dapat menghapus pengguna"}
+    username_clean = (username or "").strip().lower()
+    if username_clean == "adrian":
+        return {"status": "error", "message": "Akun administrator utama (@adrian) tidak dapat dihapus"}
+
+    users = load_users()
+    target_user = None
+    remaining_users = []
+    for u in users:
+        if u["username"].lower() == username_clean:
+            target_user = u
+        else:
+            remaining_users.append(u)
+
+    if not target_user:
+        return {"status": "error", "message": f"Pengguna @{username_clean} tidak ditemukan"}
+
+    save_local_users(remaining_users)
+    _USERS_CACHE["users"] = remaining_users
+
+    # Rewrite Google Sheet Team_Users
+    token = _get_gdrive_token()
+    if token:
+        try:
+            spreadsheet_id = _get_spreadsheet_id()
+            headers = [
+                "username", "name", "email", "role", "title",
+                "password", "password_hash", "salt", "status", "created_at"
+            ]
+            rows = [headers]
+            for u in remaining_users:
+                rows.append([
+                    u.get("username", ""),
+                    u.get("name", ""),
+                    u.get("email", ""),
+                    u.get("role", "engineer"),
+                    u.get("title", ""),
+                    "********",
+                    u.get("password_hash", ""),
+                    u.get("salt", ""),
+                    u.get("status", "active"),
+                    u.get("created_at", "")
+                ])
+            # Clear old range
+            clear_url = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A1:J100:clear"
+            req_clear = urllib.request.Request(clear_url, data=b"{}", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}, method="POST")
+            with urllib.request.urlopen(req_clear, timeout=12) as resp:
+                pass
+
+            # Write updated rows
+            put_url = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A1:J{len(rows)}?valueInputOption=USER_ENTERED"
+            req_put = urllib.request.Request(
+                put_url,
+                data=json.dumps({"range": f"Team_Users!A1:J{len(rows)}", "values": rows}).encode("utf-8"),
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                method="PUT"
+            )
+            with urllib.request.urlopen(req_put, timeout=15) as resp:
+                pass
+        except Exception as e:
+            logger.warning(f"Error updating GSheet after deleting user: {e}")
+
+    return {"status": "ok", "message": f"Pengguna @{username_clean} ({target_user.get('name', '')}) telah dihapus secara permanen."}
 
 
 def reject_team_member(creator_role: str, username: str) -> Dict[str, Any]:

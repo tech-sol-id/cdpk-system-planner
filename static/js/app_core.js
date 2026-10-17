@@ -134,9 +134,11 @@ window.cdpkSystemPlannerApp = function () {
         },
         newUserLoading: false,
         newUserError: '',
+        editUserModalOpen: false,
         editingUser: null,
         editUserLoading: false,
         editUserError: '',
+        resetPwdModalOpen: false,
         resetPwdTarget: null,
         resetPwdInput: 'cdpk2026!',
         resetPwdLoading: false,
@@ -589,21 +591,26 @@ window.cdpkSystemPlannerApp = function () {
 
         openAddUserForm() {
             this.newUserForm = {
-                username: '',
-                name: '',
                 email: '',
+                name: '',
+                username: '',
                 role: 'engineer',
-                title: '',
-                password: 'cdpk2026!'
+                title: ''
             };
             this.newUserError = '';
             this.newUserModalOpen = true;
         },
 
         async submitNewUser() {
-            if (!this.newUserForm.name || !this.newUserForm.username || !this.newUserForm.email) {
-                this.newUserError = this.lang === 'en' ? 'Name, username, and corporate email are required' : 'Nama, username, dan email kantor wajib diisi';
+            if (!this.newUserForm.email) {
+                this.newUserError = this.lang === 'en' ? 'Corporate email is required' : 'Email perusahaan (@citradata.id / @techsolutions.id) wajib diisi';
                 return;
+            }
+            if (!this.newUserForm.username && this.newUserForm.email.includes('@')) {
+                this.newUserForm.username = this.newUserForm.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
+            }
+            if (!this.newUserForm.name && this.newUserForm.email.includes('@')) {
+                this.newUserForm.name = this.newUserForm.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ').trim();
             }
             this.newUserLoading = true;
             this.newUserError = '';
@@ -633,6 +640,7 @@ window.cdpkSystemPlannerApp = function () {
         startEditUser(u) {
             this.editingUser = JSON.parse(JSON.stringify(u));
             this.editUserError = '';
+            this.editUserModalOpen = true;
         },
 
         async submitEditUser() {
@@ -650,6 +658,7 @@ window.cdpkSystemPlannerApp = function () {
                 });
                 const data = await resp.json();
                 if (resp.ok && data.status === 'ok') {
+                    this.editUserModalOpen = false;
                     this.editingUser = null;
                     await this.loadTeamUsers(false);
                 } else {
@@ -697,7 +706,10 @@ window.cdpkSystemPlannerApp = function () {
                         'Authorization': `Bearer ${this.sessionToken}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username: u.username })
+                    body: JSON.stringify({
+                        username: u.username,
+                        role: u.role || 'engineer'
+                    })
                 });
                 const data = await resp.json();
                 if (resp.ok && data.status === 'ok') {
@@ -707,6 +719,34 @@ window.cdpkSystemPlannerApp = function () {
                 }
             } catch (e) {
                 alert('Kendala koneksi saat menyetujui pendaftaran');
+            }
+        },
+
+        async deleteUser(u) {
+            if (u.username === 'adrian') {
+                alert('Akun administrator utama (@adrian) tidak dapat dihapus');
+                return;
+            }
+            if (!confirm(`Hapus pengguna @${u.username} (${u.name} - ${u.email}) secara permanen? Data yang telah dihapus tidak dapat dipulihkan.`)) {
+                return;
+            }
+            try {
+                const resp = await fetch('/api/auth/users/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.sessionToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username: u.username })
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    await this.loadTeamUsers(false);
+                } else {
+                    alert(data.message || 'Gagal menghapus pengguna');
+                }
+            } catch (e) {
+                alert('Kendala koneksi saat menghapus pengguna');
             }
         },
 
@@ -783,9 +823,10 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         startResetPassword(u) {
-            this.resetPwdTarget = u;
+            this.resetPwdTarget = JSON.parse(JSON.stringify(u));
             this.resetPwdInput = 'cdpk2026!';
             this.resetPwdError = '';
+            this.resetPwdModalOpen = true;
         },
 
         async submitResetPassword() {
@@ -809,6 +850,7 @@ window.cdpkSystemPlannerApp = function () {
                     alert(this.lang === 'en'
                         ? `Password for @${this.resetPwdTarget.username} has been reset and updated in Google Sheet!`
                         : `Password untuk @${this.resetPwdTarget.username} berhasil di-reset dan tersimpan ke Google Sheet!`);
+                    this.resetPwdModalOpen = false;
                     this.resetPwdTarget = null;
                 } else {
                     this.resetPwdError = data.message || (this.lang === 'en' ? 'Failed resetting password' : 'Gagal me-reset password');
