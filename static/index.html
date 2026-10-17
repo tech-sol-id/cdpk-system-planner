@@ -430,6 +430,13 @@
 
         <!-- Project Metadata Banner (Always visible for context) -->
         <section class="bg-white rounded-xl p-4 card-shadow border border-slate-200/80">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider" x-text="t('projMetaTitle') || 'Informasi Proyek & Klien'"></span>
+                <button @click="resetModalOpen = true" 
+                        class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition cursor-pointer">
+                    <span>🔄</span> <span x-text="lang === 'en' ? 'New Project / Reset' : 'Proyek Baru / Reset Isian'"></span>
+                </button>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                     <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('projName')"></label>
@@ -464,7 +471,7 @@
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <h2 class="text-base font-bold text-slate-800" x-text="t('sizingInputTitle')"></h2>
                     <div class="flex items-center gap-2">
-                        <button @click="resetSizingInputs()" 
+                        <button @click="resetModalOpen = true" 
                                 class="text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer"
                                 :title="t('resetInputsTitle')">
                             <span>🔄</span> <span x-text="t('resetInputsBtn')"></span>
@@ -492,9 +499,10 @@
                         <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('areaSizeLabel')"></label>
                         <div class="flex">
                             <input type="number" min="0.1" step="0.5" x-model.number="areaInput" @change="syncBoqFromSizing()"
+                                   placeholder="Contoh: 35"
                                    class="w-full px-3 py-2 text-sm rounded-l-lg border border-slate-300 font-semibold" />
                             <select x-model="areaUnit" @change="syncBoqFromSizing()"
-                                    class="px-2 py-2 text-xs font-bold bg-slate-100 border border-l-0 border-slate-300 rounded-r-lg">
+                                     class="px-2 py-2 text-xs font-bold bg-slate-100 border border-l-0 border-slate-300 rounded-r-lg">
                                 <option value="km2">km²</option>
                                 <option value="ha">Ha</option>
                             </select>
@@ -503,6 +511,7 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('userCountLabel')"></label>
                         <input type="number" min="1" max="5000" x-model.number="userCount" @change="syncBoqFromSizing()"
+                               placeholder="Contoh: 120"
                                class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-semibold" />
                     </div>
                 </div>
@@ -537,11 +546,13 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('towerHeightLabel')"></label>
                         <input type="number" min="5" max="120" x-model.number="towerHeight" @change="syncBoqFromSizing()"
+                               placeholder="Contoh: 35"
                                class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-semibold" />
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('buildingFloorsLabel')"></label>
                         <input type="number" min="1" max="80" x-model.number="buildingFloors" @change="syncBoqFromSizing()"
+                               placeholder="Contoh: 4"
                                class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-semibold" />
                     </div>
                 </div>
@@ -1110,13 +1121,52 @@
         <div x-show="activeTab === 'coverage'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-4 bg-white rounded-xl p-5 card-shadow border border-slate-200 space-y-4">
                 <h2 class="text-base font-extrabold text-slate-900" x-text="t('covTitle')"></h2>
+                <!-- Location Search by City / District -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1" x-text="t('projLocation')"></label>
                     <div class="flex gap-1.5">
-                        <input type="text" x-model="covSearchLocation" class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-300" />
-                        <button @click="geocodeLocation()" class="px-3 py-1.5 bg-blue-700 text-white text-xs font-bold rounded-lg">Cari</button>
+                        <input type="text" x-model="covSearchLocation" :placeholder="t('covSearchPh') || 'Nama kota / distrik...'" class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-300 font-medium" />
+                        <button @click="geocodeLocation()" class="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-lg cursor-pointer transition">
+                            <span x-text="lang === 'en' ? 'Search' : 'Cari'"></span>
+                        </button>
                     </div>
-                    <div class="text-[11px] text-slate-400 mt-1" x-text="`Lat: ${covLat}, Lon: ${covLon}`"></div>
+                </div>
+
+                <!-- Manual Coordinate Inputs & GPS Detection -->
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <span>📍</span> <span x-text="t('covManualCoordsTitle') || 'Koordinat Repeater / Base Station'"></span>
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-0.5" x-text="t('covLatLabel') || 'Latitude'"></label>
+                            <input type="number" step="0.0001" x-model.number="covLat" @change="applyManualCoords()" 
+                                   placeholder="-1.2379"
+                                   class="w-full px-2.5 py-1 text-xs rounded-lg border border-slate-300 font-mono font-bold bg-white text-slate-800" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-0.5" x-text="t('covLonLabel') || 'Longitude'"></label>
+                            <input type="number" step="0.0001" x-model.number="covLon" @change="applyManualCoords()" 
+                                   placeholder="116.8529"
+                                   class="w-full px-2.5 py-1 text-xs rounded-lg border border-slate-300 font-mono font-bold bg-white text-slate-800" />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <button @click="applyManualCoords()" 
+                                class="py-1.5 px-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-1 cursor-pointer">
+                            <span>📍</span> <span x-text="t('covSetCoordsBtn') || 'Terapkan'"></span>
+                        </button>
+                        <button @click="detectDeviceGps()" 
+                                :disabled="isDetectingGps"
+                                class="py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-1 cursor-pointer">
+                            <span x-show="!isDetectingGps">📡</span>
+                            <span x-show="isDetectingGps" class="animate-spin text-[10px]">⏳</span>
+                            <span x-text="isDetectingGps ? (t('covDetectingGps') || 'Mencari...') : (t('covDetectGpsBtn') || 'Deteksi GPS')"></span>
+                        </button>
+                    </div>
+                    <div class="text-[10px] text-slate-500 italic" x-text="t('covMapClickTip') || '💡 Klik pada peta atau geser marker untuk memindahkan posisi site'"></div>
                 </div>
 
                 <div>
@@ -1184,12 +1234,68 @@
                     <canvas id="cdpkCoverageCanvas" class="w-full rounded-xl border border-slate-800"></canvas>
                 </div>
 
-                <!-- View 2: Upgraded Real GIS Leaflet Map with RF Propagation Rings -->
+                <!-- View 2: Upgraded Real GIS Leaflet Map with RF Propagation Rings & Heatmap -->
                 <div x-show="coverageViewMode === 'gis'" class="space-y-2">
-                    <div id="cdpkLeafletMap" class="w-full h-[460px] rounded-xl border border-slate-700 shadow-inner relative z-0"></div>
+                    <div class="relative w-full rounded-xl overflow-hidden border border-slate-700 shadow-inner">
+                        <div id="cdpkLeafletMap" class="w-full h-[470px] z-0"></div>
+
+                        <!-- Floating Live Signal Strength Probe HUD (Top Right) -->
+                        <div class="absolute top-3 right-3 z-40 bg-slate-900/90 backdrop-blur-md text-white p-3 rounded-xl border border-slate-700 shadow-2xl max-w-xs text-xs pointer-events-auto transition">
+                            <div class="flex items-center justify-between gap-2 border-b border-slate-700 pb-1.5 mb-2">
+                                <span class="font-extrabold text-amber-400 flex items-center gap-1 text-[11px]">
+                                    <span>📶</span> <span x-text="t('covProbeTitle') || 'Signal Strength Probe'"></span>
+                                </span>
+                                <span x-show="gisProbe.active" class="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider"
+                                      :style="`background: ${gisProbe.color}25; color: ${gisProbe.color}; border: 1px solid ${gisProbe.color}60;`"
+                                      x-text="gisProbe.quality"></span>
+                            </div>
+                            <template x-if="gisProbe.active">
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="text-slate-400" x-text="(t('covProbeDist') || 'Jarak ke Site') + ':'"></span>
+                                        <span class="font-mono font-bold text-slate-200" x-text="gisProbe.distKm + ' km'"></span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="text-slate-400" x-text="(t('covProbeRssi') || 'Estimasi RSSI') + ':'"></span>
+                                        <span class="font-mono font-extrabold text-sm" :style="`color: ${gisProbe.color};`" x-text="gisProbe.rssiDbm + ' dBm'"></span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="text-slate-400" x-text="(t('covProbeMargin') || 'Fade Margin') + ':'"></span>
+                                        <span class="font-mono font-bold text-slate-200" x-text="gisProbe.marginDb > 0 ? ('+' + gisProbe.marginDb + ' dB') : (gisProbe.marginDb + ' dB')"></span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 pt-1 border-t border-slate-800 font-mono" x-text="`Lat: ${gisProbe.lat}, Lon: ${gisProbe.lon}`"></div>
+                                </div>
+                            </template>
+                            <template x-if="!gisProbe.active">
+                                <div class="text-[11px] text-slate-300 italic flex items-center gap-1.5">
+                                    <span>👉</span>
+                                    <span x-text="t('covProbePrompt') || 'Gerakkan kursor di atas peta untuk membaca sinyal.'"></span>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Heatmap Controls Toolbar (Bottom Left on Map) -->
+                        <div class="absolute bottom-3 left-3 z-40 bg-slate-900/90 backdrop-blur-md text-white px-3 py-2 rounded-xl border border-slate-700 shadow-xl flex items-center gap-3 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] uppercase font-bold text-slate-400" x-text="t('covHeatmapOpacity') || 'Transparansi'"></span>
+                                <input type="range" min="0.15" max="0.85" step="0.05" x-model.number="gisHeatmapOpacity" @input="updateGisHeatmapOpacity()" class="w-18 cursor-pointer accent-emerald-500" />
+                                <span class="text-[10px] font-mono text-emerald-400 font-bold" x-text="Math.round(gisHeatmapOpacity * 100) + '%'"></span>
+                            </div>
+                            <div class="h-4 w-px bg-slate-700"></div>
+                            <label class="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-300 select-none">
+                                <input type="checkbox" x-model="showGisRings" @change="initOrUpdateGisMap()" class="rounded text-emerald-600 focus:ring-0" />
+                                <span x-text="t('covToggleRings') || 'Cincin Jarak'"></span>
+                            </label>
+                        </div>
+                    </div>
+
                     <!-- GIS Legend -->
                     <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-[11px]">
                         <div class="flex flex-wrap items-center gap-3">
+                            <span class="flex items-center gap-1.5 font-bold text-slate-800">
+                                <span class="w-3 h-3 rounded-full bg-sky-500 border border-sky-700"></span>
+                                <span x-text="t('legendCore') || 'Inti Sangat Kuat (≥ -65 dBm)'"></span>
+                            </span>
                             <span class="flex items-center gap-1.5 font-bold text-slate-800">
                                 <span class="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-700"></span>
                                 <span x-text="t('legendStrong')"></span>
@@ -3906,6 +4012,99 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL: RESET ISIAN & MULAI PROYEK BARU                             -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div x-show="resetModalOpen" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4">
+        <div @click.away="resetModalOpen = false" 
+             class="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="p-5 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex items-center justify-between border-b border-slate-700">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xl">🔄</span>
+                    <div>
+                        <h3 class="font-extrabold text-base" x-text="t('resetModalTitle') || 'Reset Isian & Mulai Proyek Baru'"></h3>
+                        <p class="text-slate-400 text-xs" x-text="t('resetModalSubtitle') || 'Pilih cara memulai kalkulasi proyek baru Anda'"></p>
+                    </div>
+                </div>
+                <button @click="resetModalOpen = false" class="text-white/80 hover:text-white font-bold text-lg px-2 cursor-pointer">✕</button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-slate-600 leading-relaxed font-medium">
+                    <span x-text="lang === 'en' ? 'Choose how you want to reset the calculator inputs:' : 'Silakan pilih opsi reset yang Anda inginkan:'"></span>
+                </p>
+
+                <!-- Opsi 1: Kosongkan untuk Proyek Baru -->
+                <div class="p-4 rounded-xl border-2 border-rose-200 hover:border-rose-400 bg-rose-50/50 hover:bg-rose-50 transition flex flex-col justify-between gap-3 cursor-pointer"
+                     @click="resetFormToBlank()">
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl p-2 bg-rose-100 text-rose-700 rounded-xl shrink-0">🗑️</span>
+                        <div>
+                            <h4 class="text-sm font-extrabold text-rose-950" x-text="t('resetOptBlankTitle') || 'Mulai Proyek Baru (Formulir Kosong)'"></h4>
+                            <p class="text-xs text-rose-800/80 mt-0.5 leading-relaxed" x-text="t('resetOptBlankDesc') || 'Mengosongkan nama proyek, klien, lokasi, luas area, dan jumlah pengguna agar siap diisi data proyek baru dari awal.'"></p>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span>🗑️</span> <span x-text="t('resetOptBlankBtn') || 'Kosongkan Seluruh Formulir (Mulai Baru)'"></span>
+                    </button>
+                </div>
+
+                <!-- Opsi 2: Muat Template Demo Standar -->
+                <div class="p-4 rounded-xl border border-slate-200 hover:border-blue-300 bg-slate-50 hover:bg-blue-50/40 transition flex flex-col justify-between gap-3 cursor-pointer"
+                     @click="resetFormToDemo()">
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl p-2 bg-blue-100 text-blue-700 rounded-xl shrink-0">📋</span>
+                        <div>
+                            <h4 class="text-sm font-extrabold text-slate-900" x-text="t('resetOptDemoTitle') || 'Muat Template Baseline Standar (Demo Pertambangan 35 km²)'"></h4>
+                            <p class="text-xs text-slate-600 mt-0.5 leading-relaxed" x-text="t('resetOptDemoDesc') || 'Mengisi kembali parameter dengan contoh skenario standar pertambangan (120 user, UHF, Berbukit, 35 km²).'"></p>
+                        </div>
+                    </div>
+                    <button class="w-full py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span>📋</span> <span x-text="t('resetOptDemoBtn') || 'Muat Template Baseline'"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-3 bg-slate-100 border-t border-slate-200 flex justify-end">
+                <button @click="resetModalOpen = false" class="px-4 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 rounded-lg cursor-pointer">
+                    <span x-text="lang === 'en' ? 'Cancel' : 'Batal'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- GLOBAL TOAST NOTIFICATION CONTAINER                               -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div x-show="toast.show" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-3 scale-95"
+         class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border text-xs font-semibold pointer-events-auto"
+         :class="{
+             'bg-slate-900 text-white border-emerald-500/60 shadow-emerald-950/30': toast.type === 'success',
+             'bg-slate-900 text-white border-blue-500/60 shadow-blue-950/30': toast.type === 'info',
+             'bg-slate-900 text-white border-amber-500/60 shadow-amber-950/30': toast.type === 'warning',
+             'bg-slate-900 text-white border-rose-500/60 shadow-rose-950/30': toast.type === 'error'
+         }">
+        <span x-show="toast.type === 'success'" class="text-emerald-400 text-base">✓</span>
+        <span x-show="toast.type === 'info'" class="text-blue-400 text-base">ℹ</span>
+        <span x-show="toast.type === 'warning'" class="text-amber-400 text-base">⚠️</span>
+        <span x-show="toast.type === 'error'" class="text-rose-400 text-base">✕</span>
+        <span x-text="toast.message" class="text-xs"></span>
+        <button @click="toast.show = false" class="text-slate-400 hover:text-white text-xs pl-2 cursor-pointer">✕</button>
     </div>
 
 </body>
