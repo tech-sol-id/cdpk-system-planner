@@ -2,7 +2,8 @@
 """
 Authentication & Team User Management for CDPK System Planner.
 Supports role-based access control (Admin, Engineer/Presales, Sales),
-salted password hashing, and session token management.
+salted PBKDF2 password hashing, session tokens, and full two-way
+synchronization with Google Sheets ('Team_Users' tab).
 """
 
 import hashlib
@@ -11,7 +12,10 @@ import logging
 import os
 import secrets
 import time
-from typing import Any, Dict, List, Optional
+import urllib.parse
+import urllib.request
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("cdpk.auth")
 
@@ -22,6 +26,12 @@ USERS_FILE = os.path.join(DATA_DIR, "users.json")
 # In-memory active session store: token -> session dict
 _ACTIVE_SESSIONS: Dict[str, Dict[str, Any]] = {}
 SESSION_TTL_SECONDS = 7 * 24 * 3600  # 7 days
+
+# In-memory user cache with TTL
+_USERS_CACHE: Dict[str, Any] = {
+    "users": None,
+    "last_sync": 0
+}
 
 
 def _hash_password(password: str, salt: str) -> str:
@@ -44,7 +54,9 @@ def _get_initial_users() -> List[Dict[str, Any]]:
             "role": "admin",
             "title": "Principal Lead & Solutions Architect",
             "salt": secrets.token_hex(16),
-            "password_hash": ""
+            "password_hash": "",
+            "status": "active",
+            "created_at": "2026-10-17 00:00:00"
         },
         {
             "username": "presales",
@@ -53,7 +65,9 @@ def _get_initial_users() -> List[Dict[str, Any]]:
             "role": "engineer",
             "title": "Senior Presales & RF Engineer",
             "salt": secrets.token_hex(16),
-            "password_hash": ""
+            "password_hash": "",
+            "status": "active",
+            "created_at": "2026-10-17 00:00:00"
         },
         {
             "username": "sales",
@@ -62,17 +76,176 @@ def _get_initial_users() -> List[Dict[str, Any]]:
             "role": "sales",
             "title": "Commercial Account Manager",
             "salt": secrets.token_hex(16),
-            "password_hash": ""
+            "password_hash": "",
+            "status": "active",
+            "created_at": "2026-10-17 00:00:00"
         }
     ]
-    # Set default password "cdpk2026!" for initial team accounts
     for u in default_users:
         u["password_hash"] = _hash_password("cdpk2026!", u["salt"])
     return default_users
 
 
-def load_users() -> List[Dict[str, Any]]:
-    """Load users from data/users.json or initialize with defaults."""
+# ─────────────────────────────────────────────────────────────────────────────
+# Google Sheets REST API Integration for Team Users
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _get_gdrive_token() -> Optional[str]:
+    """Import and invoke get_access_token from server.gdrive_sync."""
+    try:
+        from server.gdrive_sync import get_access_token
+        return get_access_token("citradata")
+    except Exception as e:
+        logger.warning(f"Failed getting GDrive token: {e}")
+        return None
+
+
+def _get_spreadsheet_id() -> str:
+    """Return configured Master Spreadsheet ID."""
+    try:
+        from server.gdrive_sync import DEFAULT_SPREADSHEET_ID
+        return DEFAULT_SPREADSHEET_ID
+    except Exception:
+        return os.environ.get("GDRIVE_SPREADSHEET_ID", "1Kp85v81JXeRC5ti-ZXYBChgrj2ztnnwrCHokI02LX6U")
+
+
+def _ensure_team_users_sheet(token: str, spreadsheet_id: str) -> bool:
+    """Ensure that the 'Team_Users' tab exists in the spreadsheet."""
+    try:
+        url_meta = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}?fields=sheets.properties"
+        req = urllib.request.Request(url_meta, headers={"Authorization": f"Bearer {token}"})
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            meta = json.loads(resp.read().decode("utf-8"))
+        sheet_titles = [s["properties"]["title"] for s in meta.get("sheets", [])]
+        if "Team_Users" in sheet_titles:
+            return True
+
+        # Create tab
+        add_url = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}:batchUpdate"
+        body = {
+            "requests": [
+                {
+                    "addSheet": {
+                        "properties": {
+                            "title": "Team_Users",
+                            "gridProperties": {"rowCount": 100, "columnCount": 10}
+                        }
+                    }
+                }
+            ]
+        }
+        req_add = urllib.request.Request(
+            add_url,
+            data=json.dumps(body).encode("utf-8"),
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req_add, timeout=15) as resp_add:
+            pass
+
+        # Populate headers & initial seed
+        headers = [
+            "username", "name", "email", "role", "title",
+            "password", "password_hash", "salt", "status", "created_at"
+        ]
+        initial_users = _get_initial_users()
+        rows = [headers]
+        for u in initial_users:
+            rows.append([
+                u["username"], u["name"], u["email"], u["role"], u["title"],
+                "cdpk2026!", u["password_hash"], u["salt"], u.get("status", "active"), u.get("created_at", "")
+            ])
+
+        val_url = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A1:J{len(rows)}?valueInputOption=USER_ENTERED"
+        req_val = urllib.request.Request(
+            val_url,
+            data=json.dumps({"range": f"Team_Users!A1:J{len(rows)}", "values": rows}).encode("utf-8"),
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            method="PUT"
+        )
+        with urllib.request.urlopen(req_val, timeout=15) as resp_val:
+            pass
+        return True
+    except Exception as e:
+        logger.warning(f"Failed ensuring Team_Users sheet: {e}")
+        return False
+
+
+def sync_users_from_gsheet() -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    """
+    Fetch users directly from Google Sheets 'Team_Users' tab.
+    Automatically updates local users.json cache.
+    """
+    token = _get_gdrive_token()
+    if not token:
+        return load_local_users(), "Google Drive token unavailable"
+
+    spreadsheet_id = _get_spreadsheet_id()
+    try:
+        _ensure_team_users_sheet(token, spreadsheet_id)
+        url = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A1:J200"
+        req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+        raw_rows = data.get("values", [])
+        if not raw_rows or len(raw_rows) <= 1:
+            return load_local_users(), "Empty Team_Users sheet"
+
+        headers = [h.strip().lower() for h in raw_rows[0]]
+        users = []
+        for row in raw_rows[1:]:
+            if not row or not any(row):
+                continue
+            # Pad row to 10 elements
+            padded = row + [""] * (10 - len(row))
+            username = str(padded[0]).strip().lower()
+            if not username:
+                continue
+
+            name = str(padded[1]).strip()
+            email = str(padded[2]).strip().lower()
+            role = str(padded[3]).strip().lower()
+            if role not in ("admin", "engineer", "sales"):
+                role = "engineer"
+            title = str(padded[4]).strip()
+            plain_pwd = str(padded[5]).strip()
+            pwd_hash = str(padded[6]).strip()
+            salt = str(padded[7]).strip()
+            status = str(padded[8]).strip().lower() or "active"
+            created_at = str(padded[9]).strip() or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
+            # Auto-hash if plain password was entered directly into Google Sheet
+            if plain_pwd and (not pwd_hash or not salt):
+                salt = secrets.token_hex(16)
+                pwd_hash = _hash_password(plain_pwd, salt)
+
+            users.append({
+                "username": username,
+                "name": name or username.title(),
+                "email": email or f"{username}@citradata.id",
+                "role": role,
+                "title": title or ("Presales Engineer" if role == "engineer" else "Account Manager"),
+                "password_hash": pwd_hash,
+                "salt": salt,
+                "status": status,
+                "created_at": created_at
+            })
+
+        if users:
+            save_local_users(users)
+            _USERS_CACHE["users"] = users
+            _USERS_CACHE["last_sync"] = time.time()
+            return users, None
+
+    except Exception as e:
+        logger.warning(f"Error fetching Team_Users from GSheet: {e}")
+        return load_local_users(), str(e)
+
+    return load_local_users(), "Unknown error"
+
+
+def load_local_users() -> List[Dict[str, Any]]:
+    """Load users from local data/users.json fallback."""
     os.makedirs(DATA_DIR, exist_ok=True)
     if os.path.exists(USERS_FILE):
         try:
@@ -81,34 +254,57 @@ def load_users() -> List[Dict[str, Any]]:
         except Exception as e:
             logger.warning(f"Error reading users file: {e}")
     users = _get_initial_users()
-    save_users(users)
+    save_local_users(users)
     return users
 
 
-def save_users(users: List[Dict[str, Any]]):
-    """Persist users to data/users.json."""
+def save_local_users(users: List[Dict[str, Any]]):
+    """Persist users to local data/users.json."""
     os.makedirs(DATA_DIR, exist_ok=True)
     with open(USERS_FILE, "w", encoding="utf-8") as f:
         json.dump(users, f, indent=2, ensure_ascii=False)
 
 
-def authenticate_user(identifier: str, password: str) -> Optional[Dict[str, Any]]:
-    """Verify user credentials by username or email."""
+def load_users(force_remote: bool = False) -> List[Dict[str, Any]]:
+    """Load users with in-memory caching and periodic cloud sync."""
+    now = time.time()
+    if not force_remote and _USERS_CACHE.get("users") and _USERS_CACHE.get("last_sync", 0) > now - 60:
+        return _USERS_CACHE["users"]
+
+    users, err = sync_users_from_gsheet()
+    if users:
+        _USERS_CACHE["users"] = users
+        _USERS_CACHE["last_sync"] = now
+        return users
+    return load_local_users()
+
+
+def authenticate_user(identifier: str, password: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    """
+    Verify user credentials by username or email.
+    Returns (user_profile, error_message).
+    """
     ident_clean = (identifier or "").strip().lower()
     users = load_users()
     for u in users:
         if u.get("username", "").lower() == ident_clean or u.get("email", "").lower() == ident_clean:
-            expected_hash = _hash_password(password, u.get("salt", ""))
-            if secrets.compare_digest(expected_hash, u.get("password_hash", "")):
-                # Clean profile without sensitive hash
+            if u.get("status", "active") != "active":
+                return None, "Akun Anda telah dinonaktifkan oleh Administrator."
+
+            # Verify PBKDF2 hash
+            salt = u.get("salt", "")
+            expected_hash = _hash_password(password, salt) if salt else ""
+            if expected_hash and secrets.compare_digest(expected_hash, u.get("password_hash", "")):
                 return {
                     "username": u["username"],
                     "email": u["email"],
                     "name": u["name"],
                     "role": u.get("role", "engineer"),
-                    "title": u.get("title", "Solutions Engineer")
-                }
-    return None
+                    "title": u.get("title", "Solutions Engineer"),
+                    "status": u.get("status", "active")
+                }, None
+
+    return None, "Username atau Password salah."
 
 
 def create_session(user_profile: Dict[str, Any]) -> str:
@@ -140,29 +336,38 @@ def invalidate_session(token: str):
     _ACTIVE_SESSIONS.pop(token, None)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# CRUD Operations (Admin only, Synchronized to Google Sheets)
+# ─────────────────────────────────────────────────────────────────────────────
+
 def add_team_member(creator_role: str, new_user_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Add a new team member (Admin only)."""
+    """Add a new team member and immediately append to Google Sheets."""
     if creator_role != "admin":
-        return {"status": "error", "message": "Only Admin can add team members"}
+        return {"status": "error", "message": "Hanya Administrator yang memiliki akses untuk menambah pengguna"}
 
     username = (new_user_data.get("username") or "").strip().lower()
     email = (new_user_data.get("email") or "").strip().lower()
     password = new_user_data.get("password") or "cdpk2026!"
     name = (new_user_data.get("name") or "").strip()
     role = new_user_data.get("role") or "engineer"
+    if role not in ("admin", "engineer", "sales"):
+        role = "engineer"
     title = (new_user_data.get("title") or "").strip()
 
     if not username or not email or not name:
-        return {"status": "error", "message": "Username, email, and name are required"}
+        return {"status": "error", "message": "Username, email, dan nama lengkap wajib diisi"}
 
     users = load_users()
     for u in users:
         if u["username"].lower() == username:
-            return {"status": "error", "message": f"Username '{username}' already exists"}
+            return {"status": "error", "message": f"Username '{username}' sudah digunakan"}
         if u["email"].lower() == email:
-            return {"status": "error", "message": f"Email '{email}' already registered"}
+            return {"status": "error", "message": f"Email '{email}' sudah terdaftar"}
 
     salt = secrets.token_hex(16)
+    pwd_hash = _hash_password(password, salt)
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
     new_user = {
         "username": username,
         "email": email,
@@ -170,8 +375,201 @@ def add_team_member(creator_role: str, new_user_data: Dict[str, Any]) -> Dict[st
         "role": role,
         "title": title or ("Presales Engineer" if role == "engineer" else "Sales Account Manager"),
         "salt": salt,
-        "password_hash": _hash_password(password, salt)
+        "password_hash": pwd_hash,
+        "status": "active",
+        "created_at": now_str
     }
     users.append(new_user)
-    save_users(users)
-    return {"status": "ok", "message": f"User {name} added successfully"}
+    save_local_users(users)
+    _USERS_CACHE["users"] = users
+
+    # Append to Google Sheet
+    token = _get_gdrive_token()
+    sheet_synced = False
+    if token:
+        try:
+            spreadsheet_id = _get_spreadsheet_id()
+            url_append = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A:J:append?valueInputOption=USER_ENTERED"
+            row_vals = [
+                username, name, email, role, new_user["title"],
+                password, pwd_hash, salt, "active", now_str
+            ]
+            req = urllib.request.Request(
+                url_append,
+                data=json.dumps({"values": [row_vals]}).encode("utf-8"),
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                sheet_synced = (resp.status == 200)
+        except Exception as e:
+            logger.warning(f"Error appending user to GSheet: {e}")
+
+    return {
+        "status": "ok",
+        "message": f"Pengguna {name} (@{username}) berhasil ditambahkan" + (" dan tersimpan ke Google Sheet." if sheet_synced else " (tersimpan lokal)."),
+        "user": {
+            "username": username,
+            "name": name,
+            "email": email,
+            "role": role,
+            "title": new_user["title"],
+            "status": "active",
+            "created_at": now_str
+        }
+    }
+
+
+def update_team_member(creator_role: str, username: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Update user profile, role, title, or status in Google Sheets and local cache."""
+    if creator_role != "admin":
+        return {"status": "error", "message": "Hanya Administrator yang dapat mengubah data pengguna"}
+
+    username_clean = (username or "").strip().lower()
+    users = load_users()
+    target_idx = -1
+    for i, u in enumerate(users):
+        if u["username"].lower() == username_clean:
+            target_idx = i
+            break
+
+    if target_idx == -1:
+        return {"status": "error", "message": f"Pengguna @{username_clean} tidak ditemukan"}
+
+    u = users[target_idx]
+
+    # Update allowed fields
+    if "name" in update_data and update_data["name"]:
+        u["name"] = str(update_data["name"]).strip()
+    if "email" in update_data and update_data["email"]:
+        u["email"] = str(update_data["email"]).strip().lower()
+    if "role" in update_data and update_data["role"] in ("admin", "engineer", "sales"):
+        u["role"] = str(update_data["role"]).strip()
+    if "title" in update_data:
+        u["title"] = str(update_data["title"]).strip()
+    if "status" in update_data and update_data["status"] in ("active", "inactive"):
+        # Prevent deactivating self or only admin
+        if username_clean == "adrian" and update_data["status"] == "inactive":
+            return {"status": "error", "message": "Akun administrator utama tidak dapat dinonaktifkan"}
+        u["status"] = update_data["status"]
+
+    save_local_users(users)
+    _USERS_CACHE["users"] = users
+
+    # Update row in Google Sheet
+    token = _get_gdrive_token()
+    if token:
+        try:
+            spreadsheet_id = _get_spreadsheet_id()
+            # Fetch all rows to find exact row number
+            url_get = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A1:A200"
+            req = urllib.request.Request(url_get, headers={"Authorization": f"Bearer {token}"})
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                d = json.loads(resp.read().decode("utf-8"))
+            rows = d.get("values", [])
+            sheet_row_num = None
+            for idx, r in enumerate(rows):
+                if r and r[0].strip().lower() == username_clean:
+                    sheet_row_num = idx + 1
+                    break
+
+            if sheet_row_num:
+                row_vals = [
+                    u["username"], u["name"], u["email"], u["role"], u["title"],
+                    "********", u["password_hash"], u["salt"], u.get("status", "active"), u.get("created_at", "")
+                ]
+                url_put = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A{sheet_row_num}:J{sheet_row_num}?valueInputOption=USER_ENTERED"
+                req_put = urllib.request.Request(
+                    url_put,
+                    data=json.dumps({"range": f"Team_Users!A{sheet_row_num}:J{sheet_row_num}", "values": [row_vals]}).encode("utf-8"),
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    method="PUT"
+                )
+                with urllib.request.urlopen(req_put, timeout=15) as resp_put:
+                    pass
+        except Exception as e:
+            logger.warning(f"Error updating user row in GSheet: {e}")
+
+    return {"status": "ok", "message": f"Data pengguna @{username_clean} berhasil diperbarui", "user": u}
+
+
+def toggle_user_status(creator_role: str, username: str) -> Dict[str, Any]:
+    """Toggle user active / inactive status."""
+    if creator_role != "admin":
+        return {"status": "error", "message": "Hanya Administrator yang dapat mengubah status pengguna"}
+
+    username_clean = (username or "").strip().lower()
+    if username_clean == "adrian":
+        return {"status": "error", "message": "Akun administrator utama tidak dapat dinonaktifkan"}
+
+    users = load_users()
+    for u in users:
+        if u["username"].lower() == username_clean:
+            new_status = "inactive" if u.get("status", "active") == "active" else "active"
+            return update_team_member(creator_role, username_clean, {"status": new_status})
+
+    return {"status": "error", "message": f"Pengguna @{username_clean} tidak ditemukan"}
+
+
+def reset_user_password(creator_role: str, username: str, new_password: str) -> Dict[str, Any]:
+    """Reset password for a user and sync to Google Sheets."""
+    if creator_role != "admin":
+        return {"status": "error", "message": "Hanya Administrator yang dapat me-reset password"}
+
+    username_clean = (username or "").strip().lower()
+    new_pwd = (new_password or "").strip()
+    if not new_pwd:
+        return {"status": "error", "message": "Password baru tidak boleh kosong"}
+
+    users = load_users()
+    target_idx = -1
+    for i, u in enumerate(users):
+        if u["username"].lower() == username_clean:
+            target_idx = i
+            break
+
+    if target_idx == -1:
+        return {"status": "error", "message": f"Pengguna @{username_clean} tidak ditemukan"}
+
+    salt = secrets.token_hex(16)
+    pwd_hash = _hash_password(new_pwd, salt)
+    users[target_idx]["salt"] = salt
+    users[target_idx]["password_hash"] = pwd_hash
+
+    save_local_users(users)
+    _USERS_CACHE["users"] = users
+
+    # Update in Google Sheet
+    token = _get_gdrive_token()
+    if token:
+        try:
+            spreadsheet_id = _get_spreadsheet_id()
+            url_get = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A1:A200"
+            req = urllib.request.Request(url_get, headers={"Authorization": f"Bearer {token}"})
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                d = json.loads(resp.read().decode("utf-8"))
+            rows = d.get("values", [])
+            sheet_row_num = None
+            for idx, r in enumerate(rows):
+                if r and r[0].strip().lower() == username_clean:
+                    sheet_row_num = idx + 1
+                    break
+
+            if sheet_row_num:
+                u = users[target_idx]
+                row_vals = [
+                    u["username"], u["name"], u["email"], u["role"], u["title"],
+                    new_pwd, pwd_hash, salt, u.get("status", "active"), u.get("created_at", "")
+                ]
+                url_put = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A{sheet_row_num}:J{sheet_row_num}?valueInputOption=USER_ENTERED"
+                req_put = urllib.request.Request(
+                    url_put,
+                    data=json.dumps({"range": f"Team_Users!A{sheet_row_num}:J{sheet_row_num}", "values": [row_vals]}).encode("utf-8"),
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    method="PUT"
+                )
+                with urllib.request.urlopen(req_put, timeout=15) as resp_put:
+                    pass
+        except Exception as e:
+            logger.warning(f"Error updating password in GSheet: {e}")
+
+    return {"status": "ok", "message": f"Password untuk @{username_clean} berhasil di-reset"}

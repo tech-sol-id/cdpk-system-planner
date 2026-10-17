@@ -102,6 +102,31 @@ window.cdpkSystemPlannerApp = function () {
         loginError: '',
         loginLoading: false,
 
+        // ─── Team User Management State (Admin Only) ────────────────────
+        userMgmtModalOpen: false,
+        teamUsers: [],
+        usersLoading: false,
+        usersError: '',
+        userSheetUrl: 'https://docs.google.com/spreadsheets/d/1Kp85v81JXeRC5ti-ZXYBChgrj2ztnnwrCHokI02LX6U/edit#gid=78156397',
+        newUserModalOpen: false,
+        newUserForm: {
+            username: '',
+            name: '',
+            email: '',
+            role: 'engineer',
+            title: '',
+            password: 'cdpk2026!'
+        },
+        newUserLoading: false,
+        newUserError: '',
+        editingUser: null,
+        editUserLoading: false,
+        editUserError: '',
+        resetPwdTarget: null,
+        resetPwdInput: 'cdpk2026!',
+        resetPwdLoading: false,
+        resetPwdError: '',
+
         // ─── Cloud Save & Project Archive State ──────────────────────────
         outputSubfolderId: '11NLBY5EAPLb4q753r1TRVKgYRe0JpO8W',
         isSavingToDrive: false,
@@ -203,6 +228,201 @@ window.cdpkSystemPlannerApp = function () {
             this.currentUser = null;
             localStorage.removeItem('cdpk_session_token');
         },
+
+        // ─── Team User Management Methods (Admin Only) ──────────────────
+        async openUserManagementModal() {
+            this.userMgmtModalOpen = true;
+            await this.loadTeamUsers(false);
+        },
+
+        async loadTeamUsers(forceSync = false) {
+            if (!this.sessionToken) return;
+            this.usersLoading = true;
+            this.usersError = '';
+            try {
+                const url = forceSync ? '/api/auth/users?force=1' : '/api/auth/users';
+                const resp = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${this.sessionToken}` }
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    this.teamUsers = data.users || [];
+                    if (data.sheet_url) this.userSheetUrl = data.sheet_url;
+                } else {
+                    this.usersError = data.message || (this.lang === 'en' ? 'Failed loading team users' : 'Gagal memuat data pengguna tim');
+                }
+            } catch (e) {
+                this.usersError = this.lang === 'en' ? 'Connection error loading team users' : 'Kendala koneksi saat memuat pengguna tim';
+            } finally {
+                this.usersLoading = false;
+            }
+        },
+
+        async syncUsersFromSheet() {
+            if (!this.sessionToken) return;
+            this.usersLoading = true;
+            this.usersError = '';
+            try {
+                const resp = await fetch('/api/auth/users/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.sessionToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    this.teamUsers = data.users || [];
+                } else {
+                    this.usersError = data.message || (this.lang === 'en' ? 'Sync failed' : 'Gagal sinkronisasi data pengguna dari Google Sheet');
+                }
+            } catch (e) {
+                this.usersError = this.lang === 'en' ? 'Connection error syncing from Google Sheet' : 'Kendala koneksi saat sinkronisasi';
+            } finally {
+                this.usersLoading = false;
+            }
+        },
+
+        openAddUserForm() {
+            this.newUserForm = {
+                username: '',
+                name: '',
+                email: '',
+                role: 'engineer',
+                title: '',
+                password: 'cdpk2026!'
+            };
+            this.newUserError = '';
+            this.newUserModalOpen = true;
+        },
+
+        async submitNewUser() {
+            if (!this.newUserForm.name || !this.newUserForm.username || !this.newUserForm.email) {
+                this.newUserError = this.lang === 'en' ? 'Name, username, and corporate email are required' : 'Nama, username, dan email kantor wajib diisi';
+                return;
+            }
+            this.newUserLoading = true;
+            this.newUserError = '';
+            try {
+                const resp = await fetch('/api/auth/users', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.sessionToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.newUserForm)
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    this.newUserModalOpen = false;
+                    await this.loadTeamUsers(false);
+                } else {
+                    this.newUserError = data.message || (this.lang === 'en' ? 'Failed adding user' : 'Gagal menambahkan pengguna');
+                }
+            } catch (e) {
+                this.newUserError = this.lang === 'en' ? 'Connection error saving user' : 'Kendala koneksi saat menyimpan pengguna';
+            } finally {
+                this.newUserLoading = false;
+            }
+        },
+
+        startEditUser(u) {
+            this.editingUser = JSON.parse(JSON.stringify(u));
+            this.editUserError = '';
+        },
+
+        async submitEditUser() {
+            if (!this.editingUser) return;
+            this.editUserLoading = true;
+            this.editUserError = '';
+            try {
+                const resp = await fetch('/api/auth/users/update', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.sessionToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.editingUser)
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    this.editingUser = null;
+                    await this.loadTeamUsers(false);
+                } else {
+                    this.editUserError = data.message || (this.lang === 'en' ? 'Failed updating user' : 'Gagal memperbarui pengguna');
+                }
+            } catch (e) {
+                this.editUserError = this.lang === 'en' ? 'Connection error updating user' : 'Kendala koneksi saat memperbarui pengguna';
+            } finally {
+                this.editUserLoading = false;
+            }
+        },
+
+        async toggleUserStatus(u) {
+            const nextStatus = u.status === 'active' ? (this.lang === 'en' ? 'INACTIVE' : 'NONAKTIF') : (this.lang === 'en' ? 'ACTIVE' : 'AKTIF');
+            if (!confirm(this.lang === 'en'
+                ? `Change account status for @${u.username} (${u.name}) to ${nextStatus}?`
+                : `Ubah status akun @${u.username} (${u.name}) menjadi ${nextStatus}?`)) {
+                return;
+            }
+            try {
+                const resp = await fetch('/api/auth/users/toggle-status', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.sessionToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username: u.username })
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    await this.loadTeamUsers(false);
+                } else {
+                    alert(data.message || (this.lang === 'en' ? 'Failed changing status' : 'Gagal mengubah status pengguna'));
+                }
+            } catch (e) {
+                alert(this.lang === 'en' ? 'Connection error toggling status' : 'Kendala koneksi saat mengubah status');
+            }
+        },
+
+        startResetPassword(u) {
+            this.resetPwdTarget = u;
+            this.resetPwdInput = 'cdpk2026!';
+            this.resetPwdError = '';
+        },
+
+        async submitResetPassword() {
+            if (!this.resetPwdTarget || !this.resetPwdInput) return;
+            this.resetPwdLoading = true;
+            this.resetPwdError = '';
+            try {
+                const resp = await fetch('/api/auth/users/reset-password', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.sessionToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: this.resetPwdTarget.username,
+                        password: this.resetPwdInput
+                    })
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    alert(this.lang === 'en'
+                        ? `Password for @${this.resetPwdTarget.username} has been reset and updated in Google Sheet!`
+                        : `Password untuk @${this.resetPwdTarget.username} berhasil di-reset dan tersimpan ke Google Sheet!`);
+                    this.resetPwdTarget = null;
+                } else {
+                    this.resetPwdError = data.message || (this.lang === 'en' ? 'Failed resetting password' : 'Gagal me-reset password');
+                }
+            } catch (e) {
+                this.resetPwdError = this.lang === 'en' ? 'Connection error resetting password' : 'Kendala koneksi saat reset password';
+            } finally {
+                this.resetPwdLoading = false;
+            }
+        },
+
 
         // ─── Direct Google Drive Project Save Engine ─────────────────────
         async saveToGoogleDrive() {

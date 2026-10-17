@@ -1,29 +1,46 @@
 [
   {
     "username": "adrian",
-    "email": "adrian@citradata.id",
     "name": "Adrian Kansil",
+    "email": "adrian@citradata.id",
     "role": "admin",
     "title": "Principal Lead & Solutions Architect",
+    "password_hash": "be89474d872479fba71b638248e29f717528e8a215c742125dac594a6933a694",
     "salt": "c9d058f727af0a4038d241c3e6c92f99",
-    "password_hash": "be89474d872479fba71b638248e29f717528e8a215c742125dac594a6933a694"
+    "status": "active",
+    "created_at": "2026-10-17 00:00:00"
   },
   {
     "username": "presales",
-    "email": "presales@citradata.id",
     "name": "Presales Engineer",
+    "email": "presales@citradata.id",
     "role": "engineer",
     "title": "Senior Presales & RF Engineer",
+    "password_hash": "d383a1704f7fc3eb309b33fe32e56fc9a424cd98e5b329423bc96f14a8ac0bbe",
     "salt": "aef47ca3b59e5d0f9c8b8de021be5da3",
-    "password_hash": "d383a1704f7fc3eb309b33fe32e56fc9a424cd98e5b329423bc96f14a8ac0bbe"
+    "status": "active",
+    "created_at": "2026-10-17 00:00:00"
   },
   {
     "username": "sales",
-    "email": "sales@citradata.id",
     "name": "Sales Account Manager",
+    "email": "sales@citradata.id",
     "role": "sales",
     "title": "Commercial Account Manager",
+    "password_hash": "d0054b6eac40fc10317f24c32c28c30e760879488de75f87cf45867b8df30c1f",
     "salt": "c9e8758bddb026d63bed7b2b5c89cc7d",
-    "password_hash": "d0054b6eac40fc10317f24c32c28c30e760879488de75f87cf45867b8df30c1f"
+    "status": "active",
+    "created_at": "2026-10-17 00:00:00"
+  },
+  {
+    "username": "budi",
+    "name": "Budi Santoso",
+    "email": "budi@citradata.id",
+    "role": "engineer",
+    "title": "Lead Field Engineer",
+    "password_hash": "215b9e1a38c7e1fb84b3f7280a5b22ee61e8a9febc26275211593456a2e1557f",
+    "salt": "e3f6a2519f2912dab9cf97b565efdc40",
+    "status": "active",
+    "created_at": "2026-10-17 00:27:18"
   }
 ]

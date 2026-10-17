@@ -23,7 +23,11 @@ from server.auth import (
     get_session_user,
     invalidate_session,
     load_users,
-    add_team_member
+    add_team_member,
+    update_team_member,
+    toggle_user_status,
+    reset_user_password,
+    sync_users_from_gsheet
 )
 from server.gdrive_sync import (
     DEFAULT_FOLDER_ID,
@@ -86,7 +90,7 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             return self._send_json({
                 "status": "healthy",
                 "app": "CDPK System Planner",
-                "version": "8.1.3",
+                "version": "8.2.0",
                 "gdrive_folder_id": DEFAULT_FOLDER_ID,
                 "gdrive_output_subfolder_id": OUTPUT_SUBFOLDER_ID,
                 "gdrive_spreadsheet_id": DEFAULT_SPREADSHEET_ID,
@@ -104,13 +108,29 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/auth/users":
             user = self._get_auth_user()
             if not user or user.get("role") != "admin":
-                return self._send_json({"status": "forbidden", "message": "Admin only"}, status=403)
-            all_users = load_users()
+                return self._send_json({"status": "forbidden", "message": "Akses ditolak: Hanya Administrator"}, status=403)
+            qs = urllib.parse.parse_qs(parsed.query)
+            force_remote = qs.get("force", ["0"])[0] in ("1", "true", "yes")
+            all_users = load_users(force_remote=force_remote)
             clean_users = [
-                {"username": u["username"], "email": u["email"], "name": u["name"], "role": u.get("role"), "title": u.get("title")}
+                {
+                    "username": u["username"],
+                    "email": u["email"],
+                    "name": u["name"],
+                    "role": u.get("role", "engineer"),
+                    "title": u.get("title", ""),
+                    "status": u.get("status", "active"),
+                    "created_at": u.get("created_at", "")
+                }
                 for u in all_users
             ]
-            return self._send_json({"status": "ok", "users": clean_users})
+            return self._send_json({
+                "status": "ok",
+                "users": clean_users,
+                "sheet_tab": "Team_Users",
+                "spreadsheet_id": DEFAULT_SPREADSHEET_ID,
+                "sheet_url": f"https://docs.google.com/spreadsheets/d/{DEFAULT_SPREADSHEET_ID}/edit#gid=78156397"
+            })
 
         # ─── Knowledge & AI Models ────────────────────────────────────────
         if path == "/api/knowledge":
@@ -173,11 +193,11 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/auth/login":
             ident = body.get("identifier") or body.get("username") or body.get("email")
             pwd = body.get("password") or ""
-            user = authenticate_user(ident, pwd)
+            user, err = authenticate_user(ident, pwd)
             if user:
                 token = create_session(user)
                 return self._send_json({"status": "ok", "token": token, "user": user})
-            return self._send_json({"status": "error", "message": "Username atau Password salah."}, status=401)
+            return self._send_json({"status": "error", "message": err or "Username atau Password salah."}, status=401)
 
         if path == "/api/auth/logout":
             auth_hdr = self.headers.get("Authorization", "")
@@ -189,9 +209,58 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/auth/users":
             cur_user = self._get_auth_user()
             if not cur_user or cur_user.get("role") != "admin":
-                return self._send_json({"status": "forbidden", "message": "Admin role required"}, status=403)
+                return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat menambah pengguna"}, status=403)
             res = add_team_member(cur_user.get("role"), body)
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
+
+        if path == "/api/auth/users/update":
+            cur_user = self._get_auth_user()
+            if not cur_user or cur_user.get("role") != "admin":
+                return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat mengubah pengguna"}, status=403)
+            username = body.get("username")
+            res = update_team_member(cur_user.get("role"), username, body)
+            return self._send_json(res, status=200 if res["status"] == "ok" else 400)
+
+        if path == "/api/auth/users/toggle-status":
+            cur_user = self._get_auth_user()
+            if not cur_user or cur_user.get("role") != "admin":
+                return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat mengubah status pengguna"}, status=403)
+            username = body.get("username")
+            res = toggle_user_status(cur_user.get("role"), username)
+            return self._send_json(res, status=200 if res["status"] == "ok" else 400)
+
+        if path == "/api/auth/users/reset-password":
+            cur_user = self._get_auth_user()
+            if not cur_user or cur_user.get("role") != "admin":
+                return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat me-reset password"}, status=403)
+            username = body.get("username")
+            new_pwd = body.get("password") or body.get("new_password") or "cdpk2026!"
+            res = reset_user_password(cur_user.get("role"), username, new_pwd)
+            return self._send_json(res, status=200 if res["status"] == "ok" else 400)
+
+        if path == "/api/auth/users/sync":
+            cur_user = self._get_auth_user()
+            if not cur_user or cur_user.get("role") != "admin":
+                return self._send_json({"status": "forbidden", "message": "Hanya Administrator yang dapat sinkronisasi"}, status=403)
+            users, err = sync_users_from_gsheet()
+            clean_users = [
+                {
+                    "username": u["username"],
+                    "email": u["email"],
+                    "name": u["name"],
+                    "role": u.get("role", "engineer"),
+                    "title": u.get("title", ""),
+                    "status": u.get("status", "active"),
+                    "created_at": u.get("created_at", "")
+                }
+                for u in users
+            ]
+            return self._send_json({
+                "status": "ok",
+                "message": "Data pengguna berhasil disinkronkan dari Google Sheet",
+                "users": clean_users,
+                "error": err
+            })
 
         # ─── Cloud Sync ───────────────────────────────────────────────────
         if path == "/api/pricing/sync":
