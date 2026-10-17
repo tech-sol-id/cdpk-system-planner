@@ -64,5 +64,16 @@
     "salt": "2cb2611aace4cf59638da8e8b4486ec8",
     "status": "active",
     "created_at": "2026-10-17 01:51:43"
+  },
+  {
+    "username": "pending_test",
+    "name": "Testing Pending",
+    "email": "pending_test@citradata.id",
+    "role": "engineer",
+    "title": "Presales & RF Engineer",
+    "password_hash": "2205123969fbb5c4973e7cc43400242cabe03de0580a19224b6bc8b95df230ef",
+    "salt": "ab08c872bf3fc263ffeaea1aa7770e89",
+    "status": "rejected",
+    "created_at": "2026-10-17 02:03:56"
   }
 ]
