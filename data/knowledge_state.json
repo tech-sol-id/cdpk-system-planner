@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_checked": "2026-10-17T07:08:21.257874+00:00",
+  "last_checked": "2026-10-17T07:20:27.582020+00:00",
   "markdown_folder_id": "1-rv_4obDjZ3ZqxSQIvx6u-bYfUnH1zMV",
   "files": {
     "1hcDB7o7TsyDee1tBoJljAIA4gkIv-j8K": {
@@ -57,14 +57,134 @@
       "char_count": 661562,
       "synced_at": "2026-10-17T07:08:21.257853+00:00",
       "status": "ready"
+    },
+    "1GOBGhXrVm0vdyuOLd6YCjpx1q6PtmUZb": {
+      "name": "Katalog PT Citradata Purnakharisma 2026 (3).pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-17T08:42:09.027Z",
+      "md_filename": "Katalog_PT_Citradata_Purnakharisma_2026_3.md",
+      "drive_md_id": "1jhibK1h5MiuNew_Enwhgfy4DejJaj0kz",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/Katalog_PT_Citradata_Purnakharisma_2026_3.md",
+      "char_count": 66399,
+      "synced_at": "2026-10-17T07:18:11.408114+00:00",
+      "status": "ready"
+    },
+    "1SBGAvzPLq9gvk7YXLtRV2-Bkee5o2TxV": {
+      "name": "Katalog PT Citradata Purnakharisma 2026",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-05-11T09:25:15.768Z",
+      "md_filename": "Katalog_PT_Citradata_Purnakharisma_2026.md",
+      "drive_md_id": "1uD8-HSlOKvfWCrLleXyp_oUDf6PFLmg_",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/Katalog_PT_Citradata_Purnakharisma_2026.md",
+      "char_count": 66367,
+      "synced_at": "2026-10-17T07:19:39.361275+00:00",
+      "status": "ready"
+    },
+    "1kGEXzlebvSGUETWo1yL3NUUWs0zV3kOE": {
+      "name": "TA iSafe Mobile IS540.1.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-10-13T04:45:06.197Z",
+      "md_filename": "TA_iSafe_Mobile_IS540.1.md",
+      "drive_md_id": "1B2j3bI7ir-Mp8FbI3jSHXbPwD-GrLLms",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/TA_iSafe_Mobile_IS540.1.md",
+      "char_count": 6672,
+      "synced_at": "2026-10-17T07:19:43.221405+00:00",
+      "status": "ready"
+    },
+    "1zhc9CNVwJ4ZJd-WT9IPC5bdZciuiZLnU": {
+      "name": "Brosur IS440.2.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-06T04:12:11.000Z",
+      "md_filename": "Brosur_IS440.2.md",
+      "drive_md_id": "1Wt8-WeY2y4csivg1WnX_gbxnnPJodRZq",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/Brosur_IS440.2.md",
+      "char_count": 3078,
+      "synced_at": "2026-10-17T07:19:47.013155+00:00",
+      "status": "ready"
+    },
+    "1i2Vd9OwLhOY--BO8AFqXbCU8Djf9LfDh": {
+      "name": "DOC_PRO_MM_IS540.2_Safety_Instructions_DINA6_1060MM11__SALL__AWEB__V9.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-06-04T13:53:34.000Z",
+      "md_filename": "DOC_PRO_MM_IS540.2_Safety_Instructions_DINA6_1060MM11_SALL_AWEB_V9.md",
+      "drive_md_id": "1PVEmR2KEeDRj1K4OS9zg3gdtxDt9Uu7_",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/DOC_PRO_MM_IS540.2_Safety_Instructions_DINA6_1060MM11_SALL_AWEB_V9.md",
+      "char_count": 96470,
+      "synced_at": "2026-10-17T07:19:52.286716+00:00",
+      "status": "ready"
+    },
+    "1ZW53iXYB7g5BavZmxwcpSSUuLMoAIebV": {
+      "name": "DOC_PRO_MM_IS540.1_Quick_Start_Manual_DINA6_1058MM01__SALL__AWEB__V5 (1).pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-06-04T13:47:27.000Z",
+      "md_filename": "DOC_PRO_MM_IS540.1_Quick_Start_Manual_DINA6_1058MM01_SALL_AWEB_V5_1.md",
+      "drive_md_id": "1YPeFksMeUB1SpU8vqfAkMDRSBpP6Dx-S",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/DOC_PRO_MM_IS540.1_Quick_Start_Manual_DINA6_1058MM01_SALL_AWEB_V5_1.md",
+      "char_count": 76648,
+      "synced_at": "2026-10-17T07:19:58.251473+00:00",
+      "status": "ready"
+    },
+    "1Yca3I_u32r-vuY_oguHFAYEQHtQr3IbP": {
+      "name": "DOC_PRO_MM_IS540.1_Operating_Manual_DINA6_1058MM10__SALL__AWEB__V10.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-06-04T13:47:19.000Z",
+      "md_filename": "DOC_PRO_MM_IS540.1_Operating_Manual_DINA6_1058MM10_SALL_AWEB_V10.md",
+      "drive_md_id": "1jcABM2l7vO7riBuBxG3lP5AnSGRLuN0-",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/DOC_PRO_MM_IS540.1_Operating_Manual_DINA6_1058MM10_SALL_AWEB_V10.md",
+      "char_count": 54502,
+      "synced_at": "2026-10-17T07:20:04.390576+00:00",
+      "status": "ready"
+    },
+    "1ZHWVy5j4WdpeZcpwuAn-8NE__FW_vo4h": {
+      "name": "DOC_PRO_MM_IS940.2_Safety_Instructions_DINA6_1078MM02__SALL__AWEB__V4.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-06-04T13:46:59.000Z",
+      "md_filename": "DOC_PRO_MM_IS940.2_Safety_Instructions_DINA6_1078MM02_SALL_AWEB_V4.md",
+      "drive_md_id": "1h50y1XNqv-AqinCh8jmObakspnpvdze8",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/DOC_PRO_MM_IS940.2_Safety_Instructions_DINA6_1078MM02_SALL_AWEB_V4.md",
+      "char_count": 101723,
+      "synced_at": "2026-10-17T07:20:11.287041+00:00",
+      "status": "ready"
+    },
+    "1dMIqjLQBb5H7yesSwojfQVbo-p-TvOA5": {
+      "name": "DOC_PRO_MM_IS940.2_Operating_Manual_DINA6_1078MM01__SALL__AWEB__V4.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-06-04T13:46:53.000Z",
+      "md_filename": "DOC_PRO_MM_IS940.2_Operating_Manual_DINA6_1078MM01_SALL_AWEB_V4.md",
+      "drive_md_id": "12SMb5QwZ_10acDWdQfxhVIUamgjopc5T",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/DOC_PRO_MM_IS940.2_Operating_Manual_DINA6_1078MM01_SALL_AWEB_V4.md",
+      "char_count": 61933,
+      "synced_at": "2026-10-17T07:20:20.534611+00:00",
+      "status": "ready"
+    },
+    "136SfUlsc7375zJD6GuN_1SFMcYvxSQA5": {
+      "name": "DOC_PRO_MM_IS940.1_Safety_Instructions_DINA6_1065MM02__SALL__AWEB__V8.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-06-04T13:46:45.000Z",
+      "md_filename": "DOC_PRO_MM_IS940.1_Safety_Instructions_DINA6_1065MM02_SALL_AWEB_V8.md",
+      "drive_md_id": "1TcL70aJYdqQXRloub4OhfHokyCTJkmVS",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/DOC_PRO_MM_IS940.1_Safety_Instructions_DINA6_1065MM02_SALL_AWEB_V8.md",
+      "char_count": 98748,
+      "synced_at": "2026-10-17T07:20:27.581235+00:00",
+      "status": "ready"
     }
   },
   "remote_md_files": {
-    "ATEX_IS940.2.md": "1Xd3LvWRfld03kdOOgDuzxmDVkcw0RBmK",
-    "ATEX_IS940.1.md": "1JxjBA8-_F-jleZvapHXrKW1XrbBC6GOH",
-    "ATEX_IS540.2.md": "1lOZ4cJ2kwEsUri0HVOrL2EFiuclDfdp2",
+    "KATALOG_CITRADATA_2026.md": "1f7etMt5Ph4L88SUJ98Br2qznZXp_Yxto",
     "ATEX_IS540.1.md": "1AAA1ZFwf0UoWk3Jnq1Xx2qTmjhz9DNtM",
-    "KATALOG_CITRADATA_2026.md": "1f7etMt5Ph4L88SUJ98Br2qznZXp_Yxto"
+    "ATEX_IS540.2.md": "1lOZ4cJ2kwEsUri0HVOrL2EFiuclDfdp2",
+    "ATEX_IS940.1.md": "1JxjBA8-_F-jleZvapHXrKW1XrbBC6GOH",
+    "ATEX_IS940.2.md": "1Xd3LvWRfld03kdOOgDuzxmDVkcw0RBmK",
+    "Katalog_PT_Citradata_Purnakharisma_2026_3.md": "1jhibK1h5MiuNew_Enwhgfy4DejJaj0kz",
+    "Katalog_PT_Citradata_Purnakharisma_2026.md": "1uD8-HSlOKvfWCrLleXyp_oUDf6PFLmg_",
+    "TA_iSafe_Mobile_IS540.1.md": "1B2j3bI7ir-Mp8FbI3jSHXbPwD-GrLLms",
+    "Brosur_IS440.2.md": "1Wt8-WeY2y4csivg1WnX_gbxnnPJodRZq",
+    "DOC_PRO_MM_IS540.2_Safety_Instructions_DINA6_1060MM11_SALL_AWEB_V9.md": "1PVEmR2KEeDRj1K4OS9zg3gdtxDt9Uu7_",
+    "DOC_PRO_MM_IS540.1_Quick_Start_Manual_DINA6_1058MM01_SALL_AWEB_V5_1.md": "1YPeFksMeUB1SpU8vqfAkMDRSBpP6Dx-S",
+    "DOC_PRO_MM_IS540.1_Operating_Manual_DINA6_1058MM10_SALL_AWEB_V10.md": "1jcABM2l7vO7riBuBxG3lP5AnSGRLuN0-",
+    "DOC_PRO_MM_IS940.2_Safety_Instructions_DINA6_1078MM02_SALL_AWEB_V4.md": "1h50y1XNqv-AqinCh8jmObakspnpvdze8",
+    "DOC_PRO_MM_IS940.2_Operating_Manual_DINA6_1078MM01_SALL_AWEB_V4.md": "12SMb5QwZ_10acDWdQfxhVIUamgjopc5T",
+    "DOC_PRO_MM_IS940.1_Safety_Instructions_DINA6_1065MM02_SALL_AWEB_V8.md": "1TcL70aJYdqQXRloub4OhfHokyCTJkmVS"
   },
-  "total_documents": 5
+  "total_documents": 15
 }

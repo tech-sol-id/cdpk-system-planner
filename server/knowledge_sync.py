@@ -28,9 +28,21 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 import openpyxl
-import pypdf
-import docx
-import pptx
+
+try:
+    import pypdf
+except ImportError:
+    pypdf = None
+
+try:
+    import docx
+except ImportError:
+    docx = None
+
+try:
+    import pptx
+except ImportError:
+    pptx = None
 
 from server.gdrive_sync import get_access_token
 
@@ -247,14 +259,17 @@ def upload_or_update_markdown_file(
 # DOCUMENT EXTRACTION LOGIC
 # ═══════════════════════════════════════════════════════════════════════════
 
-def extract_pdf_text(content_bytes: bytes, max_pages: int = 40) -> str:
+def extract_pdf_text(content_bytes: bytes, max_pages: int = 30) -> str:
     """Extract page-by-page clean text from PDF bytes."""
+    if pypdf is None:
+        return "> *Catatan: Modul pypdf belum terpasang di runtime server.*"
     try:
         reader = pypdf.PdfReader(io.BytesIO(content_bytes))
         total = len(reader.pages)
         pages_to_read = min(total, max_pages)
         chunks = []
         for i in range(pages_to_read):
+            time.sleep(0.01)  # Release GIL to let HTTP server handle requests
             page_text = reader.pages[i].extract_text() or ""
             page_text = page_text.strip()
             if page_text:
@@ -269,6 +284,8 @@ def extract_pdf_text(content_bytes: bytes, max_pages: int = 40) -> str:
 
 def extract_docx_text(content_bytes: bytes) -> str:
     """Extract headings, paragraphs, and tables from DOCX."""
+    if docx is None:
+        return "> *Catatan: Modul python-docx belum terpasang di runtime server.*"
     try:
         doc = docx.Document(io.BytesIO(content_bytes))
         lines = []
@@ -308,10 +325,13 @@ def extract_docx_text(content_bytes: bytes) -> str:
 
 def extract_pptx_text(content_bytes: bytes) -> str:
     """Extract slides, titles, bullet points and notes from PPTX."""
+    if pptx is None:
+        return "> *Catatan: Modul python-pptx belum terpasang di runtime server.*"
     try:
         prs = pptx.Presentation(io.BytesIO(content_bytes))
         slides_text = []
         for idx, slide in enumerate(prs.slides):
+            time.sleep(0.01)  # Release GIL
             slide_lines = [f"### Slide {idx + 1}"]
             for shape in slide.shapes:
                 if shape.has_text_frame:
@@ -559,8 +579,17 @@ def sync_knowledge_base(force: bool = False, max_items_per_run: int = 15) -> Dic
             logger.info(f"Processing ({mime}): {name}")
             body_text = ""
 
+            size_val = 0
             try:
-                if mime == "application/vnd.google-apps.document":
+                size_val = int(doc.get("size") or 0)
+            except Exception:
+                size_val = 0
+
+            try:
+                if size_val > 12 * 1024 * 1024 and mime == "application/pdf":
+                    logger.info(f"Skipping heavy in-memory PDF parsing for {name} ({size_val} bytes > 12MB)")
+                    body_text = f"> *Catatan: Dokumen berukuran besar ({round(size_val/(1024*1024), 1)} MB). Untuk referensi teknis lengkap, silakan buka langsung file asli di Google Drive link di atas.*"
+                elif mime == "application/vnd.google-apps.document":
                     body_text = drive_api_export_text(fid, token) or ""
                 elif mime in ("text/plain", "text/markdown", "text/csv"):
                     raw = drive_api_download_bytes(fid, token)
@@ -682,8 +711,8 @@ _DAEMON_RUNNING = False
 def _daemon_loop(interval_seconds: int = 900):
     global _DAEMON_RUNNING
     logger.info(f"Knowledge sync background daemon started (interval: {interval_seconds}s).")
-    # Initial quick sync on startup after 10s warmup
-    time.sleep(10)
+    # Deferred initial sync after 120s warmup to guarantee container health
+    time.sleep(120)
     try:
         sync_knowledge_base(force=False, max_items_per_run=10)
     except Exception as e:

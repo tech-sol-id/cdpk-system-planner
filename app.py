@@ -14,6 +14,8 @@ import json
 import logging
 import mimetypes
 import os
+import threading
+import time
 import urllib.parse
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -125,7 +127,7 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 "gdrive_output_subfolder_id": OUTPUT_SUBFOLDER_ID,
                 "gdrive_spreadsheet_id": DEFAULT_SPREADSHEET_ID,
                 "ai_models": list(ALLOWED_MODELS.keys()),
-                "diagnostics": get_diagnostics()
+                "diagnostics": get_diagnostics(probe_remote=False)
             })
 
         # ─── Auth Endpoints ───────────────────────────────────────────────
@@ -829,23 +831,28 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
 
 
 def run_server():
-    # Pre-warm users & knowledge cache at startup
-    try:
-        load_users()
-        res = sync_from_gdrive(force=False)
-        logger.info("Initial pricelist knowledge loaded from: %s", res.get("source"))
-    except Exception as e:
-        logger.warning("Startup sync warning: %s", e)
-
-    # Initialize Google Drive Knowledge Bank background monitoring daemon
-    try:
-        start_periodic_sync_daemon(interval_seconds=900)
-        logger.info("Google Drive Knowledge Bank periodic monitoring daemon initialized (900s interval).")
-    except Exception as e:
-        logger.warning("Startup knowledge daemon warning: %s", e)
-
     server = ThreadingHTTPServer(("0.0.0.0", PORT), CDPKRequestHandler)
     logger.info("CDPK System Planner running at http://0.0.0.0:%d", PORT)
+
+    # Pre-warm users & start background daemons asynchronously AFTER socket is bound
+    def _deferred_startup():
+        time.sleep(1)  # Allow socket to immediately accept Render health check probes
+        try:
+            load_users()
+            res = sync_from_gdrive(force=False)
+            logger.info("Initial pricelist knowledge loaded from: %s", res.get("source"))
+        except Exception as e:
+            logger.warning("Startup sync warning: %s", e)
+
+        try:
+            start_periodic_sync_daemon(interval_seconds=900)
+            logger.info("Google Drive Knowledge Bank periodic monitoring daemon initialized (900s interval).")
+        except Exception as e:
+            logger.warning("Startup knowledge daemon warning: %s", e)
+
+    startup_thread = threading.Thread(target=_deferred_startup, daemon=True, name="CDPK-DeferredStartup")
+    startup_thread.start()
+
     server.serve_forever()
 
 

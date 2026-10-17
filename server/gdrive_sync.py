@@ -156,17 +156,21 @@ def get_access_token(account_key: str = "citradata") -> Optional[str]:
         return None
 
 
-def get_diagnostics() -> Dict[str, Any]:
+def get_diagnostics(probe_remote: bool = False) -> Dict[str, Any]:
     raw_citra = os.environ.get("GDRIVE_CITRADATA_CRED", "")
     raw_gemini = os.environ.get("GEMINI_API_KEY", "")
     cred = get_gdrive_credential("citradata")
     token_ok = False
     if cred:
-        try:
-            t = get_access_token("citradata")
-            token_ok = bool(t)
-        except Exception as ex:
-            _DIAGNOSTIC_INFO["last_token_err"] = str(ex)
+        if probe_remote:
+            try:
+                t = get_access_token("citradata")
+                token_ok = bool(t)
+            except Exception as ex:
+                _DIAGNOSTIC_INFO["last_token_err"] = str(ex)
+        else:
+            cached = _TOKEN_CACHE.get("citradata")
+            token_ok = bool(cached and cached.get("access_token"))
     return {
         "gdrive_env_present": bool(raw_citra.strip()),
         "gdrive_env_len": len(raw_citra.strip()),
