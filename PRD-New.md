@@ -1,171 +1,299 @@
-# PRD — CDPK System Planner (PRD-New)
+# PRD — CDPK System Planner (PRD-New v8.4.0)
 
-> **Nama Aplikasi Resmi:** **CDPK System Planner** *(Solution Sizing, RF Simulation & Commercial Suite)*  
-> **Pemilik / Entitas:** PT Citradata Purnakharisma (CDPK) — Authorized Distributor Motorola Solutions  
-> **Target Bahasa:** Dwi-Bahasa / Bilingual (**Bahasa Indonesia `ID`** & **English `EN`**)  
-> **AI Copilot Engine:** Multi-Model Selector (**Google Gemini 3.8 Flash** & **Google Gemini 3.8 Pro**)  
-> **Target Arsitektur & Hosting:** GitHub (`tech-sol-id`) + Render Cloud (Singapore Region) + Google Drive Live API (`drive citradata`) — seragam dengan arsitektur [Grok x Slack](file:///Users/adriankansil/Documents/Grok%20x%20Slack/PRD.md)  
-> **Referensi Baseline:** [PRD-legacy.md](file:///Users/adriankansil/Documents/Project%20Calculator%20-%20CDPK/PRD-legacy.md)
-
----
-
-## 1. Visi Produk & Ringkasan Perubahan Utama (What's New)
-
-**CDPK System Planner** mempertahankan seluruh kapabilitas teknis unggulan dari versi legacy (*RF Sizing Engine, DMR Capacity & Timeslot Planning, Multi-Factor Topology Decision, Intelligent Product Recommender, Presales Mandays WES Estimator, dan CloudRF-style Canvas Coverage Simulation*), sekaligus menghadirkan **6 lompatan pembaruan utama** yang telah dikonfirmasi:
-
-1. **Verifikasi & Standardisasi Bank Knowledge (Data Accuracy & APAC Alignment):**
-   - **Perbaikan Nama Repeater 50W:** Menstandarkan nama repeater standar 50W menjadi **`MOTOTRBO SLR 5300`** (sesuai kode resmi region APAC/Indonesia, menggantikan penamaan `SLR 5500` yang tercampur di kode legacy).
-   - **Perbaikan Nama Repeater 1W In-Building/DAS:** Mengganti `MOTOTRBO CLR Series` di kategori Repeater menjadi **`MOTOTRBO SLR 1000`** (repeater kompak 1W–10W IP65 untuk indoor/DAS/outdoor, konsisten dengan tab Mandays).
-   - **Auto-Allocate Kuantitas Radio di BoQ:** Menghapus status `"TBD"` pada baris radio di BoQ dengan mengalokasikan jumlah unit secara otomatis berdasarkan `userCount` dan rasio profil industri (misal: 85% Field Radio, 10% Vehicle/Security, 5% Supervisor Smart Radio) yang tetap bisa diedit langsung oleh user.
-   - **2 Mode Export BoQ:** Menyediakan pilihan ekspor **`Technical BoQ`** (hanya spesifikasi & kuantitas tanpa harga) dan **`Commercial Quotation`** (lengkap dengan Harga Satuan, Sub-item Sistem, Diskon, PPN, & Kurs IDR/USD).
-2. **Modul Baru: Perhitungan Harga Sistem & Perangkat Komposit (System & Bundle Pricing Configurator):**
-   - Kemampuan merakit suatu **Sistem / Perangkat Utama** yang terdiri dari beberapa *sub-item* komponen (*Parent-Child BOM* — contoh: *1 Set Site Repeater System SLR 5300* otomatis menghitung Repeater, Duplexer, Antena, Kabel Coaxial per meter, Konektor, Lightning Arrester, UPS, dan Lisensi).
-   - Kalkulasi finansial menyeluruh: *Base Pricelist (IDR & USD)*, *Kurs Konversi Dinamis*, *Margin / Markup*, *Diskon per Item atau Global*, *Pajak (PPN 11%/12%)*, serta *Biaya Jasa / Instalasi & Mandays*.
-3. **Modul Baru: Multi-Model AI Copilot (`Gemini 3.8 Flash` & `Gemini 3.8 Pro`):**
-   - Dilengkapi pemilih model AI (**Gemini 3.8 Flash** untuk respons instan sehari-hari dan **Gemini 3.8 Pro** untuk penalaran tender/arsitektur mendalam).
-   - Kemampuan AI Copilot: (a) *Natural Language Prompt-to-Sizing & BoQ* (mengubah deskripsi proyek/RKS menjadi parameter sizing & daftar harga otomatis), (b) *Smart Budget & Spec Optimizer* (menyesuaikan kombinasi produk agar masuk target anggaran klien), dan (c) *Executive Proposal Narrative Generator* dalam bahasa `ID` / `EN`.
-4. **Integrasi Real-Time dengan Cloud & Google Drive (`drive citradata` - `adrian@citradata.id`):**
-   - Terhubung langsung ke Folder **`CDPK System Planner`** (`1OB_UaNyd65Ccb3lmdwJuw5raufCwhgbS`) dan Google Sheet **`Master Pricelist`** (`1Kp85v81JXeRC5ti-ZXYBChgrj2ztnnwrCHokI02LX6U`).
-5. **Dukungan Dwi-Bahasa Penuh (Bilingual `ID` / `EN`):**
-   - Seluruh antarmuka pengguna (UI), deskripsi katalog, catatan teknis otomatis, rekomendasi RF, AI Copilot, hingga dokumen hasil ekspor (**PDF, XLSX, DOCX**) mendukung pergantian bahasa instan antara **Bahasa Indonesia** dan **Bahasa Inggris**.
-6. **Cloud Hosting & CI/CD Seragam dengan Proyek "Grok x Slack":**
-   - Menggunakan repositori GitHub (`tech-sol-id`) yang terhubung otomatis (*Auto-Deploy on Push*) ke **Render Cloud (Region: Singapore)** dengan `Dockerfile` (Python 3.11 + FastAPI/Flask ringan sebagai API Proxy Google Drive & AI Copilot) serta *keep-alive* GitHub Actions / UptimeRobot.
+> **Nama Aplikasi Resmi:** **CDPK System Planner** *(Solution Sizing, RF Simulation, Commercial Suite & Enterprise Team Collaboration)*  
+> **Pemilik / Entitas:** PT Citradata Purnakharisma (CDPK) — Authorized Distributor Motorola Solutions & Avigilon  
+> **Versi Saat Ini:** `8.4.0 (Enterprise Production Build)`  
+> **Target Bahasa:** Dwi-Bahasa Penuh / Bilingual (**Bahasa Indonesia `ID`** & **English `EN`**)  
+> **AI Copilot Engine:** Multi-Model AI Selector (**Google Gemini 3.8 Flash** & **Google Gemini 3.8 Pro**)  
+> **Arsitektur & Cloud Hosting:** GitHub (`tech-sol-id`) + Render Cloud Container (Singapore Region) + Google Drive Live API (`drive citradata`)  
+> **Kebijakan Keamanan:** [Strict Security Policy & Threat Modeling (AGENTS.md)](file:///Users/adriankansil/Documents/Project%20Calculator%20-%20CDPK/AGENTS.md)  
+> **Dokumentasi Terkait:** [PRD-legacy.md](file:///Users/adriankansil/Documents/Project%20Calculator%20-%20CDPK/PRD-legacy.md) | [USER_GUIDE.md](file:///Users/adriankansil/Documents/Project%20Calculator%20-%20CDPK/USER_GUIDE.md)
 
 ---
 
-## 2. Audit & Pembaruan Bank Knowledge (Knowledge Base Verification)
+## 1. Visi Produk & Ringkasan Eksekutif
 
-Berdasarkan audit terhadap `DMSC-I_Toolkit_v7_4.html` dan konfirmasi teknis, berikut adalah daftar ketetapan yang diterapkan pada sistem baru:
+**CDPK System Planner** adalah platform rekayasa sistem komunikasi radio DMR terintegrasi (*end-to-end*) yang memadukan perhitungan teknis propagasi RF, perencanaan kapasitas talkgroup & timeslot, perakitan paket solusi komposit (*Parent-Child BOM*), kalkulasi komersial presisi, kolaborasi tim lintas-divisi (*Product Expert* & *Engineer / Technician*), serta tata kelola pengawasan eksekutif (*Overseer* & *Administrator*) berbasis Google Drive Cloud.
 
-| Kategori | Status di Legacy | Ketetapan di Sistem Baru (PRD-New) |
-| :--- | :--- | :--- |
-| **Repeater In-Building 1W** | Tertulis `MOTOTRBO CLR Series` di Katalog, tapi `MOTOTRBO SLR 1000` di Mandays | Diubah & diseragamkan di seluruh modul menjadi **`MOTOTRBO SLR 1000`** (1W–10W In-Building/DAS Repeater). |
-| **Repeater Standar 50W** | Tercampur antara `SLR 5300` dan `SLR 5500 Series` | Diseragamkan di seluruh modul menjadi **`MOTOTRBO SLR 5300`** (SKU resmi APAC/Indonesia). |
-| **Repeater High Power 100W** | `MOTOTRBO SLR 8000` / `SLR 8000 High Power` | Diseragamkan menjadi **`MOTOTRBO SLR 8000`** (100W Continuous Duty). |
-| **Kuantitas (Qty) Radio di BoQ** | Selalu tertulis `"TBD"` di tabel BoQ | **Auto-Allocate Qty Radio** berdasarkan input `userCount` (proporsi otomatis per role: *Field / Vehicle / Supervisor*) dengan kolom input yang bisa diedit manual oleh user sebelum ekspor. |
-| **Mode Ekspor BoQ** | Hanya 1 mode tanpa harga | **2 Mode Ekspor:** (1) **Technical BoQ** (tanpa harga, untuk lampiran teknis) dan (2) **Commercial Quotation** (lengkap dengan rincian harga paket sistem, diskon, kurs IDR/USD, dan PPN). |
-| **Bug Teknis Legacy** | Duplikasi 1.500 baris kode, variabel `effSites` undefined di `buildTopoSVG()`, dan tidak adanya key `mixed_inout` di path loss `terrainN` | Seluruh duplikasi dihapus; kode dipecah menjadi modul bersih; bug `buildTopoSVG()` dan `terrainN['mixed_inout'] = 3.5` diperbaiki. |
+### Pilar Utama Platform (Versi 8.4.0):
+1. **Precision Engineering:** Sizing RF geometrik, rekomendasi topologi bertingkat (Conventional, IP Site Connect, Capacity Plus Trunking), kalkulasi node DAS indoor (SLR 1000), estimasi mandays (WES Method), dan simulasi canvas propagasi CloudRF-style.
+2. **Modular Product & System Configurator:** Menghitung paket repeater base station (SLR 5300, SLR 8000), radio terminal portabel (R7, P6620i, P8668i), serta konfigurator kustom dinamis dengan pemilihan lisensi (*Licenses*) dan aksesoris (*Accessories*) per produk.
+3. **Enterprise Zero-Trust Security & Gatekeeping:**
+   - Halaman depan terisolasi 100% (*Zero DOM Leakage*) dengan perlindungan CSS `x-cloak` dan otentikasi wajib sebelum akses workspace.
+   - Pembatasan domain korporat ketat: hanya `@citradata.id` dan `@techsolutions.id`.
+   - Mekanisme persetujuan wajib (*Admin Pending Approval*) untuk setiap pengguna baru.
+4. **Empat Tingkat Peran Pengguna (Four-Tier RBAC):**
+   - **👑 Administrator:** Kontrol penuh pengguna, persetujuan akun, akses link folder master Drive & master pricelist, jejak audit, dan ringkasan portofolio.
+   - **👁️ Overseer:** Mode pantau eksekutif. Dapat melihat seluruh akun tim (view-only), membuka seluruh dokumen arsip tim, meninjau jejak audit (*audit trail*), serta memantau kepatuhan margin eksekutif, tanpa akses modifikasi akun atau tautan master cloud.
+   - **🛠️ Engineer / Technician:** Fokus pada rekayasa teknis, sizing RF, estimasi mandays, kustomisasi BoQ, penyimpanan berkas, dan penerimaan handover.
+   - **💼 Product Expert:** Fokus pada penawaran komersial, konfigurasi paket produk, margin & diskon, ekspor quotation, serta handover proyek ke tim engineering.
+5. **Kolaborasi Handover & Notifikasi Terpusat:**
+   - Serah terima proyek resmi antardivisi dengan riwayat handover (*handover history*) yang tersimpan pada metadata berkas Google Drive.
+   - Pusat notifikasi in-app (ikon lonceng kuning dengan penghitung belum dibaca) untuk alert penugasan dan jalan pintas pembukaan proyek.
+6. **Executive Portfolio & Margin Guardrails:**
+   - Bar ringkasan eksekutif: total pipeline nilai proyek (IDR), rata-rata margin tim, kepatuhan guardrail, dan jumlah proyek berisiko.
+   - Kebijakan Guardrail Margin: Peringatan visual otomatis `⚠️ <15%` pada tabel BoQ, konfigurator paket, dan dashboard arsip jika margin berada di bawah standar perusahaan.
+7. **Jejak Audit Terdesentralisasi (Tamper-Evident Audit Trail):**
+   - Pencatatan otomatis aktivitas login, mutasi pengguna, penyimpanan proyek, pembukaan berkas, serah terima, serta ekspor dokumen PDF/Excel.
 
 ---
 
-## 3. Spesifikasi Modul Baru: Perhitungan Harga Sistem & Perangkat (Cloud Pricing & Bundle Configurator)
-
-### 3.1. Konsep Hierarki "System / Perangkat Komposit" (Parent-Child BOM)
-Penawaran proyek disusun dalam bentuk **Paket Sistem / Perangkat** yang terdiri dari beberapa item komponen (*sub-items*) yang saling terhubung:
+## 2. Modul Rekayasa Teknis (Engineering & Calculation Engines)
 
 ```mermaid
-flowchart LR
-    subgraph SystemBundle["Paket Sistem (Contoh: 1 Site Repeater Outdoor — MOTOTRBO SLR 5300)"]
-        P1["[Main Unit] Repeater MOTOTRBO SLR 5300 VHF/UHF (1 Unit)"]
-        P2["[RF Filtering] High-Isolation Cavity Duplexer (1 Unit)"]
-        P3["[Antenna] Avanti Omni / Yagi Antenna + Mounting Bracket (1 Set)"]
-        P4["[Feeder] Coaxial Cable 7/8 inch + Clamps (50 Meter — dinamis sesuai tinggi tower)"]
-        P5["[Connectors] Connector N-Male + Jumper Cable 1/2 inch (1 Lot)"]
-        P6["[Protection] Lightning Arrester + Grounding Kit (1 Set)"]
-        P7["[License] MOTOTRBO System License (IPSC / CapPlus / CapMax) (1 Lisensi)"]
-        P8["[Power] Online UPS + Battery Backup / Power Supply (1 Set)"]
-    end
-    SystemBundle --> CalcPrice["Kalkulasi Harga Otomatis per Site & Total Proyek"]
+flowchart TD
+    In["Input Sizing (Industri, Area km²/Ha, Kontur Medan, User Count, Backhaul, Fitur)"] --> RF["RF Geometry & DMR Capacity Engine"]
+    RF --> Topo{"Evaluasi Topologi Otomatis"}
+    Topo -->|Luas < 8 km² & User < 60| Opt1["1. Conventional Single-Site (SLR 5300)"]
+    Topo -->|Multi-Site Tersebar / Lembah| Opt2["2. IP Site Connect (Multi-Site Link)"]
+    Topo -->|User > 120 / Kanal Padat| Opt3["3. Capacity Plus Trunking (Dynamic Slots)"]
+    
+    RF --> Alloc["Alokasi Otomatis Radio Terminal"]
+    Alloc --> HT["85% Handheld Radio (TIA ATEX / Non-ATEX)"]
+    Alloc --> Mob["10% Mobile/Base Radio Vehicle"]
+    Alloc --> Sup["5% Smart Supervisor Radio"]
+    
+    RF --> DAS["Kalkulasi Node DAS In-Building (SLR 1000)"]
+    RF --> Power["Kalkulasi UPS Backup & Kapasitas Baterai Ah"]
+    
+    Opt1 & Opt2 & Opt3 & Alloc & DAS & Power --> BoQ["Sinkronisasi Otomatis ke BoQ & Commercial Suite"]
 ```
 
-### 3.2. Fitur Utama Modul Kalkulator Harga (Pricing & Quotation Builder)
-1. **Sinkronisasi Otomatis dari Sizing + Mode Custom Rakitan:**
-   - **Auto-Generate dari Sizing:** Begitu tombol *Generate Solution* ditekan di tab Sizing, sistem langsung merakit paket Repeater Site (beserta sub-itemnya), mengalokasikan jumlah Radio Handheld/Mobile sesuai jumlah user, menambahkan Dispatcher/Gateway, Backhaul, dan Mandays ke dalam tabel **BoQ & Pricing**.
-   - **Custom Bundle & Item Builder:** User juga dapat menambahkan paket sistem lain dari katalog (misal: merakit *Paket CCTV Avigilon AI NVR + Kamera H6A + PoE Switch* atau *Paket Radio Tambahan*), meng-expand/collapse sub-item, mengubah kuantitas per komponen, atau menambah item custom.
-2. **Dukungan Multi-Mata Uang (IDR & USD) & Kurs Konversi:**
-   - Harga dasar di Google Drive dapat berupa `USD` atau `IDR`.
-   - Tersedia pengaturan **Kurs USD $\rightarrow$ IDR** (otomatis dari sheet konfigurasi GDrive atau dioverride manual di layar) sehingga seluruh penawaran dapat disajikan dalam **100% IDR**, **100% USD**, atau **Dual-Currency**.
-3. **Kontrol Margin, Diskon, & Pajak (PPN):**
-   - Mendukung pengaturan **Markup / Margin (%)**, **Diskon per Item / Diskon Global (%)**, dan **PPN (11% / 12% atau Exclude Tax)**.
-   - Integrasi langsung dengan hasil **Mandays (WES)** untuk menghitung biaya *Installation, Programming, Testing & Commissioning* (`Total MD × Rate per Manday`).
-4. **2 Mode Ekspor Dokumen (PDF, XLSX, DOCX):**
-   - **Mode 1 — Technical BoQ:** Hanya menampilkan *Kategori, Model/Spesifikasi (beserta sub-item), Unit, Qty, dan Keterangan Teknis* (tanpa kolom harga).
-   - **Mode 2 — Commercial Quotation / BoQ:** Menampilkan *Kategori, Model/Spesifikasi, Unit, Qty, Unit Price, Total Price, Subtotal, Discount, PPN, dan Grand Total* lengkap dengan syarat & ketentuan komersial.
+### 2.1. Parameter Sizing & Standardisasi Regional APAC
+- **Repeater 50W Utama:** Diseragamkan menjadi **`MOTOTRBO SLR 5300`** (menggantikan kode non-resmi legacy).
+- **Repeater 1W–10W DAS / In-Building:** Diseragamkan menjadi **`MOTOTRBO SLR 1000`** (IP65 Compact Repeater).
+- **Repeater 100W Continuous Duty:** **`MOTOTRBO SLR 8000`**.
+- **Radio Portabel Standar:** **`MOTOTRBO R7 Series`** (Display/Non-Display, TIA ATEX opsional) dan **`XiR P6620i / P8668i`**.
+- **Kuantitas Radio Dinamis:** Status `"TBD"` dihapus permanen; kuantitas dialokasikan proporsional berdasarkan rasio profil industri dengan input yang dapat disesuaikan pengguna.
+
+### 2.2. Presales Mandays WES Estimator
+- Menghitung hari kerja teknis (*Mandays*) berdasarkan kompleksitas medan (*Low, Medium, High*), jumlah site, node DAS, jumlah radio yang diprogram, serta integrasi dispatcher/CCTV.
+- Biaya mandays langsung terhubung dengan rate standar perusahaan (`Rp 3.500.000 / Manday`) dan terintegrasi otomatis ke baris jasa engineering pada BoQ.
+
+### 2.3. Simulasi Propagasi Canvas RF
+- Mensimulasikan estimasi cakupan sinyal (*Strong, Fair, Weak, Dead Zone*) pada canvas HTML5 interaktif berdasarkan koordinat geografis, daya pancar repeater (Watt), gain antena (dBi), dan redaman kabel/feeder (dB).
+- Mendukung ekspor tangkapan peta simulasi ke format PNG beresolusi tinggi.
 
 ---
 
-## 4. Arsitektur Cloud Hosting & Integrasi Google Drive (Mengikuti Pola "Grok x Slack")
+## 3. Modul Komersial & Konfigurator Paket Sistem
 
-Berdasarkan pemeriksaan pada proyek **[Grok x Slack](file:///Users/adriankansil/Documents/Grok%20x%20Slack/PRD.md)** (`render.yaml`, `Dockerfile`, `gdrive_engine.py`, dan `.github/workflows/sync_drive.yml`), aplikasi ini akan menggunakan infrastruktur yang **100% seragam dan terbukti stabil**:
+### 3.1. Konsep Parent-Child Bill of Materials (BOM)
+Setiap paket sistem menghitung komponen utama beserta seluruh sub-item pembentuknya secara otomatis:
+- **Paket Repeater Base Station:** Repeater, cavity duplexer (termasuk cavity lab tuning), antena omni/yagi, kabel feeder coaxial 7/8" atau 1/2" per meter tower, lightning arrester grounding kit, rack cabinet 19", dan online UPS.
+- **Paket Terminal Radio:** Unit HT, baterai cadangan IMPRES, charger multi-unit 6-way atau single-unit, remote speaker microphone (RSM), earpiece, swivel carry case, dan lisensi enkripsi AES-256.
+
+### 3.2. Konfigurator Paket Kustom Dinamis (Tab 7)
+Memungkinkan pengguna merakit produk apa pun dari katalog dengan arsitektur:
+1. **Pilihan Produk Utama:** Dropdown pencarian cerdas (misal: `SLR5300`, `R7`, `XiR P6620i`).
+2. **Kategori Lisensi (Licenses):** Menyesuaikan otomatis dengan produk yang dipilih (misal: *IP Site Connect License*, *Capacity Plus Single/Multi-Site*, *AES-256 Encryption License*, *Mandown / GPS License*).
+3. **Kategori Aksesoris (Accessories):** Menyesuaikan otomatis dengan produk yang dipilih (misal: *IMPRES 2900mAh Battery*, *6-Way Multi-Unit Charger*, *Heavy Duty Noise-Cancelling RSM*, *Cavity Duplexer UHF*).
+4. **Kalkulasi Finansial Paket:** COGS Modal, Target Margin %, Harga Jual Klien, dan Tombol Transfer langsung ke BoQ Utama.
+
+### 3.3. Kontrol Komersial & Mode Ekspor
+- **Multi-Currency:** Mendukung mata uang **IDR (Rupiah)** dan **USD (US Dollar)** dengan kurs konversi dinamis.
+- **Pajak & Diskon:** Diskon per item atau global (%) serta opsi PPN (11%, 12%, atau Non-PKP 0%).
+- **2 Format Ekspor Dokumen:**
+  1. **Technical BoQ (PDF / Excel):** Menampilkan rincian teknis, spesifikasi, sub-item BOM, dan kuantitas tanpa kolom harga komersial (untuk lampiran teknis tender).
+  2. **Commercial Quotation (PDF / Excel):** Menampilkan struktur harga lengkap, diskon, PPN, grand total, syarat pembayaran, rekening resmi, dan masa berlaku penawaran.
+
+---
+
+## 4. Keamanan Sistem & Kontrol Akses (Security & RBAC)
+
+Sesuai standar [CDPK Security Policy (AGENTS.md)](file:///Users/adriankansil/Documents/Project%20Calculator%20-%20CDPK/AGENTS.md):
+
+```mermaid
+classDiagram
+    class User {
+        +String username
+        +String email
+        +String name
+        +String role
+        +String status
+        +login()
+        +register()
+    }
+    class Administrator {
+        +fullAccountManagement()
+        +approveUserRegistration()
+        +viewMasterDriveFolder()
+        +viewMasterSpreadsheet()
+        +viewAuditTrail()
+        +viewExecutivePortfolio()
+    }
+    class Overseer {
+        +viewAllTeamAccounts()
+        +viewAllTeamProjects()
+        +viewAuditTrail()
+        +viewExecutivePortfolio()
+        -editUsers() [DENIED]
+        -viewDriveFolderLink() [DENIED]
+        -viewPricelistLink() [DENIED]
+    }
+    class EngineerTechnician {
+        +performRFSizing()
+        +configureBoQ()
+        +saveOwnProjects()
+        +receiveHandover()
+    }
+    class ProductExpert {
+        +configureCommercialPricing()
+        +buildCustomPackages()
+        +exportQuotations()
+        +initiateHandover()
+    }
+    User <|-- Administrator
+    User <|-- Overseer
+    User <|-- EngineerTechnician
+    User <|-- ProductExpert
+```
+
+### 4.1. Kebijakan Keamanan Otentikasi
+1. **Domain Whitelisting:** Hanya alamat email dengan domain `@citradata.id` dan `@techsolutions.id` yang diizinkan masuk atau mendaftar. Domain publik (`@gmail.com`, `@yahoo.com`) ditolak secara absolut.
+2. **Pending Approval Protocol:** Akun yang didaftarkan mandiri otomatis berstatus `pending` dan terkunci hingga diverifikasi dan disetujui secara eksplisit oleh Administrator.
+3. **Kriptografi Password:** Menggunakan hashing **PBKDF2 dengan SHA-256** dan *unique cryptographic salt* (100.000 iterasi). Verifikasi password menggunakan `secrets.compare_digest` untuk mencegah serangan timing attack.
+4. **Keamanan Sesi:** Menggunakan token acak 256-bit (`secrets.token_urlsafe(32)`) dengan masa berlaku terkelola.
+5. **HTTP Security Headers:**
+   - `X-Content-Type-Options: nosniff`
+   - `X-Frame-Options: SAMEORIGIN`
+   - `Referrer-Policy: strict-origin-when-cross-origin`
+
+---
+
+## 5. Kolaborasi Tim, Handover & Notifikasi
+
+### 5.1. Alur Serah Terima Proyek (Handover Workflow)
+Fitur handover dirancang khusus untuk memfasilitasi kerja sama antara divisi *Product Expert* (Sales) dan *Engineer / Technician* (Presales):
 
 ```mermaid
 sequenceDiagram
-    participant User as Tim Presales / Sales CDPK
-    participant Render as Render Cloud Server (Docker Python + Web UI)
-    participant GDrive as Google Drive ('drive citradata' - adrian@citradata.id)
-    participant GitHub as GitHub Repo (tech-sol-id)
-
-    Note over GitHub,Render: Setiap 'git push' otomatis men-deploy ulang di Render (~30 detik)
-    User->>Render: Buka Web App / Klik Tombol "Sync Pricelist"
-    Render->>GDrive: Fetch Data Terbaru via OAuth2 Auto-Refresh (GDRIVE_CITRADATA_CRED)
-    GDrive-->>Render: Return Data Sheet/JSON (Products, Bundles, RF Rules, Rates)
-    Render->>Render: Update Cache & Hitung Harga Sistem
-    Render-->>User: Tampilkan UI Dwi-Bahasa (ID/EN) + Status "🟢 Live Synced from GDrive"
+    participant Sales as Product Expert (Sales)
+    participant Server as CDPK Gateway & Drive Engine
+    participant GDrive as Google Drive Subfolder (11NLBY...)
+    participant Eng as Engineer / Technician
+    
+    Sales->>Server: Kirim Handover (Pilih Rekan Tim + Catatan Instruksi)
+    Server->>GDrive: Update appProperties.collaborators & Simpan Catatan
+    Server->>Server: Buat In-App Notification (Tipe: Handover)
+    Server->>Server: Catat Event ke Tamper-Evident Audit Trail
+    Eng->>Server: Buka Notifikasi (Ikon Lonceng Kuning)
+    Eng->>Server: Klik "Buka Proyek" langsung dari Notifikasi
+    Server->>GDrive: Fetch Data Proyek (.cdpk.json)
+    Server-->>Eng: Render Sizing & BoQ Lengkap di Layar
 ```
 
-### 4.1. Pengaturan Hosting & Push Update (`Render + GitHub + Docker`)
-1. **Repositori GitHub (`tech-sol-id`):**
-   - Kode aplikasi disimpan di repositori GitHub organisasi `tech-sol-id`.
-   - Setiap kali Anda meminta perubahan fitur atau tampilan, kita cukup melakukan `git commit && git push origin main`, dan Render akan langsung mem-build serta men-deploy versi baru secara otomatis.
-2. **Container Runtime (`Dockerfile` + `render.yaml`):**
-   - Menggunakan `python:3.11-slim` pada port `7860` di region `singapore` (sama persis dengan `cdpk-grok-slack-bot`).
-   - Backend ringan berbasis Python (`FastAPI` / `Flask`) bertugas melayani:
-     - **Frontend Web App** (Modular JS + Tailwind + Alpine.js).
-     - **Endpoint `/api/pricing/sync` & `/api/knowledge`:** Menghubungi Google Drive API menggunakan kredensial `GDRIVE_CITRADATA_CRED` (dengan auto-refresh token persis seperti `gdrive_engine.py` di Grok x Slack) sehingga token OAuth Anda aman di sisi server dan tidak terekspos ke browser publik.
-   - Dilengkapi workflow `.github/workflows/keep_alive.yml` agar layanan web di Render selalu siap diakses 24/7 tanpa jeda *cold-start*.
-
-### 4.2. Struktur Folder & File Master di Google Drive (`drive citradata`)
-Telah terhubung ke akun **`drive citradata` (`adrian@citradata.id`)** pada resource resmi berikut:
-- **Folder Utama:** `CDPK System Planner` (`1OB_UaNyd65Ccb3lmdwJuw5raufCwhgbS`) — [Buka Folder](https://drive.google.com/drive/folders/1OB_UaNyd65Ccb3lmdwJuw5raufCwhgbS)
-- **File Master Spreadsheet:** `Master Pricelist` (`1Kp85v81JXeRC5ti-ZXYBChgrj2ztnnwrCHokI02LX6U`) — [Buka Google Sheet](https://docs.google.com/spreadsheets/d/1Kp85v81JXeRC5ti-ZXYBChgrj2ztnnwrCHokI02LX6U/edit)
-
-File `Master Pricelist` akan diisi otomatis dengan struktur 4 Tab Sheet yang siap diedit kapan saja oleh tim CDPK:
-1. **`Products_Catalog`:** Daftar lengkap produk (SKU, Kategori, Series, Nama Model—dengan `MOTOTRBO SLR 5300` & `MOTOTRBO SLR 1000` yang sudah dikoreksi, Deskripsi `ID` & `EN`, Fitur `ID` & `EN`, BestFor `ID` & `EN`, Mata Uang `USD`/`IDR`, `Base_Price`, `Default_Markup_Pct`, `Unit`).
-2. **`System_Bundles`:** Daftar paket sistem komposit (misal: *Paket Repeater Site Outdoor VHF/UHF*, *Paket Repeater Indoor DAS SLR 1000*, *Paket Dispatcher Control Room*, *Paket Solar Power Off-Grid*, *Paket CCTV AI NVR*) beserta daftar komponen sub-item dan rumus kuantitasnya.
-3. **`Industry_RF_Params`:** Parameter teknis 19 kategori industri dan 8 jenis terrain (sehingga jika tim engineering ingin mengubah base radius atau alokasi rasio radio per industri, cukup edit dari Google Sheet).
-4. **`Commercial_Config`:** Parameter komersial global (`USD_IDR_RATE`, `VAT_PPN_PCT`, `MANDAY_RATE_IDR`, `VALIDITY_DAYS`, info kontak & rekening/footer penawaran).
+1. **Inisiasi Handover:** Pembuat proyek dapat memilih 1 atau lebih rekan tim aktif, menyertakan catatan khusus (misal: *"Mohon bantu verifikasi tinggi tower dan survei link backhaul"*).
+2. **Metadata Drive:** Daftar kolaborator disimpan pada properti Google Drive `appProperties.collaborators`.
+3. **Pusat Notifikasi (Yellow Bell):**
+   - Terletak di bilah atas aplikasi dengan badge jumlah pesan belum dibaca.
+   - Memberikan notifikasi instan dan tombol aksi langsung untuk memuat proyek terkait tanpa harus mencari di arsip.
 
 ---
 
-## 5. Spesifikasi Dwi-Bahasa (Bilingual `ID` & `EN`)
+## 6. Tata Kelola Eksekutif: Portofolio, Guardrail & Jejak Audit
 
-1. **Instant Language Toggle (`🇮🇩 ID` | `🇬🇧 EN`) di Navbar:**
-   - Mengubah seluruh label form, navigasi tab, kartu hasil analisis teknis, rincian RF & kapasitas, tabel BoQ/Pricing, Mandays WES, hingga keterangan di simulasi Coverage Canvas secara real-time.
-2. **Bilingual Dynamic Text Engine:**
-   - Seluruh kalimat kesimpulan teknis otomatis (*Technical Summary*, *Special Recommendations*, *Power & UPS Calculation*, *Dead Zone Analysis*, dan *Timeline Recommendation*) dihasilkan dalam bahasa yang sedang dipilih.
-3. **Bilingual Document Export (PDF, XLSX, DOCX):**
-   - Dokumen **Technical BoQ**, **Commercial Quotation**, **Mandays WES Report**, dan **RF Coverage Simulation Report** otomatis dicetak dalam Bahasa Indonesia atau Bahasa Inggris sesuai pilihan user.
+### 6.1. Ringkasan Portofolio Eksekutif (Executive Portfolio Summary)
+Tersedia bagi **Administrator** dan **Overseer** di bagian atas modal Arsip Proyek:
+- **Total Pipeline Nilai Proyek:** Akumulasi total nominal penawaran seluruh proyek tim (format Rupiah IDR).
+- **Rata-rata Margin Tim:** Indikator kesehatan profitabilitas tim penjualan.
+- **Kepatuhan Guardrail:** Menghitung jumlah proyek yang memenuhi batas aman margin perusahaan ($\ge 15\%$).
+- **Perlu Perhatian Margin:** Mendeteksi otomatis proyek dengan margin tipis ($< 15\%$) yang memerlukan peninjauan khusus manajemen.
+
+### 6.2. Kebijakan Guardrail Margin (Margin Guardrail Policy)
+- **Standar Ambang Batas:** Minimum **15.0%**.
+- **Indikator Visual Peringatan:**
+  - **Tabel BoQ (Tab 2):** Input target margin berubah warna menjadi oranye dan memunculkan banner peringatan guardrail.
+  - **Konfigurator Paket Kustom (Tab 7):** Slider margin memunculkan pill alert `⚠️ Guardrail Margin: Di bawah standar (<15%)`.
+  - **Daftar Berkas Arsip:** Setiap berkas proyek menampilkan badge `⚠️ Margin: X% (<15%)` atau `✓ Margin: X%`.
+
+### 6.3. Jejak Audit Terdesentralisasi (Tamper-Evident Audit Trail)
+- Modul backend: `server/audit.py` | Penyimpanan: `data/audit_log.json`.
+- Event yang dicatat secara permanen:
+  - `login` / `logout` / `register`: Akses autentikasi (Google Workspace / Kredensial) beserta alamat IP.
+  - `user_mgmt`: Penambahan akun, perubahan profil, toggle status, persetujuan/penolakan, promosi, dan reset password.
+  - `save_project`: Penyimpanan berkas proyek baru atau revisi ke Google Drive.
+  - `load_project`: Pembukaan kembali berkas proyek dari Google Drive.
+  - `handover`: Serah terima proyek antardivisi beserta daftar penerima dan catatan.
+  - `export_pdf` / `export_xlsx`: Pengunduhan dokumen resmi penawaran komersial dan BoQ.
 
 ---
 
-## 6. Struktur Direktori Proyek Baru (`Project Calculator - CDPK`)
+## 7. Multi-Model AI Copilot (Google Gemini)
+
+Terhubung ke endpoint AI resmi dengan pemilih model:
+1. **Google Gemini 3.8 Flash:** Dirancang untuk inferensi cepat (sub-detik), formulasi parameter sizing dari deskripsi kebutuhan klien, dan penyusunan draf BoQ instan.
+2. **Google Gemini 3.8 Pro:** Dirancang untuk penalaran kompleks, analisis tender RKS teknis yang rumit, optimalisasi anggaran (*budget constraints*), dan pembuatan narasi proposal eksekutif komprehensif.
+
+Fitur AI Copilot:
+- *Natural Language Prompt-to-Sizing*: Mengubah kalimat klien menjadi konfigurasi radio, repeater, dan topologi otomatis.
+- *Bilingual Proposal Narrator*: Menghasilkan bab narasi metodologi teknis penawaran dalam Bahasa Indonesia atau Inggris.
+- *State Syncing*: Membaca *state* kalkulasi aktif saat ini sehingga saran AI selalu relevan dengan konteks layar pengguna.
+
+---
+
+## 8. Arsitektur Integrasi Google Drive & Cloud Hosting
+
+### 8.1. Sumber Daya Google Drive Terhubung (`drive citradata`)
+- **Master Google Drive Folder:** `1OB_UaNyd65Ccb3lmdwJuw5raufCwhgbS` (Folder Utama CDPK System Planner).
+- **Sub-folder Arsip Output:** `11NLBY5EAPLb4q753r1TRVKgYRe0JpO8W` (*Kalkulasi & Penawaran Tim*).
+- **Master Spreadsheet Pricelist:** `1Kp85v81JXeRC5ti-ZXYBChgrj2ztnnwrCHokI02LX6U`.
+- **Token OAuth2 Terisolasi:** Disimpan di sisi server (`GDRIVE_CITRADATA_CRED`) dengan auto-refresh tanpa melibatkan browser klien.
+
+### 8.2. Spesifikasi Deployment Render Cloud
+- **Docker Base Image:** `python:3.11-slim`.
+- **Container Port:** `7860`.
+- **Region:** `singapore`.
+- **Healthcheck Endpoint:** `/health` (mendukung `GET` dan `HEAD`).
+- **Keep-Alive:** Workflow GitHub Actions berjalan otomatis berkala untuk mencegah *cold-start sleep* pada tier non-dedicated.
+
+---
+
+## 9. Desain Antarmuka Responsif Mobile & Tablet
+
+Aplikasi dirancang agar dapat diakses optimal di lapangan (*field survey*):
+- **Cross-Platform:** Kompatibel penuh dengan smartphone dan tablet (Apple iOS Safari, iPadOS, dan Android Chrome).
+- **Responsive Layout:**
+  - Header dengan layout fleksibel membungkus logo, pemilih bahasa, pusat notifikasi, info pengguna, dan tombol aksi tanpa terpotong (*no horizontal scroll overflow*).
+  - Sentuhan ramah jari (*touch target $\ge 44\text{px}$*).
+  - Tabel BoQ dengan pembungkus *horizontal scroll* halus untuk layar sempit.
+  - Modal dan drawer dengan tinggi adaptif (`max-h-[92vh]`) dan penutup sentuhan luar (*click outside*).
+
+---
+
+## 10. Struktur Direktori Proyek (Production v8.4.0)
 
 ```text
 Project Calculator - CDPK/
-├── legacy/
-│   └── DMSC-I_Toolkit_v7_4.html      # File asli (dipertahankan sebagai arsip referensi)
-├── PRD-legacy.md                     # Dokumentasi bedah tuntas aplikasi legacy
-├── PRD-New.md                        # Dokumen spesifikasi sistem baru ini
-├── Dockerfile                        # Konfigurasi container untuk Render Cloud (Port 7860)
-├── render.yaml                       # Blueprint deployment Render (Singapore region)
-├── requirements.txt                  # Dependency Python (FastAPI/Flask, requests, openpyxl, dll)
-├── .github/workflows/
-│   └── keep_alive.yml                # Cron pinger agar server Render aktif 24/7
+├── Dockerfile                        # Konfigurasi container Render Cloud (Port 7860)
+├── render.yaml                       # Blueprint Render (Region: Singapore)
+├── requirements.txt                  # Dependensi Python
+├── AGENTS.md                         # Dokumen Kebijakan Keamanan & Tata Kelola Agen
+├── PRD-New.md                        # Dokumen Spesifikasi Produk (Dokumen Ini)
+├── PRD-legacy.md                     # Arsip spesifikasi versi legacy
+├── USER_GUIDE.md                     # Panduan Lengkap Operasional Pengguna
+├── README.md                         # Informasi Repositori & Petunjuk Setup
+├── app.py                            # Gateway API & Server Aplikasi Utama
 ├── server/
-│   ├── app.py                        # Main web server & API endpoint
-│   └── gdrive_sync.py                # Engine OAuth2 & Live Reader Google Drive ('drive citradata')
+│   ├── auth.py                       # Autentikasi PBKDF2, Sesi, Google OAuth, & RBAC
+│   ├── audit.py                      # Engine Tamper-Evident Audit Trail Logger
+│   ├── gdrive_sync.py                # Integrasi Google Drive API & Spreadsheet Reader
+│   ├── notifications.py              # In-App Notification Center
+│   └── ai_copilot.py                 # Multi-Model Gemini 3.8 Flash & Pro Engine
 ├── data/
-│   └── default_knowledge.json        # Fallback cache lokal (30+ produk, paket sistem, & aturan RF)
+│   ├── audit_log.json                # Log aktivitas audit trail
+│   ├── default_knowledge.json        # Cache lokal katalog produk & konfigurasi
+│   ├── notifications.json            # Database notifikasi pengguna
+│   └── users.json                    # Cache data akun pengguna lokal
 └── static/
-    ├── index.html                    # Main App Shell (Clean, Modular, Bilingual)
-    ├── css/
-    │   └── styles.css                # Glassmorphism UI & Print/Canvas Styling
+    ├── index.html                    # Single Page Application Shell (Bilingual, Tailored UI)
     └── js/
+        ├── app_core.js               # Alpine.js Controller & State Management
         ├── i18n.js                   # Kamus Bahasa Indonesia (ID) & English (EN)
-        ├── rf_sizing_engine.js       # Engine RF Geometry, DMR Capacity, & Topology Decision
-        ├── pricing_bundle_engine.js  # Engine Kalkulator Harga Sistem, Sub-item, & Auto-Qty BoQ
-        ├── mandays_wes_engine.js     # Engine Presales Mandays (WES Method)
-        ├── coverage_sim_engine.js    # Engine HTML5 Canvas Propagation & Dead Zone
-        ├── export_engine.js          # Generator PDF, XLSX, PNG, & DOCX (Technical & Commercial)
-        └── main.js                   # Alpine.js Root Controller & State Integration
+        ├── exporters.js              # PDF, Excel (.xlsx), & PNG Coverage Exporters
+        ├── sizing_engine.js          # Engine Sizing Geometrik RF & Alokasi Perangkat
+        ├── catalog_data.js           # Knowledge Bank Produk Motorola & Avigilon
+        ├── rf_simulation.js          # Engine Propagasi Canvas HTML5
+        ├── mandays_engine.js         # Estimator Hari Kerja Presales (WES)
+        └── ai_assistant.js           # Handler Dialog & State Transfer AI Copilot
 ```

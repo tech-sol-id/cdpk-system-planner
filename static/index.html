@@ -2791,6 +2791,9 @@
                 <button @click="userGuideTab = 'security'"
                         :class="userGuideTab === 'security' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
                         class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">5. Hak Akses &amp; Keamanan</button>
+                <button @click="userGuideTab = 'audit_handover'"
+                        :class="userGuideTab === 'audit_handover' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">6. Handover, Notifikasi &amp; Jejak Audit</button>
             </div>
 
             <!-- Content Area -->
@@ -2814,21 +2817,21 @@
                                 <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">2</span>
                                 <span>Engine Kalkulasi</span>
                             </div>
-                            <p class="text-[11px] text-slate-600">Sistem otomatis menghitung rekomendasi topologi (Conventional vs IP Site Connect vs Capacity Plus), jumlah repeater outdoor, node DAS in-building, radio HT &amp; mobile, serta kapasitas UPS daya.</p>
+                            <p class="text-[11px] text-slate-600">Sistem otomatis menghitung rekomendasi topologi (Conventional vs IP Site Connect vs Capacity Plus), repeater outdoor SLR 5300, node DAS SLR 1000, radio HT &amp; mobile, serta kapasitas UPS daya.</p>
                         </div>
                         <div class="p-3.5 rounded-xl bg-purple-50/60 border border-purple-200 space-y-1.5">
                             <div class="font-extrabold text-purple-900 flex items-center gap-1.5">
                                 <span class="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px]">3</span>
                                 <span>BoQ &amp; Komersial</span>
                             </div>
-                            <p class="text-[11px] text-slate-600">Review rincian Bill of Quantity (BoQ), sesuaikan mandays jasa engineering &amp; commissioning, sesuaikan margin komersial, diskon, dan PPN 11%.</p>
+                            <p class="text-[11px] text-slate-600">Review rincian BoQ, sesuaikan mandays jasa engineering, sesuaikan target margin (standar &ge;15%), diskon, dan PPN 11%.</p>
                         </div>
                         <div class="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-1.5">
                             <div class="font-extrabold text-emerald-900 flex items-center gap-1.5">
                                 <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">4</span>
-                                <span>Simpan &amp; Ekspor</span>
+                                <span>Simpan &amp; Handover</span>
                             </div>
-                            <p class="text-[11px] text-slate-600">Klik "Simpan ke Drive" untuk arsip otomatis di cloud, atau ekspor Proposal PDF komprehensif dan Excel BoQ resmi siap kirim ke klien.</p>
+                            <p class="text-[11px] text-slate-600">Klik "Simpan ke Drive" untuk arsip otomatis di cloud, serahkan tugas via fitur Handover antardivisi, atau ekspor Proposal PDF dan Excel BoQ resmi siap kirim ke klien.</p>
                         </div>
                     </div>
                 </div>
@@ -2864,8 +2867,8 @@
                     <p class="text-slate-600">Tab "Kalkulator Produk dan Sistem" memungkinkan Engineer &amp; Product Expert merakit paket penawaran spesifik secara modular:</p>
                     <ul class="list-disc pl-5 space-y-1.5 text-slate-600">
                         <li><strong>Paket Base Station Repeater (SLR 5300 / SLR 1000):</strong> Otomatis menghitung kebutuhan duplexer cavity (termasuk tuning lab), antena omni atau yagi directional, kabel feeder coaxial 7/8" atau 1/2", lightning arrester grounding, rack cabinet 19", dan online UPS backup power.</li>
-                        <li><strong>Paket Terminal Radio Komunikasi:</strong> Menghitung paket HT Motorola (XiR P6620i TIA ATEX atau XiR P8668i) beserta multi-unit charger 6-gang dan remote speaker mic (RSM).</li>
-                        <li><strong>Multi-Package Quotation:</strong> Anda dapat menambahkan beberapa paket sekaligus dalam satu proyek dan mengklik <em>"Transfer Semua ke BoQ Proyek"</em> untuk digabungkan dengan jasa engineering.</li>
+                        <li><strong>Paket Terminal Radio Komunikasi:</strong> Menghitung paket HT Motorola (R7 Series, XiR P6620i TIA ATEX, atau XiR P8668i) beserta multi-unit charger 6-gang dan remote speaker mic (RSM).</li>
+                        <li><strong>Konfigurator Kustom Lisensi &amp; Aksesoris:</strong> Pengguna dapat memilih produk utama, menambahkan lisensi resmi yang relevan, serta menambahkan aksesoris penunjang dengan kalkulasi margin instan sebelum ditransfer ke BoQ.</li>
                     </ul>
                 </div>
 
@@ -2873,10 +2876,9 @@
                 <div x-show="userGuideTab === 'sync_archive'" class="space-y-4">
                     <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
                         <span>☁️</span>
-                        <span>Sinkronisasi Harga Cloud &amp; Arsip Google Drive</span>
+                        <span>Sinkronisasi Harga Cloud, Arsip Drive &amp; Portofolio Eksekutif</span>
                     </h4>
                     <div class="space-y-2.5">
-                        <p class="text-slate-600">Aplikasi terintegrasi langsung dengan Google Drive resmi perusahaan:</p>
                         <div class="p-3 rounded-xl bg-blue-50/70 border border-blue-200">
                             <strong>🔄 Sinkronisasi Harga Cloud:</strong>
                             <p class="text-[11px] text-slate-600 mt-1">Master harga perangkat, jasa mandays, dan hardware diambil dari tab Google Spreadsheet master. Klik tombol <em>"Sinkronisasi Harga Cloud"</em> untuk memperbarui harga real-time tanpa perlu redeploy server.</p>
@@ -2885,6 +2887,10 @@
                             <strong>💾 Simpan &amp; Muat Proyek:</strong>
                             <p class="text-[11px] text-slate-600 mt-1">Setiap kali Anda mengklik <em>"Simpan ke Drive"</em>, sistem mengunggah dokumen kalkulasi (.cdpk.json) dan Excel Quotation (.xlsx) ke subfolder resmi. File tersebut dapat Anda muat kembali kapan saja melalui menu <em>"Arsip Proyek Tim"</em>.</p>
                         </div>
+                        <div class="p-3 rounded-xl bg-indigo-50/70 border border-indigo-200">
+                            <strong>📊 Ringkasan Portofolio Eksekutif &amp; Guardrail:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Bagi Administrator dan Overseer, modal arsip dilengkapi metrik total pipeline nilai proyek (IDR), rata-rata margin tim, tingkat kepatuhan guardrail, serta deteksi dini proyek dengan margin rendah (&lt;15%).</p>
+                        </div>
                     </div>
                 </div>
 
@@ -2892,24 +2898,50 @@
                 <div x-show="userGuideTab === 'security'" class="space-y-4">
                     <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
                         <span>🛡️</span>
-                        <span>Kebijakan Hak Akses &amp; Keamanan Akun</span>
+                        <span>Kebijakan Hak Akses &amp; Keamanan Akun (RBAC)</span>
                     </h4>
                     <div class="space-y-2.5">
                         <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
                             <strong class="text-amber-800">👑 Administrator (Adrian Kansil):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Memiliki hak akses penuh untuk: menyetujui (approve) pendaftaran karyawan baru, mengelola akun tim, mengakses folder master Google Drive &amp; Spreadsheet pricelist, serta melihat dan mengelola seluruh dashboard arsip tim.</p>
+                            <p class="text-[11px] text-slate-600 mt-1">Memiliki hak akses penuh untuk: menyetujui (approve) pendaftaran karyawan baru, mengelola akun tim, mengakses folder master Google Drive &amp; Spreadsheet pricelist, serta melihat dan mengelola seluruh dashboard arsip tim dan jejak audit.</p>
                         </div>
-                        <div class="p-3 rounded-xl bg-slate-50 border border-teal-200 bg-teal-50/40">
+                        <div class="p-3 rounded-xl bg-teal-50/50 border border-teal-200">
                             <strong class="text-teal-900">👁️ Overseer (Pemantau &amp; Peninjau Eksekutif):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Memiliki hak akses lihat menyeluruh seperti Administrator terhadap akun tim dan seluruh dokumen arsip proyek tim. Dapat menggunakan seluruh modul kalkulator layaknya tim teknis &amp; komersial, namun tidak memiliki hak modifikasi akun tim dan tautan edit folder master Google Drive &amp; Spreadsheet pricelist disembunyikan.</p>
+                            <p class="text-[11px] text-slate-600 mt-1">Memiliki hak akses lihat menyeluruh seperti Administrator terhadap akun tim, seluruh dokumen arsip proyek tim, ringkasan portofolio, dan jejak audit (*audit trail*). Dapat menggunakan seluruh modul kalkulator layaknya tim teknis &amp; komersial, namun tidak memiliki hak modifikasi akun tim dan tautan edit folder master Google Drive &amp; Spreadsheet pricelist disembunyikan.</p>
                         </div>
                         <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                            <strong class="text-blue-800">🛠️ Engineer / Technician &amp; 💼 Product Expert:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Dapat melakukan kalkulasi sizing RF, merakit paket BoQ, menyimpan proyek ke Google Drive, dan dapat mengakses arsip proyek yang dibuat oleh dirinya sendiri atau dibagikan melalui Handover. Tautan folder master cloud disembunyikan untuk menjaga integritas data.</p>
+                            <strong class="text-blue-800">🛠️ Engineer / Technician:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Fokus pada rekayasa teknis: kalkulasi sizing RF, perakitan BoQ, estimasi mandays, penyimpanan berkas ke Google Drive, dan menerima serah terima proyek dari Product Expert. Tautan folder master cloud disembunyikan untuk menjaga integritas data.</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <strong class="text-emerald-800">💼 Product Expert:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Fokus pada penyusunan penawaran komersial: konfigurator paket kustom, pengaturan diskon &amp; margin, ekspor penawaran resmi PDF/Excel, serta handover penugasan ke tim Engineer / Technician.</p>
                         </div>
                         <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200">
-                            <strong class="text-indigo-900">⏳ Mekanisme Pending Approval:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Setiap anggota tim yang mendaftar (baik via form registrasi maupun 1-Click Google Workspace) wajib diverifikasi dan disetujui terlebih dahulu oleh Admin sebelum dapat mengakses sistem.</p>
+                            <strong class="text-indigo-900">🔒 Domain Whitelisting &amp; Pending Approval:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Akses sistem dibatasi secara ketat hanya untuk domain resmi <strong>@citradata.id</strong> dan <strong>@techsolutions.id</strong>. Setiap pengguna baru wajib disetujui terlebih dahulu oleh Administrator sebelum dapat membuka aplikasi.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 6: AUDIT TRAIL & HANDOVER -->
+                <div x-show="userGuideTab === 'audit_handover'" class="space-y-4">
+                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span>🤝</span>
+                        <span>Kolaborasi Handover, Notifikasi &amp; Jejak Audit (Audit Trail)</span>
+                    </h4>
+                    <div class="space-y-2.5">
+                        <div class="p-3 rounded-xl bg-purple-50/70 border border-purple-200">
+                            <strong class="text-purple-900">🤝 Fitur Handover Proyek Antardivisi:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Untuk menyerahkan penugasan proyek (misal: dari Product Expert ke Engineer), buka menu <em>"Arsip Proyek Tim"</em>, klik tombol <strong>"🤝 Handover"</strong> pada proyek, pilih rekan tim penerima, dan tambahkan catatan memo kerja. Proyek otomatis dibagikan dan riwayat serah terima tersimpan permanen.</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-amber-50/70 border border-amber-200">
+                            <strong class="text-amber-900">🔔 Pusat Notifikasi (Lonceng Kuning):</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Setiap kali Anda menerima serah terima proyek, lonceng kuning di bilah navigasi atas akan menampilkan tanda merah. Buka notifikasi dan klik <strong>"⚡ Buka Proyek"</strong> untuk langsung melanjutkan pekerjaan rekan Anda.</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-300">
+                            <strong class="text-slate-900">📜 Jejak Audit (Audit Trail) bagi Admin &amp; Overseer:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Tersedia pada sub-tab di modal Arsip Proyek. Sistem merekam setiap aksi secara <em>tamper-evident</em>: login pengguna, penyimpanan berkas, pembukaan proyek, aktivitas handover, ekspor dokumen resmi PDF/Excel, hingga pengelolaan hak akses akun.</p>
                         </div>
                     </div>
                 </div>
@@ -2917,7 +2949,7 @@
 
             <!-- Footer -->
             <div class="p-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs px-6">
-                <span class="text-slate-500 font-medium">CDPK System Planner v8.3 Cloud • Solusi Motorola Solutions &amp; Avigilon</span>
+                <span class="text-slate-500 font-medium">CDPK System Planner v8.4.0 Cloud • Solusi Motorola Solutions &amp; Avigilon</span>
                 <button @click="userGuideOpen = false" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer transition">Tutup Panduan</button>
             </div>
         </div>
