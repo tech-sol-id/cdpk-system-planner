@@ -58,6 +58,12 @@ from server.notifications import (
 )
 from server.ai_copilot import ALLOWED_MODELS, query_ai_copilot
 from server.audit import log_audit_event, get_audit_logs
+from server.knowledge_sync import (
+    start_periodic_sync_daemon,
+    sync_knowledge_base,
+    get_knowledge_status
+)
+from server.knowledge_search import search_knowledge_base
 
 logging.basicConfig(
     level=logging.INFO,
@@ -162,6 +168,16 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             force = qs.get("force", ["0"])[0] in ("1", "true", "yes")
             sync_res = sync_from_gdrive(force=force)
             return self._send_json(sync_res)
+
+        # ─── Google Drive Knowledge Bank (Markdown RAG) ────────────────────
+        if path == "/api/knowledge/bank/status":
+            return self._send_json(get_knowledge_status())
+
+        if path == "/api/knowledge/bank/search":
+            qs = urllib.parse.parse_qs(parsed.query)
+            q = qs.get("q", [""])[0]
+            results = search_knowledge_base(q)
+            return self._send_json({"status": "ok", "query": q, "results": results})
 
         if path == "/api/ai/models":
             return self._send_json({
@@ -784,6 +800,13 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             )
             return self._send_json({"status": "ok", "entry": entry})
 
+        # ─── Google Drive Knowledge Bank Sync ──────────────────────────────
+        if path == "/api/knowledge/bank/sync":
+            force = body.get("force", False)
+            batch_size = int(body.get("batch_size", 15))
+            sync_res = sync_knowledge_base(force=force, max_items_per_run=batch_size)
+            return self._send_json(sync_res)
+
         # ─── AI Copilot ───────────────────────────────────────────────────
         if path == "/api/ai/copilot":
             model_id = body.get("model", "gemini-3.8-flash")
@@ -810,9 +833,16 @@ def run_server():
     try:
         load_users()
         res = sync_from_gdrive(force=False)
-        logger.info("Initial knowledge loaded from: %s", res.get("source"))
+        logger.info("Initial pricelist knowledge loaded from: %s", res.get("source"))
     except Exception as e:
         logger.warning("Startup sync warning: %s", e)
+
+    # Initialize Google Drive Knowledge Bank background monitoring daemon
+    try:
+        start_periodic_sync_daemon(interval_seconds=900)
+        logger.info("Google Drive Knowledge Bank periodic monitoring daemon initialized (900s interval).")
+    except Exception as e:
+        logger.warning("Startup knowledge daemon warning: %s", e)
 
     server = ThreadingHTTPServer(("0.0.0.0", PORT), CDPKRequestHandler)
     logger.info("CDPK System Planner running at http://0.0.0.0:%d", PORT)

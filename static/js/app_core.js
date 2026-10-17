@@ -104,6 +104,12 @@ window.cdpkSystemPlannerApp = function () {
         aiLoading: false,
         aiHistory: [],
         lastExtractedParams: null,
+        knowledgeBankStatus: {
+            total_documents: 0,
+            is_syncing: false,
+            last_synced: null,
+            recent_documents: []
+        },
 
         // ─── Team Authentication State ──────────────────────────────────
         currentUser: null, // { username, email, name, role, title }
@@ -353,6 +359,7 @@ window.cdpkSystemPlannerApp = function () {
             await this.fetchHealthConfig();
             await this.checkCurrentAuth();
             await this.loadCloudKnowledge(false);
+            await this.fetchKnowledgeBankStatus();
             this.syncBoqFromSizing();
             if (this.currentUser) {
                 this.fetchNotifications();
@@ -2334,12 +2341,55 @@ window.cdpkSystemPlannerApp = function () {
             this.sendAiCopilotMessage();
         },
 
+        saveAiApiKey() {
+            if (this.aiApiKey) {
+                localStorage.setItem('cdpk_gemini_key', this.aiApiKey.trim());
+            } else {
+                localStorage.removeItem('cdpk_gemini_key');
+            }
+        },
+
+        async fetchKnowledgeBankStatus() {
+            try {
+                const resp = await fetch('/api/knowledge/bank/status');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    this.knowledgeBankStatus = {
+                        total_documents: data.total_documents || 0,
+                        is_syncing: !!data.is_syncing,
+                        last_synced: data.last_synced || null,
+                        recent_documents: data.recent_documents || []
+                    };
+                }
+            } catch (e) {
+                console.warn('Failed fetching knowledge bank status:', e);
+            }
+        },
+
+        async triggerKnowledgeBankSync() {
+            if (this.knowledgeBankStatus.is_syncing) return;
+            this.knowledgeBankStatus.is_syncing = true;
+            try {
+                const resp = await fetch('/api/knowledge/bank/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ force: false, batch_size: 15 })
+                });
+                const data = await resp.json();
+                await this.fetchKnowledgeBankStatus();
+            } catch (e) {
+                console.warn('Knowledge sync trigger error:', e);
+            } finally {
+                this.knowledgeBankStatus.is_syncing = false;
+            }
+        },
+
         async sendAiCopilotMessage() {
             const promptText = (this.aiPrompt || '').trim();
             if (!promptText || this.aiLoading) return;
 
             if (this.aiApiKey) {
-                localStorage.setItem('cdpk_gemini_key', this.aiApiKey);
+                localStorage.setItem('cdpk_gemini_key', this.aiApiKey.trim());
             }
 
             this.aiHistory.push({
@@ -2367,7 +2417,9 @@ window.cdpkSystemPlannerApp = function () {
                             terrain: this.terrain,
                             freqBand: this.freqBand,
                             buildingFloors: this.buildingFloors,
-                            needAtex: this.needAtex
+                            needAtex: this.needAtex,
+                            powerSource: this.powerSource,
+                            backhaul: this.backhaul
                         }
                     })
                 });
@@ -2378,6 +2430,7 @@ window.cdpkSystemPlannerApp = function () {
                     model: data.model_name || this.aiModel,
                     text: data.reply || 'Analysis complete.',
                     extracted: data.extracted_params || null,
+                    citations: data.citations || null,
                     metrics: data.summary_metrics || null,
                     time: new Date().toLocaleTimeString()
                 });
@@ -2393,7 +2446,7 @@ window.cdpkSystemPlannerApp = function () {
             }
         },
 
-        applyAiParamsToApp(extracted) {
+        applyAiParamsToApp(extracted, targetTab = 'sizing') {
             const ext = extracted || this.lastExtractedParams;
             if (!ext) return;
             if (ext.industry) this.industry = ext.industry;
@@ -2406,11 +2459,12 @@ window.cdpkSystemPlannerApp = function () {
             if (ext.needAtex !== undefined) this.needAtex = ext.needAtex;
             if (ext.powerSource) this.powerSource = ext.powerSource;
             if (ext.backhaul) this.backhaul = ext.backhaul;
+            if (ext.topologyType === 'point_to_point') this.backhaul = 'radio_ip';
 
             this.syncBoqFromSizing();
             this.runCoverageSimulation();
             this.aiModalOpen = false;
-            this.activeTab = 'boq';
+            this.activeTab = targetTab || 'sizing';
         },
 
         // ─── Module 7: Product & System Configurator Methods ─────────────

@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "last_checked": "2026-10-17T07:08:21.257874+00:00",
+  "markdown_folder_id": "1-rv_4obDjZ3ZqxSQIvx6u-bYfUnH1zMV",
+  "files": {
+    "1hcDB7o7TsyDee1tBoJljAIA4gkIv-j8K": {
+      "name": "ATEX IS940.2.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-06-04T13:45:21.000Z",
+      "md_filename": "ATEX_IS940.2.md",
+      "drive_md_id": "1Xd3LvWRfld03kdOOgDuzxmDVkcw0RBmK",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/ATEX_IS940.2.md",
+      "char_count": 3278,
+      "synced_at": "2026-10-17T07:06:57.566691+00:00",
+      "status": "ready"
+    },
+    "1J2h7nn84nGfgog6dx0hdL_WIzqq7rMCN": {
+      "name": "ATEX IS940.1.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-06-04T13:45:13.000Z",
+      "md_filename": "ATEX_IS940.1.md",
+      "drive_md_id": "1JxjBA8-_F-jleZvapHXrKW1XrbBC6GOH",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/ATEX_IS940.1.md",
+      "char_count": 3550,
+      "synced_at": "2026-10-17T07:07:01.454899+00:00",
+      "status": "ready"
+    },
+    "1KVXtiCQC5cNL7RT04NG3osDyRb7fA3PG": {
+      "name": "ATEX IS540.2.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-06-04T13:45:04.000Z",
+      "md_filename": "ATEX_IS540.2.md",
+      "drive_md_id": "1lOZ4cJ2kwEsUri0HVOrL2EFiuclDfdp2",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/ATEX_IS540.2.md",
+      "char_count": 3319,
+      "synced_at": "2026-10-17T07:07:05.569161+00:00",
+      "status": "ready"
+    },
+    "16aymiVmKwvT1WEvMZFcByN2gSCBJCfdV": {
+      "name": "ATEX IS540.1.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-06-04T13:44:20.000Z",
+      "md_filename": "ATEX_IS540.1.md",
+      "drive_md_id": "1AAA1ZFwf0UoWk3Jnq1Xx2qTmjhz9DNtM",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/ATEX_IS540.1.md",
+      "char_count": 3510,
+      "synced_at": "2026-10-17T07:07:09.257829+00:00",
+      "status": "ready"
+    },
+    "1UdptsY5EXJBslWkrFjDe1NW-V32k8z1a": {
+      "name": "KATALOG CITRADATA 2026.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-29T06:03:06.000Z",
+      "md_filename": "KATALOG_CITRADATA_2026.md",
+      "drive_md_id": "1f7etMt5Ph4L88SUJ98Br2qznZXp_Yxto",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/KATALOG_CITRADATA_2026.md",
+      "char_count": 661562,
+      "synced_at": "2026-10-17T07:08:21.257853+00:00",
+      "status": "ready"
+    }
+  },
+  "remote_md_files": {
+    "ATEX_IS940.2.md": "1Xd3LvWRfld03kdOOgDuzxmDVkcw0RBmK",
+    "ATEX_IS940.1.md": "1JxjBA8-_F-jleZvapHXrKW1XrbBC6GOH",
+    "ATEX_IS540.2.md": "1lOZ4cJ2kwEsUri0HVOrL2EFiuclDfdp2",
+    "ATEX_IS540.1.md": "1AAA1ZFwf0UoWk3Jnq1Xx2qTmjhz9DNtM",
+    "KATALOG_CITRADATA_2026.md": "1f7etMt5Ph4L88SUJ98Br2qznZXp_Yxto"
+  },
+  "total_documents": 5
+}
