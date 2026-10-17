@@ -556,15 +556,6 @@
                         <span x-text="lang === 'en' ? '6. FMTCS Device Catalog' : '6. Katalog Perangkat FMTCS'"></span>
                     </button>
                 </div>
-                <!-- Bridge Action Shortcut -->
-                <div class="hidden lg:flex items-center gap-2 pl-3 border-l border-white/20">
-                    <button @click="injectDasBoqToMasterBoq()"
-                            class="px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs shadow-sm transition flex items-center gap-1 cursor-pointer"
-                            title="Tambahkan seluruh item DAS ke BoQ DMR Utama">
-                        <span>📥</span>
-                        <span x-text="lang === 'en' ? 'Inject to DMR BoQ' : 'Kirim ke BoQ DMR'"></span>
-                    </button>
-                </div>
             </div>
         </div>
     </header>
@@ -2857,9 +2848,21 @@
                             <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600" x-text="lang === 'en' ? 'RF Link Budget Engineering' : 'Kalkulator Link Budget RF DAS'"></span>
                             <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Signal Level & Path Loss Chain' : 'Tingkat Sinyal & Rantai Redaman Pasif'"></h3>
                         </div>
-                        <span class="px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider"
-                              :class="getDasLinkBudgetResult().healthStatus === 'good' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (getDasLinkBudgetResult().healthStatus === 'warn' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-rose-100 text-rose-800 border border-rose-300')"
-                              x-text="getDasLinkBudgetResult().healthStatus === 'good' ? (lang === 'en' ? 'Optimal Signal' : 'Sinyal Optimal') : (getDasLinkBudgetResult().healthStatus === 'warn' ? (lang === 'en' ? 'Marginal Signal' : 'Sinyal Cukup') : (lang === 'en' ? 'Weak Signal' : 'Sinyal Lemah'))"></span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button @click="resetDasLinkBudget(true)"
+                                    class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-[11px] transition flex items-center gap-1 cursor-pointer">
+                                <span>🔄</span>
+                                <span x-text="lang === 'en' ? 'Reset / Clear (0)' : 'Reset / Clear (0)'"></span>
+                            </button>
+                            <button @click="resetDasLinkBudget(false)"
+                                    class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-[11px] transition flex items-center gap-1 cursor-pointer">
+                                <span>📋</span>
+                                <span x-text="lang === 'en' ? 'Load Default' : 'Muat Default'"></span>
+                            </button>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider"
+                                  :class="getDasLinkBudgetResult().healthStatus === 'good' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (getDasLinkBudgetResult().healthStatus === 'warn' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-rose-100 text-rose-800 border border-rose-300')"
+                                  x-text="getDasLinkBudgetResult().healthStatus === 'good' ? (lang === 'en' ? 'Optimal Signal' : 'Sinyal Optimal') : (getDasLinkBudgetResult().healthStatus === 'warn' ? (lang === 'en' ? 'Marginal Signal' : 'Sinyal Cukup') : (lang === 'en' ? 'Weak Signal' : 'Sinyal Lemah'))"></span>
+                        </div>
                     </div>
 
                     <!-- Input Parameters Grid -->
@@ -2881,7 +2884,7 @@
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Cable Run (Meters)' : 'Panjang Kabel (m)'"></label>
-                            <input type="number" step="1" min="1" x-model.number="das.cableLengthM"
+                            <input type="number" step="1" min="0" x-model.number="das.cableLengthM"
                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
                         </div>
                         <div>
@@ -2990,14 +2993,14 @@
                     <div class="space-y-3 text-xs">
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Total Indoor Floor Area (m²)' : 'Total Luas Lantai Gedung (m²)'"></label>
-                            <input type="number" step="100" min="100" x-model.number="das.planAreaM2"
+                            <input type="number" step="100" min="0" x-model.number="das.planAreaM2"
                                    class="w-full px-3 py-2 rounded-lg border border-slate-300 font-extrabold text-slate-800 focus:border-sky-600 focus:outline-none" />
                             <span class="text-[10px] text-slate-400">Contoh: 5,000 m² (4 lantai x 1,250 m²)</span>
                         </div>
 
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Design Utilization Factor (%)' : 'Faktor Utilisasi / Overlap (%)'"></label>
-                            <input type="number" step="5" min="50" max="100" x-model.number="das.planUtilPct"
+                            <input type="number" step="5" min="0" max="100" x-model.number="das.planUtilPct"
                                    class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-sky-600 focus:outline-none" />
                             <span class="text-[10px] text-slate-400">75% = Rekomendasi standar overlap untuk mengatasi partisi dinding</span>
                         </div>
@@ -3036,6 +3039,25 @@
             <!-- VIEW 3: RF & VSWR CONVERSIONS (dasActiveTab === 'conv')         -->
             <!-- ══════════════════════════════════════════════════════════════ -->
             <div x-show="dasActiveTab === 'conv'" class="space-y-6">
+
+                <div class="bg-white rounded-2xl p-4 sm:px-6 card-shadow border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600">RF Engineering Utilities</span>
+                        <h3 class="text-sm sm:text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'RF Power, Gain/Loss, VSWR & Field Strength Converters' : 'Kalkulator Konversi Daya RF, Gain/Loss, VSWR & Kuat Medan'"></h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button @click="resetDasConverters(true)"
+                                class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                            <span>🔄</span>
+                            <span x-text="lang === 'en' ? 'Reset / Clear (0)' : 'Reset / Clear (0)'"></span>
+                        </button>
+                        <button @click="resetDasConverters(false)"
+                                class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                            <span>📋</span>
+                            <span x-text="lang === 'en' ? 'Load Default' : 'Muat Default'"></span>
+                        </button>
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -3264,9 +3286,21 @@
                             <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600">Outdoor Empirical Propagation Model</span>
                             <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Okumura-Hata Outdoor Coverage & Link Margin Engine' : 'Model Propagasi Outdoor Okumura-Hata & Analisis Link Margin'"></h3>
                         </div>
-                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200">
-                            150 MHz - 1500 MHz
-                        </span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button @click="resetDasOutdoor(true)"
+                                    class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                <span>🔄</span>
+                                <span x-text="lang === 'en' ? 'Reset / Clear (0)' : 'Reset / Clear (0)'"></span>
+                            </button>
+                            <button @click="resetDasOutdoor(false)"
+                                    class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                <span>📋</span>
+                                <span x-text="lang === 'en' ? 'Load Default' : 'Muat Default'"></span>
+                            </button>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200">
+                                150 MHz - 1500 MHz
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Input Grid -->
@@ -3278,17 +3312,17 @@
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Jarak (km)</label>
-                            <input type="number" step="0.5" min="0.1" max="50" x-model.number="das.cov_d"
+                            <input type="number" step="0.5" min="0" max="50" x-model.number="das.cov_d"
                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Tinggi Tower BS (m)</label>
-                            <input type="number" step="1" min="10" max="300" x-model.number="das.cov_ht"
+                            <input type="number" step="1" min="0" max="300" x-model.number="das.cov_ht"
                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Tinggi Antena HT (m)</label>
-                            <input type="number" step="0.1" min="1" max="10" x-model.number="das.cov_hm"
+                            <input type="number" step="0.1" min="0" max="10" x-model.number="das.cov_hm"
                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
                         </div>
                         <div>
@@ -3341,36 +3375,49 @@
 
                     <!-- Multi-Environment Propagation Results Table -->
                     <div class="space-y-2 pt-3">
-                        <div class="text-[11px] font-bold uppercase text-slate-600">Hasil Simulasi Redaman Jalur &amp; Margin Link 4 Lingkungan:</div>
+                        <div class="text-[11px] font-bold uppercase text-slate-600" x-text="lang === 'en' ? 'Path Loss & Link Margin Simulation Results Across 6 Propagation Environments:' : 'Hasil Simulasi Redaman Jalur & Margin Link 6 Lingkungan:'"></div>
                         <div class="overflow-x-auto rounded-xl border border-slate-200">
                             <table class="w-full text-left text-xs">
                                 <thead>
                                     <tr class="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold border-b border-slate-200">
-                                        <th class="py-2.5 px-3">Tipe Lingkungan Propagasi</th>
+                                        <th class="py-2.5 px-3" x-text="lang === 'en' ? 'Propagation Environment Type' : 'Tipe Lingkungan Propagasi'"></th>
                                         <th class="py-2.5 px-3 text-right">Path Loss (dB)</th>
                                         <th class="py-2.5 px-3 text-right">Uplink Margin (dB)</th>
                                         <th class="py-2.5 px-3 text-right">Downlink Margin (dB)</th>
-                                        <th class="py-2.5 px-3 text-center">Status Kelayakan</th>
+                                        <th class="py-2.5 px-3 text-right" x-text="lang === 'en' ? 'Max Range (km)' : 'Jangkauan Maks (km)'"></th>
+                                        <th class="py-2.5 px-3 text-center" x-text="lang === 'en' ? 'Feasibility Status' : 'Status Kelayakan'"></th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
+                                    <template x-if="!getDasOutdoorResult().isValid || !getDasOutdoorResult().results || getDasOutdoorResult().results.length === 0">
+                                        <tr>
+                                            <td colspan="6" class="py-6 px-4 text-center text-slate-500">
+                                                <div class="font-bold text-slate-700" x-text="lang === 'en' ? 'Simulation parameters are cleared (0) or outside valid bounds.' : 'Parameter simulasi telah di-reset (0) atau belum diisi.'"></div>
+                                                <div class="text-[11px] mt-1">
+                                                    <span x-text="lang === 'en' ? 'Enter Frequency (150-1500 MHz), Distance (> 0 km), and Tower Height, or click ' : 'Masukkan nilai Frekuensi (150-1500 MHz), Jarak (> 0 km), dan Tinggi Tower, atau klik tombol '"></span>
+                                                    <button @click="resetDasOutdoor(false)" class="text-indigo-600 font-extrabold underline cursor-pointer" x-text="lang === 'en' ? 'Load Default' : 'Muat Default'"></button>.
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
                                     <template x-for="r in getDasOutdoorResult().results" :key="r.envKey">
                                         <tr class="hover:bg-slate-50 transition">
                                             <td class="py-2 px-3">
-                                                <div class="font-extrabold text-slate-900" x-text="dasT(r.envKey)"></div>
+                                                <div class="font-extrabold text-slate-900" x-text="(r.name && (r.name[lang] || r.name.id)) ? (r.name[lang] || r.name.id) : dasT(r.envKey)"></div>
                                                 <div class="text-[10px] text-slate-400" x-text="r.envKey"></div>
                                             </td>
-                                            <td class="py-2 px-3 text-right font-black text-slate-800" x-text="r.formatted.pl"></td>
+                                            <td class="py-2 px-3 text-right font-black text-slate-800" x-text="r.formatted.pl + ' dB'"></td>
                                             <td class="py-2 px-3 text-right font-black"
                                                 :class="r.upMargin >= 10 ? 'text-emerald-700' : (r.upMargin >= 0 ? 'text-amber-700' : 'text-rose-700')"
-                                                x-text="r.formatted.upMargin"></td>
+                                                x-text="(r.upMargin > 0 ? '+' : '') + r.formatted.upMargin + ' dB'"></td>
                                             <td class="py-2 px-3 text-right font-black"
                                                 :class="r.downMargin >= 10 ? 'text-emerald-700' : (r.downMargin >= 0 ? 'text-amber-700' : 'text-rose-700')"
-                                                x-text="r.formatted.downMargin"></td>
+                                                x-text="(r.downMargin > 0 ? '+' : '') + r.formatted.downMargin + ' dB'"></td>
+                                            <td class="py-2 px-3 text-right font-extrabold text-indigo-700" x-text="r.formatted.maxDist + ' km'"></td>
                                             <td class="py-2 px-3 text-center">
                                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
                                                       :class="r.status === 'good' ? 'bg-emerald-100 text-emerald-800' : (r.status === 'warn' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800')"
-                                                      x-text="r.status === 'good' ? 'Lulus Optimal' : (r.status === 'warn' ? 'Marginal' : 'Gagal Jangkauan')"></span>
+                                                      x-text="r.status === 'good' ? (lang === 'en' ? 'Optimal Pass' : 'Lulus Optimal') : (r.status === 'warn' ? (lang === 'en' ? 'Marginal' : 'Marginal') : (lang === 'en' ? 'Out of Range' : 'Gagal Jangkauan'))"></span>
                                             </td>
                                         </tr>
                                     </template>
@@ -4018,25 +4065,16 @@
             <div class="px-3.5 py-2 bg-slate-900 text-white text-[11px] flex items-center justify-between border-b border-slate-800">
                 <div class="flex items-center gap-2 truncate">
                     <span class="text-emerald-400">📚</span>
-                    <span>Bank Knowledge: <strong class="text-amber-300" x-text="knowledgeBankStatus.total_documents || '5'"></strong> Dokumen (.md RAG)</span>
-                    <a href="https://drive.google.com/drive/folders/1LW_026giCQYGGpr7NynkSm2RTiUV1tKr" target="_blank"
-                       class="text-sky-300 hover:text-white underline text-[10px] hidden sm:inline">Drive Bank ↗</a>
+                    <span>Bank Knowledge: <strong class="text-amber-300" x-text="knowledgeBankStatus.total_documents || '14'"></strong> Dokumen (.md RAG)</span>
+                    <template x-if="currentUser && currentUser.role === 'admin'">
+                        <a href="https://drive.google.com/drive/folders/1LW_026giCQYGGpr7NynkSm2RTiUV1tKr" target="_blank"
+                           class="text-sky-300 hover:text-white underline text-[10px] hidden sm:inline">Drive Bank ↗</a>
+                    </template>
                 </div>
                 <button @click="triggerKnowledgeBankSync()" :disabled="knowledgeBankStatus.is_syncing"
-                        class="px-2.5 py-1 rounded-lg bg-sky-700 hover:bg-sky-600 font-bold text-[10px] text-white flex items-center gap-1 transition shadow-xs">
+                        class="px-2.5 py-1 rounded-lg bg-sky-700 hover:bg-sky-600 font-bold text-[10px] text-white flex items-center gap-1 transition shadow-xs cursor-pointer">
                     <span x-text="knowledgeBankStatus.is_syncing ? 'Menyinkron...' : '🔄 Sinkronkan'"></span>
                 </button>
-            </div>
-
-            <!-- Gemini API Key Setting (Optional override for live API) -->
-            <div class="px-3.5 py-2 bg-slate-100 border-b border-slate-200 flex items-center gap-2 text-xs">
-                <span class="text-[11px] font-bold text-slate-700 whitespace-nowrap">🔑 API Key:</span>
-                <input type="password" x-model="aiApiKey" @change="saveAiApiKey()"
-                       placeholder="Google Gemini API Key (Opsional jika diset di server)"
-                       class="flex-1 px-2.5 py-1 text-xs rounded-lg border border-slate-300 bg-white focus:outline-none focus:border-blue-600" />
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold whitespace-nowrap"
-                      :class="aiApiKey ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600'"
-                      x-text="aiApiKey ? '🟢 Live API' : '⚡ Local RAG'"></span>
             </div>
 
             <!-- Model Selector (Strictly Gemini 3.8 Flash & Pro) -->
@@ -4046,7 +4084,7 @@
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="aiModel = 'gemini-3.8-flash'"
                             :class="aiModel === 'gemini-3.8-flash' ? 'bg-blue-700 text-white border-blue-800 shadow-sm' : 'bg-white text-slate-700 border-slate-300'"
-                            class="p-2.5 rounded-xl border text-left transition">
+                            class="p-2.5 rounded-xl border text-left transition cursor-pointer">
                         <div class="text-xs font-extrabold flex items-center justify-between">
                             <span>⚡ Gemini 3.8 Flash</span>
                             <span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 font-bold">Fast</span>
@@ -4055,7 +4093,7 @@
                     </button>
                     <button @click="aiModel = 'gemini-3.8-pro'"
                             :class="aiModel === 'gemini-3.8-pro' ? 'bg-indigo-700 text-white border-indigo-800 shadow-sm' : 'bg-white text-slate-700 border-slate-300'"
-                            class="p-2.5 rounded-xl border text-left transition">
+                            class="p-2.5 rounded-xl border text-left transition cursor-pointer">
                         <div class="text-xs font-extrabold flex items-center justify-between">
                             <span>🧠 Gemini 3.8 Pro</span>
                             <span class="text-[10px] px-1.5 py-0.2 rounded bg-sky-300 text-slate-950 font-bold">Deep</span>
@@ -4067,16 +4105,24 @@
                 <!-- Quick Scenario Chips -->
                 <div class="flex flex-wrap gap-1.5 pt-1">
                     <button @click="setQuickAiPrompt('proyek point to point 3 group dengan 39 user')"
-                            class="text-[11px] bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 px-2.5 py-1 rounded-full font-semibold">
+                            class="text-[11px] bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 px-2.5 py-1 rounded-full font-semibold cursor-pointer">
                         📡 Point-to-Point 3 Group (39 User)
                     </button>
                     <button @click="setQuickAiPrompt('Tambang batubara 4500 hektar, 160 user, kontur berbukit, butuh dispatch')"
-                            class="text-[11px] bg-white hover:bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-full font-semibold">
+                            class="text-[11px] bg-white hover:bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-full font-semibold cursor-pointer">
                         ⛏️ Tambang 4.500 Ha (160 User)
                     </button>
                     <button @click="setQuickAiPrompt('Kilang Oil & Gas 12 km2, 90 user, wajib ATEX Intrinsically Safe')"
-                            class="text-[11px] bg-white hover:bg-red-50 text-red-800 border border-red-200 px-2.5 py-1 rounded-full font-semibold">
+                            class="text-[11px] bg-white hover:bg-red-50 text-red-800 border border-red-200 px-2.5 py-1 rounded-full font-semibold cursor-pointer">
                         🔥 Migas Wajib ATEX (90 User)
+                    </button>
+                    <button @click="setQuickAiPrompt('Gedung Data Center 6 lantai & basement, 80 user, butuh sistem RFoF DAS FMTCS Digital DOMU400C + DORU400CH')"
+                            class="text-[11px] bg-white hover:bg-indigo-50 text-indigo-900 border border-indigo-200 px-2.5 py-1 rounded-full font-semibold cursor-pointer">
+                        🏢 Gedung &amp; Data Center RFoF DAS FMTCS (6 Lantai, 80 User)
+                    </button>
+                    <button @click="setQuickAiPrompt('Terowongan bawah tanah & fasilitas basement 4 lantai, 120 user, butuh RFoF Fiber DAS FMTCS topologi Ring Optik')"
+                            class="text-[11px] bg-white hover:bg-purple-50 text-purple-900 border border-purple-200 px-2.5 py-1 rounded-full font-semibold cursor-pointer">
+                        🚇 Terowongan &amp; Basement RFoF DAS FMTCS (4 Zona, 120 User)
                     </button>
                 </div>
             </div>
@@ -4088,18 +4134,22 @@
                         <div class="font-extrabold flex items-center gap-1.5">
                             <span>⚡ Parameter Terdeteksi:</span>
                             <span class="text-emerald-700 font-bold"
-                                  x-text="(lastExtractedParams.userCount ? lastExtractedParams.userCount + ' User • ' : '') + (lastExtractedParams.channels ? lastExtractedParams.channels + ' Group • ' : '') + (lastExtractedParams.topologyType ? 'Point-to-Point' : (lastExtractedParams.industry || 'General'))"></span>
+                                  x-text="(lastExtractedParams.userCount ? lastExtractedParams.userCount + ' User • ' : '') + (lastExtractedParams.buildingFloors > 1 ? lastExtractedParams.buildingFloors + ' Lantai DAS • ' : '') + (lastExtractedParams.channels ? lastExtractedParams.channels + ' Group • ' : '') + (lastExtractedParams.needFiberDas ? 'RFoF DAS FMTCS' : (lastExtractedParams.topologyType ? 'Point-to-Point' : (lastExtractedParams.industry || 'General')))"></span>
                         </div>
-                        <div class="text-[11px] text-emerald-800 mt-0.5" x-text="lang === 'en' ? 'Click below to apply these parameters directly into the sizing calculator or BoQ.' : 'Klik tombol di samping untuk langsung mengisi kalkulator sizing atau memeriksa BoQ.'"></div>
+                        <div class="text-[11px] text-emerald-800 mt-0.5" x-text="lang === 'en' ? 'Click below to apply these parameters directly into DMR Sizing, BoQ, or RFoF DAS.' : 'Klik tombol untuk menerapkan parameter langsung ke DMR Sizing, BoQ, atau RFoF DAS.'"></div>
                     </div>
-                    <div class="flex items-center gap-1.5 w-full sm:w-auto">
+                    <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
                         <button @click="applyAiParamsToApp(lastExtractedParams, 'sizing')"
-                                class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition">
-                            ⚡ Sizing (Tab 1)
+                                class="flex-1 sm:flex-none px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition cursor-pointer">
+                            ⚡ Sizing
                         </button>
                         <button @click="applyAiParamsToApp(lastExtractedParams, 'boq')"
-                                class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow transition">
-                            📋 BoQ (Tab 2)
+                                class="flex-1 sm:flex-none px-2.5 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow transition cursor-pointer">
+                            📋 BoQ DMR
+                        </button>
+                        <button @click="applyAiParamsToApp(lastExtractedParams, 'das')"
+                                class="flex-1 sm:flex-none px-2.5 py-1.5 rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white font-extrabold text-xs shadow transition cursor-pointer">
+                            🏢 RFoF DAS
                         </button>
                     </div>
                 </div>
@@ -4110,9 +4160,9 @@
                 <template x-if="aiHistory.length === 0">
                     <div class="p-4 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 space-y-2">
                         <p class="font-bold text-slate-900" x-text="lang === 'en' ? 'Welcome to CDPK AI Copilot!' : 'Selamat datang di AI Copilot CDPK System Planner!'"></p>
-                        <p x-text="lang === 'en' ? 'Describe your project in natural language (area, user count, industry, floors, or budget) and I will calculate the exact MOTOTRBO SLR 5300 / SLR 1000 architecture and live BoQ pricing.' : 'Ketik skenario proyek Anda (luas area, jumlah pengguna, industri, jumlah lantai, atau target budget) dan AI akan menghitung kebutuhan sistem MOTOTRBO SLR 5300 / SLR 1000 beserta rincian harga BoQ.'"></p>
+                        <p x-text="lang === 'en' ? 'Describe your project in natural language (area, user count, industry, floors, or RFoF Fiber DAS requirement) and I will calculate the exact MOTOTRBO & FMTCS RFoF DAS architecture and live BoQ pricing.' : 'Ketik skenario proyek Anda (luas area, jumlah pengguna, industri, jumlah lantai gedung/basement, atau kebutuhan RFoF Fiber DAS FMTCS) dan AI akan menghitung kebutuhan sistem beserta rincian BoQ.'"></p>
                         <div class="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500">
-                            💡 <em>Tip: AI terhubung langsung dengan Bank Knowledge Google Drive PT Citradata Purnakharisma (katalog 2026, brosur, sertifikat ATEX, dan standar teknis IEC/CompEx).</em>
+                            💡 <em>Tip: AI terhubung langsung dengan Bank Knowledge Terpadu PT Citradata Purnakharisma (katalog MOTOTRBO 2026, datasheet RFoF DAS FMTCS, sertifikat ATEX, dan panduan teknis).</em>
                         </div>
                     </div>
                 </template>
@@ -4127,32 +4177,46 @@
                         <div class="leading-relaxed"
                              x-html="formatAiMarkdown(msg.text)"></div>
 
-                        <!-- Citations from Drive Knowledge Bank -->
+                        <!-- Citations from Drive Knowledge Bank (Direct Drive links restricted to Admin only) -->
                         <template x-if="msg.citations && msg.citations.length > 0">
                             <div class="mt-2 pt-2 border-t border-slate-200/80 space-y-1 bg-slate-50/50 p-2 rounded-lg">
                                 <div class="text-[10px] font-bold text-slate-600 uppercase flex items-center gap-1">
-                                    <span>📚 Dokumen Rujukan Google Drive:</span>
+                                    <span>📚 Dokumen Rujukan Knowledge Bank:</span>
                                 </div>
                                 <template x-for="c in msg.citations">
-                                    <a :href="c.url" target="_blank"
-                                       class="block text-[11px] text-blue-700 hover:text-blue-900 hover:underline font-semibold flex items-center justify-between">
-                                        <span class="truncate">📄 <span x-text="c.title"></span></span>
-                                        <span class="text-[10px] text-slate-400 shrink-0">Buka ↗</span>
-                                    </a>
+                                    <div>
+                                        <template x-if="currentUser && currentUser.role === 'admin'">
+                                            <a :href="c.url" target="_blank"
+                                               class="block text-[11px] text-blue-700 hover:text-blue-900 hover:underline font-semibold flex items-center justify-between">
+                                                <span class="truncate">📄 <span x-text="c.title"></span></span>
+                                                <span class="text-[10px] text-slate-400 shrink-0">Buka Drive ↗</span>
+                                            </a>
+                                        </template>
+                                        <template x-if="!currentUser || currentUser.role !== 'admin'">
+                                            <div class="text-[11px] text-slate-700 font-semibold flex items-center justify-between">
+                                                <span class="truncate">📄 <span x-text="c.title"></span></span>
+                                                <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded shrink-0">Terverifikasi</span>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </template>
                             </div>
                         </template>
 
                         <!-- In-message Apply button -->
                         <template x-if="msg.extracted && Object.keys(msg.extracted).length > 0">
-                            <div class="flex gap-1.5 mt-2 pt-2 border-t border-slate-100">
+                            <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-slate-100">
                                 <button @click="applyAiParamsToApp(msg.extracted, 'sizing')"
-                                        class="flex-1 py-1.5 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition">
-                                    ⚡ <span x-text="lang === 'en' ? 'Apply to Sizing' : 'Terapkan ke Sizing'"></span>
+                                        class="flex-1 py-1.5 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer">
+                                    ⚡ <span x-text="lang === 'en' ? 'Apply to Sizing' : 'Ke Sizing DMR'"></span>
                                 </button>
                                 <button @click="applyAiParamsToApp(msg.extracted, 'boq')"
-                                        class="py-1.5 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition">
-                                    📋 <span x-text="lang === 'en' ? 'View BoQ' : 'Buka BoQ'"></span>
+                                        class="py-1.5 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition cursor-pointer">
+                                    📋 <span x-text="lang === 'en' ? 'View BoQ' : 'Ke BoQ DMR'"></span>
+                                </button>
+                                <button @click="applyAiParamsToApp(msg.extracted, 'das')"
+                                        class="py-1.5 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition cursor-pointer">
+                                    🏢 <span x-text="lang === 'en' ? 'Apply to RFoF DAS' : 'Ke RFoF DAS'"></span>
                                 </button>
                             </div>
                         </template>

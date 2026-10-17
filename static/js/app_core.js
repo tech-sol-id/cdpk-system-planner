@@ -182,7 +182,6 @@ window.cdpkSystemPlannerApp = function () {
         // ─── Module 6: Multi-Model AI Copilot State ──────────────────────
         aiModel: 'gemini-3.8-flash', // Exclusively 'gemini-3.8-flash' | 'gemini-3.8-pro'
         aiPrompt: '',
-        aiApiKey: localStorage.getItem('cdpk_gemini_key') || '',
         aiLoading: false,
         aiHistory: [],
         lastExtractedParams: null,
@@ -2559,14 +2558,6 @@ window.cdpkSystemPlannerApp = function () {
             this.sendAiCopilotMessage();
         },
 
-        saveAiApiKey() {
-            if (this.aiApiKey) {
-                localStorage.setItem('cdpk_gemini_key', this.aiApiKey.trim());
-            } else {
-                localStorage.removeItem('cdpk_gemini_key');
-            }
-        },
-
         async fetchKnowledgeBankStatus() {
             try {
                 const resp = await fetch('/api/knowledge/bank/status');
@@ -2606,10 +2597,6 @@ window.cdpkSystemPlannerApp = function () {
             const promptText = (this.aiPrompt || '').trim();
             if (!promptText || this.aiLoading) return;
 
-            if (this.aiApiKey) {
-                localStorage.setItem('cdpk_gemini_key', this.aiApiKey.trim());
-            }
-
             this.aiHistory.push({
                 role: 'user',
                 text: promptText,
@@ -2626,7 +2613,6 @@ window.cdpkSystemPlannerApp = function () {
                         model: this.aiModel,
                         prompt: promptText,
                         lang: this.lang,
-                        api_key: this.aiApiKey,
                         state: {
                             industry: this.industry,
                             areaInput: this.areaInput,
@@ -2730,24 +2716,35 @@ window.cdpkSystemPlannerApp = function () {
             if (ext.topologyType === 'point_to_point') this.backhaul = 'radio_ip';
 
             // AI Copilot Auto-Fill Bridge to RFoF DAS by FMTCS
-            if (ext.needFiberDas || ext.das || ext.needDas) {
-                if (ext.buildingFloors !== undefined) {
-                    const flCount = Math.max(1, parseInt(ext.buildingFloors, 10) || 4);
-                    this.das.floors = Array.from({ length: flCount }, (_, i) => ({
-                        f: (this.lang === 'en' ? 'Floor ' : 'Lantai ') + (i + 1),
-                        q: ext.dasAntennasPerFloor || 8
-                    }));
-                }
+            if (ext.needFiberDas || ext.das || ext.needDas || targetTab === 'das') {
+                const flCount = Math.max(1, parseInt(ext.buildingFloors !== undefined ? ext.buildingFloors : this.buildingFloors, 10) || 4);
+                const antPerFl = ext.dasAntennasPerFloor || 8;
+                this.das.floors = Array.from({ length: flCount }, (_, i) => ({
+                    f: (this.lang === 'en' ? 'Floor ' : 'Lantai ') + (i + 1),
+                    q: antPerFl
+                }));
                 if (ext.dasArchMode) this.das.archMode = ext.dasArchMode;
                 if (ext.dasFiberTopo) this.das.fiberTopo = ext.dasFiberTopo;
-                if (ext.dasRepeaters) this.das.rep = ext.dasRepeaters;
-                if (ext.dasRadios) this.das.radio = ext.dasRadios;
+                this.das.rep = ext.dasRepeaters || Math.max(1, (this.sizingResult && this.sizingResult.totalRepeaters) || 2);
+                this.das.radio = ext.dasRadios || this.userCount || 40;
             }
 
             this.syncBoqFromSizing();
             this.runCoverageSimulation();
             this.aiModalOpen = false;
-            this.activeTab = targetTab || 'sizing';
+            if (targetTab === 'das') {
+                this.activeWorkspace = 'das';
+                this.dasActiveTab = 'boq';
+                this.showToast(
+                    this.lang === 'en'
+                        ? 'Applied AI Copilot scenario directly to RFoF Distributed Antenna System.'
+                        : 'Skenario AI Copilot berhasil diterapkan langsung ke RFoF Distributed Antenna System.',
+                    'success'
+                );
+            } else {
+                this.activeWorkspace = 'dmr';
+                this.activeTab = targetTab || 'sizing';
+            }
         },
 
         applyAiExtractedParams(extracted) {
@@ -3890,6 +3887,107 @@ window.cdpkSystemPlannerApp = function () {
                         'info'
                     );
                 }
+            }
+        },
+
+        resetDasOutdoor(toZero = true) {
+            if (!this.das) return;
+            if (toZero) {
+                this.das.cov_f = 0;
+                this.das.cov_d = 0;
+                this.das.cov_ht = 0;
+                this.das.cov_hm = 0;
+                this.das.cov_txbs = 0;
+                this.das.cov_txms = 0;
+                this.das.cov_gbs = 0;
+                this.das.cov_gms = 0;
+                this.das.cov_rxbs = 0;
+                this.das.cov_rxms = 0;
+                this.das.cov_flbs = 0;
+                this.das.cov_flms = 0;
+                this.showToast(
+                    this.lang === 'en'
+                        ? 'Outdoor Okumura-Hata simulation inputs have been cleared to 0.'
+                        : 'Seluruh isian simulasi propagasi Outdoor Okumura-Hata telah dikosongkan (0).',
+                    'success'
+                );
+            } else {
+                this.das.cov_f = 420;
+                this.das.cov_d = 5;
+                this.das.cov_ht = 30;
+                this.das.cov_hm = 1.5;
+                this.das.cov_txbs = 47;
+                this.das.cov_txms = 36;
+                this.das.cov_gbs = 6;
+                this.das.cov_gms = 0;
+                this.das.cov_rxbs = -118;
+                this.das.cov_rxms = -116;
+                this.das.cov_flbs = 3;
+                this.das.cov_flms = 0;
+                this.showToast(
+                    this.lang === 'en'
+                        ? 'Restored default Okumura-Hata outdoor propagation parameters (420 MHz, 5 km, 50W BS).'
+                        : 'Parameter standar simulasi propagasi Okumura-Hata (420 MHz, 5 km, 50W BS) berhasil dimuat.',
+                    'info'
+                );
+            }
+        },
+
+        resetDasLinkBudget(toZero = true) {
+            if (!this.das) return;
+            if (toZero) {
+                this.das.oruOutputDbm = 0;
+                this.das.cableLengthM = 0;
+                this.das.splittersCount = 0;
+                this.das.otherLossDb = 0;
+                this.das.antennaGainDbi = 0;
+                this.das.targetSensitivityDbm = 0;
+                this.das.fadeMarginDb = 0;
+                this.das.planAreaM2 = 0;
+                this.das.planUtilPct = 0;
+                this.showToast(
+                    this.lang === 'en'
+                        ? 'Link Budget & Antenna Planner inputs cleared to 0.'
+                        : 'Isian Link Budget & Perencana Antena telah dikosongkan (0).',
+                    'success'
+                );
+            } else {
+                this.das.oruOutputDbm = 40;
+                this.das.cableTypeIndex = 0;
+                this.das.cableLengthM = 50;
+                this.das.splittersCount = 1;
+                this.das.otherLossDb = 1.5;
+                this.das.antennaGainDbi = 3.0;
+                this.das.envIndex = 1;
+                this.das.targetSensitivityDbm = -95;
+                this.das.fadeMarginDb = 10;
+                this.das.planAreaM2 = 5000;
+                this.das.planUtilPct = 75;
+                this.showToast(
+                    this.lang === 'en'
+                        ? 'Restored default Link Budget & Antenna Planner parameters.'
+                        : 'Parameter standar Link Budget & Planner Antena berhasil dimuat.',
+                    'info'
+                );
+            }
+        },
+
+        resetDasConverters(toZero = true) {
+            if (!this.das) return;
+            if (toZero) {
+                this.das.pVal = 0;
+                this.das.gVal = 0;
+                this.das.vVal = 1.0;
+                this.das.fVal = 0;
+            } else {
+                this.das.pSrc = 'dbm';
+                this.das.pVal = 40;
+                this.das.gSrc = 'db';
+                this.das.gVal = 10;
+                this.das.vSrc = 'vswr';
+                this.das.vVal = 1.3;
+                this.das.fSrc = 'dbm';
+                this.das.fVal = -85;
             }
         },
 

@@ -1463,11 +1463,28 @@
         if (util > 1) util = util / 100;
 
         if (!(area > 0) || !(r > 0) || !(util > 0)) {
-            return { areaPerAntenna: 0, totalAntennas: 0, isValid: false };
+            return {
+                areaM2: 0,
+                radiusM: 0,
+                utilFactor: 0,
+                areaPerAntenna: 0,
+                totalAntennas: 0,
+                recommendedAntennas: 0,
+                countWithMargin: 0,
+                gridSpacingM: 0,
+                isValid: false,
+                formatted: {
+                    totalAntennas: "0",
+                    areaPerAntenna: "0 m²"
+                }
+            };
         }
 
-        var per = Math.PI * r * r * util;
-        var n = Math.ceil(area / per);
+        var rawPer = Math.PI * r * r;
+        var per = rawPer * util;
+        var rawN = Math.max(1, Math.ceil(area / rawPer));
+        var n = Math.max(1, Math.ceil(area / per));
+        var gridSpacingM = Math.round(Math.sqrt(per) * 10) / 10;
 
         return {
             areaM2: area,
@@ -1475,6 +1492,9 @@
             utilFactor: util,
             areaPerAntenna: per,
             totalAntennas: n,
+            recommendedAntennas: rawN,
+            countWithMargin: n,
+            gridSpacingM: gridSpacingM,
             isValid: true,
             formatted: {
                 totalAntennas: fmtInt(n),
@@ -1549,33 +1569,43 @@
         }
 
         var envList = [
-            { key: "urbanS", name: { en: "Urban (small/med)", id: "Urban (kecil/sedang)" } },
-            { key: "urbanL", name: { en: "Urban (large)", id: "Urban (besar)" } },
-            { key: "subS", name: { en: "Suburban (small/med)", id: "Suburban (kecil/sedang)" } },
-            { key: "subL", name: { en: "Suburban (large)", id: "Suburban (besar)" } },
-            { key: "openS", name: { en: "Open area (small/med)", id: "Area terbuka (kecil/sedang)" } },
-            { key: "openL", name: { en: "Open area (large)", id: "Area terbuka (besar)" } }
+            { key: "urbanS", name: { en: "Urban (Small / Medium City)", id: "Perkotaan Padat (Kecil / Sedang)" } },
+            { key: "urbanL", name: { en: "Urban Metropolitan (Large City)", id: "Metropolitan / Gedung Tinggi (Besar)" } },
+            { key: "subS", name: { en: "Suburban / Industrial Park (Small/Med)", id: "Suburban / Kawasan Industri (Sedang)" } },
+            { key: "subL", name: { en: "Suburban / Commercial Zone (Large)", id: "Suburban / Area Komersial (Besar)" } },
+            { key: "openS", name: { en: "Open / Rural / Mining Area (Small/Med)", id: "Area Terbuka / Tambang / Perkebunan" } },
+            { key: "openL", name: { en: "Open / Flat Terrain (Large)", id: "Area Terbuka Datar / Pesisir (Luas)" } }
         ];
 
         var results = envList.map(function(e) {
             var PL = covPL(e.key, pObj.cov_d, pObj);
             var m = covMargins(pObj, PL);
+            var minM = Math.min(m.up, m.down);
             var pass = m.up > 0 && m.down > 0;
+            var status = minM >= 10 ? "good" : (minM >= 0 ? "warn" : "bad");
             var md = covMaxDist(e.key, pObj);
             var mdStr = md <= 0 ? "0" : (md >= 100 ? "≥ 100" : fmt(md, 1));
             return {
                 key: e.key,
+                envKey: e.key,
                 name: e.name,
                 pathLoss: PL,
                 uplinkMargin: m.up,
+                upMargin: m.up,
                 downlinkMargin: m.down,
+                downMargin: m.down,
                 pass: pass,
+                status: status,
                 maxDistKm: md,
                 maxDistStr: mdStr,
                 formatted: {
+                    pl: fmt(PL, 1) + " dB",
                     pathLoss: fmt(PL, 1),
+                    upMargin: (m.up >= 0 ? "+" : "") + fmt(m.up, 1) + " dB",
                     uplinkMargin: fmt(m.up, 1),
-                    downlinkMargin: fmt(m.down, 1)
+                    downMargin: (m.down >= 0 ? "+" : "") + fmt(m.down, 1) + " dB",
+                    downlinkMargin: fmt(m.down, 1),
+                    maxDist: mdStr + " km"
                 }
             };
         });

@@ -807,6 +807,11 @@ def build_local_expert_response(
             fiber_topo=extracted.get("dasFiberTopo", "star")
         )
         das_nodes = das_sizing["oru_qty"]
+        extracted["needFiberDas"] = True
+        extracted["buildingFloors"] = das_sizing["floors"]
+        extracted["dasAntennasPerFloor"] = max(2, round(das_sizing["indoor_antennas"] / max(1, das_sizing["floors"])))
+        extracted["dasRepeaters"] = total_outdoor_rpt
+        extracted["dasRadios"] = users
         # Calculate FMTCS DAS package IDR price (OMU + ORU + UDSS + Combiner/Multiplexer + Splitters/Couplers + Antennas + Coax)
         omu_unit_idr = 68000000 if das_sizing["arch_mode"] == "digital" else 49000000
         oru_unit_idr = 56000000 if das_sizing["arch_mode"] == "digital" else 42000000
@@ -1143,7 +1148,8 @@ def query_ai_copilot(
         citations=citations
     )
 
-    api_key = (api_key_override or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
+    # Security Policy (AGENTS.md): Only use server-side environment credentials; ignore client-supplied API keys
+    api_key = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
     if not api_key:
         return expert_res
 
