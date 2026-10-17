@@ -3,8 +3,90 @@ window.cdpkSystemPlannerApp = function () {
     return {
         // ─── Global UI & Bilingual State ─────────────────────────────────
         lang: localStorage.getItem('cdpk_lang') || 'id',
+        activeWorkspace: 'dmr', // 'dmr' | 'das'
+        dasActiveTab: 'boq', // 'conv' | 'link' | 'cov' | 'boq' | 'comm' | 'prod'
+        dasHandoffModalOpen: false,
         activeTab: 'sizing', // 'sizing' | 'boq' | 'catalog' | 'mandays' | 'coverage'
         aiModalOpen: false,
+
+        // ─── Module: RFoF DAS by FMTCS Reactive State ────────────────────
+        das: {
+            // 1. Conversion Inputs
+            pSrc: 'dbm',
+            pVal: 40,
+            gSrc: 'db',
+            gVal: 10,
+            vSrc: 'vswr',
+            vVal: 1.3,
+            fSrc: 'dbm',
+            fVal: -85,
+
+            // 2. Link Budget & Planner Inputs
+            oruOutputDbm: 40,
+            cableTypeIndex: 0,
+            cableLengthM: 50,
+            splittersCount: 1,
+            otherLossDb: 1.5,
+            antennaGainDbi: 3.0,
+            envIndex: 1,
+            targetSensitivityDbm: -95,
+            fadeMarginDb: 10,
+            planAreaM2: 5000,
+            planUtilPct: 75,
+
+            // 3. Outdoor Okumura-Hata Inputs
+            cov_f: 420,
+            cov_d: 5,
+            cov_ht: 30,
+            cov_hm: 1.5,
+            cov_txbs: 47,
+            cov_txms: 36,
+            cov_gbs: 6,
+            cov_gms: 0,
+            cov_rxbs: -118,
+            cov_rxms: -116,
+            cov_flbs: 3,
+            cov_flms: 0,
+
+            // 4. Multi-Floor BoQ & Topology Inputs
+            archMode: 'digital', // 'digital' | 'analog'
+            fiberTopo: 'star',   // 'star' | 'cascade' | 'ring'
+            floors: [
+                { f: 'Floor 1 / Lobby', q: 12 },
+                { f: 'Floor 2 / Office', q: 12 },
+                { f: 'Floor 3 / Data Hall', q: 12 },
+                { f: 'Basement B1', q: 8 }
+            ],
+            rep: 2,
+            radio: 40,
+            outo: 1,
+            outd: 1,
+            r_oru: 30,
+            r_omu: 32,
+            r_split: 0.30,
+            r_coup: 0.72,
+            r_cable: 34,
+            customPrices: {},
+            customCurrencies: {},
+            handoffToken: '',
+            qrDataUrl: '',
+
+            // 5. Commissioning Test Report Inputs
+            inspector: '',
+            commDate: new Date().toISOString().slice(0, 10),
+            maxVswr: 1.5,
+            minTx: 8.0,
+            minRx: -85.0,
+            points: [
+                { id: 'Floor 1 - Ant A1', vswr: 1.25, tx: 11.5, rx: -68.0, call: 'good' },
+                { id: 'Floor 2 - Ant A2', vswr: 1.32, tx: 10.8, rx: -71.0, call: 'good' },
+                { id: 'Basement B1 - Ant B1', vswr: 1.28, tx: 11.2, rx: -69.5, call: 'good' }
+            ],
+
+            // 6. Product Selector Filter
+            prodCatFilter: 'all',
+            prodSearch: ''
+        },
 
         // ─── Cloud Sync State (Google Drive & Master Pricelist) ──────────
         syncStatus: 'ok',
@@ -1057,6 +1139,71 @@ window.cdpkSystemPlannerApp = function () {
         },
 
 
+        buildProjectPayload() {
+            return {
+                projName: this.projName,
+                clientName: this.clientName,
+                projLocation: this.projLocation,
+                salesPic: this.salesPic,
+                creatorUsername: this.currentUser ? this.currentUser.username : '',
+                creatorName: this.currentUser ? this.currentUser.name : '',
+                creatorEmail: this.currentUser ? this.currentUser.email : '',
+                lang: this.lang,
+                activeWorkspace: this.activeWorkspace,
+                exportMode: this.exportMode,
+                currency: this.currency,
+                exchangeRate: this.exchangeRate,
+                sizingInputs: {
+                    industry: this.industry,
+                    areaInput: this.areaInput,
+                    areaUnit: this.areaUnit,
+                    userCount: this.userCount,
+                    terrain: this.terrain,
+                    freqBand: this.freqBand,
+                    towerHeight: this.towerHeight,
+                    buildingFloors: this.buildingFloors,
+                    powerSource: this.powerSource,
+                    backupHours: this.backupHours,
+                    backhaul: this.backhaul,
+                    needAtex: this.needAtex,
+                    needDispatch: this.needDispatch,
+                    needCctv: this.needCctv,
+                    cctvCount: this.cctvCount
+                },
+                sizingResult: this.sizingResult,
+                boqItems: this.boqItems.map(it => ({
+                    category: it.category,
+                    name: it.name,
+                    sku: it.sku,
+                    qty: it.qty,
+                    unit: it.unit,
+                    unitPrice: Math.round(this.getEffectiveUnitPrice(it)),
+                    lineTotal: Math.round(this.getLineTotal(it)),
+                    notes: it.notes,
+                    isBundle: it.isBundle,
+                    children: it.children || []
+                })),
+                commercialTotals: {
+                    currency: this.currency,
+                    hardwareSubtotal: Math.round(this.hardwareSubtotal),
+                    serviceFeeTotal: Math.round(this.serviceFeeTotal),
+                    discountPercent: this.discountPercent,
+                    discountAmount: Math.round(this.discountAmount),
+                    netTaxableSubtotal: Math.round(this.netTaxableSubtotal),
+                    ppnPercent: this.ppnPercent,
+                    ppnAmount: Math.round(this.ppnAmount),
+                    grandTotal: Math.round(this.grandTotal)
+                },
+                mandaysResult: {
+                    totalMandays: this.mandaysResult.totalMandays,
+                    calendarDays: this.mandaysResult.calendarDays,
+                    tasks: this.mandaysResult.tasks
+                },
+                systemPackages: this.systemPackages,
+                dasState: JSON.parse(JSON.stringify(this.das))
+            };
+        },
+
         // ─── Direct Google Drive Project Save Engine ─────────────────────
         async saveToGoogleDrive() {
             if (!this.currentUser) {
@@ -1065,66 +1212,7 @@ window.cdpkSystemPlannerApp = function () {
             }
             this.isSavingToDrive = true;
             try {
-                const payload = {
-                    projName: this.projName,
-                    clientName: this.clientName,
-                    projLocation: this.projLocation,
-                    salesPic: this.salesPic,
-                    creatorUsername: this.currentUser.username,
-                    creatorName: this.currentUser.name,
-                    creatorEmail: this.currentUser.email,
-                    lang: this.lang,
-                    exportMode: this.exportMode,
-                    currency: this.currency,
-                    exchangeRate: this.exchangeRate,
-                    sizingInputs: {
-                        industry: this.industry,
-                        areaInput: this.areaInput,
-                        areaUnit: this.areaUnit,
-                        userCount: this.userCount,
-                        terrain: this.terrain,
-                        freqBand: this.freqBand,
-                        towerHeight: this.towerHeight,
-                        buildingFloors: this.buildingFloors,
-                        powerSource: this.powerSource,
-                        backupHours: this.backupHours,
-                        backhaul: this.backhaul,
-                        needAtex: this.needAtex,
-                        needDispatch: this.needDispatch,
-                        needCctv: this.needCctv,
-                        cctvCount: this.cctvCount
-                    },
-                    sizingResult: this.sizingResult,
-                    boqItems: this.boqItems.map(it => ({
-                        category: it.category,
-                        name: it.name,
-                        sku: it.sku,
-                        qty: it.qty,
-                        unit: it.unit,
-                        unitPrice: Math.round(this.getEffectiveUnitPrice(it)),
-                        lineTotal: Math.round(this.getLineTotal(it)),
-                        notes: it.notes,
-                        isBundle: it.isBundle,
-                        children: it.children || []
-                    })),
-                    commercialTotals: {
-                        currency: this.currency,
-                        hardwareSubtotal: Math.round(this.hardwareSubtotal),
-                        serviceFeeTotal: Math.round(this.serviceFeeTotal),
-                        discountPercent: this.discountPercent,
-                        discountAmount: Math.round(this.discountAmount),
-                        netTaxableSubtotal: Math.round(this.netTaxableSubtotal),
-                        ppnPercent: this.ppnPercent,
-                        ppnAmount: Math.round(this.ppnAmount),
-                        grandTotal: Math.round(this.grandTotal)
-                    },
-                    mandaysResult: {
-                        totalMandays: this.mandaysResult.totalMandays,
-                        calendarDays: this.mandaysResult.calendarDays,
-                        tasks: this.mandaysResult.tasks
-                    },
-                    systemPackages: this.systemPackages
-                };
+                const payload = this.buildProjectPayload();
 
                 const resp = await fetch('/api/project/save-to-drive', {
                     method: 'POST',
@@ -1327,6 +1415,12 @@ window.cdpkSystemPlannerApp = function () {
                         this.needCctv = si.needCctv || false;
                         this.cctvCount = si.cctvCount || 8;
                     }
+                    if (p.dasState) {
+                        this.das = Object.assign(this.das, p.dasState);
+                    }
+                    if (p.activeWorkspace) {
+                        this.activeWorkspace = p.activeWorkspace;
+                    }
                     this.syncBoqFromSizing();
                     this.runCoverageSimulation();
                     this.archiveModalOpen = false;
@@ -1459,6 +1553,25 @@ window.cdpkSystemPlannerApp = function () {
                     this.syncSource = data.source || 'google_drive_live';
                     this.lastSyncTime = data.last_sync ? new Date(data.last_sync).toLocaleTimeString() : new Date().toLocaleTimeString();
                     this.folderFiles = data.folder_files || [];
+
+                    // Sync dedicated RFoF_DAS_FMTCS Google Sheet tab into DAS Engine & BoQ state
+                    if (Array.isArray(k.rfof_das_catalog) && k.rfof_das_catalog.length > 0) {
+                        this.das.cloudPrices = this.das.cloudPrices || {};
+                        this.das.cloudCogs = this.das.cloudCogs || {};
+                        k.rfof_das_catalog.forEach((dItem) => {
+                            if (dItem.sku) {
+                                if (dItem.price_usd > 0) this.das.cloudPrices[dItem.sku] = dItem.price_usd;
+                                if (dItem.cogs_usd > 0) this.das.cloudCogs[dItem.sku] = dItem.cogs_usd;
+                                if (window.CDPK_DAS_ENGINE && Array.isArray(window.CDPK_DAS_ENGINE.devices)) {
+                                    const dev = window.CDPK_DAS_ENGINE.devices.find(x => x.sku === dItem.sku);
+                                    if (dev) {
+                                        if (dItem.price_usd > 0) dev.defaultPriceUsd = dItem.price_usd;
+                                        if (dItem.cogs_usd > 0) dev.cogsUsd = dItem.cogs_usd;
+                                    }
+                                }
+                            }
+                        });
+                    }
                 }
             } catch (e) {
                 console.warn('Knowledge sync fallback:', e);
@@ -2549,6 +2662,56 @@ window.cdpkSystemPlannerApp = function () {
             }
         },
 
+        formatAiMarkdown(rawText) {
+            if (!rawText) return '';
+            let html = String(rawText);
+
+            // 1. Code blocks ```...```
+            html = html.replace(/```(?:[a-zA-Z0-9_]+)?\n([\s\S]*?)```/g, (match, code) => {
+                return `<pre class="bg-slate-900 text-emerald-400 p-2.5 rounded-lg text-[11px] font-mono overflow-x-auto my-2 leading-tight">${code.trim()}</pre>`;
+            });
+
+            // 2. Tables | ... |
+            html = html.replace(/((?:\|[^\n]+\|\r?\n)+)/g, (tableText) => {
+                const lines = tableText.trim().split('\n').filter(l => l.trim().startsWith('|'));
+                if (lines.length < 2) return tableText;
+                let tableHtml = '<div class="overflow-x-auto my-2 rounded-lg border border-slate-200 shadow-xs"><table class="w-full text-[11px] border-collapse bg-white">';
+                lines.forEach((line, idx) => {
+                    const cells = line.split('|').slice(1, -1).map(c => c.trim());
+                    if (cells.every(c => c.match(/^:?-+:?$/))) {
+                        return; // separator line
+                    }
+                    if (idx === 0) {
+                        tableHtml += '<thead class="bg-slate-100 text-slate-800 font-bold border-b border-slate-200"><tr>';
+                        cells.forEach(c => { tableHtml += `<th class="p-2 text-left border-r border-slate-200 last:border-r-0 whitespace-nowrap">${c}</th>`; });
+                        tableHtml += '</tr></thead><tbody>';
+                    } else {
+                        tableHtml += '<tr class="border-b border-slate-100 hover:bg-slate-50 transition">';
+                        cells.forEach(c => { tableHtml += `<td class="p-2 text-slate-700 border-r border-slate-100 last:border-r-0">${c}</td>`; });
+                        tableHtml += '</tr>';
+                    }
+                });
+                tableHtml += '</tbody></table></div>';
+                return tableHtml;
+            });
+
+            // 3. Headers
+            html = html.replace(/^### (.*$)/gim, '<div class="text-sm font-extrabold text-blue-900 mt-2.5 mb-1 pb-0.5 border-b border-blue-100">$1</div>');
+            html = html.replace(/^#### (.*$)/gim, '<div class="font-bold text-slate-900 mt-2 mb-0.5 text-xs flex items-center gap-1">$1</div>');
+
+            // 4. Blockquotes
+            html = html.replace(/^> (.*$)/gim, '<div class="border-l-4 border-amber-500 pl-2.5 py-1 text-slate-700 bg-amber-50/70 my-1.5 rounded-r text-[11px]">$1</div>');
+
+            // 5. Bold & inline code
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900">$1</strong>');
+            html = html.replace(/`([^`]+)`/g, '<code class="bg-slate-100 text-blue-800 px-1 py-0.5 rounded text-[11px] font-mono border border-slate-200">$1</code>');
+
+            // 6. Links [text](url)
+            html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-semibold">$1</a>');
+
+            return html;
+        },
+
         applyAiParamsToApp(extracted, targetTab = 'sizing') {
             const ext = extracted || this.lastExtractedParams;
             if (!ext) return;
@@ -2564,10 +2727,29 @@ window.cdpkSystemPlannerApp = function () {
             if (ext.backhaul) this.backhaul = ext.backhaul;
             if (ext.topologyType === 'point_to_point') this.backhaul = 'radio_ip';
 
+            // AI Copilot Auto-Fill Bridge to RFoF DAS by FMTCS
+            if (ext.needFiberDas || ext.das || ext.needDas) {
+                if (ext.buildingFloors !== undefined) {
+                    const flCount = Math.max(1, parseInt(ext.buildingFloors, 10) || 4);
+                    this.das.floors = Array.from({ length: flCount }, (_, i) => ({
+                        f: (this.lang === 'en' ? 'Floor ' : 'Lantai ') + (i + 1),
+                        q: ext.dasAntennasPerFloor || 8
+                    }));
+                }
+                if (ext.dasArchMode) this.das.archMode = ext.dasArchMode;
+                if (ext.dasFiberTopo) this.das.fiberTopo = ext.dasFiberTopo;
+                if (ext.dasRepeaters) this.das.rep = ext.dasRepeaters;
+                if (ext.dasRadios) this.das.radio = ext.dasRadios;
+            }
+
             this.syncBoqFromSizing();
             this.runCoverageSimulation();
             this.aiModalOpen = false;
             this.activeTab = targetTab || 'sizing';
+        },
+
+        applyAiExtractedParams(extracted) {
+            return this.applyAiParamsToApp(extracted);
         },
 
         // ─── Module 7: Product & System Configurator Methods ─────────────
@@ -3543,6 +3725,339 @@ window.cdpkSystemPlannerApp = function () {
                 location: this.covSearchLocation
             });
             window.CDPK_EXPORTERS.exportCoveragePNG('cdpkCoverageCanvas', this.projName);
+        },
+
+        // ─── Module: RFoF DAS by FMTCS Methods & Two-Way Bridges ───────────────
+        dasT(key) {
+            if (window.CDPK_DAS_ENGINE && window.CDPK_DAS_ENGINE.i18n) {
+                const lang = this.lang || 'id';
+                const dict = window.CDPK_DAS_ENGINE.i18n[lang] || window.CDPK_DAS_ENGINE.i18n['id'];
+                if (dict && dict[key] !== undefined) return dict[key];
+                const fallback = window.CDPK_DAS_ENGINE.i18n['en'];
+                if (fallback && fallback[key] !== undefined) return fallback[key];
+            }
+            return key;
+        },
+
+        getDasBoqResult() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.calcDasBoq === 'function') {
+                return window.CDPK_DAS_ENGINE.calcDasBoq(this.das, this.exchangeRate);
+            }
+            return {
+                items: [],
+                quantities: {
+                    antIndoorQty: 0, oruQty: 0, omuQty: 0, repQty: 0,
+                    combQty: 0, muxQty: 0, sigSplitQty: 0, pwrSplitQty: 0, couplerQty: 0,
+                    cableQty: 0, connQty: 0, fiberQty: 0, antOutOmniQty: 0, antOutDirQty: 0, radioQty: 0
+                },
+                totals: {
+                    totalCogsUsd: 0, totalCogsIdr: 0, totalSellUsd: 0, totalSellIdr: 0,
+                    totalMarginUsd: 0, totalMarginIdr: 0, overallMarginPct: 0, marginGuardrailPassed: true
+                }
+            };
+        },
+
+        getDasTopologySvg() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.buildDasTopologySVG === 'function') {
+                return window.CDPK_DAS_ENGINE.buildDasTopologySVG(this.getDasBoqResult(), this.das.archMode, this.das.fiberTopo, this.das.floors, this.lang);
+            }
+            return '';
+        },
+
+        getDasLinkBudgetResult() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.calcDasLinkBudget === 'function') {
+                return window.CDPK_DAS_ENGINE.calcDasLinkBudget(this.das);
+            }
+            return { isValid: false, chain: [], healthStatus: 'bad', radiusM: 0, coverageAreaM2: 0 };
+        },
+
+        getDasPlannerResult() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.calcAntennaPlanner === 'function') {
+                const lb = this.getDasLinkBudgetResult();
+                return window.CDPK_DAS_ENGINE.calcAntennaPlanner(this.das.planAreaM2, lb.radiusM, this.das.planUtilPct);
+            }
+            return { recommendedAntennas: 0, countWithMargin: 0, gridSpacingM: 0, areaM2: 0 };
+        },
+
+        getDasOutdoorResult() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.calcOkumuraHataOutdoor === 'function') {
+                return window.CDPK_DAS_ENGINE.calcOkumuraHataOutdoor(this.das);
+            }
+            return { isValid: false, results: [] };
+        },
+
+        getDasPowerConvResult() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.calcPowerConversion === 'function') {
+                return window.CDPK_DAS_ENGINE.calcPowerConversion(this.das.pSrc, this.das.pVal);
+            }
+            return {};
+        },
+
+        getDasGainConvResult() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.calcGainConversion === 'function') {
+                return window.CDPK_DAS_ENGINE.calcGainConversion(this.das.gSrc, this.das.gVal);
+            }
+            return {};
+        },
+
+        getDasVswrConvResult() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.calcVswrConversion === 'function') {
+                return window.CDPK_DAS_ENGINE.calcVswrConversion(this.das.vSrc, this.das.vVal);
+            }
+            return {};
+        },
+
+        getDasFieldConvResult() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.calcFieldMeterConversion === 'function') {
+                return window.CDPK_DAS_ENGINE.calcFieldMeterConversion(this.das.fSrc, this.das.fVal);
+            }
+            return {};
+        },
+
+        addDasFloor() {
+            if (!Array.isArray(this.das.floors)) this.das.floors = [];
+            const nextIdx = this.das.floors.length + 1;
+            const floorName = this.lang === 'en' ? `Floor ${nextIdx}` : `Lantai ${nextIdx}`;
+            this.das.floors.push({ f: floorName, q: 8 });
+        },
+
+        removeDasFloor(idx) {
+            if (Array.isArray(this.das.floors) && this.das.floors.length > 1) {
+                this.das.floors.splice(idx, 1);
+            }
+        },
+
+        applyPlannerToDasBoq() {
+            const pl = this.getDasPlannerResult();
+            const totalAnt = pl.countWithMargin || pl.recommendedAntennas || 8;
+            const numFloors = Math.max(1, (this.das.floors && this.das.floors.length) || 1);
+            const antPerFloor = Math.max(1, Math.round(totalAnt / numFloors));
+            if (!Array.isArray(this.das.floors) || this.das.floors.length === 0) {
+                this.das.floors = [{ f: this.lang === 'en' ? 'Floor 1' : 'Lantai 1', q: totalAnt }];
+            } else {
+                this.das.floors.forEach((fl) => {
+                    fl.q = antPerFloor;
+                });
+            }
+            this.dasActiveTab = 'boq';
+            this.showToast(
+                this.lang === 'en'
+                    ? `Applied ${totalAnt} antennas (${antPerFloor}/floor) from Planner to DAS BoQ.`
+                    : `Menerapkan ${totalAnt} antena (${antPerFloor}/lantai) dari Planner ke BoQ DAS.`,
+                'success'
+            );
+        },
+
+        addDasCommPoint() {
+            if (!Array.isArray(this.das.points)) this.das.points = [];
+            const nextIdx = this.das.points.length + 1;
+            this.das.points.push({
+                id: `Antenna Point #${nextIdx}`,
+                vswr: 1.25,
+                tx: 10.5,
+                rx: -70.0,
+                call: 'good'
+            });
+        },
+
+        removeDasCommPoint(idx) {
+            if (Array.isArray(this.das.points) && this.das.points.length > 1) {
+                this.das.points.splice(idx, 1);
+            }
+        },
+
+        populateCommPointsFromFloors() {
+            const newPoints = [];
+            (this.das.floors || []).forEach(fl => {
+                const q = Math.min(20, Math.max(1, parseInt(fl.q, 10) || 1));
+                for (let i = 1; i <= q; i++) {
+                    newPoints.push({
+                        id: `${fl.f} - Ant #${i}`,
+                        vswr: Number((1.18 + (Math.random() * 0.18)).toFixed(2)),
+                        tx: Number((10.0 + (Math.random() * 1.5)).toFixed(1)),
+                        rx: Number((-72.0 + (Math.random() * 6.0)).toFixed(1)),
+                        call: 'good'
+                    });
+                }
+            });
+            if (newPoints.length > 0) {
+                this.das.points = newPoints;
+                this.showToast(
+                    this.lang === 'en'
+                        ? `Generated ${newPoints.length} test points from floor zones.`
+                        : `Berhasil membuat ${newPoints.length} titik uji dari zona lantai.`,
+                    'info'
+                );
+            }
+        },
+
+        exportDasCommPdf() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.exportCommissioningPdf === 'function') {
+                const meta = {
+                    projectName: this.projName || 'Proyek DAS FMTCS',
+                    technician: this.das.inspector || (this.currentUser ? this.currentUser.name : 'Lead RF Engineer'),
+                    customer: this.clientName || 'Building Management'
+                };
+                window.CDPK_DAS_ENGINE.exportCommissioningPdf(this.das, meta, this.lang);
+                this.showToast(
+                    this.lang === 'en' ? 'Commissioning SAT Report PDF generated successfully!' : 'Dokumen Berita Acara Uji Terima (SAT) PDF berhasil dibuat!',
+                    'success'
+                );
+            }
+        },
+
+        exportDasBoqCsv() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.exportDasCsv === 'function') {
+                const state = {
+                    proj: this.projName,
+                    by: this.currentUser ? this.currentUser.name : 'CDPK Presales',
+                    kurs: this.exchangeRate
+                };
+                window.CDPK_DAS_ENGINE.exportDasCsv(state, this.getDasBoqResult(), this.lang);
+                this.showToast(
+                    this.lang === 'en' ? 'DAS BoQ exported to CSV successfully.' : 'Lembar BoQ DAS berhasil diekspor ke CSV.',
+                    'success'
+                );
+            }
+        },
+
+        generateDasHandoffQr() {
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.encodeHandoffToken === 'function') {
+                const payload = {
+                    proj: this.projName,
+                    client: this.clientName,
+                    archMode: this.das.archMode,
+                    fiberTopo: this.das.fiberTopo,
+                    floors: this.das.floors,
+                    rep: this.das.rep,
+                    radio: this.das.radio,
+                    ts: Date.now()
+                };
+                const token = window.CDPK_DAS_ENGINE.encodeHandoffToken(payload);
+                this.das.handoffToken = token;
+                this.das.qrDataUrl = window.CDPK_DAS_ENGINE.generateQRCodeDataURL(token, 4, 8);
+                this.dasHandoffModalOpen = true;
+            }
+        },
+
+        importDasHandoffToken(tokenStr) {
+            const tok = (tokenStr || this.das.handoffToken || '').trim();
+            if (!tok) {
+                alert(this.lang === 'en' ? 'Please provide a valid handoff token string.' : 'Silakan masukkan kode token handoff yang valid.');
+                return;
+            }
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.decodeHandoffToken === 'function') {
+                const res = window.CDPK_DAS_ENGINE.decodeHandoffToken(tok);
+                if (res.valid && res.payload) {
+                    const p = res.payload;
+                    if (p.archMode) this.das.archMode = p.archMode;
+                    if (p.fiberTopo) this.das.fiberTopo = p.fiberTopo;
+                    if (Array.isArray(p.floors)) this.das.floors = p.floors;
+                    if (p.rep !== undefined) this.das.rep = p.rep;
+                    if (p.radio !== undefined) this.das.radio = p.radio;
+                    this.showToast(
+                        this.lang === 'en' ? 'DAS configuration imported successfully!' : 'Konfigurasi DAS berhasil diimpor!',
+                        'success'
+                    );
+                    this.dasHandoffModalOpen = false;
+                } else {
+                    const err = res.error || (this.lang === 'en' ? 'Invalid token' : 'Token tidak valid');
+                    alert(this.lang === 'en' ? `Import failed: ${err}` : `Gagal mengimpor: ${err}`);
+                }
+            }
+        },
+
+        // ─── Two-Way Bridge 1: DMR Sizing -> RFoF DAS by FMTCS ─────────────────
+        expandDmrToRfofDas() {
+            const floorsCount = Math.max(1, parseInt(this.buildingFloors, 10) || 4);
+            const currentFloors = Array.isArray(this.das.floors) ? this.das.floors : [];
+            if (currentFloors.length !== floorsCount) {
+                const newFloors = [];
+                for (let i = 1; i <= floorsCount; i++) {
+                    newFloors.push({
+                        f: this.lang === 'en' ? `Floor ${i}` : `Lantai ${i}`,
+                        q: Math.max(4, Math.round(Number(this.areaInput || 35) * 10 / floorsCount)) || 8
+                    });
+                }
+                this.das.floors = newFloors;
+            }
+            this.das.rep = Math.max(1, (this.sizingResult && (this.sizingResult.totalRepeaters || this.sizingResult.totalOutdoorRepeaters)) || 2);
+            this.das.radio = Math.max(10, parseInt(this.userCount, 10) || 40);
+            this.activeWorkspace = 'das';
+            this.dasActiveTab = 'boq';
+            this.showToast(
+                this.lang === 'en'
+                    ? `Transferred ${floorsCount} floors, ${this.das.rep} repeater(s), and ${this.das.radio} users into RFoF DAS by FMTCS.`
+                    : `Berhasil mentransfer ${floorsCount} lantai, ${this.das.rep} repeater, dan ${this.das.radio} user ke RFoF DAS by FMTCS.`,
+                'success'
+            );
+        },
+
+        // ─── Two-Way Bridge 2: RFoF DAS BoQ -> DMR Master BoQ ─────────────────
+        injectDasBoqToMasterBoq() {
+            const dasBoq = this.getDasBoqResult();
+            const items = (dasBoq && dasBoq.items) || [];
+            if (items.length === 0) {
+                alert(this.lang === 'en' ? 'No DAS items to inject.' : 'Tidak ada item DAS untuk dimasukkan.');
+                return;
+            }
+
+            let injectedCount = 0;
+            items.forEach(it => {
+                if (!it.qty || it.qty <= 0) return;
+                // Exclude general repeater and subscriber radio if already present in DMR Master BoQ
+                const isRepeaterOrRadio = it.key === 'rep' || it.key === 'radio' || it.sku === 'MOT-RPT-SLR5300' || it.sku === 'MOT-HT-R7';
+                if (isRepeaterOrRadio && this.boqItems.some(b => b.sku === it.sku)) {
+                    return;
+                }
+
+                const existingIdx = this.boqItems.findIndex(b => b.sku === it.sku);
+                const nameId = (it.name && it.name.id) || it.name || it.model;
+                const nameEn = (it.name && it.name.en) || it.name || it.model;
+                const unitPriceIdr = Math.round(it.unitPriceIdr || (it.unitPriceUsd * this.exchangeRate));
+                const unitPriceUsd = Math.round((it.unitPriceUsd || (unitPriceIdr / this.exchangeRate)) * 100) / 100;
+                const cogsIdr = Math.round(it.cogsIdr || (it.cogsUsd * this.exchangeRate));
+                const cogsUsd = Math.round((it.cogsUsd || 0) * 100) / 100;
+
+                const boqRow = {
+                    id: 'boq-das-' + it.sku + '-' + Date.now().toString(36),
+                    isBundle: false,
+                    expanded: false,
+                    category: 'FMTCS-DAS',
+                    sku: it.sku,
+                    model: it.model,
+                    name_id: nameId,
+                    name_en: nameEn,
+                    name: this.lang === 'en' ? nameEn : nameId,
+                    qty: it.qty,
+                    unit: it.unit || 'Unit',
+                    price_idr: unitPriceIdr,
+                    price_usd: unitPriceUsd,
+                    cogs_idr: cogsIdr,
+                    cogs_usd: cogsUsd,
+                    marginPct: it.marginPct || 25,
+                    notes_id: `Komponen RFoF DAS FMTCS (${it.model})`,
+                    notes_en: `FMTCS RFoF DAS Component (${it.model})`,
+                    notes: this.lang === 'en' ? `FMTCS RFoF DAS Component (${it.model})` : `Komponen RFoF DAS FMTCS (${it.model})`,
+                    children: []
+                };
+
+                if (existingIdx >= 0) {
+                    this.boqItems[existingIdx] = boqRow;
+                } else {
+                    this.boqItems.push(boqRow);
+                }
+                injectedCount++;
+            });
+
+            this.activeWorkspace = 'dmr';
+            this.activeTab = 'boq';
+            this.showToast(
+                this.lang === 'en'
+                    ? `Successfully injected ${injectedCount} FMTCS DAS items into DMR Master BoQ.`
+                    : `Berhasil menambahkan ${injectedCount} komponen DAS FMTCS ke BoQ Utama DMR.`,
+                'success'
+            );
         }
     };
 };

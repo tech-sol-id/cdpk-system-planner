@@ -1189,6 +1189,397 @@
       "best_for_id": "Implementasi proyek end-to-end berstandar Motorola Solutions Partner",
       "best_for_en": "Turnkey end-to-end project implementation to Motorola Solutions Partner standards",
       "iconBg": "linear-gradient(135deg,#059669,#065f46)"
+    },
+    {
+      "sku": "FMTCS-OMU-DIG",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Active Optical",
+      "series": "FMTCS-LRFN",
+      "model": "DOMU400C.RI Digital Optical Master Unit",
+      "unit": "Unit",
+      "price_idr": 72900000.0,
+      "price_usd": 4500.0,
+      "cogs_usd": 3150.0,
+      "boq_key": "bq_i_omu",
+      "desc_id": "Optical Master Unit (OMU) Digital C-RAN 350/400 MHz (410-440 MHz), mendukung hingga 32 unit DORU, jangkauan serat optik <=20 km, topologi Star/Cascade/Ring, 19\" 2U Rackmount.",
+      "desc_en": "Digital C-RAN Optical Master Unit (OMU) 350/400 MHz (410-440 MHz), supports up to 32 DORU units, <=20 km fiber reach, Star/Cascade/Ring topology, 19\" 2U Rackmount.",
+      "features": [
+        "Digital RFoF",
+        "Max 32 ORU",
+        "<=20 km SMF",
+        "Star/Cascade/Ring",
+        "NMS OCC"
+      ],
+      "best_for_id": "Data Center, Gedung Bertingkat Tinggi, Bandara, Terowongan & Kampus Multi-Zona",
+      "best_for_en": "Data Centers, High-Rise Buildings, Airports, Tunnels & Multi-Zone Campuses",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-OMU-ANA",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Active Optical",
+      "series": "FMTCS-LRFN",
+      "model": "AOMU400C.RI Analog Optical Master Unit",
+      "unit": "Unit",
+      "price_idr": 45360000.0,
+      "price_usd": 2800.0,
+      "cogs_usd": 1950.0,
+      "boq_key": "bq_i_omu",
+      "desc_id": "Optical Master Unit (OMU) Analog RFoF 350/400 MHz (410-470 MHz), mendukung hingga 4 unit AORU, jangkauan serat optik <=8 km, latensi ultra-rendah <=3 us.",
+      "desc_en": "Analog RFoF Optical Master Unit (OMU) 350/400 MHz (410-470 MHz), supports up to 4 AORU units, <=8 km fiber reach, ultra-low latency <=3 us.",
+      "features": [
+        "Analog RFoF",
+        "Max 4 ORU",
+        "<=8 km SMF",
+        "Latency <=3 us",
+        "19\" 2U"
+      ],
+      "best_for_id": "Gedung Menengah, Basement Parkir, Gudang Logistik & Pabrik",
+      "best_for_en": "Mid-sized Buildings, Parking Basements, Warehouses & Factories",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ORU-DIG",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Active Optical",
+      "series": "FMTCS-LRFF",
+      "model": "DORU400CH.RI Digital Optical Remote Unit (10W)",
+      "unit": "Unit",
+      "price_idr": 51840000.0,
+      "price_usd": 3200.0,
+      "cogs_usd": 2250.0,
+      "boq_key": "bq_i_oru",
+      "desc_id": "Optical Remote Unit (ORU) Digital daya tinggi 10W (+40+-2 dBm DL), penguatan >=50 dB, dual port optik LC untuk kaskade/ring, sasis aluminium IP65.",
+      "desc_en": "High-Power 10W (+40+-2 dBm DL) Digital Optical Remote Unit (ORU), >=50 dB gain, dual LC optical ports for cascade/ring, IP65 aluminum enclosure.",
+      "features": [
+        "10W (+40 dBm)",
+        "Digital Sync",
+        "Dual LC Fiber",
+        "IP65 Weatherproof",
+        "Max ~32 Antennas"
+      ],
+      "best_for_id": "Distribusi RF Multi-Lantai, Data Hall, Area Pabrik & Kampus",
+      "best_for_en": "Multi-Floor RF Distribution, Data Halls, Industrial Plants & Campuses",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ORU-ANA",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Active Optical",
+      "series": "FMTCS-LRFF",
+      "model": "AORU400CH.RI Analog Optical Remote Unit (10W)",
+      "unit": "Unit",
+      "price_idr": 31590000.0,
+      "price_usd": 1950.0,
+      "cogs_usd": 1350.0,
+      "boq_key": "bq_i_oru",
+      "desc_id": "Optical Remote Unit (ORU) Analog 10W (+40+-2 dBm DL), atenuasi step 0-31 dB, jangkauan optik <=8 km, proteksi IP65.",
+      "desc_en": "Analog 10W (+40+-2 dBm DL) Optical Remote Unit (ORU), 0-31 dB step attenuator, <=8 km optical reach, IP65 protection.",
+      "features": [
+        "10W (+40 dBm)",
+        "Analog RFoF",
+        "ATT 0-31 dB",
+        "IP65 Rugged"
+      ],
+      "best_for_id": "Ekspansi Cakupan Indoor Zona Tunggal hingga 4 Zona",
+      "best_for_en": "Single-to-4-Zone Indoor Coverage Expansion",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-UDSS",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-LRF/S",
+      "model": "UDSS400C.M UL/DL Signal Splitter (4/6-Port)",
+      "unit": "Unit",
+      "price_idr": 7290000.0,
+      "price_usd": 450.0,
+      "cogs_usd": 310.0,
+      "boq_key": "bq_i_sig",
+      "desc_id": "Pemisah sinyal Uplink/Downlink 350-470 MHz (4/6 port), redaman sisip <=1.0 dB, kopling 30+-1 dB, daya input maks 50W untuk proteksi OMU dari repeater.",
+      "desc_en": "Uplink/Downlink Signal Splitter 350-470 MHz (4/6 ports), insertion loss <=1.0 dB, coupling 30+-1 dB, 50W max input protecting OMU from repeater.",
+      "features": [
+        "350-470 MHz",
+        "IL <=1.0 dB",
+        "Coupling 30 dB",
+        "50W Rated",
+        "19\" 1U"
+      ],
+      "best_for_id": "Antarmuka Headend antara Repeater SLR 5300 & OMU FMTCS",
+      "best_for_en": "Headend Interface between SLR 5300 Repeaters & FMTCS OMU",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-CFH8",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-CFH",
+      "model": "BCFH4008.RI 8-Channel TX Cavity Combiner",
+      "unit": "Unit",
+      "price_idr": 19440000.0,
+      "price_usd": 1200.0,
+      "cogs_usd": 840.0,
+      "boq_key": "bq_i_comb",
+      "desc_id": "Combiner TX 8-kanal (tersedia 2/4/8 port) 350-470 MHz, daya input 50W/kanal, isolasi antar port >=45 dB, VSWR <=1.25.",
+      "desc_en": "8-Channel TX Cavity Combiner (2/4/8 port options) 350-470 MHz, 50W/port input, >=45 dB inter-port isolation, VSWR <=1.25.",
+      "features": [
+        "2/4/8 Ports",
+        "50W/Port",
+        "Isolation >=45 dB",
+        "VSWR <=1.25"
+      ],
+      "best_for_id": "Menggabungkan Multi-Repeater TX ke Headend DAS",
+      "best_for_en": "Combining Multi-Repeater TX into DAS Headend",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-DJF8",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-DJF",
+      "model": "PDJF4008.M 8-Way RX Multicoupler / Divider",
+      "unit": "Unit",
+      "price_idr": 15390000.0,
+      "price_usd": 950.0,
+      "cogs_usd": 665.0,
+      "boq_key": "bq_i_mux",
+      "desc_id": "Multicoupler penerima RX 8-arah (tersedia 2/4/8 port) 350-470 MHz dengan LNA low-noise figure <=2.5 dB dan isolasi >=18 dB.",
+      "desc_en": "8-Way RX Receiver Multicoupler (2/4/8 port options) 350-470 MHz with LNA noise figure <=2.5 dB and >=18 dB isolation.",
+      "features": [
+        "2/4/8 Ports",
+        "NF <=2.5 dB",
+        "Isolation >=18 dB",
+        "19\" Rackmount"
+      ],
+      "best_for_id": "Mendistribusikan Uplink RX dari OMU ke Multi-Repeater",
+      "best_for_en": "Distributing Uplink RX from OMU to Multi-Repeaters",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-SGQ",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-SGQ",
+      "model": "DSGQ400C.RI Bandpass Cavity Duplexer (50W)",
+      "unit": "Unit",
+      "price_idr": 10530000.0,
+      "price_usd": 650.0,
+      "cogs_usd": 450.0,
+      "boq_key": "bq_i_dup",
+      "desc_id": "Duplexer Cavity 50W 350-470 MHz, insertion loss <=2.5 dB, isolasi TX-RX >=80 dB, konektor N-Female.",
+      "desc_en": "50W Cavity Duplexer 350-470 MHz, insertion loss <=2.5 dB, TX-RX isolation >=80 dB, N-Female connectors.",
+      "features": [
+        "50W Continuous",
+        "IL <=2.5 dB",
+        "Isolation >=80 dB",
+        "N-Female"
+      ],
+      "best_for_id": "Pemisahan Uplink & Downlink Repeater / Headend DAS",
+      "best_for_en": "Repeater / DAS Headend Uplink & Downlink Separation",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-PD2",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-PD",
+      "model": "PD400R.M 2-Way RF Power Splitter",
+      "unit": "Unit",
+      "price_idr": 729000.0,
+      "price_usd": 45.0,
+      "cogs_usd": 28.0,
+      "boq_key": "bq_i_split",
+      "desc_id": "Power Splitter 2-arah 350-470 MHz, redaman total <=3.3 dB, daya 50W, VSWR <=1.25, IP65.",
+      "desc_en": "2-Way RF Power Splitter 350-470 MHz, total loss <=3.3 dB, 50W rating, VSWR <=1.25, IP65.",
+      "features": [
+        "350-470 MHz",
+        "Loss <=3.3 dB",
+        "50W Rating",
+        "IP65"
+      ],
+      "best_for_id": "Pembagian Cabang Feeder Coax Antar Zona Lantai",
+      "best_for_en": "Coax Feeder Branch Splitting Across Floor Zones",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-CP",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-CP",
+      "model": "CP400R.M Directional Coupler (6/10/15/20 dB)",
+      "unit": "Unit",
+      "price_idr": 891000.0,
+      "price_usd": 55.0,
+      "cogs_usd": 35.0,
+      "boq_key": "bq_i_coup",
+      "desc_id": "Directional Coupler 350-470 MHz (pilihan tap 6/10/15/20/30 dB), daya 100W, direktivitas >=20 dB, IP65.",
+      "desc_en": "Directional Coupler 350-470 MHz (6/10/15/20/30 dB tap options), 100W rating, directivity >=20 dB, IP65.",
+      "features": [
+        "6/10/15/20 dB",
+        "100W Rating",
+        "Directivity >=20 dB",
+        "IP65"
+      ],
+      "best_for_id": "Penyeimbangan Level Daya Input Antena di Riser & Koridor",
+      "best_for_en": "Balancing Antenna Input Power Levels on Risers & Corridors",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ANT-INDOOR",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Antennas",
+      "series": "FMTCS-ANTI",
+      "model": "ANTI400R.M Indoor Ceiling Omni Antenna (3 dBi)",
+      "unit": "Unit",
+      "price_idr": 567000.0,
+      "price_usd": 35.0,
+      "cogs_usd": 22.0,
+      "boq_key": "bq_i_ant",
+      "desc_id": "Antena Indoor Plafon Omnidirectional 350-470 MHz, gain 3.0 dBi, polarisasi vertikal, VSWR <=1.5, radome ABS tahan api IP53.",
+      "desc_en": "Indoor Ceiling Omnidirectional Antenna 350-470 MHz, 3.0 dBi gain, vertical polarization, VSWR <=1.5, flame-retardant ABS radome IP53.",
+      "features": [
+        "3.0 dBi Gain",
+        "350-470 MHz",
+        "VSWR <=1.5",
+        "Ceiling Mount"
+      ],
+      "best_for_id": "Cakupan Indoor Gedung, Koridor, Data Hall & Basement",
+      "best_for_en": "In-Building Coverage, Corridors, Data Halls & Basements",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ANT-OUTOMNI",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Antennas",
+      "series": "FMTCS-ANTG",
+      "model": "ANTG400R.M Outdoor Fiberglass Omni Antenna (4 dBi)",
+      "unit": "Unit",
+      "price_idr": 1944000.0,
+      "price_usd": 120.0,
+      "cogs_usd": 80.0,
+      "boq_key": "bq_i_outo",
+      "desc_id": "Antena Outdoor Fiberglass Omnidirectional 350-470 MHz, gain 4.0 dBi, daya 100W, tahan angin 60 m/s, proteksi IP65.",
+      "desc_en": "Outdoor Fiberglass Omnidirectional Antenna 350-470 MHz, 4.0 dBi gain, 100W max power, 60 m/s wind rating, IP65 protection.",
+      "features": [
+        "4.0 dBi Gain",
+        "Fiberglass Radome",
+        "100W Rated",
+        "IP65 Outdoor"
+      ],
+      "best_for_id": "Cakupan Perimeter Luar Gedung & Area Kampus Terbuka",
+      "best_for_en": "Building Perimeter & Open Campus Outdoor Coverage",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ANT-OUTDIR",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Antennas",
+      "series": "FMTCS-ANTD",
+      "model": "ANTD400R.M Outdoor Directional Panel Antenna",
+      "unit": "Unit",
+      "price_idr": 2430000.0,
+      "price_usd": 150.0,
+      "cogs_usd": 100.0,
+      "boq_key": "bq_i_outd",
+      "desc_id": "Antena Outdoor Direksional Panel 350-470 MHz (beamwidth H:80 / V:60), rasio F/B >=15 dB, proteksi IP65.",
+      "desc_en": "Outdoor Directional Panel Antenna 350-470 MHz (H:80 / V:60 beamwidth), F/B ratio >=15 dB, IP65 protection.",
+      "features": [
+        "Directional 80",
+        "F/B >=15 dB",
+        "50W Rated",
+        "IP65 Outdoor"
+      ],
+      "best_for_id": "Terowongan, Loading Dock, Jalan Tambang & Sektor Terarah",
+      "best_for_en": "Tunnels, Loading Docks, Haul Roads & Sectorized Coverage",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-CAB-COAX12",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Cables & Connectors",
+      "series": "FMTCS-FEEDER",
+      "model": "HCAAYZ-50-12 Low-Loss 1/2\" RF Coaxial Cable (LSZH)",
+      "unit": "Meter",
+      "price_idr": 40500.0,
+      "price_usd": 2.5,
+      "cogs_usd": 1.65,
+      "boq_key": "bq_i_cable",
+      "desc_id": "Kabel Feeder Koaksial RF 1/2\" Low-Loss 50 Ohm, atenuasi ~6.5 dB/100m @ 400MHz, jaket LSZH tahan api untuk instalasi indoor.",
+      "desc_en": "1/2\" Low-Loss 50 Ohm RF Coaxial Feeder Cable, ~6.5 dB/100m attenuation @ 400MHz, flame-retardant LSZH jacket for indoor risers.",
+      "features": [
+        "6.5 dB/100m @ 400MHz",
+        "50 Ohm Impedance",
+        "LSZH Flame Retardant"
+      ],
+      "best_for_id": "Jalur Distribusi RF Horizontal & Riser Antar Lantai",
+      "best_for_en": "Horizontal & Riser RF Distribution Runs Across Floors",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ACC-NK",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Cables & Connectors",
+      "series": "FMTCS-CONN",
+      "model": "N-K 1/2\" RF Coaxial Connector & Weatherproofing Kit",
+      "unit": "Pcs",
+      "price_idr": 97200.0,
+      "price_usd": 6.0,
+      "cogs_usd": 3.8,
+      "boq_key": "bq_i_conn",
+      "desc_id": "Konektor RF N-Type 50 Ohm untuk kabel feeder 1/2\", PIM3 <=-150 dBc, VSWR <=1.15, lengkap dengan seal kedap air.",
+      "desc_en": "N-Type 50 Ohm RF Connector for 1/2\" feeder cable, PIM3 <=-150 dBc, VSWR <=1.15, complete with weatherproofing seal.",
+      "features": [
+        "N-Type 50 Ohm",
+        "PIM3 <=-150 dBc",
+        "VSWR <=1.15"
+      ],
+      "best_for_id": "Terminasi Kabel Feeder 1/2\" ke Splitter, Coupler & Antena",
+      "best_for_en": "Terminating 1/2\" Feeder Cable to Splitters, Couplers & Antennas",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ACC-FIBER",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Cables & Connectors",
+      "series": "FMTCS-OPTIC",
+      "model": "MNOFHC-SMD-50 Armored LC-LC Single-Mode Fiber Patch Cord",
+      "unit": "Pcs",
+      "price_idr": 243000.0,
+      "price_usd": 15.0,
+      "cogs_usd": 9.5,
+      "boq_key": "bq_i_fiber",
+      "desc_id": "Kabel Patch Cord Serat Optik Single-Mode Duplex LC/UPC-LC/UPC (1310/1550 nm) berlapis pelindung untuk interkoneksi OMU & ORU.",
+      "desc_en": "Armored Single-Mode Duplex LC/UPC-LC/UPC Optical Patch Cord (1310/1550 nm) for OMU & ORU interconnection.",
+      "features": [
+        "LC/UPC Duplex",
+        "Single-Mode G.652D",
+        "Insertion Loss <=0.3 dB"
+      ],
+      "best_for_id": "Koneksi Optik antara OMU, ODF, dan Unit ORU",
+      "best_for_en": "Optical Interconnect between OMU, ODF, and ORU Units",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-SW-OCC",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Software & NMS",
+      "series": "FMTCS-NMS",
+      "model": "FMTCS-OCC Optical Centralized Control & NMS Suite",
+      "unit": "Lisensi",
+      "price_idr": 40500000.0,
+      "price_usd": 2500.0,
+      "cogs_usd": 1650.0,
+      "boq_key": "bq_i_nms",
+      "desc_id": "Perangkat lunak manajemen jaringan terpusat (NMS) untuk pemantauan real-time alarm optik, VSWR, daya pancar, suhu, dan atenuasi seluruh unit OMU & ORU.",
+      "desc_en": "Centralized Network Management System (NMS) software for real-time monitoring of optical alarms, VSWR, output power, temperature, and attenuation across all OMU & ORU units.",
+      "features": [
+        "Real-time Telemetry",
+        "VSWR & Optical Alarm",
+        "Remote ATT Control"
+      ],
+      "best_for_id": "Ruang NOC / Command Center Gedung & Data Center",
+      "best_for_en": "Building & Data Center NOC / Command Center",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
     }
   ],
   "system_bundles": [
@@ -1481,6 +1872,186 @@
           "mandatory": true
         }
       ]
+    },
+    {
+      "bundle_id": "SYS-DAS-FMTCS-DIGITAL",
+      "name_id": "Paket Sistem RFoF DAS by FMTCS Digital Multi-Zona (DOMU + DORU)",
+      "name_en": "RFoF DAS by FMTCS Digital Multi-Zone System Package (DOMU + DORU)",
+      "category": "RFoF DAS by FMTCS",
+      "desc_id": "Paket lengkap RF over Fiber Distributed Antenna System (Digital C-RAN) untuk gedung bertingkat, data center, dan kampus hingga 32 zona ORU & jarak serat optik 20 km.",
+      "desc_en": "Complete Digital C-RAN RF over Fiber Distributed Antenna System package for high-rise buildings, data centers, and campuses up to 32 ORU zones & 20 km fiber reach.",
+      "components": [
+        {
+          "sku": "FMTCS-OMU-DIG",
+          "role_id": "Optical Master Unit Digital",
+          "role_en": "Digital Optical Master Unit",
+          "qty_formula": "1",
+          "default_qty": 1,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-ORU-DIG",
+          "role_id": "Optical Remote Unit Digital 10W",
+          "role_en": "Digital Optical Remote Unit 10W",
+          "qty_formula": "2",
+          "default_qty": 2,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-PAS-UDSS",
+          "role_id": "UL/DL Signal Splitter",
+          "role_en": "UL/DL Signal Splitter",
+          "qty_formula": "2",
+          "default_qty": 2,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-PAS-CFH8",
+          "role_id": "TX Cavity Combiner 8-Ch",
+          "role_en": "8-Ch TX Cavity Combiner",
+          "qty_formula": "1",
+          "default_qty": 1,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-PAS-DJF8",
+          "role_id": "RX Multicoupler 8-Way",
+          "role_en": "8-Way RX Multicoupler",
+          "qty_formula": "1",
+          "default_qty": 1,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-PAS-PD2",
+          "role_id": "Power Splitter 2-Way",
+          "role_en": "2-Way Power Splitter",
+          "qty_formula": "18",
+          "default_qty": 18,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-PAS-CP",
+          "role_id": "Directional Coupler",
+          "role_en": "Directional Coupler",
+          "qty_formula": "42",
+          "default_qty": 42,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-ANT-INDOOR",
+          "role_id": "Antena Indoor Plafon 3 dBi",
+          "role_en": "3 dBi Indoor Ceiling Antenna",
+          "qty_formula": "60",
+          "default_qty": 60,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-CAB-COAX12",
+          "role_id": "Kabel Coax 1/2\" LSZH (Meter)",
+          "role_en": "1/2\" LSZH Coax Cable (Meters)",
+          "qty_formula": "1800",
+          "default_qty": 1800,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-ACC-NK",
+          "role_id": "Konektor RF N-K 1/2\"",
+          "role_en": "N-K 1/2\" RF Connector",
+          "qty_formula": "360",
+          "default_qty": 360,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-ACC-FIBER",
+          "role_id": "Patch Cord Serat Optik LC-LC",
+          "role_en": "LC-LC Fiber Patch Cord",
+          "qty_formula": "6",
+          "default_qty": 6,
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "bundle_id": "SYS-DAS-FMTCS-ANALOG",
+      "name_id": "Paket Sistem RFoF DAS by FMTCS Analog (AOMU + AORU)",
+      "name_en": "RFoF DAS by FMTCS Analog System Package (AOMU + AORU)",
+      "category": "RFoF DAS by FMTCS",
+      "desc_id": "Paket hemat RF over Fiber Distributed Antenna System (Analog RFoF) untuk gedung menengah, parkir basement, dan pabrik hingga 4 zona ORU & jarak serat optik 8 km.",
+      "desc_en": "Cost-effective Analog RF over Fiber Distributed Antenna System package for mid-sized buildings, basements, and factories up to 4 ORU zones & 8 km fiber reach.",
+      "components": [
+        {
+          "sku": "FMTCS-OMU-ANA",
+          "role_id": "Optical Master Unit Analog",
+          "role_en": "Analog Optical Master Unit",
+          "qty_formula": "1",
+          "default_qty": 1,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-ORU-ANA",
+          "role_id": "Optical Remote Unit Analog 10W",
+          "role_en": "Analog Optical Remote Unit 10W",
+          "qty_formula": "1",
+          "default_qty": 1,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-PAS-UDSS",
+          "role_id": "UL/DL Signal Splitter",
+          "role_en": "UL/DL Signal Splitter",
+          "qty_formula": "2",
+          "default_qty": 2,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-PAS-PD2",
+          "role_id": "Power Splitter 2-Way",
+          "role_en": "2-Way Power Splitter",
+          "qty_formula": "9",
+          "default_qty": 9,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-PAS-CP",
+          "role_id": "Directional Coupler",
+          "role_en": "Directional Coupler",
+          "qty_formula": "20",
+          "default_qty": 20,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-ANT-INDOOR",
+          "role_id": "Antena Indoor Plafon 3 dBi",
+          "role_en": "3 dBi Indoor Ceiling Antenna",
+          "qty_formula": "30",
+          "default_qty": 30,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-CAB-COAX12",
+          "role_id": "Kabel Coax 1/2\" LSZH (Meter)",
+          "role_en": "1/2\" LSZH Coax Cable (Meters)",
+          "qty_formula": "900",
+          "default_qty": 900,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-ACC-NK",
+          "role_id": "Konektor RF N-K 1/2\"",
+          "role_en": "N-K 1/2\" RF Connector",
+          "qty_formula": "180",
+          "default_qty": 180,
+          "mandatory": true
+        },
+        {
+          "sku": "FMTCS-ACC-FIBER",
+          "role_id": "Patch Cord Serat Optik LC-LC",
+          "role_en": "LC-LC Fiber Patch Cord",
+          "qty_formula": "3",
+          "default_qty": 3,
+          "mandatory": true
+        }
+      ]
     }
   ],
   "industry_rf_params": [
@@ -1653,6 +2224,399 @@
       "ht_primary_sku": "MOT-HT-R2",
       "ht_secondary_sku": "MOT-HT-SL1M",
       "mobile_sku": "MOT-MB-M8260I"
+    }
+  ],
+  "rfof_das_catalog": [
+    {
+      "sku": "FMTCS-OMU-DIG",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Active Optical",
+      "series": "FMTCS-LRFN",
+      "model": "DOMU400C.RI Digital Optical Master Unit",
+      "unit": "Unit",
+      "price_idr": 72900000.0,
+      "price_usd": 4500.0,
+      "cogs_usd": 3150.0,
+      "boq_key": "bq_i_omu",
+      "desc_id": "Optical Master Unit (OMU) Digital C-RAN 350/400 MHz (410-440 MHz), mendukung hingga 32 unit DORU, jangkauan serat optik <=20 km, topologi Star/Cascade/Ring, 19\" 2U Rackmount.",
+      "desc_en": "Digital C-RAN Optical Master Unit (OMU) 350/400 MHz (410-440 MHz), supports up to 32 DORU units, <=20 km fiber reach, Star/Cascade/Ring topology, 19\" 2U Rackmount.",
+      "features": [
+        "Digital RFoF",
+        "Max 32 ORU",
+        "<=20 km SMF",
+        "Star/Cascade/Ring",
+        "NMS OCC"
+      ],
+      "best_for_id": "Data Center, Gedung Bertingkat Tinggi, Bandara, Terowongan & Kampus Multi-Zona",
+      "best_for_en": "Data Centers, High-Rise Buildings, Airports, Tunnels & Multi-Zone Campuses",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-OMU-ANA",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Active Optical",
+      "series": "FMTCS-LRFN",
+      "model": "AOMU400C.RI Analog Optical Master Unit",
+      "unit": "Unit",
+      "price_idr": 45360000.0,
+      "price_usd": 2800.0,
+      "cogs_usd": 1950.0,
+      "boq_key": "bq_i_omu",
+      "desc_id": "Optical Master Unit (OMU) Analog RFoF 350/400 MHz (410-470 MHz), mendukung hingga 4 unit AORU, jangkauan serat optik <=8 km, latensi ultra-rendah <=3 us.",
+      "desc_en": "Analog RFoF Optical Master Unit (OMU) 350/400 MHz (410-470 MHz), supports up to 4 AORU units, <=8 km fiber reach, ultra-low latency <=3 us.",
+      "features": [
+        "Analog RFoF",
+        "Max 4 ORU",
+        "<=8 km SMF",
+        "Latency <=3 us",
+        "19\" 2U"
+      ],
+      "best_for_id": "Gedung Menengah, Basement Parkir, Gudang Logistik & Pabrik",
+      "best_for_en": "Mid-sized Buildings, Parking Basements, Warehouses & Factories",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ORU-DIG",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Active Optical",
+      "series": "FMTCS-LRFF",
+      "model": "DORU400CH.RI Digital Optical Remote Unit (10W)",
+      "unit": "Unit",
+      "price_idr": 51840000.0,
+      "price_usd": 3200.0,
+      "cogs_usd": 2250.0,
+      "boq_key": "bq_i_oru",
+      "desc_id": "Optical Remote Unit (ORU) Digital daya tinggi 10W (+40+-2 dBm DL), penguatan >=50 dB, dual port optik LC untuk kaskade/ring, sasis aluminium IP65.",
+      "desc_en": "High-Power 10W (+40+-2 dBm DL) Digital Optical Remote Unit (ORU), >=50 dB gain, dual LC optical ports for cascade/ring, IP65 aluminum enclosure.",
+      "features": [
+        "10W (+40 dBm)",
+        "Digital Sync",
+        "Dual LC Fiber",
+        "IP65 Weatherproof",
+        "Max ~32 Antennas"
+      ],
+      "best_for_id": "Distribusi RF Multi-Lantai, Data Hall, Area Pabrik & Kampus",
+      "best_for_en": "Multi-Floor RF Distribution, Data Halls, Industrial Plants & Campuses",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ORU-ANA",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Active Optical",
+      "series": "FMTCS-LRFF",
+      "model": "AORU400CH.RI Analog Optical Remote Unit (10W)",
+      "unit": "Unit",
+      "price_idr": 31590000.0,
+      "price_usd": 1950.0,
+      "cogs_usd": 1350.0,
+      "boq_key": "bq_i_oru",
+      "desc_id": "Optical Remote Unit (ORU) Analog 10W (+40+-2 dBm DL), atenuasi step 0-31 dB, jangkauan optik <=8 km, proteksi IP65.",
+      "desc_en": "Analog 10W (+40+-2 dBm DL) Optical Remote Unit (ORU), 0-31 dB step attenuator, <=8 km optical reach, IP65 protection.",
+      "features": [
+        "10W (+40 dBm)",
+        "Analog RFoF",
+        "ATT 0-31 dB",
+        "IP65 Rugged"
+      ],
+      "best_for_id": "Ekspansi Cakupan Indoor Zona Tunggal hingga 4 Zona",
+      "best_for_en": "Single-to-4-Zone Indoor Coverage Expansion",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-UDSS",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-LRF/S",
+      "model": "UDSS400C.M UL/DL Signal Splitter (4/6-Port)",
+      "unit": "Unit",
+      "price_idr": 7290000.0,
+      "price_usd": 450.0,
+      "cogs_usd": 310.0,
+      "boq_key": "bq_i_sig",
+      "desc_id": "Pemisah sinyal Uplink/Downlink 350-470 MHz (4/6 port), redaman sisip <=1.0 dB, kopling 30+-1 dB, daya input maks 50W untuk proteksi OMU dari repeater.",
+      "desc_en": "Uplink/Downlink Signal Splitter 350-470 MHz (4/6 ports), insertion loss <=1.0 dB, coupling 30+-1 dB, 50W max input protecting OMU from repeater.",
+      "features": [
+        "350-470 MHz",
+        "IL <=1.0 dB",
+        "Coupling 30 dB",
+        "50W Rated",
+        "19\" 1U"
+      ],
+      "best_for_id": "Antarmuka Headend antara Repeater SLR 5300 & OMU FMTCS",
+      "best_for_en": "Headend Interface between SLR 5300 Repeaters & FMTCS OMU",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-CFH8",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-CFH",
+      "model": "BCFH4008.RI 8-Channel TX Cavity Combiner",
+      "unit": "Unit",
+      "price_idr": 19440000.0,
+      "price_usd": 1200.0,
+      "cogs_usd": 840.0,
+      "boq_key": "bq_i_comb",
+      "desc_id": "Combiner TX 8-kanal (tersedia 2/4/8 port) 350-470 MHz, daya input 50W/kanal, isolasi antar port >=45 dB, VSWR <=1.25.",
+      "desc_en": "8-Channel TX Cavity Combiner (2/4/8 port options) 350-470 MHz, 50W/port input, >=45 dB inter-port isolation, VSWR <=1.25.",
+      "features": [
+        "2/4/8 Ports",
+        "50W/Port",
+        "Isolation >=45 dB",
+        "VSWR <=1.25"
+      ],
+      "best_for_id": "Menggabungkan Multi-Repeater TX ke Headend DAS",
+      "best_for_en": "Combining Multi-Repeater TX into DAS Headend",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-DJF8",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-DJF",
+      "model": "PDJF4008.M 8-Way RX Multicoupler / Divider",
+      "unit": "Unit",
+      "price_idr": 15390000.0,
+      "price_usd": 950.0,
+      "cogs_usd": 665.0,
+      "boq_key": "bq_i_mux",
+      "desc_id": "Multicoupler penerima RX 8-arah (tersedia 2/4/8 port) 350-470 MHz dengan LNA low-noise figure <=2.5 dB dan isolasi >=18 dB.",
+      "desc_en": "8-Way RX Receiver Multicoupler (2/4/8 port options) 350-470 MHz with LNA noise figure <=2.5 dB and >=18 dB isolation.",
+      "features": [
+        "2/4/8 Ports",
+        "NF <=2.5 dB",
+        "Isolation >=18 dB",
+        "19\" Rackmount"
+      ],
+      "best_for_id": "Mendistribusikan Uplink RX dari OMU ke Multi-Repeater",
+      "best_for_en": "Distributing Uplink RX from OMU to Multi-Repeaters",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-SGQ",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-SGQ",
+      "model": "DSGQ400C.RI Bandpass Cavity Duplexer (50W)",
+      "unit": "Unit",
+      "price_idr": 10530000.0,
+      "price_usd": 650.0,
+      "cogs_usd": 450.0,
+      "boq_key": "bq_i_dup",
+      "desc_id": "Duplexer Cavity 50W 350-470 MHz, insertion loss <=2.5 dB, isolasi TX-RX >=80 dB, konektor N-Female.",
+      "desc_en": "50W Cavity Duplexer 350-470 MHz, insertion loss <=2.5 dB, TX-RX isolation >=80 dB, N-Female connectors.",
+      "features": [
+        "50W Continuous",
+        "IL <=2.5 dB",
+        "Isolation >=80 dB",
+        "N-Female"
+      ],
+      "best_for_id": "Pemisahan Uplink & Downlink Repeater / Headend DAS",
+      "best_for_en": "Repeater / DAS Headend Uplink & Downlink Separation",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-PD2",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-PD",
+      "model": "PD400R.M 2-Way RF Power Splitter",
+      "unit": "Unit",
+      "price_idr": 729000.0,
+      "price_usd": 45.0,
+      "cogs_usd": 28.0,
+      "boq_key": "bq_i_split",
+      "desc_id": "Power Splitter 2-arah 350-470 MHz, redaman total <=3.3 dB, daya 50W, VSWR <=1.25, IP65.",
+      "desc_en": "2-Way RF Power Splitter 350-470 MHz, total loss <=3.3 dB, 50W rating, VSWR <=1.25, IP65.",
+      "features": [
+        "350-470 MHz",
+        "Loss <=3.3 dB",
+        "50W Rating",
+        "IP65"
+      ],
+      "best_for_id": "Pembagian Cabang Feeder Coax Antar Zona Lantai",
+      "best_for_en": "Coax Feeder Branch Splitting Across Floor Zones",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-PAS-CP",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Passive RF",
+      "series": "FMTCS-CP",
+      "model": "CP400R.M Directional Coupler (6/10/15/20 dB)",
+      "unit": "Unit",
+      "price_idr": 891000.0,
+      "price_usd": 55.0,
+      "cogs_usd": 35.0,
+      "boq_key": "bq_i_coup",
+      "desc_id": "Directional Coupler 350-470 MHz (pilihan tap 6/10/15/20/30 dB), daya 100W, direktivitas >=20 dB, IP65.",
+      "desc_en": "Directional Coupler 350-470 MHz (6/10/15/20/30 dB tap options), 100W rating, directivity >=20 dB, IP65.",
+      "features": [
+        "6/10/15/20 dB",
+        "100W Rating",
+        "Directivity >=20 dB",
+        "IP65"
+      ],
+      "best_for_id": "Penyeimbangan Level Daya Input Antena di Riser & Koridor",
+      "best_for_en": "Balancing Antenna Input Power Levels on Risers & Corridors",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ANT-INDOOR",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Antennas",
+      "series": "FMTCS-ANTI",
+      "model": "ANTI400R.M Indoor Ceiling Omni Antenna (3 dBi)",
+      "unit": "Unit",
+      "price_idr": 567000.0,
+      "price_usd": 35.0,
+      "cogs_usd": 22.0,
+      "boq_key": "bq_i_ant",
+      "desc_id": "Antena Indoor Plafon Omnidirectional 350-470 MHz, gain 3.0 dBi, polarisasi vertikal, VSWR <=1.5, radome ABS tahan api IP53.",
+      "desc_en": "Indoor Ceiling Omnidirectional Antenna 350-470 MHz, 3.0 dBi gain, vertical polarization, VSWR <=1.5, flame-retardant ABS radome IP53.",
+      "features": [
+        "3.0 dBi Gain",
+        "350-470 MHz",
+        "VSWR <=1.5",
+        "Ceiling Mount"
+      ],
+      "best_for_id": "Cakupan Indoor Gedung, Koridor, Data Hall & Basement",
+      "best_for_en": "In-Building Coverage, Corridors, Data Halls & Basements",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ANT-OUTOMNI",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Antennas",
+      "series": "FMTCS-ANTG",
+      "model": "ANTG400R.M Outdoor Fiberglass Omni Antenna (4 dBi)",
+      "unit": "Unit",
+      "price_idr": 1944000.0,
+      "price_usd": 120.0,
+      "cogs_usd": 80.0,
+      "boq_key": "bq_i_outo",
+      "desc_id": "Antena Outdoor Fiberglass Omnidirectional 350-470 MHz, gain 4.0 dBi, daya 100W, tahan angin 60 m/s, proteksi IP65.",
+      "desc_en": "Outdoor Fiberglass Omnidirectional Antenna 350-470 MHz, 4.0 dBi gain, 100W max power, 60 m/s wind rating, IP65 protection.",
+      "features": [
+        "4.0 dBi Gain",
+        "Fiberglass Radome",
+        "100W Rated",
+        "IP65 Outdoor"
+      ],
+      "best_for_id": "Cakupan Perimeter Luar Gedung & Area Kampus Terbuka",
+      "best_for_en": "Building Perimeter & Open Campus Outdoor Coverage",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ANT-OUTDIR",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Antennas",
+      "series": "FMTCS-ANTD",
+      "model": "ANTD400R.M Outdoor Directional Panel Antenna",
+      "unit": "Unit",
+      "price_idr": 2430000.0,
+      "price_usd": 150.0,
+      "cogs_usd": 100.0,
+      "boq_key": "bq_i_outd",
+      "desc_id": "Antena Outdoor Direksional Panel 350-470 MHz (beamwidth H:80 / V:60), rasio F/B >=15 dB, proteksi IP65.",
+      "desc_en": "Outdoor Directional Panel Antenna 350-470 MHz (H:80 / V:60 beamwidth), F/B ratio >=15 dB, IP65 protection.",
+      "features": [
+        "Directional 80",
+        "F/B >=15 dB",
+        "50W Rated",
+        "IP65 Outdoor"
+      ],
+      "best_for_id": "Terowongan, Loading Dock, Jalan Tambang & Sektor Terarah",
+      "best_for_en": "Tunnels, Loading Docks, Haul Roads & Sectorized Coverage",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-CAB-COAX12",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Cables & Connectors",
+      "series": "FMTCS-FEEDER",
+      "model": "HCAAYZ-50-12 Low-Loss 1/2\" RF Coaxial Cable (LSZH)",
+      "unit": "Meter",
+      "price_idr": 40500.0,
+      "price_usd": 2.5,
+      "cogs_usd": 1.65,
+      "boq_key": "bq_i_cable",
+      "desc_id": "Kabel Feeder Koaksial RF 1/2\" Low-Loss 50 Ohm, atenuasi ~6.5 dB/100m @ 400MHz, jaket LSZH tahan api untuk instalasi indoor.",
+      "desc_en": "1/2\" Low-Loss 50 Ohm RF Coaxial Feeder Cable, ~6.5 dB/100m attenuation @ 400MHz, flame-retardant LSZH jacket for indoor risers.",
+      "features": [
+        "6.5 dB/100m @ 400MHz",
+        "50 Ohm Impedance",
+        "LSZH Flame Retardant"
+      ],
+      "best_for_id": "Jalur Distribusi RF Horizontal & Riser Antar Lantai",
+      "best_for_en": "Horizontal & Riser RF Distribution Runs Across Floors",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ACC-NK",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Cables & Connectors",
+      "series": "FMTCS-CONN",
+      "model": "N-K 1/2\" RF Coaxial Connector & Weatherproofing Kit",
+      "unit": "Pcs",
+      "price_idr": 97200.0,
+      "price_usd": 6.0,
+      "cogs_usd": 3.8,
+      "boq_key": "bq_i_conn",
+      "desc_id": "Konektor RF N-Type 50 Ohm untuk kabel feeder 1/2\", PIM3 <=-150 dBc, VSWR <=1.15, lengkap dengan seal kedap air.",
+      "desc_en": "N-Type 50 Ohm RF Connector for 1/2\" feeder cable, PIM3 <=-150 dBc, VSWR <=1.15, complete with weatherproofing seal.",
+      "features": [
+        "N-Type 50 Ohm",
+        "PIM3 <=-150 dBc",
+        "VSWR <=1.15"
+      ],
+      "best_for_id": "Terminasi Kabel Feeder 1/2\" ke Splitter, Coupler & Antena",
+      "best_for_en": "Terminating 1/2\" Feeder Cable to Splitters, Couplers & Antennas",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-ACC-FIBER",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Cables & Connectors",
+      "series": "FMTCS-OPTIC",
+      "model": "MNOFHC-SMD-50 Armored LC-LC Single-Mode Fiber Patch Cord",
+      "unit": "Pcs",
+      "price_idr": 243000.0,
+      "price_usd": 15.0,
+      "cogs_usd": 9.5,
+      "boq_key": "bq_i_fiber",
+      "desc_id": "Kabel Patch Cord Serat Optik Single-Mode Duplex LC/UPC-LC/UPC (1310/1550 nm) berlapis pelindung untuk interkoneksi OMU & ORU.",
+      "desc_en": "Armored Single-Mode Duplex LC/UPC-LC/UPC Optical Patch Cord (1310/1550 nm) for OMU & ORU interconnection.",
+      "features": [
+        "LC/UPC Duplex",
+        "Single-Mode G.652D",
+        "Insertion Loss <=0.3 dB"
+      ],
+      "best_for_id": "Koneksi Optik antara OMU, ODF, dan Unit ORU",
+      "best_for_en": "Optical Interconnect between OMU, ODF, and ORU Units",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+    },
+    {
+      "sku": "FMTCS-SW-OCC",
+      "cat": "RFoF DAS by FMTCS",
+      "sub_cat": "Software & NMS",
+      "series": "FMTCS-NMS",
+      "model": "FMTCS-OCC Optical Centralized Control & NMS Suite",
+      "unit": "Lisensi",
+      "price_idr": 40500000.0,
+      "price_usd": 2500.0,
+      "cogs_usd": 1650.0,
+      "boq_key": "bq_i_nms",
+      "desc_id": "Perangkat lunak manajemen jaringan terpusat (NMS) untuk pemantauan real-time alarm optik, VSWR, daya pancar, suhu, dan atenuasi seluruh unit OMU & ORU.",
+      "desc_en": "Centralized Network Management System (NMS) software for real-time monitoring of optical alarms, VSWR, output power, temperature, and attenuation across all OMU & ORU units.",
+      "features": [
+        "Real-time Telemetry",
+        "VSWR & Optical Alarm",
+        "Remote ATT Control"
+      ],
+      "best_for_id": "Ruang NOC / Command Center Gedung & Data Center",
+      "best_for_en": "Building & Data Center NOC / Command Center",
+      "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
     }
   ]
 }

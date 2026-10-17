@@ -35,6 +35,7 @@
     <script src="/js/i18n.js"></script>
     <script src="/js/engines.js"></script>
     <script src="/js/exporters.js"></script>
+    <script src="/js/das_engine.js"></script>
     <script src="/js/app_core.js"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
@@ -248,6 +249,23 @@
                         </div>
                         <p class="text-[11px] text-sky-100/90 font-medium hidden sm:block" x-text="t('appSubtitle')"></p>
                     </div>
+                </div>
+
+                <!-- Prominent Workspace Switcher (Top Header) -->
+                <div class="hidden md:flex items-center bg-slate-900/65 p-1 rounded-xl border border-white/20 shadow-inner gap-1">
+                    <button @click="activeWorkspace = 'dmr'"
+                            :class="activeWorkspace === 'dmr' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
+                            class="px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
+                        <span>📡</span>
+                        <span>DMR System Planner</span>
+                    </button>
+                    <button @click="activeWorkspace = 'das'"
+                            :class="activeWorkspace === 'das' ? 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
+                            class="px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
+                        <span>🏢</span>
+                        <span>RFoF DAS by FMTCS</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[9px] bg-amber-400 text-slate-950 font-black uppercase tracking-tight">RF over Fiber DAS</span>
+                    </button>
                 </div>
 
                 <!-- Pojok Kanan Atas: (2) Pilihan Bahasa di sebelah kiri (1) Info Login User & Logout -->
@@ -467,8 +485,8 @@
                 </div>
             </div>
 
-        <!-- Navigation Tabs (Desktop / Tablet view) -->
-        <div class="hidden md:block bg-slate-900/35 border-t border-white/10">
+        <!-- Navigation Tabs: DMR System Planner (When activeWorkspace === 'dmr') -->
+        <div x-show="activeWorkspace === 'dmr'" class="hidden md:block bg-slate-900/35 border-t border-white/10">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto no-scrollbar gap-1 py-1.5">
                 <button @click="activeTab = 'sizing'"
                         :class="activeTab === 'sizing' ? 'bg-white text-blue-950 font-bold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
@@ -495,6 +513,59 @@
                     <span x-text="t('navConfigurator')"></span>
                     <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-900 text-amber-300 font-extrabold" x-text="systemPackages.length"></span>
                 </button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs: RFoF DAS by FMTCS (When activeWorkspace === 'das') -->
+        <div x-show="activeWorkspace === 'das'" class="hidden md:block bg-slate-900/40 border-t border-white/10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto no-scrollbar gap-1 py-1.5 items-center justify-between">
+                <div class="flex overflow-x-auto no-scrollbar gap-1">
+                    <button @click="dasActiveTab = 'boq'"
+                            :class="dasActiveTab === 'boq' ? 'bg-white text-indigo-950 font-extrabold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5">
+                        <span>🏢</span>
+                        <span x-text="lang === 'en' ? '1. BoQ & Multi-Floor Topology' : '1. BoQ & Topologi Multi-Lantai'"></span>
+                    </button>
+                    <button @click="dasActiveTab = 'link'"
+                            :class="dasActiveTab === 'link' ? 'bg-white text-indigo-950 font-extrabold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5">
+                        <span>📶</span>
+                        <span x-text="lang === 'en' ? '2. Link Budget & Antenna Planner' : '2. Link Budget & Planner Antena'"></span>
+                    </button>
+                    <button @click="dasActiveTab = 'conv'"
+                            :class="dasActiveTab === 'conv' ? 'bg-white text-indigo-950 font-extrabold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5">
+                        <span>⚡</span>
+                        <span x-text="lang === 'en' ? '3. RF & VSWR Conversions' : '3. Konversi RF & VSWR'"></span>
+                    </button>
+                    <button @click="dasActiveTab = 'cov'"
+                            :class="dasActiveTab === 'cov' ? 'bg-white text-indigo-950 font-extrabold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5">
+                        <span>📡</span>
+                        <span x-text="lang === 'en' ? '4. Outdoor Coverage (Okumura-Hata)' : '4. Cakupan Outdoor (Okumura-Hata)'"></span>
+                    </button>
+                    <button @click="dasActiveTab = 'comm'"
+                            :class="dasActiveTab === 'comm' ? 'bg-white text-indigo-950 font-extrabold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5">
+                        <span>📋</span>
+                        <span x-text="lang === 'en' ? '5. Commissioning & SAT PDF Report' : '5. Commissioning & Laporan SAT PDF'"></span>
+                    </button>
+                    <button @click="dasActiveTab = 'prod'"
+                            :class="dasActiveTab === 'prod' ? 'bg-white text-indigo-950 font-extrabold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5">
+                        <span>📦</span>
+                        <span x-text="lang === 'en' ? '6. FMTCS Device Catalog' : '6. Katalog Perangkat FMTCS'"></span>
+                    </button>
+                </div>
+                <!-- Bridge Action Shortcut -->
+                <div class="hidden lg:flex items-center gap-2 pl-3 border-l border-white/20">
+                    <button @click="injectDasBoqToMasterBoq()"
+                            class="px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs shadow-sm transition flex items-center gap-1 cursor-pointer"
+                            title="Tambahkan seluruh item DAS ke BoQ DMR Utama">
+                        <span>📥</span>
+                        <span x-text="lang === 'en' ? 'Inject to DMR BoQ' : 'Kirim ke BoQ DMR'"></span>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -534,6 +605,11 @@
                 </div>
             </div>
         </section>
+
+        <!-- ══════════════════════════════════════════════════════════════ -->
+        <!-- WORKSPACE 1: DMR SYSTEM PLANNER MODULES                         -->
+        <!-- ══════════════════════════════════════════════════════════════ -->
+        <div x-show="activeWorkspace === 'dmr'" class="space-y-4 sm:space-y-6">
 
         <!-- ══════════════════════════════════════════════════════════════════ -->
         <!-- MODULE 1: RF & SYSTEM SIZING CALCULATOR                           -->
@@ -747,6 +823,30 @@
                             <div class="text-sm font-extrabold text-slate-900 mt-0.5" x-text="sizingResult.upsRecommendedVA + ' VA UPS'"></div>
                             <div class="text-[11px] text-amber-700 font-medium" x-text="sizingResult.batteryAh + ' Ah Battery (' + sizingResult.backupHours + 'h)'"></div>
                         </div>
+                    </div>
+
+                    <!-- Prominent Bridge Button to RFoF DAS by FMTCS -->
+                    <div class="mt-3 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-blue-950 via-indigo-900 to-sky-950 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md border border-sky-400/30">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center text-xl font-black shadow shrink-0">
+                                🏢
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-black tracking-wide uppercase text-amber-300">RFoF DAS by FMTCS</span>
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded bg-sky-400/20 text-sky-200 border border-sky-400/30 font-bold uppercase">RF over Fiber DAS</span>
+                                </div>
+                                <div class="text-[11px] text-sky-100 font-medium mt-0.5">
+                                    <span x-text="lang === 'en' ? 'Seamlessly extend DMR repeater & building coverage into multi-floor C-RAN active optical DAS.' : 'Perluas jangkauan repeater DMR & gedung bertingkat ke arsitektur aktif C-RAN DAS.'"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button @click="expandDmrToRfofDas()"
+                                class="px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                            <span>🏢</span>
+                            <span x-text="lang === 'en' ? '🏢 Expand to RFoF DAS by FMTCS' : '🏢 Perluas ke RFoF DAS by FMTCS'"></span>
+                            <span>→</span>
+                        </button>
                     </div>
                 </div>
 
@@ -2219,19 +2319,1280 @@
                                         <span x-text="t('cfgPackageSellPrice')">Harga Penawaran Paket:</span>
                                         <span class="text-base text-amber-300" x-text="formatCurrency(currency === 'USD' ? calculatePackageBom(pkg).totalSellUsd : calculatePackageBom(pkg).totalSellIdr)"></span>
                                     </div>
-                                    <p class="text-[10px] text-slate-400 text-center" x-text="t('cfgPriceBeforeVat')">Harga sebelum PPN • Termasuk margin terkonfigurasi</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </template>
+            </div>
+        </div>
+        </div>
+        <!-- ══════════════════ END WORKSPACE 1: DMR ══════════════════════ -->
+
+        <!-- ══════════════════════════════════════════════════════════════ -->
+        <!-- WORKSPACE 2: RFoF DAS by FMTCS                                  -->
+        <!-- (RF over Fiber Distributed Antenna System)                      -->
+        <!-- ══════════════════════════════════════════════════════════════ -->
+        <div x-show="activeWorkspace === 'das'" class="space-y-6">
+
+            <!-- 1. Top Header Banner -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 rounded-2xl p-5 sm:p-6 text-white shadow-xl border border-indigo-500/30">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div class="space-y-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 shadow-sm">
+                                C-RAN Optical DAS Suite
+                            </span>
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                                FMTCS Fiber Tech
+                            </span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                                PT CDPK Certified
+                            </span>
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                            <span>🏢</span>
+                            <span>RFoF DAS by FMTCS</span>
+                        </h2>
+                        <p class="text-xs sm:text-sm text-sky-200 font-semibold tracking-wide">
+                            RF over Fiber Distributed Antenna System
+                        </p>
+                        <p class="text-[11px] sm:text-xs text-slate-300 max-w-3xl leading-relaxed">
+                            <span x-text="lang === 'en'
+                                ? 'Enterprise Active Optical DAS Solution Suite. Connects DMR/TETRA Base Station Repeaters to multi-floor optical remote units (ORUs) with ultra-low latency, zero RF coaxial loss over single-mode fiber, and verified Site Acceptance Test (SAT) commissioning.'
+                                : 'Suite Solusi Active Optical DAS Enterprise. Menghubungkan Repeater Base Station DMR/TETRA ke unit remote optik (ORU) multi-lantai dengan latensi rendah, transmisi serat optik bebas redaman koaksial, dan berita acara uji terima (SAT) tersertifikasi.'"></span>
+                        </p>
+                    </div>
+
+                    <!-- Right Quick Actions -->
+                    <div class="flex flex-wrap items-center gap-2 lg:flex-col lg:items-end">
+                        <div class="flex items-center gap-2">
+                            <button @click="expandDmrToRfofDas()"
+                                    class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                                <span>🔄</span>
+                                <span x-text="lang === 'en' ? 'Sync from DMR Sizing' : 'Sinkronkan dari Sizing DMR'"></span>
+                            </button>
+                            <button @click="injectDasBoqToMasterBoq()"
+                                    class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-white shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                                <span>📥</span>
+                                <span x-text="lang === 'en' ? 'Inject to Master BoQ' : 'Kirim ke BoQ Utama'"></span>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button @click="exportDasBoqCsv()"
+                                    class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-sky-100 transition flex items-center gap-1.5 cursor-pointer">
+                                <span>📄</span>
+                                <span x-text="lang === 'en' ? 'Export CSV' : 'Ekspor CSV'"></span>
+                            </button>
+                            <button @click="generateDasHandoffQr()"
+                                    class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-sky-100 transition flex items-center gap-1.5 cursor-pointer">
+                                <span>📱</span>
+                                <span x-text="lang === 'en' ? 'Handoff QR' : 'QR Handoff'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-nav pills (Mobile & Tablet view) -->
+                <div class="mt-4 pt-3 border-t border-white/10 flex md:hidden overflow-x-auto no-scrollbar gap-1.5">
+                    <button @click="dasActiveTab = 'boq'"
+                            :class="dasActiveTab === 'boq' ? 'bg-amber-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">1. BoQ & Topo</button>
+                    <button @click="dasActiveTab = 'link'"
+                            :class="dasActiveTab === 'link' ? 'bg-amber-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">2. Link Budget</button>
+                    <button @click="dasActiveTab = 'conv'"
+                            :class="dasActiveTab === 'conv' ? 'bg-amber-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">3. Konversi RF</button>
+                    <button @click="dasActiveTab = 'cov'"
+                            :class="dasActiveTab === 'cov' ? 'bg-amber-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">4. Okumura-Hata</button>
+                    <button @click="dasActiveTab = 'comm'"
+                            :class="dasActiveTab === 'comm' ? 'bg-amber-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">5. SAT Report</button>
+                    <button @click="dasActiveTab = 'prod'"
+                            :class="dasActiveTab === 'prod' ? 'bg-amber-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">6. Katalog</button>
                 </div>
             </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 1: BOQ & MULTI-FLOOR TOPOLOGY (dasActiveTab === 'boq')    -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="dasActiveTab === 'boq'" class="space-y-6">
+
+                <!-- 1. Architecture Mode & Optical Topology Controls Card -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600" x-text="lang === 'en' ? 'DAS Architecture & Optical Routing' : 'Arsitektur DAS & Routing Optik'"></span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'System Sizing & Fiber Distribution Parameters' : 'Parameter Sizing Sistem & Distribusi Fiber Optik'"></h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+                                  :class="das.archMode === 'digital' ? 'bg-blue-100 text-blue-800 border border-blue-300' : 'bg-purple-100 text-purple-800 border border-purple-300'"
+                                  x-text="das.archMode === 'digital' ? 'Digital C-RAN (CPRI)' : 'Analog Direct RFoF'"></span>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800 border border-slate-300 uppercase"
+                                  x-text="'Topologi ' + das.fiberTopo"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                        <!-- Arch Mode Selector -->
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                            <label class="block text-[11px] font-bold uppercase text-slate-600" x-text="lang === 'en' ? 'Architecture Mode' : 'Mode Arsitektur DAS'"></label>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button type="button" @click="das.archMode = 'digital'"
+                                        :class="das.archMode === 'digital' ? 'bg-indigo-600 text-white font-extrabold shadow-sm' : 'bg-white text-slate-700 border border-slate-300'"
+                                        class="py-2 px-2 rounded-lg text-center transition cursor-pointer">
+                                    <div class="font-bold">Digital C-RAN</div>
+                                    <div class="text-[9px] opacity-80">DOMU / DORU</div>
+                                </button>
+                                <button type="button" @click="das.archMode = 'analog'"
+                                        :class="das.archMode === 'analog' ? 'bg-indigo-600 text-white font-extrabold shadow-sm' : 'bg-white text-slate-700 border border-slate-300'"
+                                        class="py-2 px-2 rounded-lg text-center transition cursor-pointer">
+                                    <div class="font-bold">Analog RFoF</div>
+                                    <div class="text-[9px] opacity-80">AOMU / AORU</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Optical Topology Selector -->
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                            <label class="block text-[11px] font-bold uppercase text-slate-600" x-text="lang === 'en' ? 'Fiber Topology' : 'Topologi Jaringan Optik'"></label>
+                            <select x-model="das.fiberTopo"
+                                    class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white font-bold text-xs text-slate-800 focus:border-indigo-600 focus:outline-none">
+                                <option value="star">Star / Home-Run (Dedicated Core)</option>
+                                <option value="cascade">Cascade / Daisy-Chain (Optical Tap)</option>
+                                <option value="ring">Redundant Ring (Self-Healing)</option>
+                            </select>
+                            <div class="text-[10px] text-slate-500" x-text="das.fiberTopo === 'ring' ? (lang === 'en' ? 'Dual-fiber redundant ring with automatic sub-50ms optical failover' : 'Dual-ring optik redundan dengan proteksi failover otomatis < 50ms') : (das.fiberTopo === 'cascade' ? (lang === 'en' ? 'Single fiber run with optical tap splitters per remote unit' : 'Satu jalur fiber optik berantai dengan optical tap per ORU') : (lang === 'en' ? 'Dedicated fiber core home-run to each remote unit for highest isolation' : 'Jalur fiber optik terdedikasi langsung dari OMU ke setiap ORU'))"></div>
+                        </div>
+
+                        <!-- Radio & Base Station Inputs -->
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[11px] font-bold uppercase text-slate-600" x-text="lang === 'en' ? 'Repeaters & Radios' : 'Repeater & Radio HT'"></label>
+                                <button type="button" @click="expandDmrToRfofDas()" class="text-[10px] text-indigo-600 hover:underline font-bold" title="Ambil nilai dari DMR Sizing">Sinkron</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <span class="text-[10px] text-slate-500 font-medium">Repeater:</span>
+                                    <input type="number" min="1" max="32" x-model.number="das.rep"
+                                           class="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-500 font-medium">Radio HT:</span>
+                                    <input type="number" min="1" max="1000" x-model.number="das.radio"
+                                           class="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Outdoor Antennas Inputs -->
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                            <label class="block text-[11px] font-bold uppercase text-slate-600" x-text="lang === 'en' ? 'Outdoor Donor & Coverage' : 'Antena Outdoor'"></label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <span class="text-[10px] text-slate-500 font-medium">Donor (Omni):</span>
+                                    <input type="number" min="0" max="10" x-model.number="das.outo"
+                                           class="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-500 font-medium">Donor (Direksional):</span>
+                                    <input type="number" min="0" max="10" x-model.number="das.outd"
+                                           class="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Multi-Floor Building Zones Card -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600" x-text="lang === 'en' ? 'Indoor Building Zones' : 'Zona & Lantai Gedung'"></span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Multi-Floor Distribution Matrix' : 'Matriks Distribusi Multi-Lantai'"></h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button @click="applyPlannerToDasBoq()"
+                                    class="px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer"
+                                    :title="lang === 'en' ? 'Sync antenna density from Planner module' : 'Terapkan rekomendasi jumlah antena dari modul Link Budget & Planner'">
+                                <span>⚡</span>
+                                <span x-text="lang === 'en' ? 'Apply Planner Density' : 'Terapkan Hasil Planner'"></span>
+                            </button>
+                            <button @click="addDasFloor()"
+                                    class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition flex items-center gap-1 cursor-pointer">
+                                <span>➕</span>
+                                <span x-text="lang === 'en' ? 'Add Floor Zone' : 'Tambah Lantai'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Floor Grid / Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold bg-slate-50/80">
+                                    <th class="py-2.5 px-3 w-12 text-center">#</th>
+                                    <th class="py-2.5 px-3" x-text="lang === 'en' ? 'Floor / Zone Description' : 'Nama Lantai / Deskripsi Zona'"></th>
+                                    <th class="py-2.5 px-3 w-40 text-center" x-text="lang === 'en' ? 'Indoor Antennas (Qty)' : 'Jumlah Antena Indoor'"></th>
+                                    <th class="py-2.5 px-3 w-28 text-center" x-text="lang === 'en' ? 'Estimated ORU' : 'Estimasi ORU'"></th>
+                                    <th class="py-2.5 px-3 w-20 text-center" x-text="lang === 'en' ? 'Action' : 'Aksi'"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <template x-for="(fl, idx) in das.floors" :key="idx">
+                                    <tr class="hover:bg-slate-50/60 transition">
+                                        <td class="py-2 px-3 text-center font-bold text-slate-400" x-text="idx + 1"></td>
+                                        <td class="py-2 px-3">
+                                            <input type="text" x-model="fl.f"
+                                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-semibold text-slate-800 text-xs focus:border-indigo-600 focus:outline-none" />
+                                        </td>
+                                        <td class="py-2 px-3 text-center">
+                                            <input type="number" min="1" max="100" x-model.number="fl.q"
+                                                   class="w-24 text-center px-2 py-1.5 rounded-lg border border-slate-300 font-black text-indigo-700 text-xs focus:border-indigo-600 focus:outline-none mx-auto" />
+                                        </td>
+                                        <td class="py-2 px-3 text-center font-semibold text-slate-600">
+                                            <span x-text="Math.ceil(fl.q / (das.r_oru || 30))"></span>
+                                            <span class="text-[10px] text-slate-400">Unit</span>
+                                        </td>
+                                        <td class="py-2 px-3 text-center">
+                                            <button @click="removeDasFloor(idx)" :disabled="das.floors.length <= 1"
+                                                    :class="das.floors.length <= 1 ? 'opacity-30 cursor-not-allowed' : 'text-rose-600 hover:text-rose-800 cursor-pointer'"
+                                                    class="p-1.5 rounded-md hover:bg-rose-50 transition" title="Hapus lantai">
+                                                🗑️
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Summary KPI Cards -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                            <div class="text-[10px] font-bold uppercase text-slate-500" x-text="lang === 'en' ? 'Total Floors' : 'Total Lantai'"></div>
+                            <div class="text-xl font-extrabold text-slate-900 mt-0.5" x-text="das.floors ? das.floors.length : 0"></div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                            <div class="text-[10px] font-bold uppercase text-slate-500" x-text="lang === 'en' ? 'Indoor Antennas' : 'Antena Indoor'"></div>
+                            <div class="text-xl font-extrabold text-indigo-700 mt-0.5">
+                                <span x-text="getDasBoqResult().quantities.antIndoorQty"></span> <span class="text-xs font-semibold text-slate-500">Titik</span>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                            <div class="text-[10px] font-bold uppercase text-slate-500" x-text="lang === 'en' ? 'Active ORU Units' : 'Remote Unit (ORU)'"></div>
+                            <div class="text-xl font-extrabold text-blue-700 mt-0.5">
+                                <span x-text="getDasBoqResult().quantities.oruQty"></span> <span class="text-xs font-semibold text-slate-500">Set</span>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                            <div class="text-[10px] font-bold uppercase text-slate-500" x-text="lang === 'en' ? 'Master OMU Units' : 'Master Unit (OMU)'"></div>
+                            <div class="text-xl font-extrabold text-purple-700 mt-0.5">
+                                <span x-text="getDasBoqResult().quantities.omuQty"></span> <span class="text-xs font-semibold text-slate-500">Unit</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Dynamic Interactive SVG Topology Visualizer Card -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🗺️</span>
+                            <div>
+                                <h4 class="text-sm font-extrabold text-slate-900" x-text="lang === 'en' ? 'RF-over-Fiber C-RAN Network Topology Visualizer' : 'Diagram Visualisasi Topologi Jaringan Optik RFoF C-RAN'"></h4>
+                                <p class="text-[11px] text-slate-500" x-text="lang === 'en' ? 'Live dynamic vector diagram representing Master Unit (OMU), optical distribution, and remote units (ORU) per floor' : 'Diagram vektor interaktif real-time memetakan Master Unit (OMU), distribusi kabel optik, dan Remote Unit (ORU) per lantai'"></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-xs">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">SVG Vektor HD</span>
+                        </div>
+                    </div>
+
+                    <!-- SVG Container -->
+                    <div class="w-full bg-slate-950 rounded-xl overflow-hidden shadow-inner p-2 sm:p-4 flex items-center justify-center min-h-[380px]">
+                        <div class="w-full max-w-5xl" x-html="getDasTopologySvg()"></div>
+                    </div>
+                </div>
+
+                <!-- 4. Calculated Bill of Quantities (BoQ) Table Card -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="lang === 'en' ? 'Automated Bill of Quantities' : 'Rincian Komponen & BoQ Otomatis'"></span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'FMTCS DAS Turnkey Hardware & Passive Equipment BOM' : 'Daftar Kebutuhan Perangkat Aktif & Pasif FMTCS DAS'"></h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <template x-if="currentUser && currentUser.role === 'engineer'">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800 border border-sky-300">
+                                    🛠️ Mode Akses Engineer: Nilai Harga Terproteksi
+                                </span>
+                            </template>
+                            <button @click="injectDasBoqToMasterBoq()"
+                                    class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                                <span>📥</span>
+                                <span x-text="lang === 'en' ? 'Inject to DMR Master BoQ' : 'Tambahkan ke BoQ Utama DMR'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BoQ Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold bg-slate-50/80">
+                                    <th class="py-2.5 px-3 w-10 text-center">#</th>
+                                    <th class="py-2.5 px-3" x-text="lang === 'en' ? 'Component & Description' : 'Nama Perangkat & Deskripsi'"></th>
+                                    <th class="py-2.5 px-3" x-text="lang === 'en' ? 'Model' : 'Model'"></th>
+                                    <th class="py-2.5 px-3 font-mono" x-text="lang === 'en' ? 'SKU' : 'SKU'"></th>
+                                    <th class="py-2.5 px-3 text-center" x-text="lang === 'en' ? 'Qty' : 'Jumlah'"></th>
+                                    <th class="py-2.5 px-3 text-center" x-text="lang === 'en' ? 'Unit' : 'Satuan'"></th>
+                                    <!-- Commercial columns: Hidden for role === 'engineer' -->
+                                    <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                        <th class="py-2.5 px-3 text-right" x-text="lang === 'en' ? 'Unit Price (' + currency + ')' : 'Harga Satuan (' + currency + ')'"></th>
+                                    </template>
+                                    <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                        <th class="py-2.5 px-3 text-right" x-text="lang === 'en' ? 'Amount (' + currency + ')' : 'Total Harga (' + currency + ')'"></th>
+                                    </template>
+                                    <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                        <th class="py-2.5 px-3 text-right" x-text="lang === 'en' ? 'COGS (' + currency + ')' : 'Modal COGS (' + currency + ')'"></th>
+                                    </template>
+                                    <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                        <th class="py-2.5 px-3 text-center" x-text="lang === 'en' ? 'Margin (%)' : 'Margin (%)'"></th>
+                                    </template>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <template x-for="(it, i) in getDasBoqResult().items" :key="it.sku">
+                                    <tr class="hover:bg-slate-50/80 transition" :class="it.qty > 0 ? '' : 'opacity-40'">
+                                        <td class="py-2.5 px-3 text-center font-bold text-slate-400" x-text="i + 1"></td>
+                                        <td class="py-2.5 px-3">
+                                            <div class="font-bold text-slate-900" x-text="lang === 'en' ? it.name.en : it.name.id"></div>
+                                            <div class="text-[10px] text-slate-500" x-text="it.sku"></div>
+                                        </td>
+                                        <td class="py-2.5 px-3 font-semibold text-slate-700" x-text="it.model"></td>
+                                        <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500" x-text="it.sku"></td>
+                                        <td class="py-2.5 px-3 text-center font-black text-slate-900" x-text="it.qty"></td>
+                                        <td class="py-2.5 px-3 text-center text-slate-600 font-medium" x-text="it.unit"></td>
+
+                                        <!-- Commercial price & margin: Hidden for role === 'engineer' -->
+                                        <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                            <td class="py-2.5 px-3 text-right font-semibold text-slate-800"
+                                                x-text="currency === 'USD' ? it.formatted.unitPrice : formatCurrency(it.unitPriceIdr)"></td>
+                                        </template>
+                                        <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                            <td class="py-2.5 px-3 text-right font-black text-slate-900"
+                                                x-text="currency === 'USD' ? it.formatted.lineSellUsd : it.formatted.lineSellIdr"></td>
+                                        </template>
+                                        <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                            <td class="py-2.5 px-3 text-right font-mono text-[11px] text-slate-500"
+                                                x-text="currency === 'USD' ? ('US$ ' + (it.lineCogsUsd).toFixed(2)) : formatCurrency(it.lineCogsIdr)"></td>
+                                        </template>
+                                        <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                            <td class="py-2.5 px-3 text-center">
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black"
+                                                      :class="it.marginPct >= 15 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
+                                                      x-text="it.formatted.marginPct"></span>
+                                            </td>
+                                        </template>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Commercial Totals Banner (Hidden for Engineer Role) -->
+                    <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                        <div class="p-4 rounded-xl bg-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg border border-slate-800">
+                            <div class="space-y-1">
+                                <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400" x-text="lang === 'en' ? 'Total Hardware & Passive Scope' : 'Total Estimasi Investasi DAS'"></div>
+                                <div class="text-2xl font-black text-amber-300"
+                                     x-text="currency === 'USD' ? ('US$ ' + (getDasBoqResult().totals.totalSellUsd || 0).toLocaleString('en-US', {minimumFractionDigits: 2})) : formatCurrency(getDasBoqResult().totals.totalSellIdr)"></div>
+                                <div class="text-xs text-slate-300">
+                                    <span class="font-semibold text-slate-400">Modal COGS:</span>
+                                    <span x-text="currency === 'USD' ? ('US$ ' + (getDasBoqResult().totals.totalCogsUsd || 0).toLocaleString('en-US', {minimumFractionDigits: 2})) : formatCurrency(getDasBoqResult().totals.totalCogsIdr)"></span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Gross Margin</div>
+                                    <div class="text-xl font-black text-emerald-400"
+                                         x-text="(getDasBoqResult().totals.overallMarginPct || 0).toFixed(1) + '%'"></div>
+                                    <div class="text-[11px] text-slate-300"
+                                         x-text="currency === 'USD' ? ('US$ ' + (getDasBoqResult().totals.totalMarginUsd || 0).toFixed(2)) : formatCurrency(getDasBoqResult().totals.totalMarginIdr)"></div>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider"
+                                      :class="getDasBoqResult().totals.marginGuardrailPassed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' : 'bg-rose-500/20 text-rose-300 border border-rose-400/30'"
+                                      x-text="getDasBoqResult().totals.marginGuardrailPassed ? 'Lulus Guardrail (>= 15%)' : 'Margin Rendah (< 15%)'"></span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Technical Totals for Engineer Role -->
+                    <template x-if="currentUser && currentUser.role === 'engineer'">
+                        <div class="p-3.5 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 flex flex-wrap items-center justify-between gap-3 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base">🛠️</span>
+                                <span class="font-bold text-slate-800" x-text="lang === 'en' ? 'Technical Quantities Validated' : 'Total Kuantitas Komponen Teknis Terverifikasi'"></span>
+                            </div>
+                            <div class="flex items-center gap-3 font-semibold text-slate-600">
+                                <span>Indoor: <strong class="text-slate-900" x-text="getDasBoqResult().quantities.antIndoorQty + ' Ant'"></strong></span>
+                                <span>ORU: <strong class="text-slate-900" x-text="getDasBoqResult().quantities.oruQty + ' Set'"></strong></span>
+                                <span>OMU: <strong class="text-slate-900" x-text="getDasBoqResult().quantities.omuQty + ' Unit'"></strong></span>
+                                <span>Kabel Feeder: <strong class="text-slate-900" x-text="getDasBoqResult().quantities.cableQty + ' m'"></strong></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 2: LINK BUDGET & ANTENNA PLANNER (dasActiveTab === 'link')-->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="dasActiveTab === 'link'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Left Column (7 cols): Link Budget Calculator -->
+                <div class="lg:col-span-7 bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600" x-text="lang === 'en' ? 'RF Link Budget Engineering' : 'Kalkulator Link Budget RF DAS'"></span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Signal Level & Path Loss Chain' : 'Tingkat Sinyal & Rantai Redaman Pasif'"></h3>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider"
+                              :class="getDasLinkBudgetResult().healthStatus === 'good' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (getDasLinkBudgetResult().healthStatus === 'warn' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-rose-100 text-rose-800 border border-rose-300')"
+                              x-text="getDasLinkBudgetResult().healthStatus === 'good' ? (lang === 'en' ? 'Optimal Signal' : 'Sinyal Optimal') : (getDasLinkBudgetResult().healthStatus === 'warn' ? (lang === 'en' ? 'Marginal Signal' : 'Sinyal Cukup') : (lang === 'en' ? 'Weak Signal' : 'Sinyal Lemah'))"></span>
+                    </div>
+
+                    <!-- Input Parameters Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'ORU TX Power (dBm)' : 'Daya TX ORU (dBm)'"></label>
+                            <input type="number" step="0.5" x-model.number="das.oruOutputDbm"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                            <span class="text-[10px] text-slate-400">40 dBm = 10 Watt</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Feeder Cable Type' : 'Jenis Kabel Feeder'"></label>
+                            <select x-model.number="das.cableTypeIndex"
+                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 bg-white focus:border-indigo-600 focus:outline-none">
+                                <option value="0">1/2" Coaxial (6.5 dB/100m)</option>
+                                <option value="1">7/8" Coaxial (3.5 dB/100m)</option>
+                                <option value="2">1-1/4" Coaxial (2.6 dB/100m)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Cable Run (Meters)' : 'Panjang Kabel (m)'"></label>
+                            <input type="number" step="1" min="1" x-model.number="das.cableLengthM"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Splitters in Path' : 'Jumlah Splitter'"></label>
+                            <input type="number" min="0" max="8" x-model.number="das.splittersCount"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                            <span class="text-[10px] text-slate-400">~3.3 dB per 2-way split</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Other Passive Loss (dB)' : 'Redaman Pasif Lain (dB)'"></label>
+                            <input type="number" step="0.1" min="0" x-model.number="das.otherLossDb"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                            <span class="text-[10px] text-slate-400">Konektor & jumper</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Antenna Gain (dBi)' : 'Gain Antena (dBi)'"></label>
+                            <input type="number" step="0.5" x-model.number="das.antennaGainDbi"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Environment Path Exp (n)' : 'Eksponen Lingkungan (n)'"></label>
+                            <select x-model.number="das.envIndex"
+                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 bg-white focus:border-indigo-600 focus:outline-none">
+                                <option value="0">Kantor / dinding ringan (n=4.5)</option>
+                                <option value="1">Padat / Industri (n=5.0)</option>
+                                <option value="2">Bawah tanah / terowongan (n=5.5)</option>
+                                <option value="3">Terbuka / Line-of-sight (n=2.8)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Target Sensitivity (dBm)' : 'Sensitivitas Target (dBm)'"></label>
+                            <input type="number" step="1" x-model.number="das.targetSensitivityDbm"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                            <span class="text-[10px] text-slate-400">-95 dBm = Standar DMR</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Fade Margin (dB)' : 'Fade Margin (dB)'"></label>
+                            <input type="number" step="1" min="0" x-model.number="das.fadeMarginDb"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                    </div>
+
+                    <!-- KPI Outputs Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                        <div>
+                            <div class="text-[10px] font-bold uppercase text-slate-500" x-text="lang === 'en' ? 'Antenna Input Level' : 'Daya Masuk Antena'"></div>
+                            <div class="text-base font-extrabold text-indigo-700 mt-0.5"
+                                 x-text="getDasLinkBudgetResult().chain && getDasLinkBudgetResult().chain[4] ? (getDasLinkBudgetResult().chain[4].levelDbm.toFixed(1) + ' dBm') : '-'"></div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold uppercase text-slate-500">Antenna EIRP</div>
+                            <div class="text-base font-extrabold text-blue-700 mt-0.5"
+                                 x-text="getDasLinkBudgetResult().chain && getDasLinkBudgetResult().chain[6] ? (getDasLinkBudgetResult().chain[6].levelDbm.toFixed(1) + ' dBm') : '-'"></div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold uppercase text-slate-500" x-text="lang === 'en' ? 'Coverage Radius' : 'Radius Jangkauan'"></div>
+                            <div class="text-base font-extrabold text-emerald-700 mt-0.5">
+                                <span x-text="getDasLinkBudgetResult().radiusM ? getDasLinkBudgetResult().radiusM.toFixed(1) : '-'"></span> <span class="text-xs font-semibold text-slate-500">m</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold uppercase text-slate-500" x-text="lang === 'en' ? 'Coverage Area' : 'Luas Cakupan'"></div>
+                            <div class="text-base font-extrabold text-purple-700 mt-0.5">
+                                <span x-text="getDasLinkBudgetResult().coverageAreaM2 ? getDasLinkBudgetResult().coverageAreaM2.toFixed(0) : '-'"></span> <span class="text-xs font-semibold text-slate-500">m²</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Waterfall Signal Chain Table -->
+                    <div class="space-y-1.5 pt-2">
+                        <div class="text-[11px] font-bold uppercase text-slate-600" x-text="lang === 'en' ? 'Signal Level Distribution Waterfall' : 'Distribusi Tingkat Sinyal Rantai Pasif'"></div>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold border-b border-slate-200">
+                                        <th class="py-2 px-3" x-text="lang === 'en' ? 'Stage' : 'Tahapan Sinyal'"></th>
+                                        <th class="py-2 px-3 text-center" x-text="lang === 'en' ? 'Delta (dB)' : 'Perubahan (dB)'"></th>
+                                        <th class="py-2 px-3 text-right" x-text="lang === 'en' ? 'Level (dBm)' : 'Tingkat Sinyal (dBm)'"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <template x-for="st in getDasLinkBudgetResult().chain" :key="st.stageKey">
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="py-1.5 px-3 font-semibold text-slate-800" x-text="dasT(st.stageKey)"></td>
+                                            <td class="py-1.5 px-3 text-center font-bold"
+                                                :class="st.deltaDb < 0 ? 'text-rose-600' : (st.deltaDb > 0 ? 'text-emerald-600' : 'text-slate-400')"
+                                                x-text="st.deltaDb !== 0 ? (st.deltaDb > 0 ? ('+' + st.deltaDb.toFixed(1) + ' dB') : (st.deltaDb.toFixed(1) + ' dB')) : '-'"></td>
+                                            <td class="py-1.5 px-3 text-right font-black"
+                                                :class="st.levelDbm >= 10 ? 'text-indigo-950' : (st.levelDbm >= -30 ? 'text-blue-700' : 'text-slate-600')"
+                                                x-text="st.levelDbm.toFixed(1) + ' dBm'"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column (5 cols): Indoor Antenna Density Planner -->
+                <div class="lg:col-span-5 bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="border-b border-slate-100 pb-3">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-sky-600" x-text="lang === 'en' ? 'Antenna Grid Density Planner' : 'Perencana Kerapatan Antena Indoor'"></span>
+                        <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Building Floor Area Estimation' : 'Estimasi Kebutuhan Antena Berdasarkan Luas'"></h3>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Total Indoor Floor Area (m²)' : 'Total Luas Lantai Gedung (m²)'"></label>
+                            <input type="number" step="100" min="100" x-model.number="das.planAreaM2"
+                                   class="w-full px-3 py-2 rounded-lg border border-slate-300 font-extrabold text-slate-800 focus:border-sky-600 focus:outline-none" />
+                            <span class="text-[10px] text-slate-400">Contoh: 5,000 m² (4 lantai x 1,250 m²)</span>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Design Utilization Factor (%)' : 'Faktor Utilisasi / Overlap (%)'"></label>
+                            <input type="number" step="5" min="50" max="100" x-model.number="das.planUtilPct"
+                                   class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-sky-600 focus:outline-none" />
+                            <span class="text-[10px] text-slate-400">75% = Rekomendasi standar overlap untuk mengatasi partisi dinding</span>
+                        </div>
+                    </div>
+
+                    <!-- Planner Calculated Stats -->
+                    <div class="space-y-2.5 p-4 rounded-xl bg-gradient-to-br from-slate-50 to-sky-50/50 border border-sky-200">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-semibold text-slate-600" x-text="lang === 'en' ? 'Recommended Theoretical Antennas:' : 'Rekomendasi Teoritis:'"></span>
+                            <span class="font-extrabold text-slate-900" x-text="getDasPlannerResult().recommendedAntennas + ' Titik'"></span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-bold text-slate-700" x-text="lang === 'en' ? 'Antennas with Wall & Fading Margin:' : 'Rekomendasi dengan Margin Dinding:'"></span>
+                            <span class="text-lg font-black text-indigo-700" x-text="getDasPlannerResult().countWithMargin + ' Titik Antena'"></span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs pt-2 border-t border-sky-100">
+                            <span class="font-semibold text-slate-600" x-text="lang === 'en' ? 'Optimal Grid Spacing:' : 'Jarak Antar Antena (Grid Spacing):'"></span>
+                            <span class="font-extrabold text-sky-800" x-text="'~' + (getDasPlannerResult().gridSpacingM || 0).toFixed(1) + ' meter'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Apply Button -->
+                    <button @click="applyPlannerToDasBoq()"
+                            class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                        <span>⚡</span>
+                        <span x-text="lang === 'en' ? 'Apply Antennas to Multi-Floor BoQ' : 'Terapkan Hasil Planner ke BoQ Multi-Lantai'"></span>
+                    </button>
+                    <p class="text-[10px] text-slate-400 text-center leading-normal">
+                        Mendistribusikan total titik antena yang direkomendasikan secara merata ke seluruh lantai proyek.
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 3: RF & VSWR CONVERSIONS (dasActiveTab === 'conv')         -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="dasActiveTab === 'conv'" class="space-y-6">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- 1. Power Converter Card -->
+                    <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                        <div class="border-b border-slate-100 pb-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600">RF Power Mathematics</span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Power Converter (dBm / Watt / mW / dBW)' : 'Konversi Daya RF (dBm / Watt / mW / dBW)'"></h3>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Satuan Asal (Unit)</label>
+                                <select x-model="das.pSrc"
+                                        class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 bg-white focus:border-indigo-600 focus:outline-none">
+                                    <option value="dbm">dBm</option>
+                                    <option value="w">Watt</option>
+                                    <option value="mw">mW (Milliwatt)</option>
+                                    <option value="dbw">dBW</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Nilai Input</label>
+                                <input type="number" step="any" x-model.number="das.pVal"
+                                       class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-extrabold text-slate-900 focus:border-indigo-600 focus:outline-none" />
+                            </div>
+                        </div>
+
+                        <!-- Live Calculated Grid -->
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">dBm</span>
+                                <div class="text-lg font-black text-indigo-700 mt-0.5" x-text="getDasPowerConvResult().formatted ? getDasPowerConvResult().formatted.dbm : '-'"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Watt (W)</span>
+                                <div class="text-lg font-black text-blue-700 mt-0.5" x-text="getDasPowerConvResult().formatted ? getDasPowerConvResult().formatted.w : '-'"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Milliwatt (mW)</span>
+                                <div class="text-lg font-black text-slate-800 mt-0.5" x-text="getDasPowerConvResult().formatted ? getDasPowerConvResult().formatted.mw : '-'"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">dBW</span>
+                                <div class="text-lg font-black text-purple-700 mt-0.5" x-text="getDasPowerConvResult().formatted ? getDasPowerConvResult().formatted.dbw : '-'"></div>
+                            </div>
+                        </div>
+
+                        <!-- Reference Table -->
+                        <div class="pt-2 border-t border-slate-100">
+                            <span class="text-[10px] font-bold uppercase text-slate-400">Tabel Acuan Standar Daya RF:</span>
+                            <div class="grid grid-cols-4 gap-1 text-[10px] text-slate-600 mt-1 font-mono">
+                                <div>100W = 50 dBm</div>
+                                <div>50W = 47 dBm</div>
+                                <div>25W = 44 dBm</div>
+                                <div>10W = 40 dBm</div>
+                                <div>5W = 37 dBm</div>
+                                <div>1W = 30 dBm</div>
+                                <div>100mW = 20 dBm</div>
+                                <div>1mW = 0 dBm</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Gain & Loss Converter Card -->
+                    <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                        <div class="border-b border-slate-100 pb-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-sky-600">Rasio Penguatan & Pelemahan</span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Gain & Loss Ratio Converter (dB / Ratio)' : 'Konversi Rasio Gain & Loss (dB / Rasio)'"></h3>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Satuan Asal</label>
+                                <select x-model="das.gSrc"
+                                        class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 bg-white focus:border-sky-600 focus:outline-none">
+                                    <option value="db">dB (Decibel)</option>
+                                    <option value="pr">Rasio Daya (Power Ratio)</option>
+                                    <option value="vr">Rasio Tegangan (Voltage Ratio)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Nilai Input</label>
+                                <input type="number" step="any" x-model.number="das.gVal"
+                                       class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-extrabold text-slate-900 focus:border-sky-600 focus:outline-none" />
+                            </div>
+                        </div>
+
+                        <!-- Live Outputs -->
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">dB (Decibel)</span>
+                                <div class="text-lg font-black text-sky-700 mt-0.5" x-text="getDasGainConvResult().formatted ? getDasGainConvResult().formatted.db : '-'"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Rasio Daya (P2/P1)</span>
+                                <div class="text-lg font-black text-slate-800 mt-0.5" x-text="getDasGainConvResult().formatted ? getDasGainConvResult().formatted.pr : '-'"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Rasio Tegangan (V2/V1)</span>
+                                <div class="text-lg font-black text-slate-800 mt-0.5" x-text="getDasGainConvResult().formatted ? getDasGainConvResult().formatted.vr : '-'"></div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-sky-50 text-sky-900 text-xs font-semibold flex items-center justify-between">
+                            <span>Sifat Nilai:</span>
+                            <span class="font-black uppercase"
+                                  :class="getDasGainConvResult().type === 'gain' ? 'text-emerald-700' : (getDasGainConvResult().type === 'loss' ? 'text-rose-700' : 'text-slate-600')"
+                                  x-text="getDasGainConvResult().type === 'gain' ? 'Penguatan (Gain / Amplification)' : (getDasGainConvResult().type === 'loss' ? 'Pelemahan (Attenuation / Loss)' : 'Netral (0 dB)')"></span>
+                        </div>
+                    </div>
+
+                    <!-- 3. VSWR & Return Loss Converter Card -->
+                    <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                        <div class="border-b border-slate-100 pb-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600">RF Impedance Matching</span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'VSWR & Return Loss Calculator' : 'Kalkulator VSWR & Return Loss Antena'"></h3>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Satuan Asal</label>
+                                <select x-model="das.vSrc"
+                                        class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 bg-white focus:border-emerald-600 focus:outline-none">
+                                    <option value="vswr">VSWR (1.00 : 1)</option>
+                                    <option value="rl">Return Loss (dB)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Nilai Input</label>
+                                <input type="number" step="0.01" min="1.0" x-model.number="das.vVal"
+                                       class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-extrabold text-slate-900 focus:border-emerald-600 focus:outline-none" />
+                            </div>
+                        </div>
+
+                        <!-- Live Calculated Stats -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">VSWR</span>
+                                <div class="text-lg font-black text-indigo-700 mt-0.5" x-text="getDasVswrConvResult().formatted ? getDasVswrConvResult().formatted.vswr : '-'"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Return Loss</span>
+                                <div class="text-lg font-black text-emerald-700 mt-0.5">
+                                    <span x-text="getDasVswrConvResult().formatted ? getDasVswrConvResult().formatted.rl : '-'"></span> <span class="text-xs font-semibold text-slate-500">dB</span>
+                                </div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Gamma (&Gamma;)</span>
+                                <div class="text-lg font-black text-slate-800 mt-0.5" x-text="getDasVswrConvResult().formatted ? getDasVswrConvResult().formatted.gamma : '-'"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Reflected Power</span>
+                                <div class="text-lg font-black mt-0.5"
+                                     :class="getDasVswrConvResult().reflectedPct <= 4.0 ? 'text-emerald-700' : 'text-rose-700'"
+                                     x-text="getDasVswrConvResult().formatted ? (getDasVswrConvResult().formatted.reflectedPct + '%') : '-'"></div>
+                            </div>
+                        </div>
+
+                        <!-- Verdict Card -->
+                        <div class="p-3 rounded-xl flex items-center justify-between text-xs"
+                             :class="getDasVswrConvResult().rating === 'good' ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : (getDasVswrConvResult().rating === 'warn' ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-rose-50 text-rose-900 border border-rose-200')">
+                            <span class="font-semibold">Kualitas Matching Antena:</span>
+                            <span class="font-extrabold uppercase"
+                                  x-text="getDasVswrConvResult().rating === 'good' ? 'Sangat Baik (VSWR <= 1.5 - Lulus Standar CDPK)' : (getDasVswrConvResult().rating === 'warn' ? 'Cukup / Perlu Evaluasi (1.5 < VSWR <= 2.0)' : 'Buruk / Gagal Matching (VSWR > 2.0)')"></span>
+                        </div>
+                    </div>
+
+                    <!-- 4. Field Strength Converter Card -->
+                    <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                        <div class="border-b border-slate-100 pb-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-purple-600">Field Strength & Receiver Input</span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'dBµV to dBm Converter (@ 50 Ohm)' : 'Konversi Kuat Medan (dBµV ke dBm @ 50 Ohm)'"></h3>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Satuan Asal</label>
+                                <select x-model="das.fSrc"
+                                        class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 bg-white focus:border-purple-600 focus:outline-none">
+                                    <option value="dbm">dBm (@ 50 &Omega;)</option>
+                                    <option value="dbuv">dBµV (@ 50 &Omega;)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Nilai Input</label>
+                                <input type="number" step="any" x-model.number="das.fVal"
+                                       class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-extrabold text-slate-900 focus:border-purple-600 focus:outline-none" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">dBm (@ 50 &Omega;)</span>
+                                <div class="text-lg font-black text-purple-700 mt-0.5" x-text="getDasFieldConvResult().formatted ? getDasFieldConvResult().formatted.dbm : '-'"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">dBµV (@ 50 &Omega;)</span>
+                                <div class="text-lg font-black text-indigo-700 mt-0.5" x-text="getDasFieldConvResult().formatted ? getDasFieldConvResult().formatted.dbuv : '-'"></div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Milliwatt (mW)</span>
+                                <div class="text-lg font-black text-slate-800 mt-0.5" x-text="getDasFieldConvResult().formatted ? getDasFieldConvResult().formatted.mw : '-'"></div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 text-[11px] text-slate-600 leading-normal">
+                            Rumus konversi baku 50 &Omega;: <code class="font-mono text-purple-800 font-bold">dBm = dBµV - 107</code>.
+                            Sensitivitas minimum receiver DMR (-116 dBm) setara dengan <strong class="text-slate-900">-9 dBµV</strong>.
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 4: OUTDOOR OKUMURA-HATA (dasActiveTab === 'cov')           -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="dasActiveTab === 'cov'" class="space-y-6">
+
+                <!-- Outdoor Okumura-Hata Calculation Card -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600">Outdoor Empirical Propagation Model</span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Okumura-Hata Outdoor Coverage & Link Margin Engine' : 'Model Propagasi Outdoor Okumura-Hata & Analisis Link Margin'"></h3>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200">
+                            150 MHz - 1500 MHz
+                        </span>
+                    </div>
+
+                    <!-- Input Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Frekuensi (MHz)</label>
+                            <input type="number" step="1" x-model.number="das.cov_f"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Jarak (km)</label>
+                            <input type="number" step="0.5" min="0.1" max="50" x-model.number="das.cov_d"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Tinggi Tower BS (m)</label>
+                            <input type="number" step="1" min="10" max="300" x-model.number="das.cov_ht"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Tinggi Antena HT (m)</label>
+                            <input type="number" step="0.1" min="1" max="10" x-model.number="das.cov_hm"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Daya TX BS (dBm)</label>
+                            <input type="number" step="1" x-model.number="das.cov_txbs"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                            <span class="text-[10px] text-slate-400">47 dBm = 50W</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Daya TX HT (dBm)</label>
+                            <input type="number" step="1" x-model.number="das.cov_txms"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                            <span class="text-[10px] text-slate-400">36 dBm = 4W</span>
+                        </div>
+                    </div>
+
+                    <!-- Additional RF Parameters (Gains, Sensitivities, Feeder Losses) -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs pt-2 border-t border-slate-100">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Gain Antena BS (dBi)</label>
+                            <input type="number" step="0.5" x-model.number="das.cov_gbs"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Gain Antena HT (dBi)</label>
+                            <input type="number" step="0.5" x-model.number="das.cov_gms"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Sensitivitas BS (dBm)</label>
+                            <input type="number" step="1" x-model.number="das.cov_rxbs"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Sensitivitas HT (dBm)</label>
+                            <input type="number" step="1" x-model.number="das.cov_rxms"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Loss Feeder BS (dB)</label>
+                            <input type="number" step="0.5" x-model.number="das.cov_flbs"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Loss Feeder HT (dB)</label>
+                            <input type="number" step="0.5" x-model.number="das.cov_flms"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
+                        </div>
+                    </div>
+
+                    <!-- Multi-Environment Propagation Results Table -->
+                    <div class="space-y-2 pt-3">
+                        <div class="text-[11px] font-bold uppercase text-slate-600">Hasil Simulasi Redaman Jalur &amp; Margin Link 4 Lingkungan:</div>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold border-b border-slate-200">
+                                        <th class="py-2.5 px-3">Tipe Lingkungan Propagasi</th>
+                                        <th class="py-2.5 px-3 text-right">Path Loss (dB)</th>
+                                        <th class="py-2.5 px-3 text-right">Uplink Margin (dB)</th>
+                                        <th class="py-2.5 px-3 text-right">Downlink Margin (dB)</th>
+                                        <th class="py-2.5 px-3 text-center">Status Kelayakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <template x-for="r in getDasOutdoorResult().results" :key="r.envKey">
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="py-2 px-3">
+                                                <div class="font-extrabold text-slate-900" x-text="dasT(r.envKey)"></div>
+                                                <div class="text-[10px] text-slate-400" x-text="r.envKey"></div>
+                                            </td>
+                                            <td class="py-2 px-3 text-right font-black text-slate-800" x-text="r.formatted.pl"></td>
+                                            <td class="py-2 px-3 text-right font-black"
+                                                :class="r.upMargin >= 10 ? 'text-emerald-700' : (r.upMargin >= 0 ? 'text-amber-700' : 'text-rose-700')"
+                                                x-text="r.formatted.upMargin"></td>
+                                            <td class="py-2 px-3 text-right font-black"
+                                                :class="r.downMargin >= 10 ? 'text-emerald-700' : (r.downMargin >= 0 ? 'text-amber-700' : 'text-rose-700')"
+                                                x-text="r.formatted.downMargin"></td>
+                                            <td class="py-2 px-3 text-center">
+                                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
+                                                      :class="r.status === 'good' ? 'bg-emerald-100 text-emerald-800' : (r.status === 'warn' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800')"
+                                                      x-text="r.status === 'good' ? 'Lulus Optimal' : (r.status === 'warn' ? 'Marginal' : 'Gagal Jangkauan')"></span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 5: COMMISSIONING & SAT PDF REPORT (dasActiveTab === 'comm')-->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="dasActiveTab === 'comm'" class="space-y-6">
+
+                <!-- 1. Acceptance Criteria & Inspector Info Card -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-purple-600">Site Acceptance Test (SAT) Suite</span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Commissioning & Technical Inspection Protocol' : 'Protokol Uji Terima (SAT) & Commissioning DAS Resmi'"></h3>
+                        </div>
+                        <button @click="exportDasCommPdf()"
+                                class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                            <span>📄</span>
+                            <span x-text="lang === 'en' ? 'Generate Official SAT PDF' : 'Cetak Berita Acara SAT PDF'"></span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Nama Lead Engineer / Penguji</label>
+                            <input type="text" x-model="das.inspector" :placeholder="currentUser ? currentUser.name : 'Lead RF Engineer'"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-semibold text-slate-800 focus:border-purple-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Tanggal Pengujian SAT</label>
+                            <input type="date" x-model="das.commDate"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 focus:border-purple-600 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Batas Maksimum VSWR</label>
+                            <input type="number" step="0.05" min="1.1" max="2.0" x-model.number="das.maxVswr"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-extrabold text-indigo-700 focus:border-purple-600 focus:outline-none" />
+                            <span class="text-[10px] text-slate-400">Standar CDPK &le; 1.50</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Batas Minimum Daya TX (dBm)</label>
+                            <input type="number" step="0.5" x-model.number="das.minTx"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-extrabold text-blue-700 focus:border-purple-600 focus:outline-none" />
+                            <span class="text-[10px] text-slate-400">Daya masuk antena &ge; 8.0 dBm</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Batas Minimum Sinyal RX (dBm)</label>
+                            <input type="number" step="1" x-model.number="das.minRx"
+                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-extrabold text-emerald-700 focus:border-purple-600 focus:outline-none" />
+                            <span class="text-[10px] text-slate-400">Kuat sinyal cakupan &ge; -85 dBm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Test Points Table Card -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-purple-600">Measurement Records</span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Field Measurement Test Points & Quality Auditing' : 'Catatan Titik Uji Pengukuran Lapangan & Audit Kualitas'"></h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button @click="populateCommPointsFromFloors()"
+                                    class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs transition flex items-center gap-1 cursor-pointer">
+                                <span>⚡</span>
+                                <span x-text="lang === 'en' ? 'Auto-Generate from Floors' : 'Buat dari Daftar Lantai'"></span>
+                            </button>
+                            <button @click="addDasCommPoint()"
+                                    class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-sm transition flex items-center gap-1 cursor-pointer">
+                                <span>➕</span>
+                                <span x-text="lang === 'en' ? 'Add Test Point' : 'Tambah Titik Uji'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Test Points Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold bg-slate-50/80">
+                                    <th class="py-2.5 px-3 w-10 text-center">#</th>
+                                    <th class="py-2.5 px-3" x-text="lang === 'en' ? 'Point / Antenna ID' : 'Titik / Identitas Antena'"></th>
+                                    <th class="py-2.5 px-3 w-28 text-center">VSWR Terukur</th>
+                                    <th class="py-2.5 px-3 w-28 text-center">TX Power (dBm)</th>
+                                    <th class="py-2.5 px-3 w-28 text-center">RX Signal (dBm)</th>
+                                    <th class="py-2.5 px-3 w-36 text-center" x-text="lang === 'en' ? 'Voice Call Test' : 'Uji Panggilan Suara'"></th>
+                                    <th class="py-2.5 px-3 w-28 text-center" x-text="lang === 'en' ? 'Verdict' : 'Hasil Uji'"></th>
+                                    <th class="py-2.5 px-3 w-16 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <template x-for="(pt, idx) in das.points" :key="idx">
+                                    <tr class="hover:bg-slate-50/70 transition">
+                                        <td class="py-2 px-3 text-center font-bold text-slate-400" x-text="idx + 1"></td>
+                                        <td class="py-2 px-3">
+                                            <input type="text" x-model="pt.id"
+                                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-semibold text-slate-800 text-xs focus:border-purple-600 focus:outline-none" />
+                                        </td>
+                                        <td class="py-2 px-3 text-center">
+                                            <input type="number" step="0.01" x-model.number="pt.vswr"
+                                                   class="w-20 text-center px-1.5 py-1.5 rounded-lg border border-slate-300 font-bold text-xs focus:border-purple-600 focus:outline-none"
+                                                   :class="pt.vswr <= das.maxVswr ? 'text-emerald-700 bg-emerald-50/40' : 'text-rose-700 bg-rose-50/60 font-black'" />
+                                        </td>
+                                        <td class="py-2 px-3 text-center">
+                                            <input type="number" step="0.1" x-model.number="pt.tx"
+                                                   class="w-20 text-center px-1.5 py-1.5 rounded-lg border border-slate-300 font-bold text-xs focus:border-purple-600 focus:outline-none"
+                                                   :class="pt.tx >= das.minTx ? 'text-blue-700' : 'text-rose-700 bg-rose-50/60 font-black'" />
+                                        </td>
+                                        <td class="py-2 px-3 text-center">
+                                            <input type="number" step="0.5" x-model.number="pt.rx"
+                                                   class="w-20 text-center px-1.5 py-1.5 rounded-lg border border-slate-300 font-bold text-xs focus:border-purple-600 focus:outline-none"
+                                                   :class="pt.rx >= das.minRx ? 'text-indigo-700' : 'text-rose-700 bg-rose-50/60 font-black'" />
+                                        </td>
+                                        <td class="py-2 px-3 text-center">
+                                            <select x-model="pt.call"
+                                                    class="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white font-semibold text-xs focus:border-purple-600 focus:outline-none">
+                                                <option value="good">Suara Jernih (5/5)</option>
+                                                <option value="fair">Cukup Jelas (3/5)</option>
+                                                <option value="poor">Buruk / Putus (1/5)</option>
+                                            </select>
+                                        </td>
+                                        <td class="py-2 px-3 text-center">
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block"
+                                                  :class="(pt.vswr <= das.maxVswr && pt.tx >= das.minTx && pt.rx >= das.minRx && pt.call !== 'poor') ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300'"
+                                                  x-text="(pt.vswr <= das.maxVswr && pt.tx >= das.minTx && pt.rx >= das.minRx && pt.call !== 'poor') ? 'Lulus' : 'Gagal'"></span>
+                                        </td>
+                                        <td class="py-2 px-3 text-center">
+                                            <button @click="removeDasCommPoint(idx)" :disabled="das.points.length <= 1"
+                                                    :class="das.points.length <= 1 ? 'opacity-30 cursor-not-allowed' : 'text-rose-600 hover:text-rose-800 cursor-pointer'"
+                                                    class="p-1 rounded hover:bg-rose-50 transition" title="Hapus titik uji">
+                                                🗑️
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Overall SAT Verdict Banner -->
+                    <div class="p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 border shadow-sm"
+                         :class="(das.points.filter(p => p.vswr <= das.maxVswr && p.tx >= das.minTx && p.rx >= das.minRx && p.call !== 'poor').length === das.points.length && das.points.length > 0) ? 'bg-emerald-50 text-emerald-950 border-emerald-300' : 'bg-amber-50 text-amber-950 border-amber-300'">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl" x-text="(das.points.filter(p => p.vswr <= das.maxVswr && p.tx >= das.minTx && p.rx >= das.minRx && p.call !== 'poor').length === das.points.length && das.points.length > 0) ? '✅' : '⚠️'"></span>
+                            <div>
+                                <div class="font-black text-sm"
+                                     x-text="(das.points.filter(p => p.vswr <= das.maxVswr && p.tx >= das.minTx && p.rx >= das.minRx && p.call !== 'poor').length === das.points.length && das.points.length > 0) ? 'STATUS SAT: LULUS PENUH (ACCEPTANCE PASSED)' : 'STATUS SAT: PERLU PERBAIKAN / TUNING ULANG'"></div>
+                                <div class="text-xs mt-0.5 opacity-90"
+                                     x-text="'Sebanyak ' + das.points.filter(p => p.vswr <= das.maxVswr && p.tx >= das.minTx && p.rx >= das.minRx && p.call !== 'poor').length + ' dari ' + das.points.length + ' titik uji memenuhi batas toleransi teknis PT CDPK.'"></div>
+                            </div>
+                        </div>
+                        <button @click="exportDasCommPdf()"
+                                class="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
+                            <span>📄</span>
+                            <span x-text="lang === 'en' ? 'Print Official SAT PDF' : 'Cetak Dokumen SAT PDF'"></span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 6: FMTCS DEVICE CATALOG (dasActiveTab === 'prod')          -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="dasActiveTab === 'prod'" class="space-y-6">
+
+                <!-- Filter & Search Bar Card -->
+                <div class="bg-white rounded-2xl p-4 sm:p-5 card-shadow border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button type="button" @click="das.prodCatFilter = 'all'"
+                                :class="das.prodCatFilter === 'all' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'"
+                                class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">Semua (All)</button>
+                        <button type="button" @click="das.prodCatFilter = 'active'"
+                                :class="das.prodCatFilter === 'active' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'"
+                                class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">Perangkat Aktif (OMU/ORU)</button>
+                        <button type="button" @click="das.prodCatFilter = 'passive'"
+                                :class="das.prodCatFilter === 'passive' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'"
+                                class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">Komponen Pasif RF</button>
+                        <button type="button" @click="das.prodCatFilter = 'antenna'"
+                                :class="das.prodCatFilter === 'antenna' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'"
+                                class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">Antena</button>
+                        <button type="button" @click="das.prodCatFilter = 'cable'"
+                                :class="das.prodCatFilter === 'cable' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'"
+                                class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">Kabel &amp; Konektor</button>
+                        <button type="button" @click="das.prodCatFilter = 'fiber'"
+                                :class="das.prodCatFilter === 'fiber' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'"
+                                class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">Fiber Optik</button>
+                    </div>
+
+                    <div class="relative w-full md:w-64">
+                        <input type="text" x-model="das.prodSearch" placeholder="Cari model, SKU, atau spek..."
+                               class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold focus:border-indigo-600 focus:outline-none" />
+                        <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <template x-for="d in (window.CDPK_DAS_ENGINE ? window.CDPK_DAS_ENGINE.devices : [])" :key="d.sku">
+                        <div x-show="(das.prodCatFilter === 'all' || d.category === das.prodCatFilter) && (!das.prodSearch || (d.model + ' ' + d.sku + ' ' + (d.name ? (d.name.id + ' ' + d.name.en) : '')).toLowerCase().includes(das.prodSearch.toLowerCase()))"
+                             class="bg-white rounded-2xl p-4 card-shadow border border-slate-200 flex flex-col justify-between hover:shadow-lg transition">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider"
+                                          :class="d.category === 'active' ? 'bg-indigo-100 text-indigo-800' : (d.category === 'passive' ? 'bg-sky-100 text-sky-800' : (d.category === 'antenna' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'))"
+                                          x-text="d.category"></span>
+                                    <span class="text-[10px] font-mono text-slate-400" x-text="d.sku"></span>
+                                </div>
+                                <h4 class="font-extrabold text-sm text-slate-900" x-text="d.model"></h4>
+                                <div class="text-xs text-indigo-900 font-semibold" x-text="lang === 'en' ? d.name.en : d.name.id"></div>
+                                <div class="p-2.5 rounded-xl bg-slate-50 text-[11px] text-slate-600 space-y-1">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-slate-400 font-medium">Frekuensi:</span>
+                                        <span class="font-bold text-slate-800" x-text="d.freq || '136 - 470 MHz'"></span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-slate-400 font-medium">Impedansi:</span>
+                                        <span class="font-bold text-slate-800">50 &Omega;</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-slate-400 font-medium">Standar Acuan:</span>
+                                        <span class="font-bold text-slate-800">FMTCS Certified</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-100 mt-3 flex items-center justify-between text-xs">
+                                <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-medium">Estimasi Harga Jual:</span>
+                                        <div class="font-extrabold text-indigo-700"
+                                             x-text="currency === 'USD' ? ('US$ ' + (d.priceUsd || 0).toLocaleString('en-US', {minimumFractionDigits: 2})) : formatCurrency((d.priceUsd || 0) * exchangeRate)"></div>
+                                    </div>
+                                </template>
+                                <template x-if="currentUser && currentUser.role === 'engineer'">
+                                    <span class="text-[10px] font-semibold text-slate-500 italic">Spesifikasi Teknik PT CDPK</span>
+                                </template>
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700" x-text="d.unit"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+            </div>
+
+        </div>
+        <!-- ══════════════════ END WORKSPACE 2: RFoF DAS ═════════════════ -->
+
+        <!-- ══════════════════ DAS HANDOFF QR CODE MODAL ═════════════════ -->
+        <div x-show="dasHandoffModalOpen" x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
+
+            <div @click.away="dasHandoffModalOpen = false"
+                 class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">📱</span>
+                        <div>
+                            <h3 class="font-extrabold text-sm text-slate-900" x-text="lang === 'en' ? 'FMTCS DAS Topology Handoff Token' : 'Token & QR Handoff Topologi DAS FMTCS'"></h3>
+                            <p class="text-[10px] text-slate-500" x-text="lang === 'en' ? 'Seamlessly transfer topology parameters via offline QR or token' : 'Transfer konfigurasi antar-perangkat via QR offline atau token'"></p>
+                        </div>
+                    </div>
+                    <button @click="dasHandoffModalOpen = false" class="w-7 h-7 rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 text-xs flex items-center justify-center cursor-pointer">✕</button>
+                </div>
+
+                <!-- QR Display -->
+                <template x-if="das.qrDataUrl">
+                    <div class="text-center p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                        <img :src="das.qrDataUrl" alt="QR Code Handoff" class="w-48 h-48 mx-auto rounded-xl shadow-xs border border-slate-200 bg-white p-2" />
+                        <div class="text-[10px] text-slate-500 font-semibold" x-text="lang === 'en' ? 'Scan with field tablet or smartphone camera' : 'Pindai dengan kamera tablet / smartphone tim lapangan'"></div>
+                    </div>
+                </template>
+
+                <!-- Token String & Copy -->
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-bold text-slate-600" x-text="lang === 'en' ? 'Encrypted Token String:' : 'Kode Token Handoff:'"></label>
+                    <textarea x-model="das.handoffToken" rows="2"
+                              class="w-full p-2.5 rounded-xl border border-slate-300 font-mono text-[10px] text-slate-800 bg-slate-50 focus:border-indigo-600 focus:outline-none"></textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button @click="navigator.clipboard.writeText(das.handoffToken); showToast(lang === 'en' ? 'Token copied to clipboard!' : 'Token berhasil disalin!', 'success')"
+                            class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition flex items-center justify-center gap-1 cursor-pointer">
+                        <span>📋</span>
+                        <span x-text="lang === 'en' ? 'Copy Token' : 'Salin Token'"></span>
+                    </button>
+                    <button @click="importDasHandoffToken(das.handoffToken)"
+                            class="py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1 cursor-pointer">
+                        <span>📥</span>
+                        <span x-text="lang === 'en' ? 'Import Token' : 'Impor Token'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- ═══════════════════ MOBILE BOTTOM NAVIGATION BAR ═══════════════════ -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-lg border-t border-white/15 safe-area-bottom shadow-2xl">
-        <div class="grid grid-cols-5 h-16 items-center px-1">
+        <!-- DMR Mobile Nav -->
+        <div x-show="activeWorkspace === 'dmr'" class="grid grid-cols-5 h-16 items-center px-1">
             <!-- 1. Sizing -->
             <button @click="activeTab = 'sizing'"
                     class="flex flex-col items-center justify-center py-1 transition relative"
@@ -2270,6 +3631,57 @@
                     <span class="text-base text-slate-950">✨</span>
                 </div>
                 <span class="text-[10px] font-bold text-amber-300 tracking-tight" x-text="t('bottomNavAi') || 'AI Copilot'"></span>
+            </button>
+
+            <!-- 5. Menu / More -->
+            <button @click="mobileMenuOpen = true"
+                    class="flex flex-col items-center justify-center py-1 transition relative"
+                    :class="mobileMenuOpen ? 'text-white font-extrabold' : 'text-slate-400 hover:text-white'">
+                <span class="text-xl">📂</span>
+                <span class="text-[10px] tracking-tight" x-text="t('bottomNavMenu') || 'Menu'"></span>
+            </button>
+        </div>
+
+        <!-- RFoF DAS Mobile Nav -->
+        <div x-show="activeWorkspace === 'das'" class="grid grid-cols-5 h-16 items-center px-1">
+            <!-- 1. BoQ & Topo -->
+            <button @click="dasActiveTab = 'boq'"
+                    class="flex flex-col items-center justify-center py-1 transition relative"
+                    :class="dasActiveTab === 'boq' ? 'text-indigo-400 font-extrabold' : 'text-slate-400 hover:text-white'">
+                <div class="relative">
+                    <span class="text-xl">🏢</span>
+                    <span class="absolute -top-1 -right-2 px-1.5 py-0.2 rounded-full text-[9px] bg-indigo-500 text-white font-black"
+                          x-text="das.floors ? das.floors.length : 0"></span>
+                </div>
+                <span class="text-[10px] tracking-tight">BoQ & Topo</span>
+                <span x-show="dasActiveTab === 'boq'" class="absolute -top-1 w-6 h-1 bg-indigo-400 rounded-full"></span>
+            </button>
+
+            <!-- 2. Link Budget -->
+            <button @click="dasActiveTab = 'link'"
+                    class="flex flex-col items-center justify-center py-1 transition relative"
+                    :class="dasActiveTab === 'link' ? 'text-sky-400 font-extrabold' : 'text-slate-400 hover:text-white'">
+                <span class="text-xl">📶</span>
+                <span class="text-[10px] tracking-tight">Link Budget</span>
+                <span x-show="dasActiveTab === 'link'" class="absolute -top-1 w-6 h-1 bg-sky-400 rounded-full"></span>
+            </button>
+
+            <!-- 3. Converter -->
+            <button @click="dasActiveTab = 'conv'"
+                    class="flex flex-col items-center justify-center py-1 transition relative"
+                    :class="dasActiveTab === 'conv' ? 'text-amber-400 font-extrabold' : 'text-slate-400 hover:text-white'">
+                <span class="text-xl">⚡</span>
+                <span class="text-[10px] tracking-tight">RF Tools</span>
+                <span x-show="dasActiveTab === 'conv'" class="absolute -top-1 w-6 h-1 bg-amber-400 rounded-full"></span>
+            </button>
+
+            <!-- 4. SAT Commissioning -->
+            <button @click="dasActiveTab = 'comm'"
+                    class="flex flex-col items-center justify-center py-1 transition relative"
+                    :class="dasActiveTab === 'comm' ? 'text-emerald-400 font-extrabold' : 'text-slate-400 hover:text-white'">
+                <span class="text-xl">📋</span>
+                <span class="text-[10px] tracking-tight">SAT Test</span>
+                <span x-show="dasActiveTab === 'comm'" class="absolute -top-1 w-6 h-1 bg-emerald-400 rounded-full"></span>
             </button>
 
             <!-- 5. Menu / More -->
@@ -2346,10 +3758,38 @@
                 <span class="px-2 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-black shadow-xs">Unduh ⬇️</span>
             </a>
 
+            <!-- Mobile Workspace Switcher -->
+            <div class="space-y-1.5 p-3 rounded-2xl bg-slate-900 text-white shadow-md border border-slate-800">
+                <div class="text-[10px] font-black uppercase tracking-wider text-sky-300">Pilih Ruang Kerja (Workspace)</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="activeWorkspace = 'dmr'; mobileMenuOpen = false"
+                            :class="activeWorkspace === 'dmr' ? 'bg-blue-600 text-white font-black shadow-md border-2 border-white/40' : 'bg-white/10 text-sky-100 hover:bg-white/20 border border-white/10'"
+                            class="p-2.5 rounded-xl text-left flex flex-col gap-1 transition cursor-pointer">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-base">📡</span>
+                            <span class="text-xs font-bold">DMR Planner</span>
+                        </div>
+                        <span class="text-[10px] text-sky-200">Radio & MOTOTRBO</span>
+                    </button>
+                    <button @click="activeWorkspace = 'das'; mobileMenuOpen = false"
+                            :class="activeWorkspace === 'das' ? 'bg-indigo-600 text-white font-black shadow-md border-2 border-amber-300' : 'bg-white/10 text-sky-100 hover:bg-white/20 border border-white/10'"
+                            class="p-2.5 rounded-xl text-left flex flex-col gap-1 transition cursor-pointer">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-base">🏢</span>
+                            <span class="text-xs font-bold">RFoF DAS</span>
+                        </div>
+                        <span class="text-[9px] px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black w-fit uppercase">RF over Fiber</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Navigation Shortcuts -->
             <div class="space-y-1">
-                <div class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-1.5">Navigasi Halaman Kerja</div>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-1.5"
+                     x-text="activeWorkspace === 'das' ? 'Navigasi RFoF DAS FMTCS' : 'Navigasi Halaman Kerja DMR'"></div>
+                
+                <!-- DMR Shortcuts -->
+                <div x-show="activeWorkspace === 'dmr'" class="grid grid-cols-2 gap-2">
                     <button @click="activeTab = 'catalog'; mobileMenuOpen = false"
                             class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left flex items-center gap-2 text-xs font-bold text-slate-800">
                         <span>📦</span> <span x-text="t('navCatalog')"></span>
@@ -2365,6 +3805,26 @@
                     <button @click="openProjectArchive(); mobileMenuOpen = false"
                             class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left flex items-center gap-2 text-xs font-bold text-slate-800">
                         <span>📂</span> <span x-text="currentUser && (currentUser.role === 'admin' || currentUser.role === 'overseer') ? t('teamArchiveBtn') : t('myArchiveBtn')"></span>
+                    </button>
+                </div>
+
+                <!-- DAS Shortcuts -->
+                <div x-show="activeWorkspace === 'das'" class="grid grid-cols-2 gap-2">
+                    <button @click="dasActiveTab = 'cov'; mobileMenuOpen = false"
+                            class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left flex items-center gap-2 text-xs font-bold text-slate-800">
+                        <span>📡</span> <span>Outdoor Hata</span>
+                    </button>
+                    <button @click="dasActiveTab = 'prod'; mobileMenuOpen = false"
+                            class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left flex items-center gap-2 text-xs font-bold text-slate-800">
+                        <span>🏷️</span> <span>Katalog FMTCS</span>
+                    </button>
+                    <button @click="generateDasHandoffQr(); mobileMenuOpen = false"
+                            class="p-2.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-left flex items-center gap-2 text-xs font-bold text-indigo-900">
+                        <span>📲</span> <span>Token & QR Handoff</span>
+                    </button>
+                    <button @click="exportDasCommPdf(); mobileMenuOpen = false"
+                            class="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-left flex items-center gap-2 text-xs font-bold text-emerald-900">
+                        <span>📄</span> <span>Export SAT PDF</span>
                     </button>
                 </div>
             </div>
@@ -2571,8 +4031,8 @@
                             <span x-text="msg.role === 'user' ? 'You' : msg.model"></span>
                             <span x-text="msg.time"></span>
                         </div>
-                        <div class="leading-relaxed whitespace-pre-line"
-                             x-html="msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/### (.*)/g, '<div class=\'text-sm font-extrabold text-blue-900 mt-1\'>$1</div>').replace(/#### (.*)/g, '<div class=\'font-bold text-slate-900 mt-2\'>$1</div>')"></div>
+                        <div class="leading-relaxed"
+                             x-html="formatAiMarkdown(msg.text)"></div>
 
                         <!-- Citations from Drive Knowledge Bank -->
                         <template x-if="msg.citations && msg.citations.length > 0">

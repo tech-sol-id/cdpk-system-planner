@@ -273,6 +273,11 @@ def parse_xlsx_knowledge(xlsx_bytes: bytes, fallback: Dict[str, Any]) -> Dict[st
                     "iconBg": icon_bg
                 })
             if products:
+                seen_skus = {p["sku"] for p in products}
+                for fb_item in fallback.get("products_catalog", []):
+                    if fb_item.get("sku") and fb_item["sku"] not in seen_skus:
+                        products.append(fb_item)
+                        seen_skus.add(fb_item["sku"])
                 result["products_catalog"] = products
 
     # 2. System_Bundles
@@ -311,7 +316,12 @@ def parse_xlsx_knowledge(xlsx_bytes: bytes, fallback: Dict[str, Any]) -> Dict[st
                     "mandatory": mand_str in ("TRUE", "1", "YES", "YA")
                 })
             if bundles_map:
-                result["system_bundles"] = list(bundles_map.values())
+                merged_bundles = list(bundles_map.values())
+                for fb_b in fallback.get("system_bundles", []):
+                    fb_bid = fb_b.get("bundle_id") or fb_b.get("id")
+                    if fb_bid and fb_bid not in bundles_map:
+                        merged_bundles.append(fb_b)
+                result["system_bundles"] = merged_bundles
 
     # 3. Industry_RF_Params
     if "Industry_RF_Params" in wb.sheetnames:
@@ -363,6 +373,72 @@ def parse_xlsx_knowledge(xlsx_bytes: bytes, fallback: Dict[str, Any]) -> Dict[st
                         pass
                 cfg[k] = v
             result["commercial_config"] = cfg
+
+    # 5. RFoF_DAS_FMTCS (Dedicated Tab for RFoF DAS by FMTCS Module)
+    if "RFoF_DAS_FMTCS" in wb.sheetnames:
+        ws = wb["RFoF_DAS_FMTCS"]
+        rows = list(ws.iter_rows(values_only=True))
+        if len(rows) > 1:
+            das_items = []
+            for r in rows[1:]:
+                if not r or not r[0] or not r[3]:
+                    continue
+                sku = str(r[0]).strip()
+                sub_cat = str(r[1] or "Active Optical").strip()
+                series = str(r[2] or "FMTCS").strip()
+                model = str(r[3]).strip()
+                unit = str(r[4] or "Unit").strip()
+                try:
+                    price_idr = float(r[5] or 0)
+                except Exception:
+                    price_idr = 0.0
+                try:
+                    price_usd = float(r[6] or 0)
+                except Exception:
+                    price_usd = round(price_idr / 16200.0, 2) if price_idr else 0.0
+                try:
+                    cogs_usd = float(r[7] or round(price_usd * 0.70, 2))
+                except Exception:
+                    cogs_usd = round(price_usd * 0.70, 2)
+                boq_key = str(r[8] or "").strip() if len(r) > 8 else ""
+                desc_id = str(r[9] or "").strip() if len(r) > 9 else ""
+                desc_en = str(r[10] or desc_id).strip() if len(r) > 10 else desc_id
+                feat_raw = str(r[11] or "") if len(r) > 11 else ""
+                features = [x.strip() for x in feat_raw.split(",") if x.strip()]
+                best_id = str(r[12] or "").strip() if len(r) > 12 else ""
+                best_en = str(r[13] or best_id).strip() if len(r) > 13 else best_id
+
+                das_entry = {
+                    "sku": sku,
+                    "cat": "RFoF DAS by FMTCS",
+                    "sub_cat": sub_cat,
+                    "series": series,
+                    "model": model,
+                    "unit": unit,
+                    "price_idr": price_idr,
+                    "price_usd": price_usd,
+                    "cogs_usd": cogs_usd,
+                    "boq_key": boq_key,
+                    "desc_id": desc_id,
+                    "desc_en": desc_en,
+                    "features": features,
+                    "best_for_id": best_id,
+                    "best_for_en": best_en,
+                    "iconBg": "linear-gradient(135deg,#0369a1,#0c4a6e)"
+                }
+                das_items.append(das_entry)
+
+            if das_items:
+                result["rfof_das_catalog"] = das_items
+                # Also sync/update matching SKUs in products_catalog
+                prod_list = list(result.get("products_catalog", []))
+                sku_to_idx = {p.get("sku"): idx for idx, p in enumerate(prod_list) if p.get("sku")}
+                for d_it in das_items:
+                    if d_it["sku"] in sku_to_idx:
+                        prod_list[sku_to_idx[d_it["sku"]]] = d_it
+                    else:
+                        prod_list.append(d_it)
+                result["products_catalog"] = prod_list
 
     return result
 
