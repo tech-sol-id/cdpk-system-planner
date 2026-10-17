@@ -293,5 +293,214 @@ window.CDPK_EXPORTERS = {
         link.download = `${(projName || 'CDPK_RF_Coverage').replace(/[^a-zA-Z0-9_-]/g, '_')}_Heatmap.png`;
         link.href = c.toDataURL('image/png');
         link.click();
+    },
+
+    exportPackagesPDF(app) {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            alert(app.lang === 'en' ? 'PDF library is loading, please try again.' : 'Pustaka PDF sedang dimuat, silakan coba lagi.');
+            return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const isEn = app.lang === 'en';
+        const summary = app.getPackagesGrandSummary();
+
+        // Header Banner
+        doc.setFillColor(0, 43, 92);
+        doc.rect(0, 0, 297, 26, 'F');
+        if (window.CDPK_LOGO_B64) {
+            try {
+                doc.addImage(window.CDPK_LOGO_B64, 'PNG', 12, 3.5, 32, 17);
+            } catch (e) {}
+        }
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('PT CITRA DATA PURNAMA KARYA — CITRADATA GROUP', 50, 11);
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(
+            `${isEn ? 'System & Product Quotation' : 'Dokumen Penawaran Konfigurasi Produk & Sistem Radio'}  |  ${isEn ? 'Project' : 'Proyek'}: ${app.projName || 'Radio System'}  |  ${isEn ? 'Client' : 'Klien'}: ${app.clientName || '-'}  |  ${new Date().toLocaleDateString('id-ID')}`,
+            50, 18
+        );
+
+        // Metadata Bar
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'bold');
+        doc.text(
+            `Total Paket: ${summary.totalPackages}   |   Total Radio/Repeater: ${summary.totalMainUnits} Unit   |   Total Add-on: ${summary.totalAddons} Item   |   PIC: ${app.salesPic || 'Presales Team'}`,
+            12, 33
+        );
+
+        // Build Table Rows
+        const rows = [];
+        let num = 1;
+        (app.systemPackages || []).forEach(pkg => {
+            const bom = app.calculatePackageBom(pkg);
+            // Package Header Row
+            rows.push([
+                String(num++),
+                `[PAKET] ${pkg.name}`,
+                pkg.category === 'ht' ? 'Portable Radio Fleet' : 'Repeater Base Station',
+                pkg.mainSku,
+                '-',
+                '-',
+                '-',
+                app.formatCurrency(app.currency === 'USD' ? bom.totalSellUsd : bom.totalSellIdr)
+            ]);
+
+            // Child BOM Rows
+            bom.items.forEach(it => {
+                const unitP = app.currency === 'USD' ? it.sellUsd : it.sellIdr;
+                const lineT = app.currency === 'USD' ? (it.subtotalSellUsd || unitP * it.qty) : (it.subtotalSellIdr || unitP * it.qty);
+                rows.push([
+                    "",
+                    `  ↳ ${it.isMain ? '★ Unit Utama' : '• Add-on'}`,
+                    it.name,
+                    it.sku,
+                    String(it.qty),
+                    it.unit || 'Unit',
+                    app.formatCurrency(unitP),
+                    app.formatCurrency(lineT)
+                ]);
+            });
+        });
+
+        if (doc.autoTable) {
+            doc.autoTable({
+                startY: 37,
+                head: [[
+                    'No',
+                    isEn ? 'Package / Component' : 'Paket / Komponen',
+                    isEn ? 'Description' : 'Deskripsi',
+                    'SKU / Part No',
+                    'Qty',
+                    isEn ? 'Unit' : 'Satuan',
+                    isEn ? 'Unit Price' : 'Harga Satuan',
+                    isEn ? 'Subtotal' : 'Subtotal'
+                ]],
+                body: rows,
+                theme: 'striped',
+                headStyles: { fillColor: [0, 56, 117], textColor: 255, fontSize: 8, fontStyle: 'bold' },
+                bodyStyles: { fontSize: 7.5, cellPadding: 1.8 },
+                columnStyles: {
+                    0: { cellWidth: 10, halign: 'center' },
+                    1: { cellWidth: 50 },
+                    2: { cellWidth: 70 },
+                    3: { cellWidth: 32 },
+                    4: { cellWidth: 12, halign: 'center' },
+                    5: { cellWidth: 15, halign: 'center' },
+                    6: { cellWidth: 36, halign: 'right' },
+                    7: { cellWidth: 38, halign: 'right', fontStyle: 'bold' }
+                },
+                didParseCell: (data) => {
+                    if (data.row.raw && data.row.raw[1] && data.row.raw[1].startsWith('[PAKET]')) {
+                        data.cell.styles.fillColor = [224, 238, 255];
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.textColor = [0, 43, 92];
+                    }
+                }
+            });
+
+            // Grand Total Footer Box
+            const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 6 : 160;
+            doc.setFillColor(248, 250, 252);
+            doc.rect(170, finalY, 115, 24, 'F');
+            doc.setDrawColor(203, 213, 225);
+            doc.rect(170, finalY, 115, 24, 'S');
+
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(71, 85, 105);
+            doc.text(`Subtotal Paket: ${app.formatCurrency(app.currency === 'USD' ? summary.grandSellUsd : summary.grandSellIdr)}`, 175, finalY + 6);
+            doc.text(`PPN (${app.ppnPercent}%): ${app.formatCurrency((app.currency === 'USD' ? summary.grandSellUsd : summary.grandSellIdr) * (app.ppnPercent / 100))}`, 175, finalY + 12);
+
+            doc.setFontSize(9.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(0, 43, 92);
+            const grandWithTax = (app.currency === 'USD' ? summary.grandSellUsd : summary.grandSellIdr) * (1.0 + app.ppnPercent / 100);
+            doc.text(`GRAND TOTAL: ${app.formatCurrency(grandWithTax)}`, 175, finalY + 19);
+        }
+
+        const safeName = (app.projName || 'CDPK_Paket_Sistem').replace(/[^a-zA-Z0-9_-]/g, '_');
+        doc.save(`${safeName}_Penawaran_Sistem.pdf`);
+    },
+
+    exportPackagesXLSX(app) {
+        if (!window.XLSX) {
+            alert(app.lang === 'en' ? 'Excel library is loading, please try again.' : 'Pustaka Excel sedang dimuat, silakan coba lagi.');
+            return;
+        }
+        const wb = window.XLSX.utils.book_new();
+        const isEn = app.lang === 'en';
+        const summary = app.getPackagesGrandSummary();
+
+        const aoa = [
+            ["CDPK SYSTEM PLANNER — PAKET PRODUK & SISTEM TERKONFIGURASI"],
+            ["PT Citra Data Purnama Karya | Citradata Group"],
+            [],
+            ["Informasi Proyek:"],
+            ["Nama Proyek", app.projName || "-"],
+            ["Nama Klien", app.clientName || "-"],
+            ["Lokasi", app.projLocation || "-"],
+            ["Sales PIC", app.salesPic || "-"],
+            ["Mata Uang", app.currency || "IDR"],
+            ["Kurs USD-IDR", app.exchangeRate || 16200],
+            ["PPN %", `${app.ppnPercent}%`],
+            ["Tanggal Export", new Date().toLocaleDateString('id-ID')],
+            [],
+            ["No", "Paket Sistem", "Kategori", "SKU / Part No", "Deskripsi Komponen / Add-on", "Qty", "Satuan", "Harga Satuan", "Subtotal", "Keterangan"]
+        ];
+
+        let num = 1;
+        (app.systemPackages || []).forEach(pkg => {
+            const bom = app.calculatePackageBom(pkg);
+            aoa.push([
+                num++,
+                pkg.name,
+                pkg.category === 'ht' ? 'Handy Talky Fleet' : 'Repeater Base Station',
+                pkg.mainSku,
+                `Total ${bom.items.length} Komponen Sistem`,
+                pkg.quantity,
+                'Paket',
+                Math.round(app.currency === 'USD' ? bom.totalSellUsd : bom.totalSellIdr),
+                Math.round(app.currency === 'USD' ? bom.totalSellUsd : bom.totalSellIdr),
+                "Paket Induk"
+            ]);
+
+            bom.items.forEach(it => {
+                const unitP = app.currency === 'USD' ? it.sellUsd : it.sellIdr;
+                const lineT = app.currency === 'USD' ? (it.subtotalSellUsd || unitP * it.qty) : (it.subtotalSellIdr || unitP * it.qty);
+                aoa.push([
+                    "",
+                    "  ↳ Sub-BOM",
+                    it.category,
+                    it.sku,
+                    it.name,
+                    it.qty,
+                    it.unit || "Unit",
+                    Math.round(unitP),
+                    Math.round(lineT),
+                    it.isMain ? "Unit Utama" : "Add-on Komponen"
+                ]);
+            });
+            aoa.push([]);
+        });
+
+        const subtotal = app.currency === 'USD' ? summary.grandSellUsd : summary.grandSellIdr;
+        const ppnVal = subtotal * (app.ppnPercent / 100);
+        const grandTotalVal = subtotal + ppnVal;
+
+        aoa.push(["", "", "", "", "SUBTOTAL PAKET SISTEM", "", "", "", Math.round(subtotal)]);
+        aoa.push(["", "", "", "", `PPN (${app.ppnPercent}%)`, "", "", "", Math.round(ppnVal)]);
+        aoa.push(["", "", "", "", "GRAND TOTAL INVESTASI", "", "", "", Math.round(grandTotalVal)]);
+
+        const ws = window.XLSX.utils.aoa_to_sheet(aoa);
+        window.XLSX.utils.book_append_sheet(wb, ws, "Paket_Produk_dan_Sistem");
+
+        const safeName = (app.projName || 'CDPK_Paket_Sistem').replace(/[^a-zA-Z0-9_-]/g, '_');
+        window.XLSX.writeFile(wb, `${safeName}_Paket_Sistem.xlsx`);
     }
 };

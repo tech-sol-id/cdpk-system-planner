@@ -139,6 +139,88 @@ window.cdpkSystemPlannerApp = function () {
         archiveFiles: [],
         compareModalOpen: false,
 
+        // ─── Module 7: Product & System Configurator State ───────────────
+        systemPackages: [
+            {
+                id: 'PKG-1',
+                name: 'Paket Repeater Base Station SLR 5300 (Single-Site High Power)',
+                category: 'slr', // 'slr' | 'ht'
+                mainSku: 'MOT-RPT-SLR5300',
+                quantity: 1,
+                frequency: 'UHF', // 'VHF' | 'UHF'
+                marginPercent: 20,
+                slrOptions: {
+                    duplexer: true,
+                    cavityTuning: true,
+                    antennaType: 'omni', // 'omni' | 'yagi'
+                    antennaCount: 1,
+                    feederType: '78', // '78' | '12'
+                    feederMeters: 45,
+                    arrester: true,
+                    onlineUps: true,
+                    upsVa: 1500,
+                    rackCabinet: true,
+                    ipscLicense: true,
+                    engineeringService: true
+                },
+                htOptions: {
+                    extraBattery: true,
+                    batteryRatio: 1,
+                    chargerType: '6way',
+                    chargerCount: 2,
+                    rsmMic: true,
+                    rsmCount: 10,
+                    earpiece: false,
+                    earpieceCount: 0,
+                    swivelCase: true,
+                    swivelCaseCount: 10,
+                    aesLicense: false
+                }
+            },
+            {
+                id: 'PKG-2',
+                name: 'Paket Armada Radio Lapangan MOTOTRBO R7 (Operasional Standar)',
+                category: 'ht',
+                mainSku: 'MOT-HT-R7',
+                quantity: 10,
+                frequency: 'UHF',
+                marginPercent: 20,
+                slrOptions: {
+                    duplexer: true,
+                    cavityTuning: true,
+                    antennaType: 'omni',
+                    antennaCount: 1,
+                    feederType: '78',
+                    feederMeters: 45,
+                    arrester: true,
+                    onlineUps: true,
+                    upsVa: 1500,
+                    rackCabinet: true,
+                    ipscLicense: true,
+                    engineeringService: true
+                },
+                htOptions: {
+                    extraBattery: true,
+                    batteryRatio: 1,
+                    chargerType: '6way',
+                    chargerCount: 2,
+                    rsmMic: true,
+                    rsmCount: 10,
+                    earpiece: false,
+                    earpieceCount: 0,
+                    swivelCase: true,
+                    swivelCaseCount: 10,
+                    aesLicense: false
+                }
+            }
+        ],
+        activeConfigPkgId: 'PKG-1',
+        emailModalOpen: false,
+        emailRecipient: '',
+        emailClientContact: '',
+        emailSubject: '',
+        emailNotes: '',
+
         // ─── Lifecycle Init ──────────────────────────────────────────────
         async init() {
             await this.fetchHealthConfig();
@@ -572,7 +654,8 @@ window.cdpkSystemPlannerApp = function () {
                         totalMandays: this.mandaysResult.totalMandays,
                         calendarDays: this.mandaysResult.calendarDays,
                         tasks: this.mandaysResult.tasks
-                    }
+                    },
+                    systemPackages: this.systemPackages
                 };
 
                 const resp = await fetch('/api/project/save-to-drive', {
@@ -1435,6 +1518,549 @@ window.cdpkSystemPlannerApp = function () {
             this.runCoverageSimulation();
             this.aiModalOpen = false;
             this.activeTab = 'boq';
+        },
+
+        // ─── Module 7: Product & System Configurator Methods ─────────────
+        addSystemPackage(type = 'ht') {
+            const nextIdx = this.systemPackages.length + 1;
+            const pkgId = 'PKG-' + Date.now().toString(36).slice(-4).toUpperCase();
+            if (type === 'slr') {
+                this.systemPackages.push({
+                    id: pkgId,
+                    name: `Paket ${nextIdx}: MOTOTRBO SLR 5300 Repeater System`,
+                    category: 'slr',
+                    mainSku: 'MOT-RPT-SLR5300',
+                    quantity: 1,
+                    frequency: 'UHF',
+                    marginPercent: 20,
+                    slrOptions: {
+                        duplexer: true,
+                        cavityTuning: true,
+                        antennaType: 'omni',
+                        antennaCount: 1,
+                        feederType: '78',
+                        feederMeters: 45,
+                        arrester: true,
+                        onlineUps: true,
+                        upsVa: 1500,
+                        rackCabinet: true,
+                        ipscLicense: true,
+                        engineeringService: true
+                    },
+                    htOptions: {}
+                });
+            } else {
+                this.systemPackages.push({
+                    id: pkgId,
+                    name: `Paket ${nextIdx}: MOTOTRBO R7 Radio Fleet`,
+                    category: 'ht',
+                    mainSku: 'MOT-HT-R7',
+                    quantity: 6,
+                    frequency: 'UHF',
+                    marginPercent: 20,
+                    slrOptions: {},
+                    htOptions: {
+                        extraBattery: true,
+                        batteryRatio: 1,
+                        chargerType: '6way',
+                        chargerCount: 1,
+                        rsmMic: true,
+                        rsmCount: 6,
+                        earpiece: false,
+                        earpieceCount: 0,
+                        swivelCase: true,
+                        swivelCaseCount: 6,
+                        aesLicense: false
+                    }
+                });
+            }
+            this.activeConfigPkgId = pkgId;
+        },
+
+        duplicateSystemPackage(pkgId) {
+            const src = this.systemPackages.find(p => p.id === pkgId);
+            if (!src) return;
+            const newId = 'PKG-' + Date.now().toString(36).slice(-4).toUpperCase();
+            const clone = JSON.parse(JSON.stringify(src));
+            clone.id = newId;
+            clone.name = `[Salinan] ${src.name}`;
+            this.systemPackages.push(clone);
+            this.activeConfigPkgId = newId;
+        },
+
+        removeSystemPackage(pkgId) {
+            if (this.systemPackages.length <= 1) {
+                alert(this.lang === 'en' ? 'At least one system package must remain.' : 'Minimal harus ada 1 paket sistem tersisa.');
+                return;
+            }
+            if (!confirm(this.lang === 'en' ? 'Delete this system package?' : 'Hapus paket sistem ini?')) return;
+            this.systemPackages = this.systemPackages.filter(p => p.id !== pkgId);
+            if (this.activeConfigPkgId === pkgId && this.systemPackages.length > 0) {
+                this.activeConfigPkgId = this.systemPackages[0].id;
+            }
+        },
+
+        calculatePackageBom(pkg) {
+            const isEn = this.lang === 'en';
+            const mult = 1.0 + (Number(pkg.marginPercent || 20) / 100.0);
+            const items = [];
+
+            // 1. Main Unit
+            const mainProd = this.findProductBySku(pkg.mainSku);
+            const mainQty = Math.max(1, Number(pkg.quantity || 1));
+            const costIdr = mainProd ? Number(mainProd.price_idr || 0) : 0;
+            const costUsd = mainProd && mainProd.price_usd ? Number(mainProd.price_usd) : (costIdr / Math.max(1, this.exchangeRate));
+
+            items.push({
+                sku: pkg.mainSku,
+                name: mainProd ? `${mainProd.model} (${pkg.frequency || 'UHF'})` : pkg.mainSku,
+                category: pkg.category === 'slr' ? 'Repeater Base Station' : 'Handy Talky Portable',
+                qty: mainQty,
+                unit: mainProd ? (mainProd.unit || 'Unit') : 'Unit',
+                costIdr: costIdr,
+                costUsd: costUsd,
+                sellIdr: costIdr * mult,
+                sellUsd: costUsd * mult,
+                subtotalCostIdr: costIdr * mainQty,
+                subtotalSellIdr: costIdr * mult * mainQty,
+                subtotalCostUsd: costUsd * mainQty,
+                subtotalSellUsd: costUsd * mult * mainQty,
+                isMain: true
+            });
+
+            // 2. Add-ons
+            if (pkg.category === 'slr') {
+                const opts = pkg.slrOptions || {};
+                // Duplexer
+                if (opts.duplexer) {
+                    const p = this.findProductBySku('RF-ACC-DUPLEXER');
+                    const c = p ? Number(p.price_idr) : 6500000;
+                    items.push({
+                        sku: 'RF-ACC-DUPLEXER',
+                        name: `Duplexer Band-Pass VHF/UHF High-Power 50W (Standard N-Female)`,
+                        category: 'RF Filtering',
+                        qty: mainQty,
+                        unit: 'Unit',
+                        costIdr: c,
+                        sellIdr: c * mult,
+                        subtotalCostIdr: c * mainQty,
+                        subtotalSellIdr: c * mult * mainQty
+                    });
+                }
+                // Cavity Tuning
+                if (opts.cavityTuning) {
+                    const c = 1500000;
+                    items.push({
+                        sku: 'SVC-CAVITY-TUNING',
+                        name: `Jasa Engineering Tuning & Kalibrasi Frekuensi Cavity Duplexer (CDPK Lab)`,
+                        category: 'Services & Engineering',
+                        qty: mainQty,
+                        unit: 'Site',
+                        costIdr: c,
+                        sellIdr: c * mult,
+                        subtotalCostIdr: c * mainQty,
+                        subtotalSellIdr: c * mult * mainQty
+                    });
+                }
+                // Antenna
+                if (opts.antennaType) {
+                    const isOmni = opts.antennaType === 'omni';
+                    const antSku = isOmni ? (pkg.frequency === 'VHF' ? 'AVT-ANT-AVO150' : 'AVT-ANT-AVO400') : 'AVT-ANT-TDJ900D';
+                    const aProd = this.findProductBySku(antSku);
+                    const c = aProd ? Number(aProd.price_idr) : (isOmni ? 6800000 : 4200000);
+                    const antCount = Math.max(1, Number(opts.antennaCount || 1)) * mainQty;
+                    items.push({
+                        sku: antSku,
+                        name: isOmni ? `Antena Base Station Omni High Gain Fiberglass (6-9 dBi)` : `Antena Base Directional Yagi (11-13 dBi)`,
+                        category: 'Antenna RF',
+                        qty: antCount,
+                        unit: 'Unit',
+                        costIdr: c,
+                        sellIdr: c * mult,
+                        subtotalCostIdr: c * antCount,
+                        subtotalSellIdr: c * mult * antCount
+                    });
+                }
+                // Feeder Cable
+                const meters = Math.max(5, Number(opts.feederMeters || 45));
+                const is78 = opts.feederType === '78';
+                const cabSku = is78 ? 'RF-CAB-78-HELIAX' : 'RF-CAB-12-SUPERFLEX';
+                const cProd = this.findProductBySku(cabSku);
+                const pricePerMeter = cProd ? Number(cProd.price_idr) : (is78 ? 165000 : 85000);
+                const totalMeters = meters * mainQty;
+                items.push({
+                    sku: cabSku,
+                    name: is78 ? `Kabel Coaxial Heliax 7/8" Low-Loss Foam (${meters} meter/run)` : `Kabel Coaxial 1/2" Superflex Low-Loss (${meters} meter/run)`,
+                    category: 'RF Cable & Feeder',
+                    qty: totalMeters,
+                    unit: 'Meter',
+                    costIdr: pricePerMeter,
+                    sellIdr: pricePerMeter * mult,
+                    subtotalCostIdr: pricePerMeter * totalMeters,
+                    subtotalSellIdr: pricePerMeter * mult * totalMeters
+                });
+                // Connectors, Jumpers & Grounding Kit
+                const conProd = this.findProductBySku('RF-CON-NFEMALE-SET');
+                const conPrice = conProd ? Number(conProd.price_idr) : 2400000;
+                items.push({
+                    sku: 'RF-CON-NFEMALE-SET',
+                    name: `Set Konektor Coaxial N-Male/DIN 7/16 + Jumper RG-214 + Grounding Kit Tower`,
+                    category: 'RF Accessories',
+                    qty: mainQty,
+                    unit: 'Set',
+                    costIdr: conPrice,
+                    sellIdr: conPrice * mult,
+                    subtotalCostIdr: conPrice * mainQty,
+                    subtotalSellIdr: conPrice * mult * mainQty
+                });
+                // Lightning Arrester
+                if (opts.arrester) {
+                    const arrProd = this.findProductBySku('RF-PROT-ARRESTER');
+                    const arrPrice = arrProd ? Number(arrProd.price_idr) : 2850000;
+                    items.push({
+                        sku: 'RF-PROT-ARRESTER',
+                        name: `RF Coaxial Lightning Surge Arrester (PolyPhaser / Diamond Gas Tube)`,
+                        category: 'Protection & Grounding',
+                        qty: mainQty,
+                        unit: 'Unit',
+                        costIdr: arrPrice,
+                        sellIdr: arrPrice * mult,
+                        subtotalCostIdr: arrPrice * mainQty,
+                        subtotalSellIdr: arrPrice * mult * mainQty
+                    });
+                }
+                // Online UPS
+                if (opts.onlineUps) {
+                    const upsProd = this.findProductBySku('PWR-UPS-ONLINE');
+                    const upsPrice = upsProd ? Number(upsProd.price_idr) : 14500000;
+                    items.push({
+                        sku: 'PWR-UPS-ONLINE',
+                        name: `Smart Online Double-Conversion UPS ${opts.upsVa || 1500}VA + Battery Bank`,
+                        category: 'Power & Infrastructure',
+                        qty: mainQty,
+                        unit: 'Unit',
+                        costIdr: upsPrice,
+                        sellIdr: upsPrice * mult,
+                        subtotalCostIdr: upsPrice * mainQty,
+                        subtotalSellIdr: upsPrice * mult * mainQty
+                    });
+                }
+                // Rack Cabinet
+                if (opts.rackCabinet) {
+                    const rackProd = this.findProductBySku('INF-RACK-19U');
+                    const rackPrice = rackProd ? Number(rackProd.price_idr) : 8500000;
+                    items.push({
+                        sku: 'INF-RACK-19U',
+                        name: `19" Close Rack Standing Cabinet 20U + PDU + Roof Fan Filter`,
+                        category: 'Power & Infrastructure',
+                        qty: mainQty,
+                        unit: 'Unit',
+                        costIdr: rackPrice,
+                        sellIdr: rackPrice * mult,
+                        subtotalCostIdr: rackPrice * mainQty,
+                        subtotalSellIdr: rackPrice * mult * mainQty
+                    });
+                }
+                // IPSC License
+                if (opts.ipscLicense) {
+                    const licProd = this.findProductBySku('LIC-MOT-IPSC');
+                    const licPrice = licProd ? Number(licProd.price_idr) : 4500000;
+                    items.push({
+                        sku: 'LIC-MOT-IPSC',
+                        name: `MOTOTRBO IP Site Connect (IPSC) Software License`,
+                        category: 'Software & Licenses',
+                        qty: mainQty,
+                        unit: 'Lisensi',
+                        costIdr: licPrice,
+                        sellIdr: licPrice * mult,
+                        subtotalCostIdr: licPrice * mainQty,
+                        subtotalSellIdr: licPrice * mult * mainQty
+                    });
+                }
+                // Engineering Service
+                if (opts.engineeringService) {
+                    const engProd = this.findProductBySku('SVC-CDPK-MANDAYS');
+                    const engPrice = engProd ? Number(engProd.price_idr) : 3500000;
+                    const mandaysCount = 3 * mainQty;
+                    items.push({
+                        sku: 'SVC-CDPK-MANDAYS',
+                        name: `Jasa Engineering CDPK: Site Survey, Rigging Tower, RF Alignment & Commissioning`,
+                        category: 'Services & Engineering',
+                        qty: mandaysCount,
+                        unit: 'Mandays',
+                        costIdr: engPrice,
+                        sellIdr: engPrice * mult,
+                        subtotalCostIdr: engPrice * mandaysCount,
+                        subtotalSellIdr: engPrice * mult * mandaysCount
+                    });
+                }
+            } else if (pkg.category === 'ht') {
+                const opts = pkg.htOptions || {};
+                // Extra Battery
+                if (opts.extraBattery) {
+                    const bQty = Math.max(1, Number(opts.batteryRatio || 1)) * mainQty;
+                    const bPrice = 1650000;
+                    items.push({
+                        sku: 'ACC-MOT-BATTERY-IMPRES',
+                        name: `Baterai Cadangan Motorola IMPRES Li-Ion 2850mAh IP68 Submersible`,
+                        category: 'HT Accessories',
+                        qty: bQty,
+                        unit: 'Unit',
+                        costIdr: bPrice,
+                        sellIdr: bPrice * mult,
+                        subtotalCostIdr: bPrice * bQty,
+                        subtotalSellIdr: bPrice * mult * bQty
+                    });
+                }
+                // Charger 6-way
+                if (opts.chargerType === '6way') {
+                    const mucQty = opts.chargerCount !== undefined ? Number(opts.chargerCount) : Math.ceil(mainQty / 6.0);
+                    const mucPrice = 8800000;
+                    items.push({
+                        sku: 'ACC-MOT-MUC-6WAY',
+                        name: `6-Way Multi-Unit Rapid Charger (MUC) Rak Display IMPRES Management`,
+                        category: 'HT Charging Solutions',
+                        qty: mucQty,
+                        unit: 'Unit',
+                        costIdr: mucPrice,
+                        sellIdr: mucPrice * mult,
+                        subtotalCostIdr: mucPrice * mucQty,
+                        subtotalSellIdr: mucPrice * mult * mucQty
+                    });
+                }
+                // Remote Speaker Mic
+                if (opts.rsmMic) {
+                    const rsmQty = Number(opts.rsmCount !== undefined ? opts.rsmCount : mainQty);
+                    const rsmPrice = 1450000;
+                    items.push({
+                        sku: 'ACC-MOT-RSM-IP67',
+                        name: `Remote Speaker Microphone (RSM) Heavy Duty Windporting IP67 Water-Resistant`,
+                        category: 'Audio Accessories',
+                        qty: rsmQty,
+                        unit: 'Unit',
+                        costIdr: rsmPrice,
+                        sellIdr: rsmPrice * mult,
+                        subtotalCostIdr: rsmPrice * rsmQty,
+                        subtotalSellIdr: rsmPrice * mult * rsmQty
+                    });
+                }
+                // Earpiece
+                if (opts.earpiece) {
+                    const epQty = Number(opts.earpieceCount !== undefined ? opts.earpieceCount : mainQty);
+                    const epPrice = 650000;
+                    items.push({
+                        sku: 'ACC-MOT-EARPIECE-2WIRE',
+                        name: `2-Wire Surveillance Acoustic Tube Earpiece with In-Line PTT & Mic`,
+                        category: 'Audio Accessories',
+                        qty: epQty,
+                        unit: 'Unit',
+                        costIdr: epPrice,
+                        sellIdr: epPrice * mult,
+                        subtotalCostIdr: epPrice * epQty,
+                        subtotalSellIdr: epPrice * mult * epQty
+                    });
+                }
+                // Swivel Leather Case
+                if (opts.swivelCase) {
+                    const cQty = Number(opts.swivelCaseCount !== undefined ? opts.swivelCaseCount : mainQty);
+                    const cPrice = 750000;
+                    items.push({
+                        sku: 'ACC-MOT-CASE-SWIVEL',
+                        name: `Heavy Duty Hard Leather Carry Case with Swivel Belt Loop Quick-Release`,
+                        category: 'Carrying Solutions',
+                        qty: cQty,
+                        unit: 'Unit',
+                        costIdr: cPrice,
+                        sellIdr: cPrice * mult,
+                        subtotalCostIdr: cPrice * cQty,
+                        subtotalSellIdr: cPrice * mult * cQty
+                    });
+                }
+                // AES-256 License
+                if (opts.aesLicense) {
+                    const lPrice = 1950000;
+                    items.push({
+                        sku: 'LIC-MOT-AES256',
+                        name: `Lisensi Keamanan & Enkripsi Motorola Enhanced AES-256 Bit`,
+                        category: 'Software & Licenses',
+                        qty: mainQty,
+                        unit: 'Lisensi',
+                        costIdr: lPrice,
+                        sellIdr: lPrice * mult,
+                        subtotalCostIdr: lPrice * mainQty,
+                        subtotalSellIdr: lPrice * mult * mainQty
+                    });
+                }
+            }
+
+            let totalCostIdr = 0;
+            let totalSellIdr = 0;
+            items.forEach(it => {
+                totalCostIdr += it.subtotalCostIdr || 0;
+                totalSellIdr += it.subtotalSellIdr || 0;
+            });
+
+            const exchangeRate = Math.max(1, Number(this.exchangeRate || 16200));
+            const totalCostUsd = totalCostIdr / exchangeRate;
+            const totalSellUsd = totalSellIdr / exchangeRate;
+
+            return {
+                items: items,
+                totalCostIdr: totalCostIdr,
+                totalSellIdr: totalSellIdr,
+                totalCostUsd: totalCostUsd,
+                totalSellUsd: totalSellUsd,
+                mainUnits: mainQty,
+                addonCount: Math.max(0, items.length - 1)
+            };
+        },
+
+        getPackagesGrandSummary() {
+            let totalMainUnits = 0;
+            let totalAddons = 0;
+            let grandCostIdr = 0;
+            let grandSellIdr = 0;
+
+            (this.systemPackages || []).forEach(pkg => {
+                const bom = this.calculatePackageBom(pkg);
+                totalMainUnits += bom.mainUnits || 0;
+                totalAddons += bom.addonCount || 0;
+                grandCostIdr += bom.totalCostIdr || 0;
+                grandSellIdr += bom.totalSellIdr || 0;
+            });
+
+            const exchangeRate = Math.max(1, Number(this.exchangeRate || 16200));
+            return {
+                totalPackages: (this.systemPackages || []).length,
+                totalMainUnits: totalMainUnits,
+                totalAddons: totalAddons,
+                grandCostIdr: grandCostIdr,
+                grandSellIdr: grandSellIdr,
+                grandCostUsd: grandCostIdr / exchangeRate,
+                grandSellUsd: grandSellIdr / exchangeRate
+            };
+        },
+
+        applyPackagesToBoq() {
+            if (!this.systemPackages || this.systemPackages.length === 0) return;
+            const isEn = this.lang === 'en';
+            let addedCount = 0;
+
+            this.systemPackages.forEach(pkg => {
+                const bom = this.calculatePackageBom(pkg);
+                if (!bom || bom.items.length === 0) return;
+
+                const children = bom.items.map(it => ({
+                    sku: it.sku,
+                    name: it.name,
+                    category: it.category,
+                    qtyPerBundle: it.qty,
+                    price_idr: it.costIdr,
+                    price_usd: it.costUsd,
+                    mandatory: it.isMain === true,
+                    enabled: true
+                }));
+
+                const bundleRow = {
+                    id: 'boq-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+                    isBundle: true,
+                    expanded: true,
+                    bundle_id: pkg.id,
+                    category: pkg.category === 'ht' ? 'Handy Talky Fleet Package' : 'Repeater Base Station Package',
+                    sku: pkg.id,
+                    name_id: pkg.name,
+                    name_en: pkg.name,
+                    name: pkg.name,
+                    qty: 1,
+                    unit: 'Paket Sistem',
+                    price_idr: 0,
+                    price_usd: 0,
+                    notes_id: `Konfigurasi Khusus: ${bom.items.length} item komponen sistem`,
+                    notes_en: `Custom Config: ${bom.items.length} system component items`,
+                    notes: `Konfigurasi Khusus: ${bom.items.length} item komponen sistem`,
+                    children: children
+                };
+
+                this.boqItems.push(bundleRow);
+                addedCount++;
+            });
+
+            this.activeTab = 'boq';
+            alert(isEn
+                ? `Success! ${addedCount} configured packages have been added to the master BoQ table.`
+                : `Berhasil! ${addedCount} Paket Sistem telah diterapkan ke Tabel BoQ Utama.`);
+        },
+
+        exportPackagesXlsx() {
+            window.CDPK_EXPORTERS.exportPackagesXLSX(this);
+        },
+
+        exportPackagesPdf() {
+            window.CDPK_EXPORTERS.exportPackagesPDF(this);
+        },
+
+        openEmailQuoteModal() {
+            this.emailRecipient = '';
+            this.emailClientContact = this.clientName || '';
+            this.emailSubject = `Penawaran Paket Sistem Telekomunikasi CDPK — ${this.projName || 'Proyek Radio'}`;
+            this.emailNotes = '';
+            this.emailModalOpen = true;
+        },
+
+        sendQuoteEmailMailto() {
+            const summary = this.getPackagesGrandSummary();
+            const recipient = (this.emailRecipient || '').trim();
+            const subject = this.emailSubject || `Penawaran Sistem CDPK — ${this.projName || 'Proyek'}`;
+
+            let bodyLines = [];
+            bodyLines.push(`Kepada Yth.`);
+            bodyLines.push(`${this.emailClientContact || 'Bpk/Ibu Pimpinan'}`);
+            bodyLines.push(`${this.clientName ? this.clientName : ''}`);
+            bodyLines.push(``);
+            bodyLines.push(`Dengan hormat,`);
+            bodyLines.push(`Bersama ini kami dari PT Citra Data Purnama Karya (Citradata Group) menyampaikan rincian penawaran konfigurasi produk & paket sistem radio telekomunikasi:`);
+            bodyLines.push(``);
+            bodyLines.push(`• Nama Proyek: ${this.projName || 'Radio & Security System'}`);
+            bodyLines.push(`• Lokasi: ${this.projLocation || '-'}`);
+            bodyLines.push(`• Tanggal: ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}`);
+            bodyLines.push(``);
+            bodyLines.push(`══════════════════════════════════════════════════════`);
+            bodyLines.push(`RINGKASAN PAKET SISTEM TERKONFIGURASI:`);
+            bodyLines.push(`══════════════════════════════════════════════════════`);
+
+            (this.systemPackages || []).forEach((pkg, idx) => {
+                const bom = this.calculatePackageBom(pkg);
+                bodyLines.push(`${idx + 1}. ${pkg.name}`);
+                bodyLines.push(`   - Unit Utama: ${bom.mainUnits}x ${pkg.mainSku} (${pkg.frequency})`);
+                bodyLines.push(`   - Add-on: ${bom.addonCount} item komponen pendukung`);
+                bodyLines.push(`   - Subtotal Penawaran: ${this.formatCurrency(this.currency === 'USD' ? bom.totalSellUsd : bom.totalSellIdr)}`);
+                bodyLines.push(``);
+            });
+
+            bodyLines.push(`══════════════════════════════════════════════════════`);
+            bodyLines.push(`GRAND TOTAL PENAWARAN: ${this.formatCurrency(this.currency === 'USD' ? summary.grandSellUsd : summary.grandSellIdr)}`);
+            bodyLines.push(`(Harga sebelum PPN ${this.ppnPercent}%)`);
+            bodyLines.push(`══════════════════════════════════════════════════════`);
+            if (this.emailNotes) {
+                bodyLines.push(``);
+                bodyLines.push(`Catatan Khusus:`);
+                bodyLines.push(`${this.emailNotes}`);
+            }
+            bodyLines.push(``);
+            bodyLines.push(`Ketentuan:`);
+            bodyLines.push(`1. Masa berlaku penawaran: 30 hari kalender.`);
+            bodyLines.push(`2. Garansi resmi Motorola Solutions sesuai standar pabrikan.`);
+            bodyLines.push(`3. Dokumen rincian BoQ teknis & spreadsheet lampiran dapat kami kirimkan terlampir.`);
+            bodyLines.push(``);
+            bodyLines.push(`Hormat kami,`);
+            bodyLines.push(`${this.salesPic || (this.currentUser ? this.currentUser.name : 'Presales & Solutions Architect')}`);
+            bodyLines.push(`PT Citra Data Purnama Karya (Citradata Group)`);
+            bodyLines.push(`Motorola Solutions & Avigilon Elite Partner`);
+
+            const fullBody = bodyLines.join('\n');
+            const mailtoUrl = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(fullBody)}`;
+
+            window.location.href = mailtoUrl;
         },
 
         // ─── Document Exporters ──────────────────────────────────────────

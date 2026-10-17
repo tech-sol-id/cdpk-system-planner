@@ -69,7 +69,7 @@
                     <p class="text-xs text-sky-100 mt-1" x-text="t('loginSubtitle')"></p>
                     <div class="inline-flex items-center gap-1.5 mt-3 px-3.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 text-sky-100 border border-white/20">
                         <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span>
-                        <span>Portal Solusi Internal PT Citra Data Purnama Karya</span>
+                        <span>Portal Solusi Internal Citradata Group</span>
                     </div>
                 </div>
 
@@ -128,7 +128,7 @@
                                 <span>Sign in with Google Workspace</span>
                             </button>
                             <p class="text-[10px] text-slate-400 text-center">
-                                Khusus akun resmi domain <span class="font-bold text-slate-600">@citradata.id</span>
+                                Khusus akun resmi domain <span class="font-bold text-slate-600">@citradata.id</span> &amp; <span class="font-bold text-slate-600">@techsolutions.id</span>
                             </p>
                         </div>
                     </div>
@@ -256,6 +256,13 @@
                 <button @click="activeTab = 'coverage'; $nextTick(() => runCoverageSimulation())"
                         :class="activeTab === 'coverage' ? 'bg-white text-blue-950 font-bold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
                         class="px-4 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition" x-text="t('navCoverage')"></button>
+                <button @click="activeTab = 'configurator'"
+                        :class="activeTab === 'configurator' ? 'bg-amber-400 text-slate-950 font-extrabold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                        class="px-4 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5">
+                    <span>⚡</span>
+                    <span x-text="t('navConfigurator')"></span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-900 text-amber-300 font-extrabold" x-text="systemPackages.length"></span>
+                </button>
             </div>
         </div>
     </header>
@@ -971,6 +978,476 @@
                 </div>
             </div>
         </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <!-- MODULE 6: DEDICATED PRODUCT & SYSTEM CONFIGURATOR                  -->
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <div x-show="activeTab === 'configurator'" class="space-y-6">
+
+            <!-- Control Header & Global Action Bar -->
+            <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">⚡</span>
+                            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900" x-text="lang === 'en' ? 'Product & System Configurator' : 'Kalkulator Produk dan Sistem'"></h2>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950 uppercase tracking-wide">Multi-Package Engine</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1" x-text="lang === 'en' ? 'Configure turnkey repeater base stations & two-way radio fleets with automated add-ons, cable meter pricing, and 1-click BoQ injection.' : 'Susun paket sistem repeater & armada radio HT lengkap dengan add-on spesifik, kalkulasi meter kabel, rasio charger, dan penawaran instan.'"></p>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Add Repeater Package -->
+                        <button @click="addSystemPackage('slr')"
+                                class="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-700 hover:bg-blue-800 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                            <span>📡</span>
+                            <span>+ Paket Repeater (SLR)</span>
+                        </button>
+
+                        <!-- Add HT Package -->
+                        <button @click="addSystemPackage('ht')"
+                                class="px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                            <span>📻</span>
+                            <span>+ Paket Radio (HT)</span>
+                        </button>
+
+                        <!-- Apply to BoQ -->
+                        <button @click="applyPackagesToBoq()"
+                                class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                                title="Terapkan semua paket ke tabel BoQ utama">
+                            <span>📋</span>
+                            <span>Terapkan ke BoQ</span>
+                        </button>
+
+                        <!-- Save to Drive -->
+                        <button @click="saveToGoogleDrive()" :disabled="isSavingToDrive"
+                                class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                            <span x-show="!isSavingToDrive">☁️</span>
+                            <span x-show="isSavingToDrive" class="animate-spin">⌛</span>
+                            <span>Simpan ke Drive</span>
+                        </button>
+
+                        <!-- Export PDF -->
+                        <button @click="exportPackagesPdf()"
+                                class="px-3 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                            <span>📄</span>
+                            <span>PDF</span>
+                        </button>
+
+                        <!-- Export Excel -->
+                        <button @click="exportPackagesXlsx()"
+                                class="px-3 py-2 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                            <span>📊</span>
+                            <span>Excel</span>
+                        </button>
+
+                        <!-- Email Quote -->
+                        <button @click="openEmailQuoteModal()"
+                                class="px-3.5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                            <span>✉️</span>
+                            <span>Kirim Email</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Executive Summary Metric Cards (Grand Total across Packages) -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                        <div class="text-[11px] font-bold uppercase text-slate-500">Total Paket Aktif</div>
+                        <div class="text-xl font-black text-slate-900 mt-1" x-text="getPackagesGrandSummary().totalPackages + ' Paket'"></div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Konfigurasi mandiri</div>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200">
+                        <div class="text-[11px] font-bold uppercase text-blue-700">Total Perangkat Utama</div>
+                        <div class="text-xl font-black text-blue-950 mt-1" x-text="getPackagesGrandSummary().totalMainUnits + ' Unit'"></div>
+                        <div class="text-[10px] text-blue-600 mt-0.5">Repeater &amp; Portable HT</div>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-sky-50/70 border border-sky-200">
+                        <div class="text-[11px] font-bold uppercase text-sky-700">Total Add-on Terpasang</div>
+                        <div class="text-xl font-black text-sky-950 mt-1" x-text="getPackagesGrandSummary().totalAddons + ' Komponen'"></div>
+                        <div class="text-[10px] text-sky-600 mt-0.5">Aksesoris, antena, kabel &amp; lisensi</div>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-300">
+                        <div class="text-[11px] font-bold uppercase text-emerald-800">Grand Total Penawaran</div>
+                        <div class="text-lg sm:text-xl font-black text-emerald-950 mt-1" x-text="formatCurrency(currency === 'USD' ? getPackagesGrandSummary().grandSellUsd : getPackagesGrandSummary().grandSellIdr)"></div>
+                        <div class="text-[10px] text-emerald-700 font-semibold mt-0.5" x-text="'Sebelum PPN ' + ppnPercent + '%'"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List of Configured System Packages -->
+            <div class="space-y-5">
+                <template x-for="(pkg, pIdx) in systemPackages" :key="pkg.id">
+                    <div class="bg-white rounded-2xl border border-slate-200 card-shadow overflow-hidden transition hover:border-slate-300">
+                        <!-- Package Card Header -->
+                        <div class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3"
+                             :class="pkg.category === 'slr' ? 'bg-gradient-to-r from-blue-900 to-indigo-950 text-white' : 'bg-gradient-to-r from-slate-900 to-sky-950 text-white'">
+                            <div class="flex items-center gap-3 flex-1 min-w-[280px]">
+                                <span class="text-2xl" x-text="pkg.category === 'slr' ? '📡' : '📻'"></span>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase"
+                                              :class="pkg.category === 'slr' ? 'bg-blue-400 text-blue-950' : 'bg-sky-400 text-sky-950'"
+                                              x-text="pkg.category === 'slr' ? 'Repeater System' : 'HT Radio Fleet'"></span>
+                                        <span class="text-xs text-white/60 font-mono font-bold" x-text="pkg.id"></span>
+                                    </div>
+                                    <!-- Inline Rename Title -->
+                                    <input type="text" x-model="pkg.name"
+                                           class="mt-1 bg-white/10 hover:bg-white/20 focus:bg-white focus:text-slate-900 px-2.5 py-1 rounded-lg text-sm font-extrabold text-white w-full border border-white/20 transition"
+                                           title="Klik untuk mengubah nama paket" />
+                                </div>
+                            </div>
+
+                            <!-- Package Card Subtotal & Management Buttons -->
+                            <div class="flex items-center gap-3">
+                                <div class="text-right">
+                                    <div class="text-[10px] uppercase font-bold text-sky-200">Subtotal Penawaran</div>
+                                    <div class="text-base sm:text-lg font-black text-amber-300"
+                                         x-text="formatCurrency(currency === 'USD' ? calculatePackageBom(pkg).totalSellUsd : calculatePackageBom(pkg).totalSellIdr)"></div>
+                                    <div class="text-[10px] text-white/70" x-text="calculatePackageBom(pkg).items.length + ' item terpasang'"></div>
+                                </div>
+
+                                <div class="flex items-center gap-1 bg-white/10 p-1 rounded-xl border border-white/15">
+                                    <!-- Duplicate -->
+                                    <button @click="duplicateSystemPackage(pkg.id)"
+                                            class="p-2 rounded-lg hover:bg-white/20 text-white transition text-xs font-bold"
+                                            title="Duplikat paket ini untuk konfigurasi alternatif">
+                                        📋
+                                    </button>
+                                    <!-- Delete -->
+                                    <button @click="removeSystemPackage(pkg.id)"
+                                            class="p-2 rounded-lg hover:bg-rose-600 text-white transition text-xs font-bold"
+                                            title="Hapus paket ini">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Package Card Body (Grid: Left Config Form 7 cols, Right Live BOM 5 cols) -->
+                        <div class="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                            <!-- Left: Interactive Parameter & Add-on Selector (7 cols) -->
+                            <div class="lg:col-span-7 space-y-5">
+
+                                <!-- Primary Device Selector & Quantity -->
+                                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-3">
+                                    <div class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center justify-between">
+                                        <span>1. Perangkat Utama (Main Unit)</span>
+                                        <span class="text-[11px] font-semibold text-blue-700" x-text="pkg.category === 'slr' ? 'Base Station Hardware' : 'Portable Subscriber'"></span>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                                        <!-- Model Select -->
+                                        <div class="sm:col-span-6">
+                                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Pilih Model Perangkat</label>
+                                            <select x-model="pkg.mainSku" class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-white">
+                                                <template x-if="pkg.category === 'slr'">
+                                                    <optgroup label="Repeater MOTOTRBO">
+                                                        <option value="MOT-RPT-SLR5300">MOTOTRBO SLR 5300 (1-50W Rackmount)</option>
+                                                        <option value="MOT-RPT-SLR1000">MOTOTRBO SLR 1000 (1-10W Compact IP65)</option>
+                                                        <option value="MOT-RPT-SLR8000">MOTOTRBO SLR 8000 (1-100W High Power)</option>
+                                                    </optgroup>
+                                                </template>
+                                                <template x-if="pkg.category === 'ht'">
+                                                    <optgroup label="Handy Talky (HT) Motorola">
+                                                        <option value="MOT-HT-R7">MOTOTRBO R7 (Unggulan DMR IP68 Dual-Mic)</option>
+                                                        <option value="MOT-HT-P8600I">MOTOTRBO XiR P8600i Series</option>
+                                                        <option value="MOT-HT-P8600EX">XiR P8600 Ex ATEX (Intrinsically Safe)</option>
+                                                        <option value="MOT-HT-R2">MOTOTRBO R2 (Next-Gen Entry)</option>
+                                                        <option value="MOT-HT-TLK100">Motorola TLK 100 (WAVE PTX LTE)</option>
+                                                        <option value="MOT-HT-ION">MOTOTRBO Ion (Smart Android Radio)</option>
+                                                        <option value="MOT-HT-SL1M">MOTOTRBO SL1M (Ultra-Slim Pocket)</option>
+                                                        <option value="MOT-HT-C1200">MOTOTRBO XiR C1000/C2000</option>
+                                                    </optgroup>
+                                                </template>
+                                            </select>
+                                        </div>
+
+                                        <!-- Quantity -->
+                                        <div class="sm:col-span-3">
+                                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Jumlah Unit (Qty)</label>
+                                            <input type="number" min="1" max="500" x-model.number="pkg.quantity"
+                                                   class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 text-center" />
+                                        </div>
+
+                                        <!-- Frequency Band -->
+                                        <div class="sm:col-span-3">
+                                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Pita Frekuensi</label>
+                                            <select x-model="pkg.frequency" class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-white">
+                                                <option value="UHF">UHF (403–470 MHz)</option>
+                                                <option value="VHF">VHF (136–174 MHz)</option>
+                                                <option value="800">800/900 MHz</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Add-on Checklist for SLR Repeater -->
+                                <template x-if="pkg.category === 'slr'">
+                                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-4">
+                                        <div class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center justify-between">
+                                            <span>2. Add-on Komponen &amp; Infrastruktur RF</span>
+                                            <span class="text-[11px] text-slate-500 font-semibold">Checklist Otomatis</span>
+                                        </div>
+
+                                        <div class="space-y-3 text-xs">
+                                            <!-- Duplexer & Tuning -->
+                                            <div class="p-3 rounded-lg bg-white border border-slate-200 space-y-2">
+                                                <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
+                                                    <input type="checkbox" x-model="pkg.slrOptions.duplexer" class="rounded text-blue-600 w-4 h-4" />
+                                                    <span>Duplexer VHF/UHF Band-Pass 50W (Standard N-Female)</span>
+                                                </label>
+                                                <div x-show="pkg.slrOptions.duplexer" class="pl-6">
+                                                    <label class="flex items-center gap-2 text-slate-600 font-medium cursor-pointer">
+                                                        <input type="checkbox" x-model="pkg.slrOptions.cavityTuning" class="rounded text-blue-600" />
+                                                        <span>Termasuk Jasa Engineering Tuning &amp; Kalibrasi Cavity Duplexer di Lab CDPK (+Rp 1.500.000)</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <!-- Antenna Selection -->
+                                            <div class="p-3 rounded-lg bg-white border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tipe Antena Base Station</label>
+                                                    <select x-model="pkg.slrOptions.antennaType" class="w-full px-2.5 py-1.5 text-xs font-semibold rounded border border-slate-300">
+                                                        <option value="omni">Omni-Directional High Gain Fiberglass (6-9 dBi)</option>
+                                                        <option value="yagi">Directional Yagi High Gain (11-13 dBi)</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Jumlah Antena per Repeater</label>
+                                                    <input type="number" min="1" max="4" x-model.number="pkg.slrOptions.antennaCount"
+                                                           class="w-full px-2.5 py-1.5 text-xs font-semibold rounded border border-slate-300" />
+                                                </div>
+                                            </div>
+
+                                            <!-- Feeder Cable Dynamic Calculator -->
+                                            <div class="p-3 rounded-lg bg-white border border-slate-200 space-y-2">
+                                                <div class="font-bold text-slate-800 flex items-center justify-between">
+                                                    <span>Kabel Coaxial Feeder RF &amp; Konektor</span>
+                                                    <span class="text-[11px] text-blue-600 font-bold" x-text="pkg.slrOptions.feederMeters + ' Meter per Run'"></span>
+                                                </div>
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tipe Kabel</label>
+                                                        <select x-model="pkg.slrOptions.feederType" class="w-full px-2.5 py-1.5 text-xs font-semibold rounded border border-slate-300">
+                                                            <option value="78">Heliax 7/8" Low-Loss Foam (Rp 165.000/m)</option>
+                                                            <option value="12">Superflex 1/2" Foam Low-Loss (Rp 85.000/m)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Panjang Kabel Feeder (Meter)</label>
+                                                        <input type="number" min="5" max="200" step="5" x-model.number="pkg.slrOptions.feederMeters"
+                                                               class="w-full px-2.5 py-1.5 text-xs font-bold rounded border border-slate-300" />
+                                                    </div>
+                                                </div>
+                                                <p class="text-[10px] text-slate-400">Otomatis menyertakan set konektor N-Male/DIN 7/16, jumper RG-214, dan grounding kit tower.</p>
+                                            </div>
+
+                                            <!-- Protection, Power, Enclosure, Licenses -->
+                                            <div class="p-3 rounded-lg bg-white border border-slate-200 space-y-2">
+                                                <div class="font-bold text-slate-800 mb-1">Proteksi, Daya &amp; Lisensi Tambahan</div>
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                                                    <label class="flex items-center gap-2 text-slate-700 cursor-pointer">
+                                                        <input type="checkbox" x-model="pkg.slrOptions.arrester" class="rounded text-blue-600" />
+                                                        <span>Lightning Arrester PolyPhaser</span>
+                                                    </label>
+                                                    <label class="flex items-center gap-2 text-slate-700 cursor-pointer">
+                                                        <input type="checkbox" x-model="pkg.slrOptions.onlineUps" class="rounded text-blue-600" />
+                                                        <span>Smart Online UPS 1500VA</span>
+                                                    </label>
+                                                    <label class="flex items-center gap-2 text-slate-700 cursor-pointer">
+                                                        <input type="checkbox" x-model="pkg.slrOptions.rackCabinet" class="rounded text-blue-600" />
+                                                        <span>19" Close Rack Standing 20U</span>
+                                                    </label>
+                                                    <label class="flex items-center gap-2 text-slate-700 cursor-pointer">
+                                                        <input type="checkbox" x-model="pkg.slrOptions.ipscLicense" class="rounded text-blue-600" />
+                                                        <span>Lisensi IP Site Connect (IPSC)</span>
+                                                    </label>
+                                                    <label class="flex items-center gap-2 text-slate-700 cursor-pointer sm:col-span-2">
+                                                        <input type="checkbox" x-model="pkg.slrOptions.engineeringService" class="rounded text-blue-600" />
+                                                        <span>Jasa Engineering CDPK: Survey, Rigging Tower &amp; Commissioning (3 Mandays/Site)</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Add-on Checklist for HT (Handie Talkie) -->
+                                <template x-if="pkg.category === 'ht'">
+                                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-4">
+                                        <div class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center justify-between">
+                                            <span>2. Add-on Baterai, Charger &amp; Aksesori HT</span>
+                                            <span class="text-[11px] text-slate-500 font-semibold">Checklist Otomatis</span>
+                                        </div>
+
+                                        <div class="space-y-3 text-xs">
+                                            <!-- Battery Add-on -->
+                                            <div class="p-3 rounded-lg bg-white border border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                                                <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
+                                                    <input type="checkbox" x-model="pkg.htOptions.extraBattery" class="rounded text-sky-600 w-4 h-4" />
+                                                    <span>Extra Battery Pack Motorola IMPRES Li-Ion 2850mAh IP68</span>
+                                                </label>
+                                                <div x-show="pkg.htOptions.extraBattery" class="flex items-center gap-2">
+                                                    <span class="text-[11px] text-slate-500">Rasio per Radio:</span>
+                                                    <input type="number" min="1" max="5" x-model.number="pkg.htOptions.batteryRatio"
+                                                           class="w-16 px-2 py-1 text-xs font-bold rounded border border-slate-300 text-center" />
+                                                    <span class="text-[11px] font-bold text-slate-700" x-text="'= ' + (pkg.quantity * (pkg.htOptions.batteryRatio || 1)) + ' Pcs'"></span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Smart Charger Ratio (6-Way Multi-Unit Charger) -->
+                                            <div class="p-3 rounded-lg bg-white border border-slate-200 space-y-2">
+                                                <div class="font-bold text-slate-800">Sistem Pengisian Daya (Charging Management)</div>
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tipe Charger</label>
+                                                        <select x-model="pkg.htOptions.chargerType" class="w-full px-2.5 py-1.5 text-xs font-semibold rounded border border-slate-300">
+                                                            <option value="6way">6-Way Multi-Unit Rapid Charger (MUC)</option>
+                                                            <option value="single">Single Desktop Charger (Bawaan)</option>
+                                                            <option value="none">Tanpa Tambahan Charger</option>
+                                                        </select>
+                                                    </div>
+                                                    <div x-show="pkg.htOptions.chargerType === '6way'">
+                                                        <div class="flex items-center justify-between mb-1">
+                                                            <label class="block text-[11px] font-semibold text-slate-600">Jumlah Unit 6-Way MUC</label>
+                                                            <span class="text-[10px] text-emerald-600 font-bold" x-text="'Rekomendasi: ' + Math.ceil(pkg.quantity / 6) + ' Unit'"></span>
+                                                        </div>
+                                                        <input type="number" min="1" max="50" x-model.number="pkg.htOptions.chargerCount"
+                                                               class="w-full px-2.5 py-1.5 text-xs font-bold rounded border border-slate-300" />
+                                                    </div>
+                                                </div>
+                                                <p x-show="pkg.htOptions.chargerType === '6way'" class="text-[10px] text-slate-400">
+                                                    Formula otomatis: Setiap 6 unit radio direkomendasikan 1 unit Multi-Charger 6-Gang untuk kerapihan ruang kontrol / charging rack.
+                                                </p>
+                                            </div>
+
+                                            <!-- Audio & Carrying Accessories -->
+                                            <div class="p-3 rounded-lg bg-white border border-slate-200 space-y-2">
+                                                <div class="font-bold text-slate-800 mb-1">Aksesori Lapangan &amp; Solusi Pembawa</div>
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <!-- RSM Mic -->
+                                                    <div class="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
+                                                        <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
+                                                            <input type="checkbox" x-model="pkg.htOptions.rsmMic" class="rounded text-sky-600" />
+                                                            <span>Remote Speaker Mic IP67</span>
+                                                        </label>
+                                                        <div x-show="pkg.htOptions.rsmMic" class="flex items-center gap-2 pt-1">
+                                                            <span class="text-[10px] text-slate-500">Jumlah:</span>
+                                                            <input type="number" min="1" :max="pkg.quantity * 2" x-model.number="pkg.htOptions.rsmCount"
+                                                                   class="w-16 px-2 py-0.5 text-xs font-bold rounded border border-slate-300 text-center" />
+                                                            <span class="text-[10px] text-slate-500">Unit</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Earpiece -->
+                                                    <div class="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
+                                                        <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
+                                                            <input type="checkbox" x-model="pkg.htOptions.earpiece" class="rounded text-sky-600" />
+                                                            <span>Surveillance Acoustic Earpiece</span>
+                                                        </label>
+                                                        <div x-show="pkg.htOptions.earpiece" class="flex items-center gap-2 pt-1">
+                                                            <span class="text-[10px] text-slate-500">Jumlah:</span>
+                                                            <input type="number" min="1" :max="pkg.quantity * 2" x-model.number="pkg.htOptions.earpieceCount"
+                                                                   class="w-16 px-2 py-0.5 text-xs font-bold rounded border border-slate-300 text-center" />
+                                                            <span class="text-[10px] text-slate-500">Unit</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Swivel Case -->
+                                                    <div class="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
+                                                        <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
+                                                            <input type="checkbox" x-model="pkg.htOptions.swivelCase" class="rounded text-sky-600" />
+                                                            <span>Leather Swivel Carry Case</span>
+                                                        </label>
+                                                        <div x-show="pkg.htOptions.swivelCase" class="flex items-center gap-2 pt-1">
+                                                            <span class="text-[10px] text-slate-500">Jumlah:</span>
+                                                            <input type="number" min="1" :max="pkg.quantity * 2" x-model.number="pkg.htOptions.swivelCaseCount"
+                                                                   class="w-16 px-2 py-0.5 text-xs font-bold rounded border border-slate-300 text-center" />
+                                                            <span class="text-[10px] text-slate-500">Unit</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- AES-256 License -->
+                                                    <div class="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
+                                                        <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
+                                                            <input type="checkbox" x-model="pkg.htOptions.aesLicense" class="rounded text-sky-600" />
+                                                            <span>Lisensi Enkripsi AES-256 Bit</span>
+                                                        </label>
+                                                        <p class="text-[10px] text-slate-400">Proteksi penyadapan level military/public-safety.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Commercial Margin Override -->
+                                <div class="flex items-center justify-between p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs">
+                                    <span class="font-bold text-amber-900">Target Profit Margin Paket (%):</span>
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="number" min="0" max="60" step="1" x-model.number="pkg.marginPercent"
+                                               class="w-20 px-2 py-1 text-xs font-bold rounded border border-amber-300 bg-white text-center" />
+                                        <span class="font-extrabold text-amber-900">%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Live Bill of Materials (BOM) Breakdown (5 cols) -->
+                            <div class="lg:col-span-5 flex flex-col justify-between p-4 rounded-xl bg-slate-900 text-white space-y-4">
+                                <div>
+                                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                                        <div>
+                                            <div class="text-[10px] font-bold uppercase tracking-wider text-sky-300">Rincian Komponen Paket (BOM)</div>
+                                            <h4 class="text-xs font-extrabold text-white mt-0.5" x-text="pkg.name"></h4>
+                                        </div>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-sky-200"
+                                              x-text="calculatePackageBom(pkg).items.length + ' Item'"></span>
+                                    </div>
+
+                                    <!-- Itemized Table -->
+                                    <div class="mt-3 space-y-2 max-h-[320px] overflow-y-auto pr-1 text-xs divide-y divide-white/5">
+                                        <template x-for="(it, iIdx) in calculatePackageBom(pkg).items" :key="iIdx">
+                                            <div class="pt-2 pb-1 flex items-start justify-between gap-2">
+                                                <div class="flex-1">
+                                                    <div class="font-semibold text-slate-100 flex items-center gap-1">
+                                                        <span x-show="it.isMain" class="text-amber-400">★</span>
+                                                        <span x-text="it.name"></span>
+                                                    </div>
+                                                    <div class="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                                                        <span x-text="it.qty + ' ' + (it.unit || 'Unit')"></span>
+                                                        <span>•</span>
+                                                        <span x-text="formatCurrency(currency === 'USD' ? it.sellUsd : it.sellIdr) + '/satuan'"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="text-right font-bold text-sky-200 text-xs"
+                                                     x-text="formatCurrency(currency === 'USD' ? (it.subtotalSellUsd || it.sellUsd * it.qty) : (it.subtotalSellIdr || it.sellIdr * it.qty))"></div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Package Summary Total -->
+                                <div class="pt-3 border-t border-white/15 space-y-2">
+                                    <div class="flex items-center justify-between text-xs text-slate-300">
+                                        <span>Estimasi Modal (Cost):</span>
+                                        <span class="font-semibold" x-text="formatCurrency(currency === 'USD' ? calculatePackageBom(pkg).totalCostUsd : calculatePackageBom(pkg).totalCostIdr)"></span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm font-extrabold text-white">
+                                        <span>Harga Penawaran Paket:</span>
+                                        <span class="text-base text-amber-300" x-text="formatCurrency(currency === 'USD' ? calculatePackageBom(pkg).totalSellUsd : calculatePackageBom(pkg).totalSellIdr)"></span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 text-center">Harga sebelum PPN • Termasuk margin terkonfigurasi</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
     </main>
     </div> <!-- ═══════════════════ END OF MAIN APPLICATION WORKSPACE ═══════════════════ -->
 
@@ -1300,6 +1777,14 @@
                     </button>
                 </div>
 
+                <!-- Domain SSO Restriction Notice -->
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs text-blue-900">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">🏢</span>
+                        <span><strong>Domain Resmi Diizinkan:</strong> <code class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">@citradata.id</code> &amp; <code class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">@techsolutions.id</code>. Pengguna harus didaftarkan di sini terlebih dahulu sebelum dapat login via Google Workspace SSO.</span>
+                    </div>
+                </div>
+
                 <!-- Error Alert -->
                 <template x-if="usersError">
                     <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium flex items-center justify-between">
@@ -1554,6 +2039,123 @@
             </div>
         </div>
     </template>
+
+    <!-- ═══════════════════ MODAL 6: EMAIL QUOTATION MODAL ═══════════════════ -->
+    <div x-show="emailModalOpen"
+         style="display: none;"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4 overflow-y-auto">
+        <div @click.away="emailModalOpen = false" class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 my-8">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600/40 border border-blue-400/30 flex items-center justify-center text-xl shadow-inner">
+                        ✉️
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black tracking-tight">Kirim Penawaran Konfigurasi via Email</h3>
+                        <p class="text-xs text-blue-200/80">Draft penawaran resmi paket sistem radio telekomunikasi</p>
+                    </div>
+                </div>
+                <button @click="emailModalOpen = false" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition font-bold">✕</button>
+            </div>
+
+            <!-- Modal Content Form -->
+            <form @submit.prevent="sendQuoteEmailMailto()" class="p-6 space-y-4 text-xs">
+                <!-- Info Banner -->
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-amber-900">
+                    <span class="text-base">💡</span>
+                    <div class="text-[11px] leading-relaxed">
+                        Tombol <strong>"Buka di Email Client"</strong> akan membuka aplikasi email default Anda (Gmail / Outlook / Apple Mail) dengan subjek dan format rincian teknis yang sudah terisi otomatis. Anda juga dapat mengunduh lampiran resmi PDF / Excel di bawah untuk di-attach ke email.
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Email Penerima (To):</label>
+                        <input type="email" x-model="emailRecipient" placeholder="klien@instansi.co.id" required
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none font-medium text-slate-800" />
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Ditujukan Kepada (PIC / Instansi):</label>
+                        <input type="text" x-model="emailClientContact" placeholder="Bpk. Budi Santoso / Procurement Manager"
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none font-medium text-slate-800" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Subjek Email:</label>
+                    <input type="text" x-model="emailSubject" required
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none font-medium text-slate-800" />
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Catatan Tambahan / Ruang Lingkup Khusus (Opsional):</label>
+                    <textarea x-model="emailNotes" rows="2" placeholder="Contoh: Jadwal survei lokasi dijadwalkan minggu depan. Garansi perangkat 2 tahun include spare part..."
+                              class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none font-medium text-slate-800 resize-none"></textarea>
+                </div>
+
+                <!-- Live Summary Snapshot -->
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <div class="text-[11px] font-bold uppercase text-slate-500 mb-2 flex items-center justify-between">
+                        <span>Ringkasan Isi Penawaran</span>
+                        <span class="text-blue-600 font-extrabold" x-text="(systemPackages || []).length + ' Paket Terkonfigurasi'"></span>
+                    </div>
+                    <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                        <template x-for="(pkg, idx) in systemPackages" :key="pkg.id">
+                            <div class="flex items-center justify-between text-[11px] py-1 border-b border-slate-200/60 last:border-0">
+                                <div class="font-bold text-slate-800 truncate mr-2">
+                                    <span class="text-blue-600" x-text="(idx + 1) + '. '"></span>
+                                    <span x-text="pkg.name"></span>
+                                </div>
+                                <div class="font-mono font-bold text-slate-900 shrink-0"
+                                     x-text="formatCurrency(currency === 'USD' ? calculatePackageBom(pkg).totalSellUsd : calculatePackageBom(pkg).totalSellIdr)">
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-slate-300 flex items-center justify-between">
+                        <span class="font-extrabold text-slate-700">Estimasi Grand Total:</span>
+                        <span class="text-sm font-black text-blue-700 font-mono"
+                              x-text="formatCurrency(currency === 'USD' ? getPackagesGrandSummary().grandSellUsd : getPackagesGrandSummary().grandSellIdr)">
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Document Download Convenience -->
+                <div class="p-3 bg-indigo-50/60 border border-indigo-200/60 rounded-xl flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-indigo-950 text-xs">Unduh Lampiran Resmi:</div>
+                        <div class="text-[11px] text-indigo-700/90">Lampirkan file PDF / Excel ke email klien Anda</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="exportPackagesPdf()"
+                                class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5">
+                            <span>📄</span>
+                            <span>Download PDF</span>
+                        </button>
+                        <button type="button" @click="exportPackagesXlsx()"
+                                class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5">
+                            <span>📊</span>
+                            <span>Download Excel</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+                    <button type="button" @click="emailModalOpen = false"
+                            class="px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold shadow-md transition flex items-center gap-2">
+                        <span>✉️</span>
+                        <span>Buka di Email Client</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 </body>
 </html>
