@@ -130,6 +130,33 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 "diagnostics": get_diagnostics(probe_remote=False)
             })
 
+        # ─── Android Standalone APK Download Endpoint ─────────────────────
+        if path in ("/download/apk", "/download/android", "/apk", "/download"):
+            local_apk = os.path.join(STATIC_DIR, "download", "CDPK_System_Planner_v8.4.2.apk")
+            if not os.path.isfile(local_apk):
+                local_apk = os.path.join(BASE_DIR, "CDPK_System_Planner_v8.4.2.apk")
+
+            if os.path.isfile(local_apk):
+                file_size = os.path.getsize(local_apk)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/vnd.android.package-archive")
+                self.send_header("Content-Disposition", 'attachment; filename="CDPK_System_Planner_v8.4.2.apk"')
+                self.send_header("Content-Length", str(file_size))
+                self.send_header("Cache-Control", "public, max-age=3600")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.end_headers()
+                with open(local_apk, "rb") as f:
+                    while chunk := f.read(65536):
+                        self.wfile.write(chunk)
+                return
+            else:
+                drive_download_url = "https://drive.google.com/uc?export=download&id=13PxfnWCALXxSd_7uBdhZJqGXoFqWEdjd"
+                self.send_response(302)
+                self.send_header("Location", drive_download_url)
+                self.send_header("Cache-Control", "no-cache")
+                self.end_headers()
+                return
+
         # ─── Auth Endpoints ───────────────────────────────────────────────
         if path == "/api/auth/me":
             user = self._get_auth_user()

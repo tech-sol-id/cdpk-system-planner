@@ -205,6 +205,20 @@
                         </button>
                         <p class="text-[10px] text-slate-400 text-center italic" x-text="t('loginEmergencyNotice')"></p>
                     </form>
+
+                    <!-- Android Standalone APK Download Option -->
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                            <span class="text-base">🤖</span>
+                            <span class="font-semibold text-slate-600">Aplikasi Android</span>
+                            <span class="text-[9px] px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-bold">APK v8.4.2</span>
+                        </div>
+                        <a href="/download/apk" download="CDPK_System_Planner_v8.4.2.apk"
+                           class="text-blue-600 hover:text-blue-800 font-bold text-[11px] flex items-center gap-1 hover:underline">
+                            <span>Unduh APK</span>
+                            <span>⬇️</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </main>
@@ -2318,6 +2332,19 @@
                 </div>
                 <span class="px-2.5 py-1 rounded-lg bg-white/20 text-white text-[10px] font-bold">Install</span>
             </button>
+
+            <!-- Download Standalone Android APK Button -->
+            <a href="/download/apk" download="CDPK_System_Planner_v8.4.2.apk"
+               class="w-full p-2.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-950 shadow-2xs flex items-center justify-between cursor-pointer transition">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xl">🤖</span>
+                    <div class="text-left">
+                        <div class="text-xs font-extrabold text-emerald-900">Unduh APK Android (v8.4.2)</div>
+                        <div class="text-[10px] text-emerald-700 font-medium">Installer mandiri offline • 4.4 MB</div>
+                    </div>
+                </div>
+                <span class="px-2 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-black shadow-xs">Unduh ⬇️</span>
+            </a>
 
             <!-- Navigation Shortcuts -->
             <div class="space-y-1">
