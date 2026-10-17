@@ -5,8 +5,8 @@
     "email": "adrian@citradata.id",
     "role": "admin",
     "title": "Principal Lead & Solutions Architect",
-    "password_hash": "3fe9030320edd05f7965f021bc32e9d0a7e7ee333fa2c01875b0d8b206542bb1",
-    "salt": "8716e6a13a307eac250e74d14fa43363",
+    "password_hash": "4637d30ed61f3c63c8f85ab7d6b03d242f16d0af1463dea1d3ebcbae83517083",
+    "salt": "99baf13afb59e864eedf55bf033ced2f",
     "status": "active",
     "created_at": "2026-10-17 00:00:00"
   },
@@ -16,8 +16,8 @@
     "email": "gama@citradata.id",
     "role": "engineer",
     "title": "Presales Engineer",
-    "password_hash": "cffcf4615d324c393ab8acef6ee59c2539ded6050caaf7947ff39b40a51fc3fc",
-    "salt": "c7d8982a9f7f714d1d5c4b8e70f839aa",
+    "password_hash": "67affd8a6d798e43fbeda3287c301414c1a7eb527beb3f8f0244a635f5930780",
+    "salt": "041a2368d7057e988a53ed1db94afcaf",
     "status": "pending",
     "created_at": "2026-10-17 05:27:31"
   }

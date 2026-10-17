@@ -148,6 +148,11 @@ window.cdpkSystemPlannerApp = function () {
         resetPwdInput: 'cdpk2026!',
         resetPwdLoading: false,
         resetPwdError: '',
+        changeMyPwdModalOpen: false,
+        changeMyPwdInput: '',
+        changeMyPwdConfirm: '',
+        changeMyPwdLoading: false,
+        changeMyPwdError: '',
 
         // ─── Cloud Save & Project Archive State ──────────────────────────
         outputSubfolderId: '11NLBY5EAPLb4q753r1TRVKgYRe0JpO8W',
@@ -876,6 +881,58 @@ window.cdpkSystemPlannerApp = function () {
                 this.resetPwdError = this.lang === 'en' ? 'Connection error resetting password' : 'Kendala koneksi saat reset password';
             } finally {
                 this.resetPwdLoading = false;
+            }
+        },
+
+        startChangeMyPassword() {
+            this.changeMyPwdInput = '';
+            this.changeMyPwdConfirm = '';
+            this.changeMyPwdError = '';
+            this.changeMyPwdLoading = false;
+            this.changeMyPwdModalOpen = true;
+        },
+
+        async submitChangeMyPassword() {
+            if (!this.changeMyPwdInput) {
+                this.changeMyPwdError = this.lang === 'en' ? 'New password cannot be empty' : 'Password baru tidak boleh kosong';
+                return;
+            }
+            if (this.changeMyPwdInput.length < 6) {
+                this.changeMyPwdError = this.lang === 'en' ? 'Password must be at least 6 characters' : 'Password minimal 6 karakter';
+                return;
+            }
+            if (this.changeMyPwdInput !== this.changeMyPwdConfirm) {
+                this.changeMyPwdError = this.lang === 'en' ? 'Password confirmation does not match' : 'Konfirmasi password tidak cocok';
+                return;
+            }
+            this.changeMyPwdLoading = true;
+            this.changeMyPwdError = '';
+            try {
+                const resp = await fetch('/api/auth/change-my-password', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.sessionToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        password: this.changeMyPwdInput
+                    })
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    alert(this.lang === 'en'
+                        ? 'Your password has been successfully updated and synced!'
+                        : 'Password Anda berhasil diperbarui dan disinkronkan!');
+                    this.changeMyPwdModalOpen = false;
+                    this.changeMyPwdInput = '';
+                    this.changeMyPwdConfirm = '';
+                } else {
+                    this.changeMyPwdError = data.message || (this.lang === 'en' ? 'Failed updating password' : 'Gagal memperbarui password');
+                }
+            } catch (e) {
+                this.changeMyPwdError = this.lang === 'en' ? 'Connection error' : 'Kendala koneksi';
+            } finally {
+                this.changeMyPwdLoading = false;
             }
         },
 

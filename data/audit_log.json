@@ -1,5 +1,71 @@
 [
   {
+    "id": "aud_0260db0495da",
+    "timestamp": "2026-10-17 06:12:57",
+    "username": "adrian",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "action": "login",
+    "detail": "Login sukses via Kredensial (@adrian)",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  },
+  {
+    "id": "aud_f4bf4f2574a9",
+    "timestamp": "2026-10-17 06:12:57",
+    "username": "adrian",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "action": "user_mgmt",
+    "detail": "Pengguna @adrian memperbarui password akun pribadinya",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  },
+  {
+    "id": "aud_263db613f75d",
+    "timestamp": "2026-10-17 06:12:56",
+    "username": "adrian",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "action": "login",
+    "detail": "Login sukses via Kredensial (@adrian)",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  },
+  {
+    "id": "aud_767891fc717d",
+    "timestamp": "2026-10-17 06:12:56",
+    "username": "adrian",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "action": "user_mgmt",
+    "detail": "Pengguna @adrian memperbarui password akun pribadinya",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  },
+  {
+    "id": "aud_d635d3b3fd69",
+    "timestamp": "2026-10-17 06:12:55",
+    "username": "adrian",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "action": "login",
+    "detail": "Login sukses via Kredensial (@adrian)",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  },
+  {
+    "id": "aud_5000fddea834",
+    "timestamp": "2026-10-17 06:12:26",
+    "username": "adrian",
+    "name": "Adrian Kansil",
+    "role": "admin",
+    "action": "login",
+    "detail": "Login sukses via Kredensial (@adrian)",
+    "ip": "127.0.0.1",
+    "metadata": {}
+  },
+  {
     "id": "aud_ece329eb3420",
     "timestamp": "2026-10-17 05:25:48",
     "username": "adrian",

@@ -130,7 +130,7 @@ def _ensure_team_users_sheet(token: str, spreadsheet_id: str) -> bool:
         for u in initial_users:
             rows.append([
                 u["username"], u["name"], u["email"], u["role"], u["title"],
-                "cdpk2026!", u["password_hash"], u["salt"], u.get("status", "active"), u.get("created_at", "")
+                "●●●●●●●●", u["password_hash"], u["salt"], u.get("status", "active"), u.get("created_at", "")
             ])
 
         val_url = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A1:J{len(rows)}?valueInputOption=USER_ENTERED"
@@ -308,7 +308,7 @@ def _append_user_row_to_gsheet(u: Dict[str, Any], plain_pwd: str = ""):
             u.get("email", ""),
             u.get("role", "engineer"),
             u.get("title", ""),
-            plain_pwd or "cdpk2026!",
+            "●●●●●●●●",
             u.get("password_hash", ""),
             u.get("salt", ""),
             u.get("status", "pending"),
@@ -539,7 +539,7 @@ def add_team_member(creator_role: str, new_user_data: Dict[str, Any]) -> Dict[st
             url_append = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A:J:append?valueInputOption=USER_ENTERED"
             row_vals = [
                 username, name, email, role, new_user["title"],
-                password, pwd_hash, salt, "active", now_str
+                "●●●●●●●●", pwd_hash, salt, "active", now_str
             ]
             req = urllib.request.Request(
                 url_append,
@@ -751,15 +751,14 @@ def toggle_user_status(creator_role: str, username: str) -> Dict[str, Any]:
     return {"status": "error", "message": f"Pengguna @{username_clean} tidak ditemukan"}
 
 
-def reset_user_password(creator_role: str, username: str, new_password: str) -> Dict[str, Any]:
-    """Reset password for a user and sync to Google Sheets."""
-    if creator_role != "admin":
-        return {"status": "error", "message": "Hanya Administrator yang dapat me-reset password"}
-
+def change_user_password(username: str, new_password: str) -> Dict[str, Any]:
+    """Change password for a user and sync to Google Sheets (masked in GSheet)."""
     username_clean = (username or "").strip().lower()
     new_pwd = (new_password or "").strip()
     if not new_pwd:
         return {"status": "error", "message": "Password baru tidak boleh kosong"}
+    if len(new_pwd) < 6:
+        return {"status": "error", "message": "Password minimal 6 karakter"}
 
     users = load_users()
     target_idx = -1
@@ -799,7 +798,7 @@ def reset_user_password(creator_role: str, username: str, new_password: str) -> 
                 u = users[target_idx]
                 row_vals = [
                     u["username"], u["name"], u["email"], u["role"], u["title"],
-                    new_pwd, pwd_hash, salt, u.get("status", "active"), u.get("created_at", "")
+                    "●●●●●●●●", pwd_hash, salt, u.get("status", "active"), u.get("created_at", "")
                 ]
                 url_put = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A{sheet_row_num}:J{sheet_row_num}?valueInputOption=USER_ENTERED"
                 req_put = urllib.request.Request(
@@ -814,6 +813,13 @@ def reset_user_password(creator_role: str, username: str, new_password: str) -> 
             logger.warning(f"Error updating password in GSheet: {e}")
 
     return {"status": "ok", "message": f"Password untuk @{username_clean} berhasil di-reset"}
+
+
+def reset_user_password(creator_role: str, username: str, new_password: str) -> Dict[str, Any]:
+    """Reset password for a user (Admin only) and sync to Google Sheets."""
+    if creator_role != "admin":
+        return {"status": "error", "message": "Hanya Administrator yang dapat me-reset password"}
+    return change_user_password(username, new_password)
 
 
 def approve_team_member(creator_role: str, username: str, assigned_role: Optional[str] = None) -> Dict[str, Any]:

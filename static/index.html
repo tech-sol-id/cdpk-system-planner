@@ -87,7 +87,7 @@
                     <p class="text-xs text-sky-100 mt-1" x-text="t('loginSubtitle')"></p>
                     <div class="inline-flex items-center gap-1.5 mt-3 px-3.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 text-sky-100 border border-white/20">
                         <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span>
-                        <span>Portal Solusi Internal Citradata Group</span>
+                        <span x-text="t('portalSubtitle')"></span>
                     </div>
                 </div>
 
@@ -104,8 +104,8 @@
                     <!-- Primary Action: Google Workspace SSO -->
                     <div class="p-4 rounded-2xl bg-gradient-to-b from-blue-50/70 to-indigo-50/40 border border-blue-200/80 shadow-xs space-y-3">
                         <div class="text-center">
-                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-blue-900 block">Metode Masuk &amp; Pendaftaran Resmi</span>
-                            <p class="text-[11px] text-slate-500 mt-0.5">Akses Single Sign-On (SSO) Google Workspace</p>
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-blue-900 block" x-text="t('loginMethodTitle')"></span>
+                            <p class="text-[11px] text-slate-500 mt-0.5" x-text="t('loginMethodSubtitle')"></p>
                         </div>
 
                         <!-- Google Button Container -->
@@ -118,19 +118,16 @@
                                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                             </svg>
-                            <span>Masuk / Daftar dengan Google Workspace</span>
+                            <span x-text="t('googleSignInBtnText')"></span>
                         </button>
 
-                        <div class="text-[10px] text-slate-500 text-center leading-relaxed">
-                            Khusus email resmi <span class="font-bold text-slate-700">@citradata.id</span> &amp; <span class="font-bold text-slate-700">@techsolutions.id</span>.<br>
-                            Akun baru akan diverifikasi persetujuannya oleh Administrator.
-                        </div>
+                        <div class="text-[10px] text-slate-500 text-center leading-relaxed" x-html="t('domainNotice')"></div>
                     </div>
 
                     <!-- Divider -->
                     <div class="relative flex py-1 items-center">
                         <div class="flex-grow border-t border-slate-200"></div>
-                        <span class="flex-shrink mx-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-text="lang === 'en' ? 'Or Sign In With Password' : 'Atau Masuk dengan Kredensial Khusus'"></span>
+                        <span class="flex-shrink mx-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-text="t('orPasswordDivider')"></span>
                         <div class="flex-grow border-t border-slate-200"></div>
                     </div>
 
@@ -157,9 +154,9 @@
                         <button type="submit" :disabled="loginLoading"
                                 class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs">
                             <svg x-show="loginLoading" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                            <span x-text="loginLoading ? t('loggingInBtn') : 'Masuk dengan Password'"></span>
+                            <span x-text="loginLoading ? t('loggingInBtn') : t('loginPasswordBtn')"></span>
                         </button>
-                        <p class="text-[10px] text-slate-400 text-center italic">Jalur khusus akun lokal yang didaftarkan oleh Administrator</p>
+                        <p class="text-[10px] text-slate-400 text-center italic" x-text="t('loginEmergencyNotice')"></p>
                     </form>
                 </div>
             </div>
@@ -321,7 +318,11 @@
                                 </div>
                             </div>
                             <div class="h-4 w-px bg-white/20 hidden sm:block"></div>
-                            <button @click="logout()" class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-rose-600 text-white font-bold text-xs transition" title="Keluar">
+                            <button @click="startChangeMyPassword()" class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-amber-600 text-white font-bold text-xs transition cursor-pointer" :title="t('changePwdBtn')">
+                                <span>🔑</span>
+                                <span class="hidden sm:inline" x-text="t('changePwdBtn')"></span>
+                            </button>
+                            <button @click="logout()" class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-rose-600 text-white font-bold text-xs transition cursor-pointer" :title="t('logoutBtn')">
                                 <span>🚪</span>
                                 <span class="hidden sm:inline" x-text="t('logoutBtn')"></span>
                             </button>
@@ -345,7 +346,7 @@
                     <button @click="openProjectArchive()"
                             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/15 hover:bg-white/25 border border-white/25 transition text-white shadow-sm">
                         <span>📂</span>
-                        <span x-text="currentUser && (currentUser.role === 'admin' || currentUser.role === 'overseer') ? 'Dashboard Arsip Tim' : 'Arsip Proyek Saya'"></span>
+                        <span x-text="currentUser && (currentUser.role === 'admin' || currentUser.role === 'overseer') ? t('teamArchiveBtn') : t('myArchiveBtn')"></span>
                     </button>
 
                     <!-- Sync Cloud Pricelist Button -->
@@ -361,7 +362,7 @@
                     <button @click="userGuideOpen = true"
                             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition text-sky-100">
                         <span>📖</span>
-                        <span>Panduan Pengguna</span>
+                        <span x-text="t('userGuideBtn')"></span>
                     </button>
                 </div>
 
@@ -372,7 +373,7 @@
                         <button @click="openUserManagementModal()"
                                 class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition border border-indigo-400/40">
                             <span>👥</span>
-                            <span x-text="currentUser.role === 'admin' ? t('navUserManagement') : 'Direktori Tim'"></span>
+                            <span x-text="currentUser.role === 'admin' ? t('navUserManagement') : t('teamDirectoryBtn')"></span>
                         </button>
                     </template>
 
@@ -1157,13 +1158,13 @@
                                 :class="coverageViewMode === 'grid' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10 font-medium'"
                                 class="px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
                             <span>🔲</span>
-                            <span>Grid Analitis (60×60)</span>
+                            <span x-text="t('simModeGrid')"></span>
                         </button>
                         <button @click="coverageViewMode = 'gis'; $nextTick(() => initOrUpdateGisMap())"
                                 :class="coverageViewMode === 'gis' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10 font-medium'"
                                 class="px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
                             <span>🛰️</span>
-                            <span>Real GIS Heatmap (Peta Nyata)</span>
+                            <span x-text="t('simModeGis')"></span>
                             <span class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-950 text-emerald-300 font-bold uppercase">Upgrade</span>
                         </button>
                     </div>
@@ -1171,10 +1172,10 @@
                     <div x-show="coverageViewMode === 'gis'" class="flex items-center gap-1 bg-slate-800 p-1 rounded-lg text-[11px]">
                         <button @click="setGisBasemap('osm')" 
                                 :class="gisBasemap === 'osm' ? 'bg-white text-slate-900 font-extrabold shadow-xs' : 'text-slate-300 hover:text-white font-medium'"
-                                class="px-2 py-0.5 rounded transition cursor-pointer">🗺️ Street</button>
+                                class="px-2 py-0.5 rounded transition cursor-pointer" x-text="t('simGisStreet')"></button>
                         <button @click="setGisBasemap('sat')" 
                                 :class="gisBasemap === 'sat' ? 'bg-white text-slate-900 font-extrabold shadow-xs' : 'text-slate-300 hover:text-white font-medium'"
-                                class="px-2 py-0.5 rounded transition cursor-pointer">🛰️ Satelit</button>
+                                class="px-2 py-0.5 rounded transition cursor-pointer" x-text="t('simGisSat')"></button>
                     </div>
                 </div>
 
@@ -1191,22 +1192,22 @@
                         <div class="flex flex-wrap items-center gap-3">
                             <span class="flex items-center gap-1.5 font-bold text-slate-800">
                                 <span class="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-700"></span>
-                                <span>Kuat (&ge; -85 dBm / Indoor HT)</span>
+                                <span x-text="t('legendStrong')"></span>
                             </span>
                             <span class="flex items-center gap-1.5 font-bold text-slate-800">
                                 <span class="w-3 h-3 rounded-full bg-amber-400 border border-amber-600"></span>
-                                <span>Cukup (-86..-95 dBm / Outdoor)</span>
+                                <span x-text="t('legendFair')"></span>
                             </span>
                             <span class="flex items-center gap-1.5 font-bold text-slate-800">
                                 <span class="w-3 h-3 rounded-full bg-orange-500 border border-orange-700"></span>
-                                <span>Batas Kritis / Mobile (-96..-105 dBm)</span>
+                                <span x-text="t('legendEdge')"></span>
                             </span>
                             <span class="flex items-center gap-1.5 font-bold text-slate-800">
                                 <span class="w-3 h-3 rounded-full bg-red-600 border border-red-800"></span>
-                                <span>Dead-Zone (&lt; -105 dBm)</span>
+                                <span x-text="t('legendDead')"></span>
                             </span>
                         </div>
-                        <span class="text-slate-500 italic text-[10px]">Klik marker R1/R2 pada peta untuk rincian teknis</span>
+                        <span class="text-slate-500 italic text-[10px]" x-text="t('legendMapTip')"></span>
                     </div>
                 </div>
                 <div class="space-y-1.5">
@@ -1233,13 +1234,13 @@
                             :class="configuratorMode === 'standard' ? 'bg-blue-600 text-white shadow-md font-black' : 'text-slate-300 hover:text-white hover:bg-white/10 font-bold'"
                             class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer">
                         <span>📦</span>
-                        <span>Mode Paket Standar (SLR &amp; Radio Fleet)</span>
+                        <span x-text="t('cfgModeStandard')"></span>
                     </button>
                     <button @click="configuratorMode = 'custom'"
                             :class="configuratorMode === 'custom' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md font-black' : 'text-slate-300 hover:text-white hover:bg-white/10 font-bold'"
                             class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer">
                         <span>🛠️</span>
-                        <span>Mode Kalkulator Custom (Pilih Produk + Lisensi + Aksesoris)</span>
+                        <span x-text="t('cfgModeCustom')"></span>
                         <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-white/40 text-slate-950">Fleksibel</span>
                     </button>
                 </div>
@@ -1253,16 +1254,16 @@
                         <div>
                             <div class="flex items-center gap-2.5">
                                 <span class="text-2xl">🛠️</span>
-                                <h2 class="text-lg sm:text-xl font-extrabold text-white">Kalkulator Produk Kustom (Modular Configurator)</h2>
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950 uppercase tracking-wide">Pilih Produk + Lisensi + Aksesoris</span>
+                                <h2 class="text-lg sm:text-xl font-extrabold text-white" x-text="t('cfgCustomTitle')"></h2>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950 uppercase tracking-wide" x-text="t('cfgCustomBadge')"></span>
                             </div>
-                            <p class="text-xs text-sky-200 mt-1 max-w-3xl">Pilih perangkat utama (SLR 5300, MOTOTRBO R7, dsb.), tambahkan opsi lisensi yang kompatibel, lengkapi dengan aksesoris pendukung, atur margin, dan masukkan langsung ke BoQ utama.</p>
+                            <p class="text-xs text-sky-200 mt-1 max-w-3xl" x-text="t('cfgCustomSubtitle')"></p>
                         </div>
                         <div class="flex items-center gap-2">
                             <button @click="transferCustomToBoq()"
                                     class="px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg transition flex items-center gap-2 cursor-pointer">
                                 <span>📋</span>
-                                <span>Masukkan Bundle ke BoQ</span>
+                                <span x-text="t('cfgBtnInsertCustom')"></span>
                             </button>
                         </div>
                     </div>
@@ -1277,14 +1278,14 @@
                             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <div class="flex items-center gap-2">
                                     <span class="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs">1</span>
-                                    <h3 class="font-extrabold text-sm text-slate-900">Pilih Produk Utama</h3>
+                                    <h3 class="font-extrabold text-sm text-slate-900" x-text="t('cfgStep1Product')"></h3>
                                 </div>
-                                <span class="text-xs text-slate-500 font-medium">Repeater, Handy Talky, Mobile Base, CCTV</span>
+                                <span class="text-xs text-slate-500 font-medium" x-text="t('cfgStep1Subtitle')"></span>
                             </div>
 
                             <!-- Quick Preset Shortcuts -->
                             <div class="flex flex-wrap items-center gap-2">
-                                <span class="text-[11px] font-bold text-slate-400">Pilihan Cepat:</span>
+                                <span class="text-[11px] font-bold text-slate-400" x-text="t('cfgQuickPresets')"></span>
                                 <button type="button" @click="onCustomProductSelect(productsCatalog.find(p => p.sku === 'MOT-RPT-SLR5300'))"
                                         :class="customConfig.sku === 'MOT-RPT-SLR5300' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                                         class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
@@ -1325,7 +1326,7 @@
                             <!-- Product Selector Dropdown -->
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div class="sm:col-span-2">
-                                    <label class="block font-bold text-xs text-slate-700 mb-1">Pilih Produk : [dropdown / ketik nama]</label>
+                                    <label class="block font-bold text-xs text-slate-700 mb-1" x-text="t('cfgSelectProductLabel')"></label>
                                     <select @change="const s = $event.target.value; const f = productsCatalog.find(x => x.sku === s); if (f) onCustomProductSelect(f);"
                                             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs focus:border-blue-600 focus:ring-2 focus:ring-blue-100">
                                         <template x-for="p in getAvailableProducts()" :key="p.sku">
@@ -1334,7 +1335,7 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block font-bold text-xs text-slate-700 mb-1">Jumlah Unit (Qty):</label>
+                                    <label class="block font-bold text-xs text-slate-700 mb-1" x-text="t('cfgProductQty')"></label>
                                     <input type="number" min="1" max="1000" x-model.number="customConfig.qty"
                                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-extrabold text-xs focus:border-blue-600 text-center" />
                                 </div>
@@ -1349,7 +1350,7 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-[10px] text-blue-700 uppercase font-bold">Harga Satuan Unit:</div>
+                                    <div class="text-[10px] text-blue-700 uppercase font-bold" x-text="t('cfgUnitPrice')"></div>
                                     <div class="text-sm font-black text-blue-950" x-text="formatCurrency(currency === 'USD' ? customConfig.unitPriceUsd : customConfig.unitPriceIdr)"></div>
                                 </div>
                             </div>
@@ -1361,15 +1362,15 @@
                                 <div class="flex items-center gap-2">
                                     <span class="w-6 h-6 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-black text-xs">2</span>
                                     <div>
-                                        <h3 class="font-extrabold text-sm text-slate-900">Licenses: (menyesuaikan dengan produk yang dipilih)</h3>
-                                        <p class="text-[11px] text-slate-500">Lisensi software &amp; aktivasi sistem</p>
+                                        <h3 class="font-extrabold text-sm text-slate-900" x-text="t('cfgStep2Licenses')"></h3>
+                                        <p class="text-[11px] text-slate-500" x-text="t('cfgLicensesSubtitle')"></p>
                                     </div>
                                 </div>
                                 <!-- Add License Dropdown & Manual Button -->
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <select @change="const s = $event.target.value; if (s) { const it = getCompatibleLicenses(customConfig.sku).find(x=>x.sku===s); addCustomLicense(it); $event.target.value=''; }"
                                             class="px-2.5 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-purple-800 text-xs font-bold focus:border-purple-600 cursor-pointer">
-                                        <option value="">+ add : [pilih dari daftar]</option>
+                                        <option value="" x-text="t('cfgSelectLicensePh')"></option>
                                         <template x-for="l in getCompatibleLicenses(customConfig.sku)" :key="l.sku">
                                             <option :value="l.sku" x-text="l.model + ' (' + formatCurrency(currency === 'USD' ? l.price_usd : l.price_idr) + ')'"></option>
                                         </template>
@@ -1377,7 +1378,7 @@
                                     <button type="button" @click="addCustomLicense(null)"
                                             class="px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
                                             title="Tambah baris lisensi manual">
-                                        <span>+ add manual</span>
+                                        <span x-text="t('cfgAddManualLic')"></span>
                                     </button>
                                 </div>
                             </div>
@@ -1385,9 +1386,7 @@
                             <!-- License Items Table / List -->
                             <div class="space-y-2">
                                 <template x-if="customConfig.licenses.length === 0">
-                                    <div class="p-6 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl text-xs">
-                                        Belum ada lisensi yang ditambahkan. Gunakan <strong>+ add : [dropdown]</strong> di atas jika memerlukan lisensi IPSC, Capacity Plus, SINC+, WiFi, dsb.
-                                    </div>
+                                    <div class="p-6 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl text-xs" x-text="t('cfgEmptyLic')"></div>
                                 </template>
                                 <template x-for="(lic, lIdx) in customConfig.licenses" :key="lic.id || lIdx">
                                     <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
@@ -1428,15 +1427,15 @@
                                 <div class="flex items-center gap-2">
                                     <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs">3</span>
                                     <div>
-                                        <h3 class="font-extrabold text-sm text-slate-900">Accessories: (menyesuaikan dengan produk yang dipilih)</h3>
-                                        <p class="text-[11px] text-slate-500">Aksesoris RF, antena, kabel, baterai, audio &amp; power</p>
+                                        <h3 class="font-extrabold text-sm text-slate-900" x-text="t('cfgStep3Acc')"></h3>
+                                        <p class="text-[11px] text-slate-500" x-text="t('cfgAccSubtitle')"></p>
                                     </div>
                                 </div>
                                 <!-- Add Accessory Dropdown & Manual Button -->
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <select @change="const s = $event.target.value; if (s) { const it = getCompatibleAccessories(customConfig.sku).find(x=>x.sku===s); addCustomAccessory(it); $event.target.value=''; }"
                                             class="px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-bold focus:border-emerald-600 cursor-pointer">
-                                        <option value="">+ add : [pilih dari daftar]</option>
+                                        <option value="" x-text="t('cfgSelectAccPh')"></option>
                                         <template x-for="a in getCompatibleAccessories(customConfig.sku)" :key="a.sku">
                                             <option :value="a.sku" x-text="a.model + ' (' + formatCurrency(currency === 'USD' ? a.price_usd : a.price_idr) + ')'"></option>
                                         </template>
@@ -1444,7 +1443,7 @@
                                     <button type="button" @click="addCustomAccessory(null)"
                                             class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
                                             title="Tambah baris aksesoris manual">
-                                        <span>+ add manual</span>
+                                        <span x-text="t('cfgAddManualAcc')"></span>
                                     </button>
                                 </div>
                             </div>
@@ -1452,9 +1451,7 @@
                             <!-- Accessory Items Table / List -->
                             <div class="space-y-2">
                                 <template x-if="customConfig.accessories.length === 0">
-                                    <div class="p-6 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl text-xs">
-                                        Belum ada aksesoris yang ditambahkan. Gunakan <strong>+ add : [dropdown]</strong> di atas jika membutuhkan Duplexer, Antena, Kabel Coaxial, Baterai IMPRES, RSM, dsb.
-                                    </div>
+                                    <div class="p-6 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl text-xs" x-text="t('cfgEmptyAcc')"></div>
                                 </template>
                                 <template x-for="(acc, aIdx) in customConfig.accessories" :key="acc.id || aIdx">
                                     <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
@@ -1497,7 +1494,7 @@
                             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <div class="flex items-center gap-2">
                                     <span class="text-lg">💰</span>
-                                    <h3 class="font-extrabold text-sm text-slate-900">Kalkulasi Finansial Bundle</h3>
+                                    <h3 class="font-extrabold text-sm text-slate-900" x-text="t('cfgFinancialTitle')"></h3>
                                 </div>
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800" x-text="getCustomConfigSummary().totalItemsCount + ' Komponen'"></span>
                             </div>
@@ -1505,19 +1502,19 @@
                             <!-- Cost Breakdown -->
                             <div class="space-y-2.5 text-xs divide-y divide-slate-100">
                                 <div class="flex justify-between pt-1">
-                                    <span class="text-slate-500">Unit Utama (<span x-text="customConfig.qty"></span>x):</span>
+                                    <span class="text-slate-500"><span x-text="t('cfgMainUnitCost')"></span> (<span x-text="customConfig.qty"></span>x):</span>
                                     <span class="font-bold text-slate-800" x-text="formatCurrency(currency === 'USD' ? getCustomConfigSummary().prodCostUsd : getCustomConfigSummary().prodCostIdr)"></span>
                                 </div>
                                 <div class="flex justify-between pt-2">
-                                    <span class="text-slate-500">Total Lisensi (<span x-text="customConfig.licenses.length"></span> item):</span>
+                                    <span class="text-slate-500"><span x-text="t('cfgLicCost')"></span> (<span x-text="customConfig.licenses.length"></span> item):</span>
                                     <span class="font-bold text-purple-700" x-text="formatCurrency(currency === 'USD' ? getCustomConfigSummary().licCostUsd : getCustomConfigSummary().licCostIdr)"></span>
                                 </div>
                                 <div class="flex justify-between pt-2">
-                                    <span class="text-slate-500">Total Aksesoris (<span x-text="customConfig.accessories.length"></span> item):</span>
+                                    <span class="text-slate-500"><span x-text="t('cfgAccCost')"></span> (<span x-text="customConfig.accessories.length"></span> item):</span>
                                     <span class="font-bold text-emerald-700" x-text="formatCurrency(currency === 'USD' ? getCustomConfigSummary().accCostUsd : getCustomConfigSummary().accCostIdr)"></span>
                                 </div>
                                 <div class="flex justify-between pt-2.5 text-sm font-black border-t-2 border-slate-200">
-                                    <span class="text-slate-700">Total Modal (COGS):</span>
+                                    <span class="text-slate-700" x-text="t('cfgTotalCogs')"></span>
                                     <span class="text-slate-900" x-text="formatCurrency(currency === 'USD' ? getCustomConfigSummary().totalCostUsd : getCustomConfigSummary().totalCostIdr)"></span>
                                 </div>
                             </div>
@@ -1525,7 +1522,7 @@
                             <!-- Margin Slider -->
                             <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 space-y-2">
                                 <div class="flex justify-between items-center text-xs">
-                                    <label class="font-extrabold text-amber-950">Target Margin / Markup:</label>
+                                    <label class="font-extrabold text-amber-950" x-text="t('cfgTargetMargin')"></label>
                                     <div class="flex items-center gap-1">
                                         <input type="number" min="0" max="100" x-model.number="customConfig.marginPercent"
                                                class="w-14 px-2 py-1 text-center font-black rounded-lg border border-amber-300 bg-white text-amber-950 text-xs" />
@@ -1550,11 +1547,11 @@
 
                             <!-- Grand Selling Price Highlight -->
                             <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg space-y-1">
-                                <div class="text-[11px] uppercase font-bold text-emerald-100">Harga Penawaran Klien:</div>
+                                <div class="text-[11px] uppercase font-bold text-emerald-100" x-text="t('cfgClientPrice')"></div>
                                 <div class="text-2xl font-black tracking-tight"
                                      x-text="formatCurrency(currency === 'USD' ? getCustomConfigSummary().sellPriceUsd : getCustomConfigSummary().sellPriceIdr)"></div>
                                 <div class="text-[10px] text-emerald-200 flex justify-between pt-1 border-t border-emerald-500/40">
-                                    <span>Estimasi Gross Profit:</span>
+                                    <span x-text="t('cfgEstGrossProfit')"></span>
                                     <span class="font-bold text-white" x-text="formatCurrency(currency === 'USD' ? (getCustomConfigSummary().sellPriceUsd - getCustomConfigSummary().totalCostUsd) : getCustomConfigSummary().grossProfitIdr)"></span>
                                 </div>
                             </div>
@@ -1564,11 +1561,12 @@
                                 <button type="button" @click="transferCustomToBoq()"
                                         class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
                                     <span>📋</span>
-                                    <span>Masukkan Bundle Custom ke BoQ</span>
+                                    <span x-text="t('cfgBtnInsertCustom')"></span>
                                 </button>
                                 <button type="button" @click="onCustomProductSelect(productsCatalog.find(p => p.sku === 'MOT-RPT-SLR5300'))"
                                         class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition cursor-pointer">
-                                    <span>🔄 Reset Form Konfigurasi</span>
+                                    <span>🔄</span>
+                                    <span x-text="t('cfgBtnResetCustom')"></span>
                                 </button>
                             </div>
                         </div>
@@ -1598,22 +1596,22 @@
                         <button @click="addSystemPackage('slr')"
                                 class="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-700 hover:bg-blue-800 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                             <span>📡</span>
-                            <span>+ Paket Repeater (SLR)</span>
+                            <span x-text="t('cfgAddSlrPkg')"></span>
                         </button>
 
                         <!-- Add HT Package -->
                         <button @click="addSystemPackage('ht')"
                                 class="px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                             <span>📻</span>
-                            <span>+ Paket Radio (HT)</span>
+                            <span x-text="t('cfgAddHtPkg')"></span>
                         </button>
 
                         <!-- Apply to BoQ -->
                         <button @click="applyPackagesToBoq()"
                                 class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer"
-                                title="Terapkan semua paket ke tabel BoQ utama">
+                                :title="lang === 'en' ? 'Apply all packages to main BoQ' : 'Terapkan semua paket ke tabel BoQ utama'">
                             <span>📋</span>
-                            <span>Terapkan ke BoQ</span>
+                            <span x-text="t('cfgApplyToBoq')"></span>
                         </button>
 
                         <!-- Save to Drive -->
@@ -1621,7 +1619,7 @@
                                 class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                             <span x-show="!isSavingToDrive">☁️</span>
                             <span x-show="isSavingToDrive" class="animate-spin">⌛</span>
-                            <span>Simpan ke Drive</span>
+                            <span x-text="t('cfgSaveToDrive')"></span>
                         </button>
 
                         <!-- Export PDF -->
@@ -1642,7 +1640,7 @@
                         <button @click="openEmailQuoteModal()"
                                 class="px-3.5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                             <span>✉️</span>
-                            <span>Kirim Email</span>
+                            <span x-text="t('cfgEmailQuote')"></span>
                         </button>
                     </div>
                 </div>
@@ -1650,24 +1648,24 @@
                 <!-- Executive Summary Metric Cards (Grand Total across Packages) -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
                     <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                        <div class="text-[11px] font-bold uppercase text-slate-500">Total Paket Aktif</div>
-                        <div class="text-xl font-black text-slate-900 mt-1" x-text="getPackagesGrandSummary().totalPackages + ' Paket'"></div>
-                        <div class="text-[10px] text-slate-400 mt-0.5">Konfigurasi mandiri</div>
+                        <div class="text-[11px] font-bold uppercase text-slate-500" x-text="t('cfgKpiActivePkgs')">Total Paket Aktif</div>
+                        <div class="text-xl font-black text-slate-900 mt-1" x-text="getPackagesGrandSummary().totalPackages + ' ' + (lang === 'en' ? 'Packages' : 'Paket')"></div>
+                        <div class="text-[10px] text-slate-400 mt-0.5" x-text="t('cfgKpiActiveSub')">Konfigurasi mandiri</div>
                     </div>
                     <div class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200">
-                        <div class="text-[11px] font-bold uppercase text-blue-700">Total Perangkat Utama</div>
-                        <div class="text-xl font-black text-blue-950 mt-1" x-text="getPackagesGrandSummary().totalMainUnits + ' Unit'"></div>
-                        <div class="text-[10px] text-blue-600 mt-0.5">Repeater &amp; Portable HT</div>
+                        <div class="text-[11px] font-bold uppercase text-blue-700" x-text="t('cfgKpiMainUnits')">Total Perangkat Utama</div>
+                        <div class="text-xl font-black text-blue-950 mt-1" x-text="getPackagesGrandSummary().totalMainUnits + ' ' + (lang === 'en' ? 'Units' : 'Unit')"></div>
+                        <div class="text-[10px] text-blue-600 mt-0.5" x-text="t('cfgKpiMainSub')">Repeater &amp; Portable HT</div>
                     </div>
                     <div class="p-3.5 rounded-xl bg-sky-50/70 border border-sky-200">
-                        <div class="text-[11px] font-bold uppercase text-sky-700">Total Add-on Terpasang</div>
-                        <div class="text-xl font-black text-sky-950 mt-1" x-text="getPackagesGrandSummary().totalAddons + ' Komponen'"></div>
-                        <div class="text-[10px] text-sky-600 mt-0.5">Aksesoris, antena, kabel &amp; lisensi</div>
+                        <div class="text-[11px] font-bold uppercase text-sky-700" x-text="t('cfgKpiAddons')">Total Add-on Terpasang</div>
+                        <div class="text-xl font-black text-sky-950 mt-1" x-text="getPackagesGrandSummary().totalAddons + ' ' + (lang === 'en' ? 'Components' : 'Komponen')"></div>
+                        <div class="text-[10px] text-sky-600 mt-0.5" x-text="t('cfgKpiAddonsSub')">Aksesoris, antena, kabel &amp; lisensi</div>
                     </div>
                     <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-300">
-                        <div class="text-[11px] font-bold uppercase text-emerald-800">Grand Total Penawaran</div>
+                        <div class="text-[11px] font-bold uppercase text-emerald-800" x-text="t('cfgKpiGrandTotal')">Grand Total Penawaran</div>
                         <div class="text-lg sm:text-xl font-black text-emerald-950 mt-1" x-text="formatCurrency(currency === 'USD' ? getPackagesGrandSummary().grandSellUsd : getPackagesGrandSummary().grandSellIdr)"></div>
-                        <div class="text-[10px] text-emerald-700 font-semibold mt-0.5" x-text="'Sebelum PPN ' + ppnPercent + '%'"></div>
+                        <div class="text-[10px] text-emerald-700 font-semibold mt-0.5" x-text="t('cfgKpiGrandSub') + ' ' + ppnPercent + '%'"></div>
                     </div>
                 </div>
             </div>
@@ -1698,23 +1696,23 @@
                             <!-- Package Card Subtotal & Management Buttons -->
                             <div class="flex items-center gap-3">
                                 <div class="text-right">
-                                    <div class="text-[10px] uppercase font-bold text-sky-200">Subtotal Penawaran</div>
+                                    <div class="text-[10px] uppercase font-bold text-sky-200" x-text="t('cfgPkgSubtotal')">Subtotal Penawaran</div>
                                     <div class="text-base sm:text-lg font-black text-amber-300"
                                          x-text="formatCurrency(currency === 'USD' ? calculatePackageBom(pkg).totalSellUsd : calculatePackageBom(pkg).totalSellIdr)"></div>
-                                    <div class="text-[10px] text-white/70" x-text="calculatePackageBom(pkg).items.length + ' item terpasang'"></div>
+                                    <div class="text-[10px] text-white/70" x-text="calculatePackageBom(pkg).items.length + ' ' + t('cfgPkgItemsInstalled')"></div>
                                 </div>
 
                                 <div class="flex items-center gap-1 bg-white/10 p-1 rounded-xl border border-white/15">
                                     <!-- Duplicate -->
                                     <button @click="duplicateSystemPackage(pkg.id)"
                                             class="p-2 rounded-lg hover:bg-white/20 text-white transition text-xs font-bold"
-                                            title="Duplikat paket ini untuk konfigurasi alternatif">
+                                            :title="lang === 'en' ? 'Duplicate this package' : 'Duplikat paket ini untuk konfigurasi alternatif'">
                                         📋
                                     </button>
                                     <!-- Delete -->
                                     <button @click="removeSystemPackage(pkg.id)"
                                             class="p-2 rounded-lg hover:bg-rose-600 text-white transition text-xs font-bold"
-                                            title="Hapus paket ini">
+                                            :title="lang === 'en' ? 'Delete this package' : 'Hapus paket ini'">
                                         🗑️
                                     </button>
                                 </div>
@@ -1730,14 +1728,14 @@
                                 <!-- Primary Device Selector & Quantity -->
                                 <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-3">
                                     <div class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center justify-between">
-                                        <span>1. Perangkat Utama (Main Unit)</span>
+                                        <span x-text="t('cfgMainUnitSection')">1. Perangkat Utama (Main Unit)</span>
                                         <span class="text-[11px] font-semibold text-blue-700" x-text="pkg.category === 'slr' ? 'Base Station Hardware' : 'Portable Subscriber'"></span>
                                     </div>
 
                                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
                                         <!-- Model Select -->
                                         <div class="sm:col-span-6">
-                                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Pilih Model Perangkat</label>
+                                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="t('cfgSelectDeviceModel')">Pilih Model Perangkat</label>
                                             <select x-model="pkg.mainSku" class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-white">
                                                 <template x-if="pkg.category === 'slr'">
                                                     <optgroup label="Repeater MOTOTRBO">
@@ -1763,14 +1761,14 @@
 
                                         <!-- Quantity -->
                                         <div class="sm:col-span-3">
-                                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Jumlah Unit (Qty)</label>
+                                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="t('cfgProductQty')">Jumlah Unit (Qty)</label>
                                             <input type="number" min="1" max="500" x-model.number="pkg.quantity"
                                                    class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 text-center" />
                                         </div>
 
                                         <!-- Frequency Band -->
                                         <div class="sm:col-span-3">
-                                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Pita Frekuensi</label>
+                                            <label class="block text-[11px] font-bold text-slate-600 mb-1" x-text="t('cfgFrequencyBand')">Pita Frekuensi</label>
                                             <select x-model="pkg.frequency" class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-white">
                                                 <option value="UHF">UHF (403–470 MHz)</option>
                                                 <option value="VHF">VHF (136–174 MHz)</option>
@@ -1784,8 +1782,8 @@
                                 <template x-if="pkg.category === 'slr'">
                                     <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-4">
                                         <div class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center justify-between">
-                                            <span>2. Add-on Komponen &amp; Infrastruktur RF</span>
-                                            <span class="text-[11px] text-slate-500 font-semibold">Checklist Otomatis</span>
+                                            <span x-text="t('cfgSlrAddonsSection')">2. Add-on Komponen &amp; Infrastruktur RF</span>
+                                            <span class="text-[11px] text-slate-500 font-semibold" x-text="lang === 'en' ? 'Auto Checklist' : 'Checklist Otomatis'"></span>
                                         </div>
 
                                         <div class="space-y-3 text-xs">
@@ -1793,12 +1791,12 @@
                                             <div class="p-3 rounded-lg bg-white border border-slate-200 space-y-2">
                                                 <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
                                                     <input type="checkbox" x-model="pkg.slrOptions.duplexer" class="rounded text-blue-600 w-4 h-4" />
-                                                    <span>Duplexer VHF/UHF Band-Pass 50W (Standard N-Female)</span>
+                                                    <span x-text="t('cfgSlrDuplexerLabel')">Duplexer VHF/UHF Band-Pass 50W (Standard N-Female)</span>
                                                 </label>
                                                 <div x-show="pkg.slrOptions.duplexer" class="pl-6">
                                                     <label class="flex items-center gap-2 text-slate-600 font-medium cursor-pointer">
                                                         <input type="checkbox" x-model="pkg.slrOptions.cavityTuning" class="rounded text-blue-600" />
-                                                        <span>Termasuk Jasa Engineering Tuning &amp; Kalibrasi Cavity Duplexer di Lab CDPK (+Rp 1.500.000)</span>
+                                                        <span x-text="t('cfgSlrTuningLabel')">Termasuk Jasa Engineering Tuning &amp; Kalibrasi Cavity Duplexer di Lab CDPK (+Rp 1.500.000)</span>
                                                     </label>
                                                 </div>
                                             </div>
@@ -1806,14 +1804,14 @@
                                             <!-- Antenna Selection -->
                                             <div class="p-3 rounded-lg bg-white border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 <div>
-                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tipe Antena Base Station</label>
+                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1" x-text="t('cfgSlrAntennaType')">Tipe Antena Base Station</label>
                                                     <select x-model="pkg.slrOptions.antennaType" class="w-full px-2.5 py-1.5 text-xs font-semibold rounded border border-slate-300">
                                                         <option value="omni">Omni-Directional High Gain Fiberglass (6-9 dBi)</option>
                                                         <option value="yagi">Directional Yagi High Gain (11-13 dBi)</option>
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Jumlah Antena per Repeater</label>
+                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1" x-text="t('cfgSlrAntennaCount')">Jumlah Antena per Repeater</label>
                                                     <input type="number" min="1" max="4" x-model.number="pkg.slrOptions.antennaCount"
                                                            class="w-full px-2.5 py-1.5 text-xs font-semibold rounded border border-slate-300" />
                                                 </div>
@@ -1822,29 +1820,29 @@
                                             <!-- Feeder Cable Dynamic Calculator -->
                                             <div class="p-3 rounded-lg bg-white border border-slate-200 space-y-2">
                                                 <div class="font-bold text-slate-800 flex items-center justify-between">
-                                                    <span>Kabel Coaxial Feeder RF &amp; Konektor</span>
-                                                    <span class="text-[11px] text-blue-600 font-bold" x-text="pkg.slrOptions.feederMeters + ' Meter per Run'"></span>
+                                                    <span x-text="t('cfgSlrFeederTitle')">Kabel Coaxial Feeder RF &amp; Konektor</span>
+                                                    <span class="text-[11px] text-blue-600 font-bold" x-text="pkg.slrOptions.feederMeters + ' ' + (lang === 'en' ? 'Meters per Run' : 'Meter per Run')"></span>
                                                 </div>
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     <div>
-                                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tipe Kabel</label>
+                                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1" x-text="t('cfgSlrFeederType')">Tipe Kabel</label>
                                                         <select x-model="pkg.slrOptions.feederType" class="w-full px-2.5 py-1.5 text-xs font-semibold rounded border border-slate-300">
                                                             <option value="78">Heliax 7/8" Low-Loss Foam (Rp 165.000/m)</option>
                                                             <option value="12">Superflex 1/2" Foam Low-Loss (Rp 85.000/m)</option>
                                                         </select>
                                                     </div>
                                                     <div>
-                                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Panjang Kabel Feeder (Meter)</label>
+                                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1" x-text="t('cfgSlrFeederLength')">Panjang Kabel Feeder (Meter)</label>
                                                         <input type="number" min="5" max="200" step="5" x-model.number="pkg.slrOptions.feederMeters"
                                                                class="w-full px-2.5 py-1.5 text-xs font-bold rounded border border-slate-300" />
                                                     </div>
                                                 </div>
-                                                <p class="text-[10px] text-slate-400">Otomatis menyertakan set konektor N-Male/DIN 7/16, jumper RG-214, dan grounding kit tower.</p>
+                                                <p class="text-[10px] text-slate-400" x-text="t('cfgSlrFeederNote')">Otomatis menyertakan set konektor N-Male/DIN 7/16, jumper RG-214, dan grounding kit tower.</p>
                                             </div>
 
                                             <!-- Protection, Power, Enclosure, Licenses -->
                                             <div class="p-3 rounded-lg bg-white border border-slate-200 space-y-2">
-                                                <div class="font-bold text-slate-800 mb-1">Proteksi, Daya &amp; Lisensi Tambahan</div>
+                                                <div class="font-bold text-slate-800 mb-1" x-text="t('cfgSlrProtTitle')">Proteksi, Daya &amp; Lisensi Tambahan</div>
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                                                     <label class="flex items-center gap-2 text-slate-700 cursor-pointer">
                                                         <input type="checkbox" x-model="pkg.slrOptions.arrester" class="rounded text-blue-600" />
@@ -1864,7 +1862,7 @@
                                                     </label>
                                                     <label class="flex items-center gap-2 text-slate-700 cursor-pointer sm:col-span-2">
                                                         <input type="checkbox" x-model="pkg.slrOptions.engineeringService" class="rounded text-blue-600" />
-                                                        <span>Jasa Engineering CDPK: Survey, Rigging Tower &amp; Commissioning (3 Mandays/Site)</span>
+                                                        <span x-text="t('cfgSlrEngService')">Jasa Engineering CDPK: Survey, Rigging Tower &amp; Commissioning (3 Mandays/Site)</span>
                                                     </label>
                                                 </div>
                                             </div>
@@ -1876,8 +1874,8 @@
                                 <template x-if="pkg.category === 'ht'">
                                     <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-4">
                                         <div class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center justify-between">
-                                            <span>2. Add-on Baterai, Charger &amp; Aksesori HT</span>
-                                            <span class="text-[11px] text-slate-500 font-semibold">Checklist Otomatis</span>
+                                            <span x-text="t('cfgHtAddonsSection')">2. Add-on Baterai, Charger &amp; Aksesori HT</span>
+                                            <span class="text-[11px] text-slate-500 font-semibold" x-text="lang === 'en' ? 'Auto Checklist' : 'Checklist Otomatis'"></span>
                                         </div>
 
                                         <div class="space-y-3 text-xs">
@@ -1885,10 +1883,10 @@
                                             <div class="p-3 rounded-lg bg-white border border-slate-200 flex flex-wrap items-center justify-between gap-2">
                                                 <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
                                                     <input type="checkbox" x-model="pkg.htOptions.extraBattery" class="rounded text-sky-600 w-4 h-4" />
-                                                    <span>Extra Battery Pack Motorola IMPRES Li-Ion 2850mAh IP68</span>
+                                                    <span x-text="t('cfgHtExtraBat')">Extra Battery Pack Motorola IMPRES Li-Ion 2850mAh IP68</span>
                                                 </label>
                                                 <div x-show="pkg.htOptions.extraBattery" class="flex items-center gap-2">
-                                                    <span class="text-[11px] text-slate-500">Rasio per Radio:</span>
+                                                    <span class="text-[11px] text-slate-500" x-text="t('cfgHtBatRatio')">Rasio per Radio:</span>
                                                     <input type="number" min="1" max="5" x-model.number="pkg.htOptions.batteryRatio"
                                                            class="w-16 px-2 py-1 text-xs font-bold rounded border border-slate-300 text-center" />
                                                     <span class="text-[11px] font-bold text-slate-700" x-text="'= ' + (pkg.quantity * (pkg.htOptions.batteryRatio || 1)) + ' Pcs'"></span>
@@ -1897,10 +1895,10 @@
 
                                             <!-- Smart Charger Ratio (6-Way Multi-Unit Charger) -->
                                             <div class="p-3 rounded-lg bg-white border border-slate-200 space-y-2">
-                                                <div class="font-bold text-slate-800">Sistem Pengisian Daya (Charging Management)</div>
+                                                <div class="font-bold text-slate-800" x-text="t('cfgHtChargerTitle')">Sistem Pengisian Daya (Charging Management)</div>
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     <div>
-                                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tipe Charger</label>
+                                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1" x-text="t('cfgHtChargerType')">Tipe Charger</label>
                                                         <select x-model="pkg.htOptions.chargerType" class="w-full px-2.5 py-1.5 text-xs font-semibold rounded border border-slate-300">
                                                             <option value="6way">6-Way Multi-Unit Rapid Charger (MUC)</option>
                                                             <option value="single">Single Desktop Charger (Bawaan)</option>
@@ -1909,30 +1907,30 @@
                                                     </div>
                                                     <div x-show="pkg.htOptions.chargerType === '6way'">
                                                         <div class="flex items-center justify-between mb-1">
-                                                            <label class="block text-[11px] font-semibold text-slate-600">Jumlah Unit 6-Way MUC</label>
-                                                            <span class="text-[10px] text-emerald-600 font-bold" x-text="'Rekomendasi: ' + Math.ceil(pkg.quantity / 6) + ' Unit'"></span>
+                                                            <label class="block text-[11px] font-semibold text-slate-600" x-text="t('cfgHtCharger6WayCount')">Jumlah Unit 6-Way MUC</label>
+                                                            <span class="text-[10px] text-emerald-600 font-bold" x-text="(lang === 'en' ? 'Recommendation: ' : 'Rekomendasi: ') + Math.ceil(pkg.quantity / 6) + ' Unit'"></span>
                                                         </div>
                                                         <input type="number" min="1" max="50" x-model.number="pkg.htOptions.chargerCount"
                                                                class="w-full px-2.5 py-1.5 text-xs font-bold rounded border border-slate-300" />
                                                     </div>
                                                 </div>
-                                                <p x-show="pkg.htOptions.chargerType === '6way'" class="text-[10px] text-slate-400">
-                                                    Formula otomatis: Setiap 6 unit radio direkomendasikan 1 unit Multi-Charger 6-Gang untuk kerapihan ruang kontrol / charging rack.
+                                                <p x-show="pkg.htOptions.chargerType === '6way'" class="text-[10px] text-slate-400"
+                                                   x-text="lang === 'en' ? 'Automatic formula: For every 6 radios, 1 Multi-Unit Charger is recommended for neat control room / charging rack deployment.' : 'Formula otomatis: Setiap 6 unit radio direkomendasikan 1 unit Multi-Charger 6-Gang untuk kerapihan ruang kontrol / charging rack.'">
                                                 </p>
                                             </div>
 
                                             <!-- Audio & Carrying Accessories -->
                                             <div class="p-3 rounded-lg bg-white border border-slate-200 space-y-2">
-                                                <div class="font-bold text-slate-800 mb-1">Aksesori Lapangan &amp; Solusi Pembawa</div>
+                                                <div class="font-bold text-slate-800 mb-1" x-text="t('cfgHtAccessoriesTitle')">Aksesori Lapangan &amp; Solusi Pembawa</div>
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     <!-- RSM Mic -->
                                                     <div class="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
                                                         <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
                                                             <input type="checkbox" x-model="pkg.htOptions.rsmMic" class="rounded text-sky-600" />
-                                                            <span>Remote Speaker Mic IP67</span>
+                                                            <span x-text="t('cfgHtRsmLabel')">Remote Speaker Mic IP67</span>
                                                         </label>
                                                         <div x-show="pkg.htOptions.rsmMic" class="flex items-center gap-2 pt-1">
-                                                            <span class="text-[10px] text-slate-500">Jumlah:</span>
+                                                            <span class="text-[10px] text-slate-500" x-text="lang === 'en' ? 'Qty:' : 'Jumlah:'"></span>
                                                             <input type="number" min="1" :max="pkg.quantity * 2" x-model.number="pkg.htOptions.rsmCount"
                                                                    class="w-16 px-2 py-0.5 text-xs font-bold rounded border border-slate-300 text-center" />
                                                             <span class="text-[10px] text-slate-500">Unit</span>
@@ -1943,10 +1941,10 @@
                                                     <div class="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
                                                         <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
                                                             <input type="checkbox" x-model="pkg.htOptions.earpiece" class="rounded text-sky-600" />
-                                                            <span>Surveillance Acoustic Earpiece</span>
+                                                            <span x-text="t('cfgHtEarpieceLabel')">Surveillance Acoustic Earpiece</span>
                                                         </label>
                                                         <div x-show="pkg.htOptions.earpiece" class="flex items-center gap-2 pt-1">
-                                                            <span class="text-[10px] text-slate-500">Jumlah:</span>
+                                                            <span class="text-[10px] text-slate-500" x-text="lang === 'en' ? 'Qty:' : 'Jumlah:'"></span>
                                                             <input type="number" min="1" :max="pkg.quantity * 2" x-model.number="pkg.htOptions.earpieceCount"
                                                                    class="w-16 px-2 py-0.5 text-xs font-bold rounded border border-slate-300 text-center" />
                                                             <span class="text-[10px] text-slate-500">Unit</span>
@@ -1957,10 +1955,10 @@
                                                     <div class="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
                                                         <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
                                                             <input type="checkbox" x-model="pkg.htOptions.swivelCase" class="rounded text-sky-600" />
-                                                            <span>Leather Swivel Carry Case</span>
+                                                            <span x-text="t('cfgHtSwivelLabel')">Leather Swivel Carry Case</span>
                                                         </label>
                                                         <div x-show="pkg.htOptions.swivelCase" class="flex items-center gap-2 pt-1">
-                                                            <span class="text-[10px] text-slate-500">Jumlah:</span>
+                                                            <span class="text-[10px] text-slate-500" x-text="lang === 'en' ? 'Qty:' : 'Jumlah:'"></span>
                                                             <input type="number" min="1" :max="pkg.quantity * 2" x-model.number="pkg.htOptions.swivelCaseCount"
                                                                    class="w-16 px-2 py-0.5 text-xs font-bold rounded border border-slate-300 text-center" />
                                                             <span class="text-[10px] text-slate-500">Unit</span>
@@ -1971,9 +1969,9 @@
                                                     <div class="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
                                                         <label class="flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
                                                             <input type="checkbox" x-model="pkg.htOptions.aesLicense" class="rounded text-sky-600" />
-                                                            <span>Lisensi Enkripsi AES-256 Bit</span>
+                                                            <span x-text="t('cfgHtAesLabel')">Lisensi Enkripsi AES-256 Bit</span>
                                                         </label>
-                                                        <p class="text-[10px] text-slate-400">Proteksi penyadapan level military/public-safety.</p>
+                                                        <p class="text-[10px] text-slate-400" x-text="t('cfgHtAesNote')">Proteksi penyadapan level military/public-safety.</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1984,7 +1982,7 @@
                                 <!-- Commercial Margin Override -->
                                 <div class="flex items-center justify-between p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="font-bold text-amber-900">Target Profit Margin Paket (%):</span>
+                                        <span class="font-bold text-amber-900" x-text="t('cfgMarginTarget')">Target Profit Margin Paket (%):</span>
                                         <span x-show="Number(pkg.marginPercent || 0) < 15" class="text-[10px] text-amber-700 font-extrabold bg-amber-100 border border-amber-300 px-1 rounded">⚠️ &lt;15%</span>
                                     </div>
                                     <div class="flex items-center gap-1.5">
@@ -2000,11 +1998,11 @@
                                 <div>
                                     <div class="flex items-center justify-between border-b border-white/10 pb-3">
                                         <div>
-                                            <div class="text-[10px] font-bold uppercase tracking-wider text-sky-300">Rincian Komponen Paket (BOM)</div>
+                                            <div class="text-[10px] font-bold uppercase tracking-wider text-sky-300" x-text="t('cfgBomTitle')">Rincian Komponen Paket (BOM)</div>
                                             <h4 class="text-xs font-extrabold text-white mt-0.5" x-text="pkg.name"></h4>
                                         </div>
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-sky-200"
-                                              x-text="calculatePackageBom(pkg).items.length + ' Item'"></span>
+                                              x-text="calculatePackageBom(pkg).items.length + ' ' + (lang === 'en' ? 'Items' : 'Item')"></span>
                                     </div>
 
                                     <!-- Itemized Table -->
@@ -2017,9 +2015,9 @@
                                                         <span x-text="it.name"></span>
                                                     </div>
                                                     <div class="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
-                                                        <span x-text="it.qty + ' ' + (it.unit || 'Unit')"></span>
+                                                        <span x-text="it.qty + ' ' + (it.unit || (lang === 'en' ? 'Unit' : 'Unit'))"></span>
                                                         <span>•</span>
-                                                        <span x-text="formatCurrency(currency === 'USD' ? it.sellUsd : it.sellIdr) + '/satuan'"></span>
+                                                        <span x-text="formatCurrency(currency === 'USD' ? it.sellUsd : it.sellIdr) + (lang === 'en' ? '/unit' : '/satuan')"></span>
                                                     </div>
                                                 </div>
                                                 <div class="text-right font-bold text-sky-200 text-xs"
@@ -2032,14 +2030,14 @@
                                 <!-- Package Summary Total -->
                                 <div class="pt-3 border-t border-white/15 space-y-2">
                                     <div class="flex items-center justify-between text-xs text-slate-300">
-                                        <span>Estimasi Modal (Cost):</span>
+                                        <span x-text="t('cfgCostEst')">Estimasi Modal (Cost):</span>
                                         <span class="font-semibold" x-text="formatCurrency(currency === 'USD' ? calculatePackageBom(pkg).totalCostUsd : calculatePackageBom(pkg).totalCostIdr)"></span>
                                     </div>
                                     <div class="flex items-center justify-between text-sm font-extrabold text-white">
-                                        <span>Harga Penawaran Paket:</span>
+                                        <span x-text="t('cfgPackageSellPrice')">Harga Penawaran Paket:</span>
                                         <span class="text-base text-amber-300" x-text="formatCurrency(currency === 'USD' ? calculatePackageBom(pkg).totalSellUsd : calculatePackageBom(pkg).totalSellIdr)"></span>
                                     </div>
-                                    <p class="text-[10px] text-slate-400 text-center">Harga sebelum PPN • Termasuk margin terkonfigurasi</p>
+                                    <p class="text-[10px] text-slate-400 text-center" x-text="t('cfgPriceBeforeVat')">Harga sebelum PPN • Termasuk margin terkonfigurasi</p>
                                 </div>
                             </div>
                         </div>
@@ -2753,10 +2751,10 @@
                     <div class="p-2.5 rounded-xl bg-white/15 backdrop-blur-xs text-xl shadow-inner">📖</div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h3 class="text-base sm:text-lg font-extrabold tracking-tight">Panduan Pengguna Interaktif</h3>
+                            <h3 class="text-base sm:text-lg font-extrabold tracking-tight" x-text="t('guideTitle')">Panduan Pengguna Interaktif</h3>
                             <span class="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-bold uppercase tracking-wider text-white">v8.4.0</span>
                         </div>
-                        <p class="text-xs text-sky-100 mt-0.5">Dokumentasi Operasional Solusi Radio Komunikasi &amp; Sizing RF CDPK</p>
+                        <p class="text-xs text-sky-100 mt-0.5" x-text="t('guideSubtitle')">Dokumentasi Operasional Solusi Radio Komunikasi &amp; Sizing RF CDPK</p>
                     </div>
                 </div>
                 <button @click="userGuideOpen = false" 
@@ -2769,7 +2767,7 @@
                 <div class="relative flex-1 sm:max-w-xs">
                     <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400 text-xs">🔍</span>
                     <input type="text" x-model="guideSearchQuery" 
-                           placeholder="Cari topik... (reset, sizing, role, handover)"
+                           :placeholder="t('guideSearchPh')"
                            class="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition" />
                     <button x-show="guideSearchQuery" @click="guideSearchQuery = ''" 
                             class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 text-xs cursor-pointer">✕</button>
@@ -2779,25 +2777,25 @@
                 <div class="flex overflow-x-auto gap-1.5 py-0.5 text-xs no-scrollbar">
                     <button @click="userGuideTab = 'workflow'"
                             :class="userGuideTab === 'workflow' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">1. Alur Kerja</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabWorkflow')">1. Alur Kerja</button>
                     <button @click="userGuideTab = 'sizing'"
                             :class="userGuideTab === 'sizing' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">2. Sizing &amp; Reset</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabSizing')">2. Sizing &amp; Reset</button>
                     <button @click="userGuideTab = 'configurator'"
                             :class="userGuideTab === 'configurator' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">3. Kalkulator Produk</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabConfigurator')">3. Kalkulator Produk</button>
                     <button @click="userGuideTab = 'sync_archive'"
                             :class="userGuideTab === 'sync_archive' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">4. Sinkronisasi &amp; Arsip</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabSyncArchive')">4. Sinkronisasi &amp; Arsip</button>
                     <button @click="userGuideTab = 'security'"
                             :class="userGuideTab === 'security' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">5. Hak Akses (RBAC)</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabSecurity')">5. Hak Akses (RBAC)</button>
                     <button @click="userGuideTab = 'audit_handover'"
                             :class="userGuideTab === 'audit_handover' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">6. Handover &amp; Audit</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabHandover')">6. Handover &amp; Audit</button>
                     <button @click="userGuideTab = 'faq'"
                             :class="userGuideTab === 'faq' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">7. FAQ &amp; Tips</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabFaq')">7. FAQ &amp; Tips</button>
                 </div>
             </div>
 
@@ -2808,9 +2806,9 @@
                 <div x-show="guideSearchQuery" class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <span>🔍</span>
-                        <span>Mencari topik: <strong class="font-extrabold" x-text="guideSearchQuery"></strong></span>
+                        <span><span x-text="t('guideSearchActive')">Mencari topik:</span> <strong class="font-extrabold" x-text="guideSearchQuery"></strong></span>
                     </div>
-                    <button @click="guideSearchQuery = ''" class="underline font-bold text-amber-900 cursor-pointer">Hapus Pencarian</button>
+                    <button @click="guideSearchQuery = ''" class="underline font-bold text-amber-900 cursor-pointer" x-text="t('guideClearSearch')">Hapus Pencarian</button>
                 </div>
 
                 <!-- ══════════ TAB 1: WORKFLOW ══════════ -->
@@ -3206,7 +3204,7 @@
                     " :disabled="userGuideTab === 'workflow'"
                     :class="userGuideTab === 'workflow' ? 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-slate-200 hover:bg-slate-300 text-slate-800 cursor-pointer'"
                     class="px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 shadow-xs">
-                        <span>◀</span> <span>Sebelumnya</span>
+                        <span>◀</span> <span x-text="t('guideBtnPrev')">Sebelumnya</span>
                     </button>
 
                     <button @click="
@@ -3216,14 +3214,14 @@
                     " :disabled="userGuideTab === 'faq'"
                     :class="userGuideTab === 'faq' ? 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'"
                     class="px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center gap-1 shadow-xs">
-                        <span>Selanjutnya</span> <span>▶</span>
+                        <span x-text="t('guideBtnNext')">Selanjutnya</span> <span>▶</span>
                     </button>
                 </div>
 
                 <!-- Close CTA -->
                 <div class="flex items-center gap-3">
                     <span class="text-slate-400 font-medium hidden sm:inline">CDPK System Planner v8.4.0 Cloud</span>
-                    <button @click="userGuideOpen = false" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold cursor-pointer transition shadow-xs">
+                    <button @click="userGuideOpen = false" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold cursor-pointer transition shadow-xs" x-text="t('closeGuideBtn')">
                         Tutup Panduan
                     </button>
                 </div>
@@ -3469,7 +3467,7 @@
                                             <template x-if="u.status === 'pending'">
                                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                                    <span>Menunggu Approval</span>
+                                                    <span x-text="t('statusPending')">Menunggu Approval</span>
                                                 </span>
                                             </template>
                                             <template x-if="u.status === 'inactive'">
@@ -3480,7 +3478,7 @@
                                             </template>
                                             <template x-if="u.status === 'rejected'">
                                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">
-                                                    <span>✕ Ditolak</span>
+                                                    <span x-text="'✕ ' + t('statusRejected')">✕ Ditolak</span>
                                                 </span>
                                             </template>
                                         </td>
@@ -3501,13 +3499,13 @@
                                                             </select>
                                                             <button @click.stop="approveUser(u)"
                                                                     class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition cursor-pointer"
-                                                                    title="Setujui &amp; Aktifkan Akun">
-                                                                ✅ Setujui
+                                                                    :title="lang === 'en' ? 'Approve & Activate Account' : 'Setujui & Aktifkan Akun'">
+                                                                ✅ <span x-text="t('btnApprove')"></span>
                                                             </button>
                                                             <button @click.stop="rejectUser(u)"
                                                                     class="px-2 py-1 rounded bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-[11px] transition cursor-pointer"
-                                                                    title="Tolak Pendaftaran">
-                                                                ✕ Tolak
+                                                                    :title="lang === 'en' ? 'Reject Registration' : 'Tolak Pendaftaran'">
+                                                                ✕ <span x-text="t('btnReject')"></span>
                                                             </button>
                                                         </div>
                                                     </template>
@@ -3519,29 +3517,29 @@
                                                             <template x-if="u.role !== 'admin'">
                                                                 <button @click.stop="promoteToAdmin(u)"
                                                                         class="px-2 py-1 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[11px] border border-purple-200 transition cursor-pointer"
-                                                                        title="Angkat pengguna ini menjadi Administrator">
-                                                                    👑 <span class="hidden sm:inline">Angkat</span> Admin
+                                                                        :title="lang === 'en' ? 'Promote user to Administrator' : 'Angkat pengguna ini menjadi Administrator'">
+                                                                    👑 <span class="hidden sm:inline" x-text="t('btnPromote')"></span>
                                                                 </button>
                                                             </template>
                                                             <!-- Demote Admin (only if not adrian) -->
                                                             <template x-if="u.role === 'admin' && u.username !== 'adrian'">
                                                                 <button @click.stop="demoteAdmin(u)"
                                                                         class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-[11px] transition cursor-pointer"
-                                                                        title="Turunkan peran menjadi Engineer">
-                                                                    ⬇️ Turunkan
+                                                                        :title="lang === 'en' ? 'Demote role to Engineer' : 'Turunkan peran menjadi Engineer'">
+                                                                    ⬇️ <span x-text="t('btnDemote')"></span>
                                                                 </button>
                                                             </template>
 
                                                             <!-- Edit (Fixed with @click.stop) -->
                                                             <button type="button" @click.stop="startEditUser(u)"
                                                                     class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] border border-blue-200 transition cursor-pointer shadow-xs"
-                                                                    title="Edit Profil &amp; Role Pengguna">
+                                                                    :title="lang === 'en' ? 'Edit User Profile & Role' : 'Edit Profil & Role Pengguna'">
                                                                 ✏️ <span x-text="t('editUserBtn')"></span>
                                                             </button>
                                                             <!-- Reset Password -->
                                                             <button type="button" @click.stop="startResetPassword(u)"
                                                                     class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer"
-                                                                    title="Reset Password">
+                                                                    :title="lang === 'en' ? 'Reset Password' : 'Reset Password'">
                                                                 🔑 <span x-text="t('resetPwdBtn')"></span>
                                                             </button>
                                                             <!-- Toggle Status (Disabled for adrian) -->
@@ -3556,8 +3554,8 @@
                                                             <template x-if="u.username !== 'adrian'">
                                                                 <button type="button" @click.stop="deleteUser(u)"
                                                                         class="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] border border-rose-200 transition cursor-pointer"
-                                                                        title="Hapus Pengguna Secara Permanen">
-                                                                    🗑️ Hapus
+                                                                        :title="lang === 'en' ? 'Delete User Permanently' : 'Hapus Pengguna Secara Permanen'">
+                                                                    🗑️ <span x-text="t('btnDelete')"></span>
                                                                 </button>
                                                             </template>
                                                         </div>
@@ -3586,8 +3584,8 @@
                 <div class="flex items-center gap-2">
                     <span class="text-lg">➕</span>
                     <div>
-                        <h3 class="text-sm font-extrabold">Daftarkan Anggota Tim Baru</h3>
-                        <p class="text-[10px] text-sky-200">Akses Google Workspace SSO Instant</p>
+                        <h3 class="text-sm font-extrabold" x-text="t('addNewUserTitle')">Daftarkan Anggota Tim Baru</h3>
+                        <p class="text-[10px] text-sky-200" x-text="t('addNewUserSubtitle')">Akses Google Workspace SSO Instant</p>
                     </div>
                 </div>
                 <button type="button" @click="newUserModalOpen = false" class="text-white/80 hover:text-white font-bold text-base cursor-pointer">✕</button>
@@ -3597,12 +3595,12 @@
                     <div class="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-1.5" x-text="newUserError"></div>
                 </template>
 
-                <div class="p-2.5 bg-blue-50/80 border border-blue-200 rounded-xl text-blue-900 text-[11px] leading-relaxed">
-                    💡 <strong>Tanpa Password Manual:</strong> Pengguna didaftarkan langsung di bawah domain resmi. Ketika anggota tim masuk via <em>Google Workspace SSO</em>, akun langsung aktif dengan peran yang telah Anda tetapkan.
+                <div class="p-2.5 bg-blue-50/80 border border-blue-200 rounded-xl text-blue-900 text-[11px] leading-relaxed"
+                     x-html="lang === 'en' ? '💡 <strong>No Manual Password:</strong> Users are registered directly under official company domains. When members sign in via <em>Google Workspace SSO</em>, their account activates instantly with the assigned role.' : '💡 <strong>Tanpa Password Manual:</strong> Pengguna didaftarkan langsung di bawah domain resmi. Ketika anggota tim masuk via <em>Google Workspace SSO</em>, akun langsung aktif dengan peran yang telah Anda tetapkan.'">
                 </div>
 
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Email Perusahaan (Wajib):</label>
+                    <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Company Email (Required):' : 'Email Perusahaan (Wajib):'"></label>
                     <input type="email" x-model="newUserForm.email" placeholder="nama@citradata.id atau nama@techsolutions.id" required autofocus
                            @input="if (!newUserForm.username && newUserForm.email.includes('@')) { newUserForm.username = newUserForm.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_'); } if (!newUserForm.name && newUserForm.email.includes('@')) { newUserForm.name = newUserForm.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); }"
                            class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 font-medium" />
@@ -3639,11 +3637,11 @@
 
                 <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
                     <button type="button" @click="newUserModalOpen = false"
-                            class="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition cursor-pointer">Batal</button>
+                            class="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition cursor-pointer" x-text="t('btnCancel')">Batal</button>
                     <button type="submit" :disabled="newUserLoading"
                             class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-md flex items-center gap-1.5 cursor-pointer">
                         <svg x-show="newUserLoading" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                        <span x-text="newUserLoading ? 'Mendaftarkan...' : 'Simpan &amp; Aktifkan Akun'"></span>
+                        <span x-text="newUserLoading ? (lang === 'en' ? 'Registering...' : 'Mendaftarkan...') : t('btnSaveUser')"></span>
                     </button>
                 </div>
             </form>
@@ -3659,7 +3657,7 @@
                         <span class="text-lg">✏️</span>
                         <div>
                             <h3 class="text-sm font-extrabold" x-text="t('editUserTitle') + ': @' + editingUser.username"></h3>
-                            <p class="text-[10px] text-slate-300">Perbarui Peran (Role) &amp; Profil Pengguna</p>
+                            <p class="text-[10px] text-slate-300" x-text="t('editUserSubtitle')">Perbarui Peran (Role) &amp; Profil Pengguna</p>
                         </div>
                     </div>
                     <button type="button" @click="editUserModalOpen = false; editingUser = null" class="text-white/80 hover:text-white font-bold text-base cursor-pointer">✕</button>
@@ -3703,11 +3701,11 @@
                     </div>
                     <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
                         <button type="button" @click="editUserModalOpen = false; editingUser = null"
-                                class="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition cursor-pointer">Batal</button>
+                                class="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition cursor-pointer" x-text="t('btnCancel')">Batal</button>
                         <button type="submit" :disabled="editUserLoading"
                                 class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-md flex items-center gap-1.5 cursor-pointer">
                             <svg x-show="editUserLoading" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                            <span x-text="editUserLoading ? 'Menyimpan...' : 'Simpan Perubahan'"></span>
+                            <span x-text="editUserLoading ? (lang === 'en' ? 'Saving...' : 'Menyimpan...') : t('btnSaveEdit')"></span>
                         </button>
                     </div>
                 </form>
@@ -3731,7 +3729,7 @@
                         <div class="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold" x-text="resetPwdError"></div>
                     </template>
                     <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
-                        <div class="text-[11px] text-amber-800">Mereset password untuk akun:</div>
+                        <div class="text-[11px] text-amber-800" x-text="t('resetPwdForAccount')">Mereset password untuk akun:</div>
                         <div class="font-bold text-slate-900 mt-0.5" x-text="resetPwdTarget.name + ' (@' + resetPwdTarget.username + ')'"></div>
                     </div>
                     <div>
@@ -3741,15 +3739,56 @@
                     </div>
                     <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
                         <button type="button" @click="resetPwdModalOpen = false; resetPwdTarget = null"
-                                class="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition cursor-pointer">Batal</button>
+                                class="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition cursor-pointer" x-text="t('btnCancel')">Batal</button>
                         <button type="submit" :disabled="resetPwdLoading"
                                 class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold transition shadow-md flex items-center gap-1.5 cursor-pointer">
-                            <span x-text="resetPwdLoading ? 'Menyimpan...' : t('confirmResetPwdBtn')"></span>
+                            <span x-text="resetPwdLoading ? (lang === 'en' ? 'Saving...' : 'Menyimpan...') : t('confirmResetPwdBtn')"></span>
                         </button>
                     </div>
                 </form>
             </div>
         </template>
+    </div>
+
+    <!-- ═══════════════════ SUB-MODAL: GANTI PASSWORD SAYA (CHANGE MY PASSWORD) ═══════════════════ -->
+    <div x-show="changeMyPwdModalOpen" x-cloak style="z-index: 75;" class="fixed inset-0 z-[75] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div @click.away="changeMyPwdModalOpen = false" class="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">🔑</span>
+                    <h3 class="text-sm font-extrabold" x-text="t('changePwdTitle')"></h3>
+                </div>
+                <button type="button" @click="changeMyPwdModalOpen = false" class="text-white/80 hover:text-white font-bold text-base cursor-pointer">✕</button>
+            </div>
+            <form @submit.prevent="submitChangeMyPassword()" class="p-5 space-y-3.5 text-xs">
+                <template x-if="changeMyPwdError">
+                    <div class="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold" x-text="changeMyPwdError"></div>
+                </template>
+                <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                    <div class="text-[11px] text-blue-800" x-text="t('currentUsernameLabel')"></div>
+                    <div class="font-bold text-slate-900 mt-0.5" x-text="(currentUser?.name || '') + ' (@' + (currentUser?.username || '') + ')'"></div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1" x-text="t('newPasswordLabel')"></label>
+                    <input type="password" x-model="changeMyPwdInput" required :placeholder="lang === 'en' ? 'Min 6 characters' : 'Minimal 6 karakter'"
+                           class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none font-medium" />
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1" x-text="t('confirmNewPwdLabel')"></label>
+                    <input type="password" x-model="changeMyPwdConfirm" required :placeholder="lang === 'en' ? 'Repeat new password' : 'Ulangi password baru'"
+                           class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none font-medium" />
+                </div>
+                <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                    <button type="button" @click="changeMyPwdModalOpen = false"
+                            class="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition cursor-pointer" x-text="t('btnCancel')"></button>
+                    <button type="submit" :disabled="changeMyPwdLoading"
+                            class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-md flex items-center gap-1.5 cursor-pointer">
+                        <svg x-show="changeMyPwdLoading" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span x-text="changeMyPwdLoading ? (lang === 'en' ? 'Saving...' : 'Menyimpan...') : t('btnSavePassword')"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- ═══════════════════ MODAL 6: EMAIL QUOTATION MODAL ═══════════════════ -->
@@ -3764,8 +3803,8 @@
                         ✉️
                     </div>
                     <div>
-                        <h3 class="text-base font-black tracking-tight">Kirim Penawaran Konfigurasi via Email</h3>
-                        <p class="text-xs text-blue-200/80">Draft penawaran resmi paket sistem radio telekomunikasi</p>
+                        <h3 class="text-base font-black tracking-tight" x-text="t('emailQuoteTitle')">Kirim Penawaran Konfigurasi via Email</h3>
+                        <p class="text-xs text-blue-200/80" x-text="t('emailQuoteSubtitle')">Draft penawaran resmi paket sistem radio telekomunikasi</p>
                     </div>
                 </div>
                 <button @click="emailModalOpen = false" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition font-bold">✕</button>
@@ -3776,41 +3815,41 @@
                 <!-- Info Banner -->
                 <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-amber-900">
                     <span class="text-base">💡</span>
-                    <div class="text-[11px] leading-relaxed">
+                    <div class="text-[11px] leading-relaxed" x-html="t('emailBannerNotice')">
                         Tombol <strong>"Buka di Email Client"</strong> akan membuka aplikasi email default Anda (Gmail / Outlook / Apple Mail) dengan subjek dan format rincian teknis yang sudah terisi otomatis. Anda juga dapat mengunduh lampiran resmi PDF / Excel di bawah untuk di-attach ke email.
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Email Penerima (To):</label>
+                        <label class="block font-bold text-slate-700 mb-1" x-text="t('emailRecipientLabel')">Email Penerima (To):</label>
                         <input type="email" x-model="emailRecipient" placeholder="klien@instansi.co.id" required
                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none font-medium text-slate-800" />
                     </div>
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Ditujukan Kepada (PIC / Instansi):</label>
+                        <label class="block font-bold text-slate-700 mb-1" x-text="t('emailClientContactLabel')">Ditujukan Kepada (PIC / Instansi):</label>
                         <input type="text" x-model="emailClientContact" placeholder="Bpk. Budi Santoso / Procurement Manager"
                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none font-medium text-slate-800" />
                     </div>
                 </div>
 
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Subjek Email:</label>
+                    <label class="block font-bold text-slate-700 mb-1" x-text="t('emailSubjectLabel')">Subjek Email:</label>
                     <input type="text" x-model="emailSubject" required
                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none font-medium text-slate-800" />
                 </div>
 
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Catatan Tambahan / Ruang Lingkup Khusus (Opsional):</label>
-                    <textarea x-model="emailNotes" rows="2" placeholder="Contoh: Jadwal survei lokasi dijadwalkan minggu depan. Garansi perangkat 2 tahun include spare part..."
+                    <label class="block font-bold text-slate-700 mb-1" x-text="t('emailNotesLabel')">Catatan Tambahan / Ruang Lingkup Khusus (Opsional):</label>
+                    <textarea x-model="emailNotes" rows="2" :placeholder="lang === 'en' ? 'Example: Site survey planned next week. 2-year warranty included...' : 'Contoh: Jadwal survei lokasi dijadwalkan minggu depan. Garansi perangkat 2 tahun include spare part...'"
                               class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none font-medium text-slate-800 resize-none"></textarea>
                 </div>
 
                 <!-- Live Summary Snapshot -->
                 <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
                     <div class="text-[11px] font-bold uppercase text-slate-500 mb-2 flex items-center justify-between">
-                        <span>Ringkasan Isi Penawaran</span>
-                        <span class="text-blue-600 font-extrabold" x-text="(systemPackages || []).length + ' Paket Terkonfigurasi'"></span>
+                        <span x-text="t('emailSummaryTitle')">Ringkasan Isi Penawaran</span>
+                        <span class="text-blue-600 font-extrabold" x-text="(systemPackages || []).length + ' ' + (lang === 'en' ? 'Configured Packages' : 'Paket Terkonfigurasi')"></span>
                     </div>
                     <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                         <template x-for="(pkg, idx) in systemPackages" :key="pkg.id">
@@ -3826,7 +3865,7 @@
                         </template>
                     </div>
                     <div class="mt-3 pt-2.5 border-t border-slate-300 flex items-center justify-between">
-                        <span class="font-extrabold text-slate-700">Estimasi Grand Total:</span>
+                        <span class="font-extrabold text-slate-700" x-text="lang === 'en' ? 'Estimated Grand Total:' : 'Estimasi Grand Total:'">Estimasi Grand Total:</span>
                         <span class="text-sm font-black text-blue-700 font-mono"
                               x-text="formatCurrency(currency === 'USD' ? getPackagesGrandSummary().grandSellUsd : getPackagesGrandSummary().grandSellIdr)">
                         </span>
@@ -3836,8 +3875,8 @@
                 <!-- Document Download Convenience -->
                 <div class="p-3 bg-indigo-50/60 border border-indigo-200/60 rounded-xl flex items-center justify-between">
                     <div>
-                        <div class="font-bold text-indigo-950 text-xs">Unduh Lampiran Resmi:</div>
-                        <div class="text-[11px] text-indigo-700/90">Lampirkan file PDF / Excel ke email klien Anda</div>
+                        <div class="font-bold text-indigo-950 text-xs" x-text="t('emailDownloadTitle')">Unduh Lampiran Resmi:</div>
+                        <div class="text-[11px] text-indigo-700/90" x-text="t('emailDownloadSubtitle')">Lampirkan file PDF / Excel ke email klien Anda</div>
                     </div>
                     <div class="flex items-center gap-2">
                         <button type="button" @click="exportPackagesPdf()"
@@ -3856,13 +3895,13 @@
                 <!-- Action Buttons -->
                 <div class="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
                     <button type="button" @click="emailModalOpen = false"
-                            class="px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition">
+                            class="px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition" x-text="t('btnCancel')">
                         Batal
                     </button>
                     <button type="submit"
                             class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold shadow-md transition flex items-center gap-2">
                         <span>✉️</span>
-                        <span>Buka di Email Client</span>
+                        <span x-text="t('emailBtnOpenClient')">Buka di Email Client</span>
                     </button>
                 </div>
             </form>

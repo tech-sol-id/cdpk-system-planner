@@ -35,6 +35,7 @@ from server.auth import (
     delete_team_member,
     promote_team_member,
     demote_team_member,
+    change_user_password,
     sync_users_from_gsheet
 )
 from server.gdrive_sync import (
@@ -551,6 +552,25 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                     cur_user.get("role", "admin"),
                     "user_mgmt",
                     f"Reset password akun pengguna @{username}",
+                    ip=self.address_string()
+                )
+            return self._send_json(res, status=200 if res["status"] == "ok" else 400)
+
+        if path == "/api/auth/change-my-password":
+            cur_user = self._get_auth_user()
+            if not cur_user:
+                return self._send_json({"status": "unauthorized", "message": "Autentikasi diperlukan"}, status=401)
+            new_pwd = body.get("password") or body.get("new_password")
+            if not new_pwd:
+                return self._send_json({"status": "error", "message": "Password baru wajib diisi"}, status=400)
+            res = change_user_password(cur_user["username"], new_pwd)
+            if res.get("status") == "ok":
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "engineer"),
+                    "user_mgmt",
+                    f"Pengguna @{cur_user.get('username')} memperbarui password akun pribadinya",
                     ip=self.address_string()
                 )
             return self._send_json(res, status=200 if res["status"] == "ok" else 400)
