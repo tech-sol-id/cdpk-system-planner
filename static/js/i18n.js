@@ -215,6 +215,23 @@ window.CDPK_I18N = {
         teamDirectoryBtn: "Direktori Tim",
         changePwdBtn: "Ganti Password",
 
+        // Mobile Bottom Navigation & PWA
+        bottomNavSizing: "Sizing",
+        bottomNavBoq: "BoQ",
+        bottomNavGis: "Peta GIS",
+        bottomNavAi: "AI Copilot",
+        bottomNavMenu: "Menu",
+        pwaInstallTitle: "Pasang CDPK Planner di HP",
+        pwaInstallPrompt: "Akses cepat satu sentuhan dari layar utama tanpa browser.",
+        pwaInstallBtn: "📲 Pasang Aplikasi",
+        pwaInstalledText: "Aplikasi Terpasang",
+        pwaIosGuideTitle: "Cara Pasang di iPhone / iPad",
+        pwaIosStep1: "Ketuk tombol Bagikan (Share) ⎋ di bilah bawah Safari.",
+        pwaIosStep2: "Gulir ke bawah dan pilih 'Tambah ke Layar Utama' ➕.",
+        pwaIosStep3: "Ketuk 'Tambah' di sudut kanan atas.",
+        googleSwitchAccountBtn: "🔄 Pilih / Ganti Akun Google Lain",
+        googleMultiAccountHelp: "💡 Browser terhubung ke beberapa akun Google. Pastikan memilih akun resmi @citradata.id atau @techsolutions.id.",
+
         // Login Screen
         portalSubtitle: "Portal Solusi Internal Citradata Group",
         loginMethodTitle: "Metode Masuk & Pendaftaran Resmi",
@@ -612,6 +629,23 @@ window.CDPK_I18N = {
         myArchiveBtn: "My Project Archive",
         teamDirectoryBtn: "Team Directory",
         changePwdBtn: "Change Password",
+
+        // Mobile Bottom Navigation & PWA
+        bottomNavSizing: "Sizing",
+        bottomNavBoq: "BoQ",
+        bottomNavGis: "GIS Map",
+        bottomNavAi: "AI Copilot",
+        bottomNavMenu: "Menu",
+        pwaInstallTitle: "Install CDPK Planner on Mobile",
+        pwaInstallPrompt: "One-touch instant access from home screen without browser bar.",
+        pwaInstallBtn: "📲 Install App",
+        pwaInstalledText: "App Installed",
+        pwaIosGuideTitle: "How to Install on iPhone / iPad",
+        pwaIosStep1: "Tap the Share button ⎋ at the bottom of Safari.",
+        pwaIosStep2: "Scroll down and choose 'Add to Home Screen' ➕.",
+        pwaIosStep3: "Tap 'Add' in the top right corner.",
+        googleSwitchAccountBtn: "🔄 Choose / Switch Google Account",
+        googleMultiAccountHelp: "💡 Browser is connected to multiple Google accounts. Ensure you pick your official @citradata.id or @techsolutions.id account.",
 
         // Login Screen
         portalSubtitle: "Citradata Group Internal Solution Portal",

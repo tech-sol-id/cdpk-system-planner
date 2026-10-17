@@ -1,0 +1,63 @@
+{
+  "id": "/",
+  "name": "CDPK System Planner",
+  "short_name": "CDPK Planner",
+  "description": "Radio Communication Solution Sizing, RF Propagation Simulation & BoQ Commercial Suite",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#002b5c",
+  "background_color": "#002b5c",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/maskable-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Kalkulator Sizing Radio",
+      "short_name": "Sizing",
+      "description": "Kalkulasi infrastruktur repeater, handy talky, dan daya",
+      "url": "/?tab=sizing",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Bill of Quantities (BoQ)",
+      "short_name": "BoQ",
+      "description": "Rincian komersial perangkat dan estimasi anggaran",
+      "url": "/?tab=boq",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Peta RF Coverage GIS",
+      "short_name": "Peta RF",
+      "description": "Simulasi jangkauan sinyal radio dan probe GIS",
+      "url": "/?tab=coverage",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "AI System Copilot",
+      "short_name": "AI Copilot",
+      "description": "Konsultasi sistem radio dan Knowledge Bank",
+      "url": "/?tab=ai",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

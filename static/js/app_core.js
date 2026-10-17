@@ -135,6 +135,15 @@ window.cdpkSystemPlannerApp = function () {
         googleClientId: '',
         googleButtonRendered: false,
 
+        // ─── PWA & Mobile Navigation State ──────────────────────────────
+        pwaCanInstall: false,
+        pwaIsInstalled: false,
+        deferredInstallPrompt: null,
+        iosInstallGuideOpen: false,
+        mobileMenuOpen: false,
+        googleDomainMismatch: false,
+        gisMobileProbeCollapsed: true,
+
         // ─── Team User Management State (Admin Only) ────────────────────
         userMgmtModalOpen: false,
         teamUsers: [],
@@ -367,6 +376,46 @@ window.cdpkSystemPlannerApp = function () {
                     if (this.currentUser) this.fetchNotifications();
                 }, 30000);
             }
+
+            // PWA Service Worker Registration
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+                        .then((reg) => console.log('[PWA] Service Worker registered with scope:', reg.scope))
+                        .catch((err) => console.warn('[PWA] Service Worker registration failed:', err));
+                });
+            }
+
+            // PWA Install Prompt & Standalone Mode Detection
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                this.deferredInstallPrompt = e;
+                this.pwaCanInstall = true;
+            });
+
+            window.addEventListener('appinstalled', () => {
+                this.pwaIsInstalled = true;
+                this.pwaCanInstall = false;
+                this.deferredInstallPrompt = null;
+                this.showToast(this.lang === 'en' ? 'CDPK Planner installed successfully!' : 'CDPK Planner berhasil dipasang di layar utama!', 'success');
+            });
+
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                this.pwaIsInstalled = true;
+            }
+
+            // PWA Shortcut URL Handler (?tab=boq / ?tab=coverage / ?tab=ai)
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const qTab = urlParams.get('tab');
+                if (qTab && ['sizing', 'boq', 'catalog', 'mandays', 'coverage', 'configurator'].includes(qTab)) {
+                    this.activeTab = qTab;
+                }
+                if (qTab === 'ai') {
+                    this.aiModalOpen = true;
+                }
+            } catch (e) {}
+
             this.$nextTick(() => {
                 this.runCoverageSimulation();
                 this.initGoogleAuth();
@@ -494,7 +543,9 @@ window.cdpkSystemPlannerApp = function () {
                         window.google.accounts.id.initialize({
                             client_id: this.googleClientId,
                             callback: (res) => this.handleGoogleCredentialResponse(res),
-                            auto_select: false
+                            auto_select: false,
+                            itp_support: true,
+                            cancel_on_tap_outside: false
                         });
                         const btnEl = document.getElementById('googleSignInBtn');
                         if (btnEl) {
@@ -534,9 +585,42 @@ window.cdpkSystemPlannerApp = function () {
             }
         },
 
+        switchGoogleAccount() {
+            this.loginError = '';
+            this.googleDomainMismatch = false;
+            if (window.google && window.google.accounts && window.google.accounts.id) {
+                try {
+                    window.google.accounts.id.disableAutoSelect();
+                } catch (e) {}
+                window.google.accounts.id.prompt();
+            }
+        },
+
+        triggerPwaInstall() {
+            const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            if (isIos && !this.pwaIsInstalled) {
+                this.iosInstallGuideOpen = true;
+                return;
+            }
+            if (this.deferredInstallPrompt) {
+                this.deferredInstallPrompt.prompt();
+                this.deferredInstallPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult && choiceResult.outcome === 'accepted') {
+                        this.pwaCanInstall = false;
+                    }
+                    this.deferredInstallPrompt = null;
+                });
+            } else {
+                this.showToast(this.lang === 'en'
+                    ? 'To install, open browser menu (⋮ or Share) and select "Add to Home Screen".'
+                    : 'Untuk memasang, buka menu browser (titik tiga atau Bagikan) lalu pilih "Tambah ke Layar Utama".', 'info');
+            }
+        },
+
         async loginWithGoogleToken(idToken) {
             this.loginLoading = true;
             this.loginError = '';
+            this.googleDomainMismatch = false;
             try {
                 const resp = await fetch('/api/auth/google', {
                     method: 'POST',
@@ -552,8 +636,12 @@ window.cdpkSystemPlannerApp = function () {
                     this.loginPassword = '';
                     this.salesPic = `${data.user.name} (${data.user.title || 'CDPK'})`;
                     this.fetchNotifications();
+                    this.googleDomainMismatch = false;
                 } else {
                     this.loginError = data.message || (this.lang === 'en' ? 'Google Workspace login failed' : 'Gagal login akun Google Workspace');
+                    if (data.status === 'forbidden' || (data.message && (data.message.includes('citradata.id') || data.message.includes('techsolutions.id') || data.message.includes('domain')))) {
+                        this.googleDomainMismatch = true;
+                    }
                 }
             } catch (e) {
                 this.loginError = this.lang === 'en' ? 'Network error during Google auth' : 'Kendala jaringan verifikasi Google Workspace';
@@ -2004,7 +2092,10 @@ window.cdpkSystemPlannerApp = function () {
             if (!this.gisMap) {
                 this.gisMap = L.map('cdpkLeafletMap', {
                     zoomControl: true,
-                    attributionControl: false
+                    attributionControl: false,
+                    scrollWheelZoom: false,
+                    tap: false,
+                    touchZoom: true
                 }).setView([lat, lon], 12);
 
                 this.updateGisTileLayer();
@@ -2210,18 +2301,30 @@ window.cdpkSystemPlannerApp = function () {
                     this.isDetectingGps = false;
                     this.covLat = parseFloat(pos.coords.latitude.toFixed(4));
                     this.covLon = parseFloat(pos.coords.longitude.toFixed(4));
+                    const accMeters = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
                     this.runCoverageSimulation();
                     if (this.coverageViewMode === 'gis') {
                         this.initOrUpdateGisMap();
                     }
-                    this.showToast(this.t('covGpsSuccess') || 'Titik koordinat berhasil dideteksi dari GPS perangkat!', 'success');
+                    const msg = this.lang === 'en'
+                        ? `GPS fixed: ${this.covLat}, ${this.covLon}${accMeters ? ` (Accuracy: ±${accMeters}m)` : ''}`
+                        : `GPS terhubung: ${this.covLat}, ${this.covLon}${accMeters ? ` (Akurasi: ±${accMeters}m)` : ''}`;
+                    this.showToast(msg, 'success');
                 },
                 (err) => {
                     this.isDetectingGps = false;
                     console.warn('GPS detection error:', err);
-                    this.showToast(this.t('covGpsError') || 'Gagal mendeteksi GPS atau izin lokasi ditolak.', 'error');
+                    let errTxt = 'Gagal mendeteksi GPS atau izin lokasi ditolak.';
+                    if (err.code === 1) {
+                        errTxt = this.lang === 'en' ? 'Location permission denied. Please allow location access in browser/device settings.' : 'Izin lokasi ditolak. Izinkan akses lokasi pada browser atau HP Anda.';
+                    } else if (err.code === 2) {
+                        errTxt = this.lang === 'en' ? 'Position unavailable. Ensure GPS / Location service is turned on.' : 'Posisi satelit tidak tersedia. Pastikan GPS/Layanan Lokasi di HP telah aktif.';
+                    } else if (err.code === 3) {
+                        errTxt = this.lang === 'en' ? 'GPS timeout. Please try again in an open-sky area.' : 'Waktu deteksi GPS habis. Silakan coba kembali di area terbuka.';
+                    }
+                    this.showToast(errTxt, 'error');
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
         },
 

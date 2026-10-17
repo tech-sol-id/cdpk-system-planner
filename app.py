@@ -121,7 +121,7 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             return self._send_json({
                 "status": "healthy",
                 "app": "CDPK System Planner",
-                "version": "8.4.0",
+                "version": "8.4.1",
                 "google_client_id": os.environ.get("GOOGLE_CLIENT_ID", "423480156983-n52244lq61g7u3qub5p2khlfvtd3hs0f.apps.googleusercontent.com"),
                 "gdrive_folder_id": DEFAULT_FOLDER_ID,
                 "gdrive_output_subfolder_id": OUTPUT_SUBFOLDER_ID,
@@ -325,15 +325,23 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
 
         if os.path.isfile(file_path):
             mime, _ = mimetypes.guess_type(file_path)
+            if file_path.endswith("manifest.json"):
+                mime = "application/manifest+json"
+            elif file_path.endswith("service-worker.js"):
+                mime = "application/javascript"
             mime = mime or "application/octet-stream"
+
             with open(file_path, "rb") as f:
                 content = f.read()
             self.send_response(200)
-            self.send_header("Content-Type", f"{mime}; charset=utf-8" if mime.startswith("text/") or mime == "application/javascript" else mime)
+            self.send_header("Content-Type", f"{mime}; charset=utf-8" if mime.startswith("text/") or mime in ("application/javascript", "application/manifest+json") else mime)
             self.send_header("Content-Length", str(len(content)))
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("X-Frame-Options", "SAMEORIGIN")
             self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+            if file_path.endswith("service-worker.js"):
+                self.send_header("Service-Worker-Allowed", "/")
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
             self.end_headers()
             self.wfile.write(content)
         else:

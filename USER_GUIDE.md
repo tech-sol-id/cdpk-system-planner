@@ -280,13 +280,25 @@ Terletak di bagian atas modal Arsip Proyek, menampilkan 4 metrik finansial real-
 
 ---
 
-## 15. Penggunaan pada Smartphone & Tablet
+## 15. Penggunaan pada Smartphone & Tablet (PWA & Versi Mobile)
 
 CDPK System Planner dioptimalkan secara penuh untuk survei lapangan menggunakan perangkat bergerak:
-- **Kompatibilitas:** Apple iPhone (iOS Safari), iPad (iPadOS Safari), dan perangkat Android (Google Chrome).
-- **Tata Letak Adaptif:** Bilah navigasi, kartu ringkasan, dan tabel otomatis menyesuaikan ukuran layar tanpa terpotong.
-- **Tombol Sentuh Ramah Jari:** Seluruh tombol dan kontrol form dirancang dengan ukuran target sentuh minimum $44\text{px}$ untuk kenyamanan pengetikan di lapangan.
+- **Progressive Web App (PWA):** Dapat dipasang langsung ke layar utama HP tanpa melalui App Store / Play Store dan berjalan dalam mode *standalone* layar penuh tanpa bilah URL browser.
+- **Cara Pasang di Android:**
+  - Buka `https://cdpk-system-planner.onrender.com` di Google Chrome.
+  - Ketuk tombol **"📲 Pasang CDPK Planner di HP"** di menu atau ketuk pop-up *Install App* yang muncul di bilah browser.
+- **Cara Pasang di iPhone & iPad:**
+  - Buka tautan sistem di browser **Safari**.
+  - Ketuk tombol **Bagikan (Share)** ⎋ di bilah navigasi bawah Safari.
+  - Gulir ke bawah dan ketuk opsi **"Tambah ke Layar Utama" (Add to Home Screen)** ➕.
+  - Ketuk **"Tambah"** di sudut kanan atas. Ikon resmi CDPK Planner akan muncul di layar utama iOS Anda.
+- **Dukungan Multi-Akun Google:**
+  - Jika browser HP terhubung ke beberapa akun Google (pribadi dan kerja), gunakan tombol **"🔄 Pilih / Ganti Akun Google Lain"** di halaman login untuk memilih akun resmi perusahaan (`@citradata.id` atau `@techsolutions.id`).
+- **Navigasi Bawah Ramah Jempol (Bottom Navigation Bar):**
+  - Pada layar smartphone, navigasi utama dipindahkan ke bilah bawah: 📐 **Sizing**, 📋 **BoQ**, 🗺️ **Peta GIS**, ✨ **AI Copilot**, dan 📂 **Menu**.
+- **Deteksi GPS Satelit Lapangan:**
+  - Modul deteksi GPS memanfaatkan antena satelit perangkat dengan opsi presisi tinggi (*high accuracy*) dan pelaporan toleransi akurasi seketika.
 
 ---
 
-*CDPK System Planner v8.4.0 — Solusi Rekayasa Komunikasi Radio Motorola Solutions & Keamanan Avigilon.*
+*CDPK System Planner v8.4.1 — Solusi Rekayasa Komunikasi Radio Motorola Solutions & Keamanan Avigilon.*
