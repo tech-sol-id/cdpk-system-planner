@@ -9,5 +9,16 @@
     "salt": "c9d058f727af0a4038d241c3e6c92f99",
     "status": "active",
     "created_at": "2026-10-17 00:00:00"
+  },
+  {
+    "username": "test_overseer",
+    "name": "Test Overseer",
+    "email": "overseer@citradata.id",
+    "role": "overseer",
+    "title": "Overseer / Executive Auditor",
+    "password_hash": "70b4ff5e240dfca8529de78b9d9499a7b2e85290db5590f0fe5216bdd96c00b6",
+    "salt": "d03e3cfe32b35f0c0e580993aebfbd7e",
+    "status": "active",
+    "created_at": "2026-10-17 04:13:58"
   }
 ]

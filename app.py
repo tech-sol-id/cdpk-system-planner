@@ -125,8 +125,8 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
 
         if path == "/api/auth/users":
             user = self._get_auth_user()
-            if not user or user.get("role") != "admin":
-                return self._send_json({"status": "forbidden", "message": "Akses ditolak: Hanya Administrator"}, status=403)
+            if not user or user.get("role") not in ("admin", "overseer"):
+                return self._send_json({"status": "forbidden", "message": "Akses ditolak: Hanya Administrator atau Overseer"}, status=403)
             qs = urllib.parse.parse_qs(parsed.query)
             force_remote = qs.get("force", ["0"])[0] in ("1", "true", "yes")
             all_users = load_users(force_remote=force_remote)
@@ -212,6 +212,8 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             enriched_files = []
             cur_username_lower = cur_user.get("username", "").strip().lower()
             is_admin = cur_user.get("role") == "admin"
+            is_overseer = cur_user.get("role") == "overseer"
+            can_view_all = is_admin or is_overseer
 
             for f in raw_files:
                 name = f.get("name", "")
@@ -242,16 +244,18 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 f["is_creator"] = is_creator
                 f["is_collaborator"] = is_collab
 
-                # Access Control: Admin gets full view, regular user sees their creations AND projects shared with them
-                if is_admin or is_creator or is_collab:
+                # Access Control: Admin & Overseer get full team view; regular user sees their creations AND shared files
+                if can_view_all or is_creator or is_collab:
                     enriched_files.append(f)
 
             return self._send_json({
                 "status": "ok",
                 "is_admin": is_admin,
+                "is_overseer": is_overseer,
+                "can_view_all": can_view_all,
                 "current_username": cur_user.get("username"),
                 "subfolder_id": OUTPUT_SUBFOLDER_ID,
-                "subfolder_url": f"https://drive.google.com/drive/folders/{OUTPUT_SUBFOLDER_ID}",
+                "subfolder_url": f"https://drive.google.com/drive/folders/{OUTPUT_SUBFOLDER_ID}" if is_admin else "",
                 "files": enriched_files
             })
 
@@ -478,8 +482,8 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             if proj_data:
                 file_creator = (proj_data.get("creator", {}).get("username") or "").lower()
                 existing_collabs = [c.lower() for c in proj_data.get("collaborators", [])]
-                if cur_user.get("role") != "admin" and file_creator != cur_username_lower and cur_username_lower not in existing_collabs:
-                    return self._send_json({"status": "forbidden", "message": "Hanya pembuat proyek, kolaborator, atau Admin yang dapat melakukan handover"}, status=403)
+                if cur_user.get("role") not in ("admin", "overseer") and file_creator != cur_username_lower and cur_username_lower not in existing_collabs:
+                    return self._send_json({"status": "forbidden", "message": "Hanya pembuat proyek, kolaborator, atau Admin/Overseer yang dapat melakukan handover"}, status=403)
 
                 all_collabs = list(dict.fromkeys(existing_collabs + valid_targets))
                 proj_data["collaborators"] = all_collabs
@@ -534,8 +538,8 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             if not proj_data:
                 return self._send_json({"status": "error", "message": "Failed loading project file"}, status=404)
 
-            # Access Control: Admin gets full access, regular user can access if creator or collaborator
-            if cur_user.get("role") != "admin":
+            # Access Control: Admin and Overseer get full access, regular user can access if creator or collaborator
+            if cur_user.get("role") not in ("admin", "overseer"):
                 file_creator = (proj_data.get("creator", {}).get("username") or "").lower()
                 cur_u = cur_user.get("username", "").lower()
                 collaborators = [c.lower() for c in proj_data.get("collaborators", [])]

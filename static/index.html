@@ -216,8 +216,8 @@
                             <div>
                                 <label class="block font-bold text-slate-700 mb-1">Divisi / Peran:</label>
                                 <select x-model="regForm.role" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-blue-600 font-medium bg-white">
-                                    <option value="engineer">Presales &amp; RF</option>
-                                    <option value="sales">Commercial / Sales</option>
+                                    <option value="engineer">🛠️ Engineer / Technician</option>
+                                    <option value="sales">💼 Product Expert</option>
                                 </select>
                             </div>
                         </div>
@@ -263,7 +263,7 @@
     </div>
 
     <!-- ═══════════════════ MAIN APPLICATION WORKSPACE (WHEN currentUser) ═══════════════════ -->
-    <div x-show="currentUser" class="min-h-screen flex flex-col bg-slate-100 text-slate-900">
+    <div x-show="currentUser" x-cloak style="display: none;" class="min-h-screen flex flex-col bg-slate-100 text-slate-900">
 
         <!-- ═══════════════════ TOP HEADER & CLOUD SYNC BAR ═══════════════════ -->
         <header class="cdpk-gradient text-white shadow-lg sticky top-0 z-30">
@@ -363,7 +363,7 @@
                                         </div>
                                         <!-- Content -->
                                         <div class="flex-1 min-w-0">
-                                            <div class="flex items-center justify-between gap-1">
+                                             <div class="flex items-center justify-between gap-1">
                                                 <div class="font-bold text-slate-900 truncate" x-text="n.title"></div>
                                                 <template x-if="!n.is_read">
                                                     <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
@@ -407,8 +407,8 @@
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:gap-1.5">
                                     <span class="font-bold text-white text-xs truncate max-w-[120px] sm:max-w-none" x-text="currentUser.name"></span>
                                     <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded w-fit"
-                                          :class="currentUser.role === 'admin' ? 'bg-amber-400/30 text-amber-200 border border-amber-300/40' : 'bg-sky-500/30 text-sky-200'"
-                                          x-text="currentUser.role"></span>
+                                          :class="currentUser.role === 'admin' ? 'bg-amber-400/30 text-amber-200 border border-amber-300/40' : (currentUser.role === 'overseer' ? 'bg-teal-400/30 text-teal-200 border border-teal-300/40' : (currentUser.role === 'engineer' ? 'bg-sky-500/30 text-sky-200' : 'bg-amber-500/30 text-amber-200'))"
+                                          x-text="currentUser.role === 'admin' ? '👑 Admin' : (currentUser.role === 'overseer' ? '👁️ Overseer' : (currentUser.role === 'engineer' ? '🛠️ Engineer' : '💼 Product Expert'))"></span>
                                 </div>
                             </div>
                             <div class="h-4 w-px bg-white/20 hidden sm:block"></div>
@@ -436,7 +436,7 @@
                     <button @click="openProjectArchive()"
                             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/15 hover:bg-white/25 border border-white/25 transition text-white shadow-sm">
                         <span>📂</span>
-                        <span x-text="currentUser && currentUser.role === 'admin' ? 'Dashboard Arsip Tim' : 'Arsip Proyek Saya'"></span>
+                        <span x-text="currentUser && (currentUser.role === 'admin' || currentUser.role === 'overseer') ? 'Dashboard Arsip Tim' : 'Arsip Proyek Saya'"></span>
                     </button>
 
                     <!-- Sync Cloud Pricelist Button -->
@@ -456,14 +456,14 @@
                     </button>
                 </div>
 
-                <!-- Right Side: Admin Only Controls (Hidden for non-admin) -->
+                <!-- Right Side: Admin & Overseer Controls (Folder/Pricelist STRICTLY Admin only) -->
                 <div class="flex items-center gap-2">
-                    <!-- Admin User Management Button -->
-                    <template x-if="currentUser && currentUser.role === 'admin'">
+                    <!-- Team Users Management (Admin) / Directory (Overseer) -->
+                    <template x-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'overseer')">
                         <button @click="openUserManagementModal()"
                                 class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition border border-indigo-400/40">
                             <span>👥</span>
-                            <span x-text="t('navUserManagement')"></span>
+                            <span x-text="currentUser.role === 'admin' ? t('navUserManagement') : 'Direktori Tim'"></span>
                         </button>
                     </template>
 
@@ -482,7 +482,6 @@
                     </template>
                 </div>
             </div>
-        </div>
 
         <!-- Navigation Tabs -->
         <div class="bg-slate-900/35 border-t border-white/10">
@@ -2044,7 +2043,6 @@
                 </template>
                 </div>
             </div>
-        </div>
     </main>
     </div> <!-- ═══════════════════ END OF MAIN APPLICATION WORKSPACE ═══════════════════ -->
 
@@ -2449,7 +2447,7 @@
                     <span class="text-lg">🤝</span>
                     <div>
                         <h3 class="text-sm font-extrabold">Handover / Bagikan Proyek ke Rekan Tim</h3>
-                        <p class="text-[11px] text-blue-200">Serahkan perhitungan ke Presales atau Sales lain</p>
+                        <p class="text-[11px] text-blue-200">Serahkan perhitungan ke Engineer / Technician atau Product Expert lain</p>
                     </div>
                 </div>
                 <button @click="handoverModalOpen = false" class="text-white/80 hover:text-white font-bold text-lg cursor-pointer">✕</button>
@@ -2486,8 +2484,8 @@
                                     </div>
                                 </div>
                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                                      :class="m.role === 'engineer' ? 'bg-sky-100 text-sky-700' : (m.role === 'sales' ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700')"
-                                      x-text="m.role === 'engineer' ? 'Presales' : (m.role === 'sales' ? 'Sales' : 'Admin')"></span>
+                                      :class="m.role === 'admin' ? 'bg-purple-100 text-purple-700' : (m.role === 'overseer' ? 'bg-teal-100 text-teal-800' : (m.role === 'engineer' ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-700'))"
+                                      x-text="m.role === 'admin' ? '👑 Admin' : (m.role === 'overseer' ? '👁️ Overseer' : (m.role === 'engineer' ? '🛠️ Engineer' : '💼 Product Expert'))"></span>
                             </label>
                         </template>
                     </div>
@@ -2618,7 +2616,7 @@
                         <span>⚡</span>
                         <span>Kalkulator Produk &amp; Sistem Custom</span>
                     </h4>
-                    <p class="text-slate-600">Tab "Kalkulator Produk dan Sistem" memungkinkan Presales &amp; Sales merakit paket penawaran spesifik secara modular:</p>
+                    <p class="text-slate-600">Tab "Kalkulator Produk dan Sistem" memungkinkan Engineer &amp; Product Expert merakit paket penawaran spesifik secara modular:</p>
                     <ul class="list-disc pl-5 space-y-1.5 text-slate-600">
                         <li><strong>Paket Base Station Repeater (SLR 5300 / SLR 1000):</strong> Otomatis menghitung kebutuhan duplexer cavity (termasuk tuning lab), antena omni atau yagi directional, kabel feeder coaxial 7/8" atau 1/2", lightning arrester grounding, rack cabinet 19", dan online UPS backup power.</li>
                         <li><strong>Paket Terminal Radio Komunikasi:</strong> Menghitung paket HT Motorola (XiR P6620i TIA ATEX atau XiR P8668i) beserta multi-unit charger 6-gang dan remote speaker mic (RSM).</li>
@@ -2654,11 +2652,15 @@
                     <div class="space-y-2.5">
                         <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
                             <strong class="text-amber-800">👑 Administrator (Adrian Kansil):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Memiliki hak akses penuh untuk: menyetujui (approve) pendaftaran karyawan baru, mengangkat Admin, mengakses folder master Google Drive &amp; Spreadsheet pricelist, serta melihat seluruh dashboard arsip tim.</p>
+                            <p class="text-[11px] text-slate-600 mt-1">Memiliki hak akses penuh untuk: menyetujui (approve) pendaftaran karyawan baru, mengelola akun tim, mengakses folder master Google Drive &amp; Spreadsheet pricelist, serta melihat dan mengelola seluruh dashboard arsip tim.</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-teal-200 bg-teal-50/40">
+                            <strong class="text-teal-900">👁️ Overseer (Pemantau &amp; Peninjau Eksekutif):</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Memiliki hak akses lihat menyeluruh seperti Administrator terhadap akun tim dan seluruh dokumen arsip proyek tim. Dapat menggunakan seluruh modul kalkulator layaknya tim teknis &amp; komersial, namun tidak memiliki hak modifikasi akun tim dan tautan edit folder master Google Drive &amp; Spreadsheet pricelist disembunyikan.</p>
                         </div>
                         <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                            <strong class="text-blue-800">🛠️ Presales &amp; RF Engineer / Commercial Sales:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Dapat melakukan kalkulasi sizing RF, merakit paket BoQ, menyimpan proyek ke Google Drive, dan <em>hanya dapat mengakses arsip proyek yang dibuat oleh dirinya sendiri</em>. Tautan folder master cloud disembunyikan untuk menjaga integritas data.</p>
+                            <strong class="text-blue-800">🛠️ Engineer / Technician &amp; 💼 Product Expert:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Dapat melakukan kalkulasi sizing RF, merakit paket BoQ, menyimpan proyek ke Google Drive, dan dapat mengakses arsip proyek yang dibuat oleh dirinya sendiri atau dibagikan melalui Handover. Tautan folder master cloud disembunyikan untuk menjaga integritas data.</p>
                         </div>
                         <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200">
                             <strong class="text-indigo-900">⏳ Mekanisme Pending Approval:</strong>
@@ -2715,7 +2717,7 @@
         </div>
     </div>
 
-    <!-- ═══════════════════ MODAL 5: TEAM USER MANAGEMENT (ADMIN ONLY) ═══════════════════ -->
+    <!-- ═══════════════════ MODAL 5: TEAM USER MANAGEMENT / DIRECTORY ═══════════════════ -->
     <div x-show="userMgmtModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4">
         <div @click.away="userMgmtModalOpen = false" class="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
             <!-- Header -->
@@ -2723,27 +2725,36 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="text-xl">👥</span>
-                        <h3 class="text-base font-extrabold" x-text="t('userMgmtTitle')"></h3>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">Google Sheets Sync</span>
+                        <h3 class="text-base font-extrabold" x-text="currentUser && currentUser.role === 'admin' ? t('userMgmtTitle') : 'Direktori Pengguna Tim'"></h3>
+                        <template x-if="currentUser && currentUser.role === 'admin'">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">Google Sheets Sync</span>
+                        </template>
+                        <template x-if="currentUser && currentUser.role === 'overseer'">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-300 text-teal-950">Mode Pantau Eksekutif (View Only)</span>
+                        </template>
                     </div>
-                    <p class="text-xs text-sky-100 mt-1" x-text="t('userMgmtSubtitle')"></p>
+                    <p class="text-xs text-sky-100 mt-1" x-text="currentUser && currentUser.role === 'admin' ? t('userMgmtSubtitle') : 'Daftar seluruh akun dan peran aktif di tim CDPK'"></p>
                 </div>
                 <div class="flex items-center gap-2">
                     <!-- Link to Google Sheet Tab -->
-                    <a :href="userSheetUrl" target="_blank"
-                       class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition border border-emerald-400/30">
-                        <span>📊</span>
-                        <span x-text="t('openUsersSheet')"></span>
-                        <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                    </a>
-                    <!-- Sync from GSheet -->
-                    <button @click="syncUsersFromSheet()" :disabled="usersLoading"
-                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition">
-                        <svg class="w-3.5 h-3.5" :class="usersLoading ? 'animate-spin' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span x-text="usersLoading ? t('syncingUsersBtn') : t('syncUsersBtn')"></span>
-                    </button>
+                    <template x-if="currentUser && currentUser.role === 'admin'">
+                        <a :href="userSheetUrl" target="_blank"
+                           class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition border border-emerald-400/30">
+                            <span>📊</span>
+                            <span x-text="t('openUsersSheet')"></span>
+                            <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        </a>
+                    </template>
+                    <!-- Sync from GSheet (Admin only) -->
+                    <template x-if="currentUser && currentUser.role === 'admin'">
+                        <button @click="syncUsersFromSheet()" :disabled="usersLoading"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition">
+                            <svg class="w-3.5 h-3.5" :class="usersLoading ? 'animate-spin' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <span x-text="usersLoading ? t('syncingUsersBtn') : t('syncUsersBtn')"></span>
+                        </button>
+                    </template>
                     <!-- Close -->
                     <button @click="userMgmtModalOpen = false" class="text-white/80 hover:text-white font-bold text-lg px-2">✕</button>
                 </div>
@@ -2753,29 +2764,35 @@
             <div class="p-6 flex-1 overflow-y-auto space-y-5 bg-slate-50/50">
                 <!-- Summary Metrics & Add User Action -->
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 flex-1 max-w-2xl">
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 flex-1 max-w-4xl">
                         <div class="bg-white p-3 rounded-xl border border-slate-200 card-shadow">
                             <div class="text-[10px] font-bold uppercase text-slate-500">Total Akun</div>
                             <div class="text-lg font-black text-slate-900 mt-0.5" x-text="teamUsers.length"></div>
                         </div>
                         <div class="bg-white p-3 rounded-xl border border-slate-200 card-shadow">
-                            <div class="text-[10px] font-bold uppercase text-purple-600">Admin</div>
+                            <div class="text-[10px] font-bold uppercase text-purple-600">Administrator</div>
                             <div class="text-lg font-black text-purple-700 mt-0.5" x-text="teamUsers.filter(u => u.role === 'admin').length"></div>
                         </div>
                         <div class="bg-white p-3 rounded-xl border border-slate-200 card-shadow">
-                            <div class="text-[10px] font-bold uppercase text-sky-600">Presales / RF</div>
+                            <div class="text-[10px] font-bold uppercase text-teal-600">Overseer</div>
+                            <div class="text-lg font-black text-teal-700 mt-0.5" x-text="teamUsers.filter(u => u.role === 'overseer').length"></div>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border border-slate-200 card-shadow">
+                            <div class="text-[10px] font-bold uppercase text-sky-600">Engineer / Tech</div>
                             <div class="text-lg font-black text-sky-700 mt-0.5" x-text="teamUsers.filter(u => u.role === 'engineer').length"></div>
                         </div>
                         <div class="bg-white p-3 rounded-xl border border-slate-200 card-shadow">
-                            <div class="text-[10px] font-bold uppercase text-amber-600">Commercial / Sales</div>
+                            <div class="text-[10px] font-bold uppercase text-amber-600">Product Expert</div>
                             <div class="text-lg font-black text-amber-700 mt-0.5" x-text="teamUsers.filter(u => u.role === 'sales').length"></div>
                         </div>
                     </div>
-                    <button @click="openAddUserForm()"
-                            class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition">
-                        <span>➕</span>
-                        <span x-text="t('addNewUserBtn')"></span>
-                    </button>
+                    <template x-if="currentUser && currentUser.role === 'admin'">
+                        <button @click="openAddUserForm()"
+                                class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition">
+                            <span>➕</span>
+                            <span x-text="t('addNewUserBtn')"></span>
+                        </button>
+                    </template>
                 </div>
 
                 <!-- Domain SSO Restriction Notice -->
@@ -2803,22 +2820,28 @@
                                         <div class="font-bold text-slate-900 flex items-center gap-1.5">
                                             <span x-text="pu.name"></span>
                                             <span class="text-[11px] text-slate-500 font-mono" x-text="'(@' + pu.username + ')'"></span>
-                                            <span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-bold" x-text="pu.role === 'engineer' ? 'Presales' : 'Sales'"></span>
+                                            <span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-bold"
+                                                  x-text="pu.role === 'engineer' ? '🛠️ Engineer' : (pu.role === 'sales' ? '💼 Product Expert' : '👁️ Overseer')"></span>
                                         </div>
                                         <div class="text-[11px] text-slate-500" x-text="pu.email + ' • ' + (pu.title || 'Karyawan Baru')"></div>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <button @click="approveUser(pu)"
-                                                class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition flex items-center gap-1 cursor-pointer">
-                                            <span>✅</span>
-                                            <span>Setujui &amp; Aktifkan</span>
-                                        </button>
-                                        <button @click="rejectUser(pu)"
-                                                class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] border border-rose-200 transition cursor-pointer">
-                                            <span>✕</span>
-                                            <span>Tolak</span>
-                                        </button>
-                                    </div>
+                                    <template x-if="currentUser && currentUser.role === 'admin'">
+                                        <div class="flex items-center gap-2">
+                                            <button @click="approveUser(pu)"
+                                                    class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition flex items-center gap-1 cursor-pointer">
+                                                <span>✅</span>
+                                                <span>Setujui &amp; Aktifkan</span>
+                                            </button>
+                                            <button @click="rejectUser(pu)"
+                                                    class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] border border-rose-200 transition cursor-pointer">
+                                                <span>✕</span>
+                                                <span>Tolak</span>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <template x-if="currentUser && currentUser.role !== 'admin'">
+                                        <span class="text-[11px] text-amber-800 font-medium italic">Menunggu verifikasi Administrator</span>
+                                    </template>
                                 </div>
                             </template>
                         </div>
@@ -2854,7 +2877,7 @@
                                         <td class="py-3 px-4">
                                             <div class="flex items-center gap-2.5">
                                                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0"
-                                                     :class="u.role === 'admin' ? 'bg-gradient-to-tr from-purple-600 to-indigo-500' : (u.role === 'engineer' ? 'bg-gradient-to-tr from-blue-600 to-sky-400' : 'bg-gradient-to-tr from-amber-500 to-orange-400')"
+                                                     :class="u.role === 'admin' ? 'bg-gradient-to-tr from-purple-600 to-indigo-500' : (u.role === 'overseer' ? 'bg-gradient-to-tr from-teal-600 to-cyan-500' : (u.role === 'engineer' ? 'bg-gradient-to-tr from-blue-600 to-sky-400' : 'bg-gradient-to-tr from-amber-500 to-orange-400'))"
                                                      x-text="u.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()">
                                                 </div>
                                                 <div>
@@ -2869,8 +2892,8 @@
                                         <!-- Role Badge -->
                                         <td class="py-3 px-3">
                                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
-                                                  :class="u.role === 'admin' ? 'bg-purple-100 text-purple-700' : (u.role === 'engineer' ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-700')"
-                                                  x-text="u.role === 'admin' ? '👑 Admin' : (u.role === 'engineer' ? '🛠️ Presales' : '💼 Sales')">
+                                                  :class="u.role === 'admin' ? 'bg-purple-100 text-purple-700' : (u.role === 'overseer' ? 'bg-teal-100 text-teal-800 border border-teal-300/40' : (u.role === 'engineer' ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-700'))"
+                                                  x-text="u.role === 'admin' ? '👑 Admin' : (u.role === 'overseer' ? '👁️ Overseer' : (u.role === 'engineer' ? '🛠️ Engineer' : '💼 Product Expert'))">
                                             </span>
                                         </td>
                                         <!-- Title -->
@@ -2905,66 +2928,71 @@
                                         <td class="py-3 px-3 text-[11px] text-slate-400" x-text="u.created_at || '-'"></td>
                                         <!-- Actions -->
                                         <td class="py-3 px-4 text-right">
-                                            <div class="inline-flex items-center gap-1.5">
-                                                <!-- When Pending: Quick Approve / Reject -->
-                                                <template x-if="u.status === 'pending'">
-                                                    <div class="inline-flex items-center gap-1">
-                                                        <button @click="approveUser(u)"
-                                                                class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition cursor-pointer"
-                                                                title="Setujui &amp; Aktifkan Akun">
-                                                            ✅ Setujui
-                                                        </button>
-                                                        <button @click="rejectUser(u)"
-                                                                class="px-2 py-1 rounded bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-[11px] transition cursor-pointer"
-                                                                title="Tolak Pendaftaran">
-                                                            ✕ Tolak
-                                                        </button>
-                                                    </div>
-                                                </template>
+                                            <template x-if="currentUser && currentUser.role === 'admin'">
+                                                <div class="inline-flex items-center gap-1.5">
+                                                    <!-- When Pending: Quick Approve / Reject -->
+                                                    <template x-if="u.status === 'pending'">
+                                                        <div class="inline-flex items-center gap-1">
+                                                            <button @click="approveUser(u)"
+                                                                    class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition cursor-pointer"
+                                                                    title="Setujui &amp; Aktifkan Akun">
+                                                                ✅ Setujui
+                                                            </button>
+                                                            <button @click="rejectUser(u)"
+                                                                    class="px-2 py-1 rounded bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-[11px] transition cursor-pointer"
+                                                                    title="Tolak Pendaftaran">
+                                                                ✕ Tolak
+                                                            </button>
+                                                        </div>
+                                                    </template>
 
-                                                <!-- When Active / Inactive: Promote/Demote & Standard Actions -->
-                                                <template x-if="u.status !== 'pending'">
-                                                    <div class="inline-flex items-center gap-1.5">
-                                                        <!-- Promote to Admin -->
-                                                        <template x-if="u.role !== 'admin'">
-                                                            <button @click="promoteToAdmin(u)"
-                                                                    class="px-2 py-1 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[11px] border border-purple-200 transition cursor-pointer"
-                                                                    title="Angkat pengguna ini menjadi Administrator">
-                                                                👑 <span class="hidden sm:inline">Angkat</span> Admin
-                                                            </button>
-                                                        </template>
-                                                        <!-- Demote Admin (only if not adrian) -->
-                                                        <template x-if="u.role === 'admin' && u.username !== 'adrian'">
-                                                            <button @click="demoteAdmin(u)"
-                                                                    class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-[11px] transition cursor-pointer"
-                                                                    title="Turunkan peran menjadi Engineer">
-                                                                ⬇️ Turunkan
-                                                            </button>
-                                                        </template>
+                                                    <!-- When Active / Inactive: Promote/Demote & Standard Actions -->
+                                                    <template x-if="u.status !== 'pending'">
+                                                        <div class="inline-flex items-center gap-1.5">
+                                                            <!-- Promote to Admin -->
+                                                            <template x-if="u.role !== 'admin'">
+                                                                <button @click="promoteToAdmin(u)"
+                                                                        class="px-2 py-1 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[11px] border border-purple-200 transition cursor-pointer"
+                                                                        title="Angkat pengguna ini menjadi Administrator">
+                                                                    👑 <span class="hidden sm:inline">Angkat</span> Admin
+                                                                </button>
+                                                            </template>
+                                                            <!-- Demote Admin (only if not adrian) -->
+                                                            <template x-if="u.role === 'admin' && u.username !== 'adrian'">
+                                                                <button @click="demoteAdmin(u)"
+                                                                        class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-[11px] transition cursor-pointer"
+                                                                        title="Turunkan peran menjadi Engineer">
+                                                                    ⬇️ Turunkan
+                                                                </button>
+                                                            </template>
 
-                                                        <!-- Edit -->
-                                                        <button @click="startEditUser(u)"
-                                                                class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer"
-                                                                title="Edit Pengguna">
-                                                            ✏️ <span x-text="t('editUserBtn')"></span>
-                                                        </button>
-                                                        <!-- Reset Password -->
-                                                        <button @click="startResetPassword(u)"
-                                                                class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer"
-                                                                title="Reset Password">
-                                                            🔑 <span x-text="t('resetPwdBtn')"></span>
-                                                        </button>
-                                                        <!-- Toggle Status (Disabled for adrian) -->
-                                                        <template x-if="u.username !== 'adrian'">
-                                                            <button @click="toggleUserStatus(u)"
-                                                                    class="px-2 py-1 rounded font-bold text-[11px] transition cursor-pointer"
-                                                                    :class="u.status === 'active' ? 'bg-rose-50 text-rose-700 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'"
-                                                                    x-text="u.status === 'active' ? t('deactivateUserBtn') : t('activateUserBtn')">
+                                                            <!-- Edit -->
+                                                            <button @click="startEditUser(u)"
+                                                                    class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer"
+                                                                    title="Edit Pengguna">
+                                                                ✏️ <span x-text="t('editUserBtn')"></span>
                                                             </button>
-                                                        </template>
-                                                    </div>
-                                                </template>
-                                            </div>
+                                                            <!-- Reset Password -->
+                                                            <button @click="startResetPassword(u)"
+                                                                    class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer"
+                                                                    title="Reset Password">
+                                                                🔑 <span x-text="t('resetPwdBtn')"></span>
+                                                            </button>
+                                                            <!-- Toggle Status (Disabled for adrian) -->
+                                                            <template x-if="u.username !== 'adrian'">
+                                                                <button @click="toggleUserStatus(u)"
+                                                                        class="px-2 py-1 rounded font-bold text-[11px] transition cursor-pointer"
+                                                                        :class="u.status === 'active' ? 'bg-rose-50 text-rose-700 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'"
+                                                                        x-text="u.status === 'active' ? t('deactivateUserBtn') : t('activateUserBtn')">
+                                                                </button>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <template x-if="currentUser && currentUser.role !== 'admin'">
+                                                <span class="text-[10px] text-slate-400 font-semibold px-2 py-1 rounded bg-slate-100 border border-slate-200">👁️ View Only</span>
+                                            </template>
                                         </td>
                                     </tr>
                                 </template>
@@ -3006,6 +3034,7 @@
                         <select x-model="newUserForm.role" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:outline-none font-medium bg-white">
                             <option value="engineer" x-text="t('roleEngineer')"></option>
                             <option value="sales" x-text="t('roleSales')"></option>
+                            <option value="overseer" x-text="t('roleOverseer')"></option>
                         </select>
                         <p class="text-[10px] text-slate-400 mt-1">Peran Admin dapat diangkat terpisah via tombol '👑 Angkat Admin' setelah akun terverifikasi.</p>
                     </div>
@@ -3068,9 +3097,10 @@
                         <div>
                             <label class="block font-bold text-slate-700 mb-1" x-text="t('roleLabel')"></label>
                             <select x-model="editingUser.role" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-600 focus:outline-none font-medium bg-white">
-                                <option value="engineer">🛠️ Presales</option>
-                                <option value="sales">💼 Sales</option>
-                                <option value="admin">👑 Admin</option>
+                                <option value="engineer">🛠️ Engineer / Technician</option>
+                                <option value="sales">💼 Product Expert</option>
+                                <option value="overseer">👁️ Overseer</option>
+                                <option value="admin">👑 Administrator</option>
                             </select>
                         </div>
                         <div>

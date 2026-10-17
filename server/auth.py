@@ -183,7 +183,7 @@ def sync_users_from_gsheet() -> Tuple[List[Dict[str, Any]], Optional[str]]:
             name = str(padded[1]).strip()
             email = str(padded[2]).strip().lower()
             role = str(padded[3]).strip().lower()
-            if role not in ("admin", "engineer", "sales"):
+            if role not in ("admin", "overseer", "engineer", "sales"):
                 role = "engineer"
             title = str(padded[4]).strip()
             plain_pwd = str(padded[5]).strip()
@@ -197,12 +197,13 @@ def sync_users_from_gsheet() -> Tuple[List[Dict[str, Any]], Optional[str]]:
                 salt = secrets.token_hex(16)
                 pwd_hash = _hash_password(plain_pwd, salt)
 
+            default_title = "Overseer / Executive Auditor" if role == "overseer" else ("Engineer / Technician" if role == "engineer" else "Product Expert")
             users.append({
                 "username": username,
                 "name": name or username.title(),
                 "email": email or f"{username}@citradata.id",
                 "role": role,
-                "title": title or ("Presales Engineer" if role == "engineer" else "Account Manager"),
+                "title": title or default_title,
                 "password_hash": pwd_hash,
                 "salt": salt,
                 "status": status,
@@ -476,9 +477,10 @@ def add_team_member(creator_role: str, new_user_data: Dict[str, Any]) -> Dict[st
     password = new_user_data.get("password") or "cdpk2026!"
     name = (new_user_data.get("name") or "").strip()
     role = new_user_data.get("role") or "engineer"
-    if role not in ("admin", "engineer", "sales"):
+    if role not in ("admin", "overseer", "engineer", "sales"):
         role = "engineer"
     title = (new_user_data.get("title") or "").strip()
+    default_title = "Overseer / Executive Auditor" if role == "overseer" else ("Engineer / Technician" if role == "engineer" else "Product Expert")
 
     if not username or not email or not name:
         return {"status": "error", "message": "Username, email, dan nama lengkap wajib diisi"}
@@ -499,7 +501,7 @@ def add_team_member(creator_role: str, new_user_data: Dict[str, Any]) -> Dict[st
         "email": email,
         "name": name,
         "role": role,
-        "title": title or ("Presales Engineer" if role == "engineer" else "Sales Account Manager"),
+        "title": title or default_title,
         "salt": salt,
         "password_hash": pwd_hash,
         "status": "active",
@@ -584,7 +586,7 @@ def register_self_user(reg_data: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any
         role = "engineer"
 
     if not title:
-        title = "Presales & RF Engineer" if role == "engineer" else "Commercial Account Manager"
+        title = "Engineer / Technician" if role == "engineer" else "Product Expert"
 
     users = load_users()
     for u in users:
@@ -662,7 +664,7 @@ def update_team_member(creator_role: str, username: str, update_data: Dict[str, 
         u["name"] = str(update_data["name"]).strip()
     if "email" in update_data and update_data["email"]:
         u["email"] = str(update_data["email"]).strip().lower()
-    if "role" in update_data and update_data["role"] in ("admin", "engineer", "sales"):
+    if "role" in update_data and update_data["role"] in ("admin", "overseer", "engineer", "sales"):
         u["role"] = str(update_data["role"]).strip()
     if "title" in update_data:
         u["title"] = str(update_data["title"]).strip()

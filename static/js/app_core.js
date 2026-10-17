@@ -519,7 +519,14 @@ window.cdpkSystemPlannerApp = function () {
             localStorage.removeItem('cdpk_session_token');
         },
 
-        // ─── Team User Management Methods (Admin Only) ──────────────────
+        getRoleBadge(role) {
+            if (role === 'admin') return { label: '👑 Administrator', class: 'bg-purple-100 text-purple-700 border border-purple-200' };
+            if (role === 'overseer') return { label: '👁️ Overseer', class: 'bg-teal-100 text-teal-800 border border-teal-200' };
+            if (role === 'sales') return { label: '💼 Product Expert', class: 'bg-amber-100 text-amber-700 border border-amber-200' };
+            return { label: '🛠️ Engineer / Technician', class: 'bg-sky-100 text-sky-700 border border-sky-200' };
+        },
+
+        // ─── Team User Management Methods (Admin & Overseer) ────────────
         async openUserManagementModal() {
             this.userMgmtModalOpen = true;
             await this.loadTeamUsers(false);
@@ -909,6 +916,8 @@ window.cdpkSystemPlannerApp = function () {
                 });
                 const data = await resp.json();
                 this.archiveIsAdmin = !!data.is_admin;
+                this.archiveIsOverseer = !!data.is_overseer;
+                this.archiveCanViewAll = !!(data.is_admin || data.is_overseer || data.can_view_all);
                 this.archiveFiles = (data.files || []).filter(f => f.name.endsWith('.cdpk.json') || f.name.endsWith('.xlsx'));
             } catch (e) {
                 console.warn('Archive load error:', e);
