@@ -180,7 +180,7 @@ window.cdpkSystemPlannerApp = function () {
         gisMapMouseMoveHandlerSet: false,
 
         // ─── Module 6: Multi-Model AI Copilot State ──────────────────────
-        aiModel: 'gemini-3.8-flash', // Exclusively 'gemini-3.8-flash' | 'gemini-3.8-pro'
+        aiModel: localStorage.getItem('cdpk_ai_model') || 'gemini-3.8-pro', // Exclusively 'gemini-3.8-flash' | 'gemini-3.8-pro'
         aiPrompt: '',
         aiLoading: false,
         aiHistory: [],
@@ -2553,6 +2553,33 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         // ─── Module 6: Multi-Model AI Copilot (Gemini 3.8 Flash & Pro) ───
+        selectAiModel(modelId) {
+            this.aiModel = modelId;
+            try {
+                localStorage.setItem('cdpk_ai_model', modelId);
+            } catch (e) {}
+
+            // If user already ran a prompt and switches between Flash and Pro, automatically re-evaluate the last user prompt with the newly selected model
+            if (!this.aiLoading && this.aiHistory.length >= 2) {
+                const lastMsg = this.aiHistory[this.aiHistory.length - 1];
+                const prevUserMsg = [...this.aiHistory].reverse().find(m => m.role === 'user');
+                if (lastMsg && lastMsg.role === 'assistant' && lastMsg.modelId !== modelId && prevUserMsg) {
+                    this.aiHistory.pop();
+                    this.aiPrompt = prevUserMsg.text;
+                    // Remove the duplicate user message before re-sending so history stays clean
+                    const lastUserIdx = this.aiHistory.lastIndexOf(prevUserMsg);
+                    if (lastUserIdx !== -1) this.aiHistory.splice(lastUserIdx, 1);
+                    this.sendAiCopilotMessage();
+                }
+            }
+        },
+
+        clearAiHistory() {
+            this.aiHistory = [];
+            this.lastExtractedParams = null;
+            this.aiPrompt = '';
+        },
+
         setQuickAiPrompt(text) {
             this.aiPrompt = text;
             this.sendAiCopilotMessage();
@@ -2596,6 +2623,7 @@ window.cdpkSystemPlannerApp = function () {
         async sendAiCopilotMessage() {
             const promptText = (this.aiPrompt || '').trim();
             if (!promptText || this.aiLoading) return;
+            const requestedModel = this.aiModel || 'gemini-3.8-pro';
 
             this.aiHistory.push({
                 role: 'user',
@@ -2610,7 +2638,7 @@ window.cdpkSystemPlannerApp = function () {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        model: this.aiModel,
+                        model: requestedModel,
                         prompt: promptText,
                         lang: this.lang,
                         state: {
@@ -2631,7 +2659,8 @@ window.cdpkSystemPlannerApp = function () {
                 this.lastExtractedParams = data.extracted_params || null;
                 this.aiHistory.push({
                     role: 'assistant',
-                    model: data.model_name || this.aiModel,
+                    modelId: data.model || requestedModel,
+                    model: data.model_name || (requestedModel === 'gemini-3.8-pro' ? 'Google Gemini 3.8 Pro' : 'Google Gemini 3.8 Flash'),
                     text: data.reply || 'Analysis complete.',
                     extracted: data.extracted_params || null,
                     citations: data.citations || null,
@@ -2694,8 +2723,9 @@ window.cdpkSystemPlannerApp = function () {
             html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900">$1</strong>');
             html = html.replace(/`([^`]+)`/g, '<code class="bg-slate-100 text-blue-800 px-1 py-0.5 rounded text-[11px] font-mono border border-slate-200">$1</code>');
 
-            // 6. Links [text](url)
-            html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-semibold">$1</a>');
+            // 6. Security Policy: Strip links [text](url) to plain bold text (never render external/Drive hyperlinks)
+            html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<strong class="font-bold text-slate-900">$1</strong>');
+            html = html.replace(/https?:\/\/drive\.google\.com\/[^\s)<"]+/g, '[Internal Knowledge Bank]');
 
             return html;
         },

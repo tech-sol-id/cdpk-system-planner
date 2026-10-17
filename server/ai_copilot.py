@@ -592,13 +592,13 @@ def generate_compliance_matrix(
     for c in citations:
         c_low = c.get("title", "").lower()
         if "slr" in c_low:
-            doc_ref_repeater = f"[{c['title']}]({c.get('url', '#')})"
+            doc_ref_repeater = f"**{c['title']}**"
         elif "is540" in c_low or "p8600" in c_low or "r7" in c_low or "r2" in c_low:
-            doc_ref_terminal = f"[{c['title']}]({c.get('url', '#')})"
+            doc_ref_terminal = f"**{c['title']}**"
         if "atex" in c_low or "iecex" in c_low:
-            doc_ref_safety = f"[{c['title']}]({c.get('url', '#')})"
+            doc_ref_safety = f"**{c['title']}**"
         if "fmtcs" in c_low or "omu" in c_low or "oru" in c_low:
-            doc_ref_das = f"[{c['title']}]({c.get('url', '#')})"
+            doc_ref_das = f"**{c['title']}**"
 
     rows = [
         ("| 1 | Standar Protokol Radio Digital | DMR Tier II ETSI TS 102 361-1/2/3 (2 Slot TDMA) | "
@@ -689,18 +689,18 @@ def build_local_expert_response(
     # CASE A: Pure Technical / Knowledge Retrieval Question
     # ─────────────────────────────────────────────────────────────────────────
     if not has_sizing_intent and citations:
-        top_c = citations[0]
+        icon = "🧠" if is_pro else "⚡"
         header = (
-            f"### ⚡ {ALLOWED_MODELS[model_id]['name']} — Jawaban Teknis Bank Knowledge Citradata\n"
+            f"### {icon} {ALLOWED_MODELS[model_id]['name']} — Jawaban Teknis Bank Knowledge Citradata\n"
             if not is_en else
-            f"### ⚡ {ALLOWED_MODELS[model_id]['name']} — Citradata Technical Knowledge Base Response\n"
+            f"### {icon} {ALLOWED_MODELS[model_id]['name']} — Citradata Technical Knowledge Base Response\n"
         )
         body = (
             f"{header}\n"
-            f"Berdasarkan penelusuran dokumen teknis pada **Bank Knowledge Google Drive PT Citradata Purnakharisma**:\n\n"
+            f"Berdasarkan penelusuran dokumen teknis terverifikasi pada **Bank Knowledge Internal PT Citra Data Purnama Karya**:\n\n"
             if not is_en else
             f"{header}\n"
-            f"Based on official engineering documentation from the **Citradata Google Drive Knowledge Bank**:\n\n"
+            f"Based on verified engineering documentation from the **Internal Citradata Knowledge Bank**:\n\n"
         )
 
         for idx, c in enumerate(citations[:3]):
@@ -719,16 +719,12 @@ def build_local_expert_response(
                 if parts:
                     spec_line = f"  - 🏷️ *Spesifikasi Kunci:* {' | '.join(parts)}\n"
 
-            body += f"- 📄 **[{c['title']}]({c.get('url', '#')})** (`{c.get('folder', 'Knowledge Base')}`)\n{spec_line}"
+            body += f"- 📄 **{c['title']}** (`{c.get('folder', 'Knowledge Base')}`)\n{spec_line}"
 
         body += (
-            f"\n#### ℹ️ Rujukan Gambar & Diagram Fisik\n"
-            f"*Catatan: Teks dokumen di atas telah diproses oleh AI. Untuk memeriksa **skematik sirkuit, kurva isolasi cavity duplexer, diagram topologi, dan foto fisik perangkat**, silakan buka langsung tautan Google Drive di atas.*\n\n"
-            f"Silakan ajukan skenario jumlah pengguna atau luas area proyek jika Anda ingin menghitung sizing sistem, RF link budget, dan BoQ komersial secara otomatis."
+            f"\nSilakan ajukan skenario jumlah pengguna, jumlah lantai gedung, atau luas area proyek jika Anda ingin menghitung sizing sistem, RF link budget, dan BoQ komersial secara otomatis."
             if not is_en else
-            f"\n#### ℹ️ Physical Schematics & Diagrams Reference\n"
-            f"*Note: For detailed schematics, duplexer cavity isolation curves, topology diagrams, and high-res device photos, please open the original Google Drive links above.*\n\n"
-            f"Please provide user count or site area if you would like me to calculate complete RF Link Budget sizing and commercial BoQ."
+            f"\nPlease provide user count, building floors, or site area if you would like me to calculate complete RF Link Budget sizing and commercial BoQ."
         )
 
         return {
@@ -983,11 +979,21 @@ def build_local_expert_response(
                 f"RFoF DAS by FMTCS Link Budget: ORU +40.0 dBm -> Ant Input +{das_sizing['ant_input_dbm']} dBm "
                 f"(EIRP +{das_sizing['eirp_dbm']} dBm | Status: {das_sizing['ant_health']} | Radius: ~{das_sizing['cov_radius_m']} m/ant)\n"
             )
+        body += f"```\n\n"
+        if is_pro:
+            body += (
+                f"#### 3. Tender Specification Compliance Matrix (Compliance Sheet)\n\n"
+                f"{comp_table}\n\n"
+                f"#### 4. Deep Architectural Redundancy, Risk Mitigation & SAT Protocol (Pro Analysis)\n"
+                f"- **RF Isolation & Intermodulation Guard:** Enforce minimum **85–90 dB TX/RX Cavity Isolation** via `DSGQ400C.RI` / `QPD-450D` and `BCFH400x.RI` Combiner + `PDJF400x.M` Multiplexer to prevent receiver desensitization.\n"
+                f"- **Optical & Passive DAS Integrity:** Target **+10 to +15 dBm** input power at each `ANTI400R.M` indoor antenna port using asymmetrical `CP400R.M` directional couplers near the `DORU400CH.RI` and balanced `PD400R.M` power splitters at far branches.\n"
+                f"- **Site Acceptance Test (SAT) Thresholds:** Mandatory field verification at every antenna point: **VSWR ≤ 1.50 : 1** (Return Loss ≥ 14.0 dB), **TX Input ≥ +8.0 dBm**, **Indoor RSSI ≥ -85 dBm** across 95% coverage area, and grounding resistance **< 5.0 Ohm**.\n\n"
+                f"#### 5. Live Commercial Cost Estimate (BoQ Master Pricelist)\n"
+            )
+        else:
+            body += f"#### 3. Quick Commercial Cost Estimate (BoQ Master Pricelist)\n"
+
         body += (
-            f"```\n\n"
-            f"#### 3. Tender Specification Compliance Matrix (Compliance Sheet)\n\n"
-            f"{comp_table}\n\n"
-            f"#### 4. Live Commercial Cost Estimate (BoQ Master Pricelist)\n"
             f"- **RF Repeater & Fiber DAS Infrastructure:** `{fmt_idr(est_infra_idr)}`\n"
             f"- **Subscriber Radios & Terminals ({users} Units):** `{fmt_idr(est_terms_idr)}`\n"
             f"- **Work Execution Statement / Engineering Services:** `{fmt_idr(est_svc_idr)}` (~{est_mandays} Mandays)\n"
@@ -995,9 +1001,9 @@ def build_local_expert_response(
         )
     else:
         header = (
-            f"### ⚡ {ALLOWED_MODELS[model_id]['name']} — Solusi Senior RF Telecom & Critical Communications Architect\n"
+            f"### ⚡ {ALLOWED_MODELS[model_id]['name']} — Kalkulasi Cepat Sizing & Estimasi BoQ\n"
             if not is_pro else
-            f"### 🧠 {ALLOWED_MODELS[model_id]['name']} — Rancangan Arsitektur RF & Proposal Kepatuhan Tender\n"
+            f"### 🧠 {ALLOWED_MODELS[model_id]['name']} — Rancangan Arsitektur RF Mendalam & Proposal Kepatuhan Tender\n"
         )
         body = (
             f"{header}\n"
@@ -1051,11 +1057,21 @@ def build_local_expert_response(
                 f"Link Budget RFoF DAS by FMTCS: ORU +40.0 dBm -> Input Antena +{das_sizing['ant_input_dbm']} dBm "
                 f"(EIRP +{das_sizing['eirp_dbm']} dBm | Status: {das_sizing['ant_health']} | Radius: ~{das_sizing['cov_radius_m']} m/antena)\n"
             )
+        body += f"```\n\n"
+        if is_pro:
+            body += (
+                f"#### 3. Matriks Kepatuhan Spesifikasi Teknis (Compliance Sheet Tender)\n\n"
+                f"{comp_table}\n\n"
+                f"#### 4. Analisis Mendalam Redundansi Arsitektur, Mitigasi Risiko & Protokol SAT (Mode Pro)\n"
+                f"- **Mitigasi Intermodulasi & Isolasi RF:** Wajib menggunakan Cavity Bandpass Duplexer `DSGQ400C.RI` / `QPD-450D` (**Isolasi TX-RX ≥ 85–90 dB**) serta `BCFH400x.RI` Combiner + `PDJF400x.M` Multiplexer pada sistem multi-repeater untuk mencegah desensitisasi receiver.\n"
+                f"- **Keseimbangan Distribusi Daya RFoF DAS:** Gunakan `CP400R.M` Directional Coupler (6–15 dB) untuk titik antena yang dekat dengan `DORU400CH.RI` dan `PD400R.M` Power Splitter di ujung jalur agar daya input setiap antena indoor `ANTI400R.M` merata pada rentang ideal **+10 s/d +15 dBm**.\n"
+                f"- **Standar Uji Terima Lapangan (FAT/SAT):** Setiap titik antena wajib lulus pengukuran **VSWR ≤ 1.50 : 1** (Return Loss ≥ 14.0 dB), **Daya TX ≥ +8.0 dBm**, **RSSI Indoor ≥ -85 dBm** pada ≥95% area kerja, serta resistansi grounding proteksi petir **< 5.0 Ohm**.\n\n"
+                f"#### 5. Estimasi Komersial Master Pricelist (BoQ)\n"
+            )
+        else:
+            body += f"#### 3. Estimasi Komersial Cepat Master Pricelist (BoQ)\n"
+
         body += (
-            f"```\n\n"
-            f"#### 3. Matriks Kepatuhan Spesifikasi Teknis (Compliance Sheet Tender)\n\n"
-            f"{comp_table}\n\n"
-            f"#### 4. Estimasi Komersial Master Pricelist (BoQ)\n"
             f"- **Paket Infrastruktur Repeater & Fiber DAS:** `{fmt_idr(est_infra_idr)}`\n"
             f"- **Perangkat Radio Pengguna ({users} Unit):** `{fmt_idr(est_terms_idr)}`\n"
             f"- **Jasa Implementasi Engineering (WES):** `{fmt_idr(est_svc_idr)}` (~{est_mandays} Mandays: FAT, SAT, Duplexer Tuning, Grounding < 5 Ohm)\n"
@@ -1072,14 +1088,13 @@ def build_local_expert_response(
         for idx, q in enumerate(missing_q):
             body += f"{idx + 1}. **{q}**\n"
 
-    # Attach citations from Google Drive Bank Knowledge
+    # Attach citations from Internal Bank Knowledge (Title & Category only — NO external links)
     if citations:
         body += (
-            f"\n#### 📚 Referensi Bank Knowledge (Google Drive PT Citradata Purnakharisma)\n"
+            f"\n#### 📚 Referensi Bank Knowledge Terverifikasi (Internal PT Citra Data Purnama Karya)\n"
         )
         for c in citations[:3]:
-            body += f"- 📄 **[{c['title']}]({c.get('url', '#')})** (`{c.get('folder', 'Knowledge Base')}`)\n"
-        body += f"\n> ℹ️ *Rujukan Visual: Untuk memeriksa gambar skematik koneksi, kurva frekuensi, dan foto fisik perangkat, buka link file asli di atas.*\n"
+            body += f"- 📄 **{c['title']}** (`{c.get('folder', 'Knowledge Base')}`)\n"
 
     return {
         "status": "ok",
@@ -1167,8 +1182,8 @@ def query_ai_copilot(
         f"6. HYBRID CONVERGENCE & POC: For broadband or LTE/5G integration, design Motorola WAVE PTX RoIP gateways and SmartPTT Enterprise dispatch console.\n"
         f"7. TENDER PROPOSAL STRUCTURE: Format responses with Executive Summary, Operational Topology, Link Budget Table, Specification Compliance Matrix (Compliance Sheet with COMPLY status), BoQ Pricing, and Engineering Implementation Plan (FAT/SAT, grounding < 5 Ohm, duplexer tuning, DAS VSWR & RSSI commissioning).\n"
         f"8. PROACTIVE INTERVIEW: If the user's requirements lack critical sizing details, formulate 2-3 focused clarification questions.\n"
-        f"9. CITATIONS: Reference the pre-calculated engineering metrics: {json.dumps(expert_res['summary_metrics'])}. "
-        f"Always cite document titles and original Google Drive links from the verified Citradata Knowledge Bank below.\n\n"
+        f"9. CITATIONS (STRICT ZERO-LINK POLICY): Reference the pre-calculated engineering metrics: {json.dumps(expert_res['summary_metrics'])}. "
+        f"Mention verified document titles by name only from the Citradata Knowledge Bank below. NEVER output any URLs, Google Drive links, or clickable hyperlinks.\n\n"
         f"{rag_context}"
     )
 

@@ -413,7 +413,8 @@ def search_knowledge_base(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
 def build_rag_context_for_prompt(prompt: str) -> Tuple[str, List[Dict[str, Any]]]:
     """
     Build structured knowledge context ready for injection into Gemini or Local Expert,
-    enforcing prior reading of Markdown text and linking to original files for images.
+    enforcing prior reading of Markdown text while strictly keeping internal Google Drive
+    URLs confidential (never exposed in client responses or clickable links).
     """
     matches = search_knowledge_base(prompt, top_k=4)
     if not matches:
@@ -421,9 +422,9 @@ def build_rag_context_for_prompt(prompt: str) -> Tuple[str, List[Dict[str, Any]]
 
     context_lines = [
         "═════════════════════════════════════════════════════════════════════",
-        "PRIORITIZED CITRADATA KNOWLEDGE BANK (EXTRACTED FROM DRIVE MARKDOWN):",
+        "PRIORITIZED CITRADATA KNOWLEDGE BANK (INTERNAL VERIFIED MARKDOWN):",
         "Rule 1: Prioritize these verified facts over generic assumptions.",
-        "Rule 2: For visual schematics / block diagrams, cite the Google Drive link.",
+        "Rule 2: Cite the verified document title by name only. NEVER include any URLs or Google Drive links.",
         "Rule 3: Enforce strict safety ratings (ATEX Zone 1 vs Zone 2) as listed below.",
         "═════════════════════════════════════════════════════════════════════"
     ]
@@ -431,8 +432,7 @@ def build_rag_context_for_prompt(prompt: str) -> Tuple[str, List[Dict[str, Any]]
     citations = []
     for idx, m in enumerate(matches):
         context_lines.append(f"\n[Source Document #{idx + 1}: {m['title']}]")
-        context_lines.append(f"Google Drive Link: {m['view_url']}")
-        context_lines.append(f"Folder: {m['folder_path']}")
+        context_lines.append(f"Category / Folder: {m['folder_path']}")
 
         specs = m.get("key_specs", {})
         if specs:
@@ -454,7 +454,6 @@ def build_rag_context_for_prompt(prompt: str) -> Tuple[str, List[Dict[str, Any]]
 
         citations.append({
             "title": m["title"],
-            "url": m["view_url"],
             "folder": m["folder_path"],
             "key_specs": specs
         })
