@@ -1,0 +1,16 @@
+[
+  {
+    "id": "notif_6f2b8849ca1f",
+    "target": "admin",
+    "type": "system",
+    "title": "🔔 Selamat Datang di CDPK System Planner v8.3",
+    "message": "Sistem notifikasi & handover kolaborasi tim siap digunakan.",
+    "action": "",
+    "data": {},
+    "read": true,
+    "created_at": "2026-10-17 03:52:53",
+    "read_by": [
+      "adrian"
+    ]
+  }
+]

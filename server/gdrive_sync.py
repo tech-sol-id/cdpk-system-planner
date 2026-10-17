@@ -730,3 +730,52 @@ def load_project_data_from_gdrive(file_id: str) -> Optional[Dict[str, Any]]:
         logger.warning(f"Failed loading project file {file_id}: {e}")
         return None
 
+
+def patch_drive_file_properties(file_id: str, app_properties: Dict[str, str], description: Optional[str] = None) -> bool:
+    """Updates appProperties and optionally description of an existing file in Google Drive."""
+    token = get_access_token()
+    if not token:
+        return False
+    try:
+        url = f"https://www.googleapis.com/drive/v3/files/{file_id}?supportsAllDrives=true"
+        payload: Dict[str, Any] = {"appProperties": app_properties}
+        if description:
+            payload["description"] = description
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            },
+            method="PATCH"
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return resp.status in (200, 204)
+    except Exception as e:
+        logger.warning(f"Failed patching file properties for {file_id}: {e}")
+        return False
+
+
+def update_drive_file_content(file_id: str, content_bytes: bytes, mime_type: str = "application/json") -> bool:
+    """Updates the file media in Google Drive."""
+    token = get_access_token()
+    if not token:
+        return False
+    try:
+        url = f"https://www.googleapis.com/upload/drive/v3/files/{file_id}?uploadType=media&supportsAllDrives=true"
+        req = urllib.request.Request(
+            url,
+            data=content_bytes,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": mime_type
+            },
+            method="PATCH"
+        )
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return resp.status in (200, 204)
+    except Exception as e:
+        logger.warning(f"Failed updating file content for {file_id}: {e}")
+        return False
+

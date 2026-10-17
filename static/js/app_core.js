@@ -240,12 +240,73 @@ window.cdpkSystemPlannerApp = function () {
         emailSubject: '',
         emailNotes: '',
 
+        // ─── In-App Notifications State ──────────────────────────────────
+        notifications: [],
+        unreadNotificationsCount: 0,
+        notificationsOpen: false,
+        notificationsLoading: false,
+
+        // ─── Project Handover State ──────────────────────────────────────
+        handoverModalOpen: false,
+        handoverFile: null,
+        handoverTargetUsers: [],
+        handoverNote: '',
+        handoverLoading: false,
+        activeTeamMembers: [],
+
+        // ─── Custom Configurator Mode (Pilih Produk + Lisensi + Aksesoris) ──
+        configuratorMode: 'standard', // 'standard' | 'custom'
+        customProductSearch: '',
+        customConfig: {
+            sku: 'MOT-RPT-SLR5300',
+            name: 'MOTOTRBO SLR 5300',
+            category: 'Repeater',
+            unitPriceIdr: 48500000,
+            unitPriceUsd: 2995,
+            qty: 1,
+            licenses: [
+                {
+                    id: 'lic-init-1',
+                    sku: 'LIC-MOT-IPSC',
+                    name: 'MOTOTRBO IP Site Connect License (HKVN4045)',
+                    priceIdr: 4500000,
+                    priceUsd: 280,
+                    qty: 1
+                }
+            ],
+            accessories: [
+                {
+                    id: 'acc-init-1',
+                    sku: 'RF-ACC-DUPLEXER',
+                    name: 'Duplexer VHF/UHF Band-Pass',
+                    priceIdr: 6500000,
+                    priceUsd: 400,
+                    qty: 1
+                },
+                {
+                    id: 'acc-init-2',
+                    sku: 'AVT-ANT-AVO400',
+                    name: 'AVO-400D/DII/E Omni 400MHz',
+                    priceIdr: 6800000,
+                    priceUsd: 420,
+                    qty: 1
+                }
+            ],
+            marginPercent: 20
+        },
+
         // ─── Lifecycle Init ──────────────────────────────────────────────
         async init() {
             await this.fetchHealthConfig();
             await this.checkCurrentAuth();
             await this.loadCloudKnowledge(false);
             this.syncBoqFromSizing();
+            if (this.currentUser) {
+                this.fetchNotifications();
+                setInterval(() => {
+                    if (this.currentUser) this.fetchNotifications();
+                }, 30000);
+            }
             this.$nextTick(() => {
                 this.runCoverageSimulation();
                 this.initGoogleAuth();
@@ -314,6 +375,7 @@ window.cdpkSystemPlannerApp = function () {
                     this.loginModalOpen = false;
                     this.loginPassword = '';
                     this.salesPic = `${data.user.name} (${data.user.title || 'CDPK'})`;
+                    this.fetchNotifications();
                 } else {
                     this.loginError = data.message || (this.lang === 'en' ? 'Invalid credentials' : 'Username atau password salah');
                 }
@@ -429,6 +491,7 @@ window.cdpkSystemPlannerApp = function () {
                     this.loginModalOpen = false;
                     this.loginPassword = '';
                     this.salesPic = `${data.user.name} (${data.user.title || 'CDPK'})`;
+                    this.fetchNotifications();
                 } else {
                     this.loginError = data.message || (this.lang === 'en' ? 'Google Workspace login failed' : 'Gagal login akun Google Workspace');
                 }
@@ -450,6 +513,9 @@ window.cdpkSystemPlannerApp = function () {
             }
             this.sessionToken = '';
             this.currentUser = null;
+            this.notifications = [];
+            this.unreadNotificationsCount = 0;
+            this.notificationsOpen = false;
             localStorage.removeItem('cdpk_session_token');
         },
 
@@ -2261,6 +2327,395 @@ window.cdpkSystemPlannerApp = function () {
             const mailtoUrl = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(fullBody)}`;
 
             window.location.href = mailtoUrl;
+        },
+
+        // ─── In-App Notifications Methods ────────────────────────────────
+        async fetchNotifications() {
+            if (!this.sessionToken) return;
+            try {
+                const resp = await fetch('/api/notifications', {
+                    headers: { 'Authorization': `Bearer ${this.sessionToken}` }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    this.notifications = data.notifications || [];
+                    this.unreadNotificationsCount = data.unread_count || 0;
+                }
+            } catch (e) {
+                console.warn('Notifications fetch error:', e);
+            }
+        },
+
+        toggleNotifications() {
+            this.notificationsOpen = !this.notificationsOpen;
+            if (this.notificationsOpen) {
+                this.fetchNotifications();
+            }
+        },
+
+        async markNotificationRead(notif) {
+            if (!notif) return;
+            try {
+                await fetch('/api/notifications/mark-read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.sessionToken}`
+                    },
+                    body: JSON.stringify({ notif_id: notif.id })
+                });
+                notif.is_read = true;
+                notif.read = true;
+                this.unreadNotificationsCount = Math.max(0, this.unreadNotificationsCount - 1);
+            } catch (e) {
+                console.warn('Mark read error:', e);
+            }
+        },
+
+        async markAllNotificationsRead() {
+            try {
+                await fetch('/api/notifications/mark-read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.sessionToken}`
+                    },
+                    body: JSON.stringify({})
+                });
+                this.notifications.forEach(n => { n.is_read = true; n.read = true; });
+                this.unreadNotificationsCount = 0;
+            } catch (e) {
+                console.warn('Mark all read error:', e);
+            }
+        },
+
+        async handleNotificationAction(notif) {
+            this.notificationsOpen = false;
+            this.markNotificationRead(notif);
+            if (notif.action === 'load_project' && notif.data && notif.data.file_id) {
+                await this.loadProjectFromDrive(notif.data.file_id);
+                this.activeTab = 'boq';
+            } else if (notif.type === 'pending_user') {
+                this.openUserManagementModal();
+            }
+        },
+
+        // ─── Project Handover / Sharing Methods ──────────────────────────
+        async openHandoverModal(file) {
+            this.handoverFile = file;
+            this.handoverTargetUsers = [];
+            this.handoverNote = '';
+            this.handoverModalOpen = true;
+            this.handoverLoading = true;
+            try {
+                const resp = await fetch('/api/team/active-members', {
+                    headers: { 'Authorization': `Bearer ${this.sessionToken}` }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const curUser = (this.currentUser ? this.currentUser.username : '').toLowerCase();
+                    this.activeTeamMembers = (data.members || []).filter(m => (m.username || '').toLowerCase() !== curUser);
+                }
+            } catch (e) {
+                console.warn('Fetch active members error:', e);
+            } finally {
+                this.handoverLoading = false;
+            }
+        },
+
+        toggleHandoverTarget(username) {
+            const idx = this.handoverTargetUsers.indexOf(username);
+            if (idx >= 0) {
+                this.handoverTargetUsers.splice(idx, 1);
+            } else {
+                this.handoverTargetUsers.push(username);
+            }
+        },
+
+        async submitHandover() {
+            if (!this.handoverFile || this.handoverTargetUsers.length === 0) {
+                alert('Pilih minimal 1 rekan tim penerima proyek.');
+                return;
+            }
+            this.handoverLoading = true;
+            try {
+                const payload = {
+                    file_id: this.handoverFile.id,
+                    project_name: this.handoverFile.summary || this.handoverFile.name,
+                    client_name: (this.handoverFile.appProperties && this.handoverFile.appProperties.client_name) || this.clientName || 'Klien',
+                    target_usernames: this.handoverTargetUsers,
+                    note: this.handoverNote
+                };
+                const resp = await fetch('/api/project/handover', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.sessionToken}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const res = await resp.json();
+                if (res.status === 'ok') {
+                    alert('Berhasil! ' + res.message);
+                    this.handoverModalOpen = false;
+                    await this.openProjectArchive();
+                } else {
+                    alert('Gagal handover: ' + (res.message || 'Terjadi kesalahan'));
+                }
+            } catch (e) {
+                alert('Koneksi gagal saat handover proyek: ' + e);
+            } finally {
+                this.handoverLoading = false;
+            }
+        },
+
+        // ─── Custom Configurator Methods ─────────────────────────────────
+        getAvailableProducts() {
+            const allowedCats = ['Repeater', 'Handy Talky', 'Base Station / Mobile', 'CCTV Avigilon', 'CCTV AVA', 'AI NVR', 'Cloud Connector'];
+            const catalog = this.productsCatalog || [];
+            return catalog.filter(p => allowedCats.includes(p.cat) || (!p.cat.includes('License') && !p.cat.includes('Accessory') && !p.cat.includes('Software') && !p.sku.startsWith('LIC-') && !p.sku.startsWith('RF-') && !p.sku.startsWith('AVT-')));
+        },
+
+        getCompatibleLicenses(productSku) {
+            const catalog = this.productsCatalog || [];
+            const sku = (productSku || this.customConfig.sku || '').toUpperCase();
+
+            let compatible = [];
+            if (sku.includes('SLR') || sku.includes('RPT') || sku.includes('DR3000')) {
+                compatible = catalog.filter(p => p.sku.startsWith('LIC-MOT-') || p.sku.startsWith('SW-'));
+            } else if (sku.includes('R7') || sku.includes('R2') || sku.includes('P86') || sku.includes('HT')) {
+                compatible = [
+                    { sku: 'LIC-R7-SINC', model: 'MOTOTRBO R7 SINC+ Noise Cancellation License', price_idr: 1200000, price_usd: 75, unit: 'License' },
+                    { sku: 'LIC-R7-WIFI-BT', model: 'MOTOTRBO R7 Wi-Fi & Bluetooth Activation License', price_idr: 1800000, price_usd: 110, unit: 'License' },
+                    { sku: 'LIC-R7-MANDOWN', model: 'MOTOTRBO R7 Man-Down Safety Option License', price_idr: 2200000, price_usd: 135, unit: 'License' },
+                    { sku: 'LIC-R7-AES256', model: 'MOTOTRBO AES-256 Enhanced Privacy Encryption License', price_idr: 3500000, price_usd: 215, unit: 'License' }
+                ];
+            } else {
+                compatible = catalog.filter(p => p.cat === 'Software' || p.sku.startsWith('LIC-'));
+            }
+            return compatible;
+        },
+
+        getCompatibleAccessories(productSku) {
+            const catalog = this.productsCatalog || [];
+            const sku = (productSku || this.customConfig.sku || '').toUpperCase();
+
+            let compatible = [];
+            if (sku.includes('SLR') || sku.includes('RPT') || sku.includes('DR3000')) {
+                compatible = catalog.filter(p => p.cat === 'RF Accessories & Cable' || p.cat === 'Avanti Antenna' || p.cat === 'Power & Infrastructure' || p.sku === 'RF-ACC-DUPLEXER');
+            } else if (sku.includes('R7') || sku.includes('R2') || sku.includes('P86') || sku.includes('HT')) {
+                compatible = [
+                    { sku: 'ACC-R7-BATT-IMPRES', model: 'Motorola PMNN4807 IMPRES Li-Ion 2200mAh IP68 Battery', price_idr: 1650000, price_usd: 100, unit: 'Unit' },
+                    { sku: 'ACC-R7-RSM-IP68', model: 'Motorola PMMN4140 Remote Speaker Mic IP68', price_idr: 1950000, price_usd: 120, unit: 'Unit' },
+                    { sku: 'ACC-R7-MUC-6WAY', model: 'Motorola PMPN4284 Multi-Unit 6-Pocket IMPRES Charger', price_idr: 9500000, price_usd: 585, unit: 'Unit' },
+                    { sku: 'ACC-R7-EARPIECE', model: 'Surveillance Earpiece with Acoustic Tube', price_idr: 850000, price_usd: 52, unit: 'Unit' },
+                    { sku: 'ACC-R7-HOLSTER', model: 'Heavy Duty Hard Leather Carry Case with Swivel Belt Loop', price_idr: 650000, price_usd: 40, unit: 'Unit' }
+                ];
+            } else {
+                compatible = catalog.filter(p => p.cat.includes('Accessories') || p.cat.includes('Antenna') || p.cat.includes('Power'));
+            }
+            return compatible;
+        },
+
+        onCustomProductSelect(prod) {
+            if (!prod) return;
+            this.customConfig.sku = prod.sku;
+            this.customConfig.name = prod.model || prod.sku;
+            this.customConfig.category = prod.cat || 'Custom Device';
+            this.customConfig.unitPriceIdr = prod.price_idr || 0;
+            this.customConfig.unitPriceUsd = prod.price_usd || Math.round((prod.price_idr || 0) / this.exchangeRate);
+
+            const compLic = this.getCompatibleLicenses(prod.sku);
+            if (compLic.length > 0) {
+                this.customConfig.licenses = [{
+                    id: 'lic-' + Date.now(),
+                    sku: compLic[0].sku,
+                    name: compLic[0].model || compLic[0].sku,
+                    priceIdr: compLic[0].price_idr || 0,
+                    priceUsd: compLic[0].price_usd || 0,
+                    qty: 1
+                }];
+            } else {
+                this.customConfig.licenses = [];
+            }
+
+            const compAcc = this.getCompatibleAccessories(prod.sku);
+            if (compAcc.length > 0) {
+                this.customConfig.accessories = [
+                    {
+                        id: 'acc-' + Date.now() + '-1',
+                        sku: compAcc[0].sku,
+                        name: compAcc[0].model || compAcc[0].sku,
+                        priceIdr: compAcc[0].price_idr || 0,
+                        priceUsd: compAcc[0].price_usd || 0,
+                        qty: 1
+                    }
+                ];
+                if (compAcc.length > 1) {
+                    this.customConfig.accessories.push({
+                        id: 'acc-' + Date.now() + '-2',
+                        sku: compAcc[1].sku,
+                        name: compAcc[1].model || compAcc[1].sku,
+                        priceIdr: compAcc[1].price_idr || 0,
+                        priceUsd: compAcc[1].price_usd || 0,
+                        qty: 1
+                    });
+                }
+            } else {
+                this.customConfig.accessories = [];
+            }
+        },
+
+        addCustomLicense(item) {
+            const itemObj = item || {
+                sku: 'LIC-CUSTOM-' + Date.now(),
+                model: 'Lisensi Tambahan Baru',
+                price_idr: 2500000,
+                price_usd: 150
+            };
+            this.customConfig.licenses.push({
+                id: 'lic-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+                sku: itemObj.sku,
+                name: itemObj.model || itemObj.sku,
+                priceIdr: itemObj.price_idr || 0,
+                priceUsd: itemObj.price_usd || 0,
+                qty: 1
+            });
+        },
+
+        removeCustomLicense(index) {
+            this.customConfig.licenses.splice(index, 1);
+        },
+
+        addCustomAccessory(item) {
+            const itemObj = item || {
+                sku: 'ACC-CUSTOM-' + Date.now(),
+                model: 'Aksesoris Tambahan Baru',
+                price_idr: 1500000,
+                price_usd: 95
+            };
+            this.customConfig.accessories.push({
+                id: 'acc-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+                sku: itemObj.sku,
+                name: itemObj.model || itemObj.sku,
+                priceIdr: itemObj.price_idr || 0,
+                priceUsd: itemObj.price_usd || 0,
+                qty: 1
+            });
+        },
+
+        removeCustomAccessory(index) {
+            this.customConfig.accessories.splice(index, 1);
+        },
+
+        getCustomConfigSummary() {
+            const cfg = this.customConfig;
+            const mult = 1.0 + (Number(cfg.marginPercent || 20) / 100.0);
+            const prodCostIdr = (Number(cfg.unitPriceIdr) || 0) * (Number(cfg.qty) || 1);
+            const prodCostUsd = (Number(cfg.unitPriceUsd) || 0) * (Number(cfg.qty) || 1);
+
+            let licCostIdr = 0;
+            let licCostUsd = 0;
+            (cfg.licenses || []).forEach(l => {
+                licCostIdr += (Number(l.priceIdr) || 0) * (Number(l.qty) || 1);
+                licCostUsd += (Number(l.priceUsd) || 0) * (Number(l.qty) || 1);
+            });
+
+            let accCostIdr = 0;
+            let accCostUsd = 0;
+            (cfg.accessories || []).forEach(a => {
+                accCostIdr += (Number(a.priceIdr) || 0) * (Number(a.qty) || 1);
+                accCostUsd += (Number(a.priceUsd) || 0) * (Number(a.qty) || 1);
+            });
+
+            const totalCostIdr = prodCostIdr + licCostIdr + accCostIdr;
+            const totalCostUsd = prodCostUsd + licCostUsd + accCostUsd;
+            const sellPriceIdr = Math.round(totalCostIdr * mult);
+            const sellPriceUsd = Math.round(totalCostUsd * mult);
+            const grossProfitIdr = sellPriceIdr - totalCostIdr;
+
+            return {
+                prodCostIdr,
+                prodCostUsd,
+                licCostIdr,
+                licCostUsd,
+                accCostIdr,
+                accCostUsd,
+                totalCostIdr,
+                totalCostUsd,
+                sellPriceIdr,
+                sellPriceUsd,
+                grossProfitIdr,
+                totalItemsCount: (Number(cfg.qty) || 1) + (cfg.licenses || []).length + (cfg.accessories || []).length
+            };
+        },
+
+        transferCustomToBoq() {
+            const summary = this.getCustomConfigSummary();
+            const cfg = this.customConfig;
+
+            const children = [
+                {
+                    sku: cfg.sku,
+                    name: cfg.name,
+                    category: cfg.category,
+                    qtyPerBundle: Number(cfg.qty) || 1,
+                    price_idr: Number(cfg.unitPriceIdr) || 0,
+                    price_usd: Number(cfg.unitPriceUsd) || 0,
+                    mandatory: true,
+                    enabled: true
+                }
+            ];
+
+            (cfg.licenses || []).forEach(l => {
+                children.push({
+                    sku: l.sku,
+                    name: l.name,
+                    category: 'Software / License',
+                    qtyPerBundle: Number(l.qty) || 1,
+                    price_idr: Number(l.priceIdr) || 0,
+                    price_usd: Number(l.priceUsd) || 0,
+                    mandatory: false,
+                    enabled: true
+                });
+            });
+
+            (cfg.accessories || []).forEach(a => {
+                children.push({
+                    sku: a.sku,
+                    name: a.name,
+                    category: 'Accessories & Hardware',
+                    qtyPerBundle: Number(a.qty) || 1,
+                    price_idr: Number(a.priceIdr) || 0,
+                    price_usd: Number(a.priceUsd) || 0,
+                    mandatory: false,
+                    enabled: true
+                });
+            });
+
+            const bundleRow = {
+                id: 'boq-cust-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+                isBundle: true,
+                expanded: true,
+                bundle_id: 'CUSTOM-' + cfg.sku,
+                category: 'Paket Kustom Terkonfigurasi',
+                sku: 'CUST-' + cfg.sku,
+                name_id: 'Paket Kustom: ' + cfg.name + ' (' + (Number(cfg.qty) || 1) + ' Unit + ' + (cfg.licenses.length + cfg.accessories.length) + ' Add-on)',
+                name_en: 'Custom Package: ' + cfg.name + ' (' + (Number(cfg.qty) || 1) + ' Unit + ' + (cfg.licenses.length + cfg.accessories.length) + ' Add-ons)',
+                name: 'Paket Kustom: ' + cfg.name,
+                qty: 1,
+                unit: 'Paket',
+                price_idr: summary.totalCostIdr,
+                price_usd: summary.totalCostUsd,
+                notes_id: `Konfigurasi Khusus: 1x ${cfg.name}, ${cfg.licenses.length} lisensi, ${cfg.accessories.length} aksesoris. Margin ${cfg.marginPercent}%.`,
+                notes_en: `Custom Config: 1x ${cfg.name}, ${cfg.licenses.length} licenses, ${cfg.accessories.length} accessories. Margin ${cfg.marginPercent}%.`,
+                notes: `Konfigurasi Khusus: 1x ${cfg.name}, ${cfg.licenses.length} lisensi, ${cfg.accessories.length} aksesoris.`,
+                children: children
+            };
+
+            this.boqItems.push(bundleRow);
+            this.activeTab = 'boq';
+            alert(`Berhasil! Paket Kustom "${cfg.name}" dengan ${children.length} rincian komponen telah dimasukkan ke Tabel BoQ Utama.`);
         },
 
         // ─── Document Exporters ──────────────────────────────────────────

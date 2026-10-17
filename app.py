@@ -15,6 +15,7 @@ import logging
 import mimetypes
 import os
 import urllib.parse
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from server.auth import (
@@ -43,8 +44,15 @@ from server.gdrive_sync import (
     save_project_to_gdrive,
     list_saved_projects_from_gdrive,
     load_project_data_from_gdrive,
+    patch_drive_file_properties,
+    update_drive_file_content,
     parse_project_filename,
     get_diagnostics
+)
+from server.notifications import (
+    get_user_notifications,
+    mark_notifications_read,
+    add_notification
 )
 from server.ai_copilot import ALLOWED_MODELS, query_ai_copilot
 
@@ -155,6 +163,41 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 "models": list(ALLOWED_MODELS.values())
             })
 
+        # ─── In-App Notifications ─────────────────────────────────────────
+        if path == "/api/notifications":
+            cur_user = self._get_auth_user()
+            if not cur_user:
+                return self._send_json({"status": "unauthorized", "message": "Autentikasi diperlukan"}, status=401)
+            notifs = get_user_notifications(cur_user["username"], cur_user.get("role", "engineer"))
+            unread_count = sum(1 for n in notifs if not n.get("is_read"))
+            return self._send_json({
+                "status": "ok",
+                "notifications": notifs,
+                "unread_count": unread_count
+            })
+
+        # ─── Team Active Members for Handover & Collaboration ─────────────
+        if path == "/api/team/active-members":
+            cur_user = self._get_auth_user()
+            if not cur_user:
+                return self._send_json({"status": "unauthorized", "message": "Autentikasi diperlukan"}, status=401)
+            users = load_users()
+            members = [
+                {
+                    "username": u["username"],
+                    "name": u["name"],
+                    "email": u["email"],
+                    "role": u.get("role", "engineer"),
+                    "title": u.get("title", "")
+                }
+                for u in users
+                if u.get("status") == "active"
+            ]
+            return self._send_json({
+                "status": "ok",
+                "members": members
+            })
+
         # ─── Cloud Project Archive ────────────────────────────────────────
         if path == "/api/project/list-drive":
             cur_user = self._get_auth_user()
@@ -167,6 +210,9 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             known_usernames = list(user_map.keys())
 
             enriched_files = []
+            cur_username_lower = cur_user.get("username", "").strip().lower()
+            is_admin = cur_user.get("role") == "admin"
+
             for f in raw_files:
                 name = f.get("name", "")
                 if not (name.endswith(".cdpk.json") or name.endswith(".xlsx")):
@@ -176,24 +222,33 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 creator = app_props.get("creator_username")
                 creator_name = app_props.get("creator_name")
 
+                collab_str = app_props.get("collaborators", "")
+                collaborators = [c.strip().lower() for c in collab_str.split(",") if c.strip()]
+
                 parsed = parse_project_filename(name, known_usernames)
                 if not creator:
                     creator = parsed.get("creator") or "unknown"
                     creator_name = user_map.get(creator, creator.title())
+
+                is_creator = (creator.strip().lower() == cur_username_lower)
+                is_collab = (cur_username_lower in collaborators)
 
                 f["creator_username"] = creator
                 f["creator_name"] = creator_name or creator.title()
                 f["file_type"] = parsed.get("type", "json")
                 f["summary"] = parsed.get("summary", name)
                 f["timestamp"] = parsed.get("timestamp", "")
+                f["collaborators"] = collaborators
+                f["is_creator"] = is_creator
+                f["is_collaborator"] = is_collab
 
-                # Access Control: Admin gets full view, regular user only sees their own creations
-                if cur_user.get("role") == "admin" or creator == cur_user.get("username"):
+                # Access Control: Admin gets full view, regular user sees their creations AND projects shared with them
+                if is_admin or is_creator or is_collab:
                     enriched_files.append(f)
 
             return self._send_json({
                 "status": "ok",
-                "is_admin": cur_user.get("role") == "admin",
+                "is_admin": is_admin,
                 "current_username": cur_user.get("username"),
                 "subfolder_id": OUTPUT_SUBFOLDER_ID,
                 "subfolder_url": f"https://drive.google.com/drive/folders/{OUTPUT_SUBFOLDER_ID}",
@@ -378,6 +433,95 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             save_res = save_project_to_gdrive(body, cur_user)
             return self._send_json(save_res)
 
+        # ─── Notifications: Mark as Read ──────────────────────────────────
+        if path == "/api/notifications/mark-read":
+            cur_user = self._get_auth_user()
+            if not cur_user:
+                return self._send_json({"status": "unauthorized", "message": "Autentikasi diperlukan"}, status=401)
+            notif_id = body.get("notif_id")
+            mark_notifications_read(cur_user["username"], cur_user.get("role", "engineer"), notif_id)
+            return self._send_json({"status": "ok", "message": "Notifikasi ditandai telah dibaca"})
+
+        # ─── Project Handover / Sharing ───────────────────────────────────
+        if path == "/api/project/handover":
+            cur_user = self._get_auth_user()
+            if not cur_user:
+                return self._send_json({"status": "unauthorized", "message": "Autentikasi diperlukan"}, status=401)
+
+            file_id = body.get("file_id")
+            project_name = body.get("project_name") or "Proyek CDPK"
+            client_name = body.get("client_name") or "Klien"
+            target_usernames = body.get("target_usernames") or []
+            note = body.get("note", "").strip()
+
+            if not file_id:
+                return self._send_json({"status": "error", "message": "file_id wajib disertakan"}, status=400)
+            if not target_usernames or not isinstance(target_usernames, list):
+                return self._send_json({"status": "error", "message": "Pilih minimal 1 rekan tim tujuan handover"}, status=400)
+
+            users = load_users()
+            user_dict = {u["username"].lower(): u for u in users if u.get("status") == "active"}
+            cur_username_lower = cur_user.get("username", "").strip().lower()
+
+            valid_targets = []
+            for tu in target_usernames:
+                tu_clean = tu.strip().lower()
+                if tu_clean in user_dict and tu_clean != cur_username_lower:
+                    valid_targets.append(tu_clean)
+
+            if not valid_targets:
+                return self._send_json({"status": "error", "message": "Tidak ada pengguna tujuan yang valid atau aktif"}, status=400)
+
+            # Load project data from Google Drive
+            proj_data = load_project_data_from_gdrive(file_id)
+            existing_collabs = []
+            if proj_data:
+                file_creator = (proj_data.get("creator", {}).get("username") or "").lower()
+                existing_collabs = [c.lower() for c in proj_data.get("collaborators", [])]
+                if cur_user.get("role") != "admin" and file_creator != cur_username_lower and cur_username_lower not in existing_collabs:
+                    return self._send_json({"status": "forbidden", "message": "Hanya pembuat proyek, kolaborator, atau Admin yang dapat melakukan handover"}, status=403)
+
+                all_collabs = list(dict.fromkeys(existing_collabs + valid_targets))
+                proj_data["collaborators"] = all_collabs
+
+                if "handover_history" not in proj_data:
+                    proj_data["handover_history"] = []
+                proj_data["handover_history"].append({
+                    "from_username": cur_user.get("username"),
+                    "from_name": cur_user.get("name"),
+                    "to_usernames": valid_targets,
+                    "note": note,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+
+                updated_json_bytes = json.dumps(proj_data, indent=2, ensure_ascii=False).encode("utf-8")
+                update_drive_file_content(file_id, updated_json_bytes)
+                collab_str = ",".join(all_collabs)
+            else:
+                collab_str = ",".join(valid_targets)
+
+            # Update Google Drive appProperties
+            patch_drive_file_properties(file_id, {"collaborators": collab_str})
+
+            # Send in-app notification to all recipients
+            note_suffix = f' Catatan: "{note}"' if note else ''
+            notif_msg = f"{cur_user.get('name')} menyerahkan proyek '{project_name}' (Klien: {client_name}) kepada Anda.{note_suffix}"
+            for tu in valid_targets:
+                add_notification(
+                    target=tu,
+                    title=f"🤝 Handover Proyek: {project_name}",
+                    message=notif_msg,
+                    notif_type="handover",
+                    action="load_project",
+                    action_data={"file_id": file_id, "project_name": project_name, "client_name": client_name}
+                )
+
+            return self._send_json({
+                "status": "ok",
+                "message": f"Proyek '{project_name}' berhasil diserahkan kepada {len(valid_targets)} rekan tim.",
+                "collaborators": valid_targets
+            })
+
         # ─── Load Project File from Google Drive ──────────────────────────
         if path == "/api/project/load-from-drive":
             cur_user = self._get_auth_user()
@@ -390,13 +534,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             if not proj_data:
                 return self._send_json({"status": "error", "message": "Failed loading project file"}, status=404)
 
-            # Access Control: Non-admins cannot load other users' project files
+            # Access Control: Admin gets full access, regular user can access if creator or collaborator
             if cur_user.get("role") != "admin":
-                file_creator = proj_data.get("creator", {}).get("username")
-                if file_creator and file_creator != cur_user.get("username"):
+                file_creator = (proj_data.get("creator", {}).get("username") or "").lower()
+                cur_u = cur_user.get("username", "").lower()
+                collaborators = [c.lower() for c in proj_data.get("collaborators", [])]
+                if file_creator and file_creator != cur_u and cur_u not in collaborators:
                     return self._send_json({
                         "status": "forbidden",
-                        "message": "Akses ditolak: Anda hanya memiliki izin untuk membuka proyek yang Anda buat sendiri."
+                        "message": "Akses ditolak: Anda hanya memiliki izin untuk membuka proyek yang Anda buat atau dibagikan kepada Anda."
                     }, status=403)
 
             return self._send_json({"status": "ok", "project": proj_data})

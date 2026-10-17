@@ -295,6 +295,110 @@
                                 class="px-2 py-1 rounded-md transition text-xs font-bold">EN 🇬🇧</button>
                     </div>
 
+                    <!-- Notifikasi Lonceng Kuning (Yellow Notification Bell matching image) -->
+                    <div class="relative" @click.away="notificationsOpen = false">
+                        <button @click="toggleNotifications()"
+                                class="relative p-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-900/90 border border-white/20 transition cursor-pointer flex items-center justify-center focus:outline-none"
+                                :title="unreadNotificationsCount > 0 ? unreadNotificationsCount + ' Notifikasi Belum Dibaca' : 'Notifikasi'">
+                            <!-- Yellow Bell SVG matching media_1792207904064_1759d227.jpg -->
+                            <svg class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <!-- Top handle/finial -->
+                                <circle cx="50" cy="18" r="7" fill="#FBBF24" />
+                                <!-- Bell body -->
+                                <path d="M50 18 C36 18 29 28 29 44 C29 55 25 64 18 69 C16 71 17.5 74 21 74 L79 74 C82.5 74 84 71 82 69 C75 64 71 55 71 44 C71 28 64 18 50 18 Z" fill="#FBBF24"/>
+                                <!-- Bottom clapper -->
+                                <path d="M39 77 C39 83 44 88 50 88 C56 88 61 83 61 77 Z" fill="#FBBF24"/>
+                            </svg>
+
+                            <!-- Red notification badge (like image) -->
+                            <template x-if="unreadNotificationsCount > 0">
+                                <span class="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-[#EF4444] text-white text-[10px] font-black rounded-full border-2 border-white shadow-md animate-pulse"
+                                      x-text="unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount">
+                                </span>
+                            </template>
+                        </button>
+
+                        <!-- Notification Dropdown Popover -->
+                        <div x-show="notificationsOpen"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                             class="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 z-[80] overflow-hidden text-slate-800"
+                             style="display: none; z-index: 80;">
+                            <!-- Popover Header -->
+                            <div class="p-3 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-amber-400 text-sm">🔔</span>
+                                    <span class="font-extrabold text-xs tracking-tight">Notifikasi &amp; Pengingat</span>
+                                    <template x-if="unreadNotificationsCount > 0">
+                                        <span class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-500 text-white" x-text="unreadNotificationsCount"></span>
+                                    </template>
+                                </div>
+                                <button @click="markAllNotificationsRead()"
+                                        class="text-[10px] font-bold text-sky-200 hover:text-white hover:underline transition cursor-pointer">
+                                    Tandai Semua Dibaca
+                                </button>
+                            </div>
+
+                            <!-- Notification List -->
+                            <div class="max-h-80 overflow-y-auto divide-y divide-slate-100 text-xs">
+                                <template x-if="notifications.length === 0">
+                                    <div class="p-8 text-center text-slate-400">
+                                        <div class="text-3xl mb-1">🔕</div>
+                                        <div class="font-bold text-xs text-slate-600">Tidak ada notifikasi</div>
+                                        <div class="text-[11px] text-slate-400 mt-0.5">Semua pesan dan reminder telah dibaca</div>
+                                    </div>
+                                </template>
+
+                                <template x-for="n in notifications" :key="n.id">
+                                    <div class="p-3 transition hover:bg-slate-50 flex items-start gap-2.5"
+                                         :class="!n.is_read ? 'bg-amber-50/50 border-l-4 border-amber-500' : ''">
+                                        <!-- Icon badge -->
+                                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-sm shadow-xs"
+                                             :class="n.type === 'handover' ? 'bg-blue-100 text-blue-700' : (n.type === 'pending_user' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700')">
+                                            <span x-text="n.type === 'handover' ? '🤝' : (n.type === 'pending_user' ? '👤' : '🔔')"></span>
+                                        </div>
+                                        <!-- Content -->
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center justify-between gap-1">
+                                                <div class="font-bold text-slate-900 truncate" x-text="n.title"></div>
+                                                <template x-if="!n.is_read">
+                                                    <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                                                </template>
+                                            </div>
+                                            <div class="text-[11px] text-slate-600 mt-0.5 leading-snug" x-text="n.message"></div>
+                                            <div class="flex items-center justify-between mt-2 pt-1 border-t border-slate-100 text-[10px]">
+                                                <span class="text-slate-400" x-text="n.created_at"></span>
+                                                <div class="flex items-center gap-1.5">
+                                                    <template x-if="n.action === 'load_project'">
+                                                        <button @click="handleNotificationAction(n)"
+                                                                class="px-2 py-0.5 rounded bg-blue-600 hover:bg-blue-700 text-white font-bold transition cursor-pointer">
+                                                            📂 Buka Proyek
+                                                        </button>
+                                                    </template>
+                                                    <template x-if="n.type === 'pending_user'">
+                                                        <button @click="handleNotificationAction(n)"
+                                                                class="px-2 py-0.5 rounded bg-amber-600 hover:bg-amber-700 text-white font-bold transition cursor-pointer">
+                                                            👥 Kelola User
+                                                        </button>
+                                                    </template>
+                                                    <button @click="markNotificationRead(n)"
+                                                            class="text-slate-400 hover:text-slate-700 transition"
+                                                            title="Tandai dibaca">
+                                                        ✓
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 1. Info Login User, Role beserta Button Logout -->
                     <template x-if="currentUser">
                         <div class="flex items-center gap-2 bg-slate-900/65 border border-white/25 px-2.5 sm:px-3 py-1 rounded-lg text-xs shadow-md">
@@ -1129,16 +1233,363 @@
         <!-- ══════════════════════════════════════════════════════════════════ -->
         <div x-show="activeTab === 'configurator'" class="space-y-6">
 
-            <!-- Control Header & Global Action Bar -->
-            <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xl">⚡</span>
-                            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900" x-text="lang === 'en' ? 'Product & System Configurator' : 'Kalkulator Produk dan Sistem'"></h2>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950 uppercase tracking-wide">Multi-Package Engine</span>
+            <!-- Mode Switcher Header: Mode Paket Standar vs Mode Kalkulator Custom -->
+            <div class="flex items-center justify-between p-2 bg-slate-900 rounded-2xl text-white shadow-md">
+                <div class="flex flex-wrap items-center gap-2 w-full">
+                    <button @click="configuratorMode = 'standard'"
+                            :class="configuratorMode === 'standard' ? 'bg-blue-600 text-white shadow-md font-black' : 'text-slate-300 hover:text-white hover:bg-white/10 font-bold'"
+                            class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer">
+                        <span>📦</span>
+                        <span>Mode Paket Standar (SLR &amp; Radio Fleet)</span>
+                    </button>
+                    <button @click="configuratorMode = 'custom'"
+                            :class="configuratorMode === 'custom' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md font-black' : 'text-slate-300 hover:text-white hover:bg-white/10 font-bold'"
+                            class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer">
+                        <span>🛠️</span>
+                        <span>Mode Kalkulator Custom (Pilih Produk + Lisensi + Aksesoris)</span>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-white/40 text-slate-950">Fleksibel</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ═══════════════ SUB-VIEW: MODE KALKULATOR CUSTOM ═══════════════ -->
+            <div x-show="configuratorMode === 'custom'" class="space-y-6">
+                <!-- Header Card -->
+                <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-800">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-2xl">🛠️</span>
+                                <h2 class="text-lg sm:text-xl font-extrabold text-white">Kalkulator Produk Kustom (Modular Configurator)</h2>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950 uppercase tracking-wide">Pilih Produk + Lisensi + Aksesoris</span>
+                            </div>
+                            <p class="text-xs text-sky-200 mt-1 max-w-3xl">Pilih perangkat utama (SLR 5300, MOTOTRBO R7, dsb.), tambahkan opsi lisensi yang kompatibel, lengkapi dengan aksesoris pendukung, atur margin, dan masukkan langsung ke BoQ utama.</p>
                         </div>
-                        <p class="text-xs text-slate-500 mt-1" x-text="lang === 'en' ? 'Configure turnkey repeater base stations & two-way radio fleets with automated add-ons, cable meter pricing, and 1-click BoQ injection.' : 'Susun paket sistem repeater & armada radio HT lengkap dengan add-on spesifik, kalkulasi meter kabel, rasio charger, dan penawaran instan.'"></p>
+                        <div class="flex items-center gap-2">
+                            <button @click="transferCustomToBoq()"
+                                    class="px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg transition flex items-center gap-2 cursor-pointer">
+                                <span>📋</span>
+                                <span>Masukkan Bundle ke BoQ</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left 2 Cols: Product, Licenses, Accessories Builder -->
+                    <div class="lg:col-span-2 space-y-6">
+
+                        <!-- 1. PILIH PRODUK UTAMA -->
+                        <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs">1</span>
+                                    <h3 class="font-extrabold text-sm text-slate-900">Pilih Produk Utama</h3>
+                                </div>
+                                <span class="text-xs text-slate-500 font-medium">Repeater, Handy Talky, Mobile Base, CCTV</span>
+                            </div>
+
+                            <!-- Quick Preset Shortcuts -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-[11px] font-bold text-slate-400">Pilihan Cepat:</span>
+                                <button type="button" @click="onCustomProductSelect(productsCatalog.find(p => p.sku === 'MOT-RPT-SLR5300'))"
+                                        :class="customConfig.sku === 'MOT-RPT-SLR5300' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                        class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                    📡 SLR 5300
+                                </button>
+                                <button type="button" @click="onCustomProductSelect(productsCatalog.find(p => p.sku === 'MOT-RPT-SLR8000'))"
+                                        :class="customConfig.sku === 'MOT-RPT-SLR8000' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                        class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                    📡 SLR 8000
+                                </button>
+                                <button type="button" @click="onCustomProductSelect(productsCatalog.find(p => p.sku === 'MOT-RPT-SLR1000'))"
+                                        :class="customConfig.sku === 'MOT-RPT-SLR1000' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                        class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                    📡 SLR 1000
+                                </button>
+                                <button type="button" @click="onCustomProductSelect(productsCatalog.find(p => p.sku === 'MOT-HT-R7'))"
+                                        :class="customConfig.sku === 'MOT-HT-R7' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                        class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                    📻 MOTOTRBO R7
+                                </button>
+                                <button type="button" @click="onCustomProductSelect(productsCatalog.find(p => p.sku === 'MOT-HT-R2'))"
+                                        :class="customConfig.sku === 'MOT-HT-R2' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                        class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                    📻 MOTOTRBO R2
+                                </button>
+                                <button type="button" @click="onCustomProductSelect(productsCatalog.find(p => p.sku === 'MOT-HT-P8600EX'))"
+                                        :class="customConfig.sku === 'MOT-HT-P8600EX' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                        class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                    📻 XiR P8600Ex
+                                </button>
+                                <button type="button" @click="onCustomProductSelect(productsCatalog.find(p => p.sku === 'AVG-CAM-H6A-DOME8'))"
+                                        :class="customConfig.sku === 'AVG-CAM-H6A-DOME8' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                                        class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                    📹 Avigilon H6A
+                                </button>
+                            </div>
+
+                            <!-- Product Selector Dropdown -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="sm:col-span-2">
+                                    <label class="block font-bold text-xs text-slate-700 mb-1">Pilih Produk : [dropdown / ketik nama]</label>
+                                    <select @change="const s = $event.target.value; const f = productsCatalog.find(x => x.sku === s); if (f) onCustomProductSelect(f);"
+                                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-semibold text-xs focus:border-blue-600 focus:ring-2 focus:ring-blue-100">
+                                        <template x-for="p in getAvailableProducts()" :key="p.sku">
+                                            <option :value="p.sku" :selected="p.sku === customConfig.sku" x-text="p.model + ' (' + p.sku + ') — ' + formatCurrency(currency === 'USD' ? p.price_usd : p.price_idr)"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-xs text-slate-700 mb-1">Jumlah Unit (Qty):</label>
+                                    <input type="number" min="1" max="1000" x-model.number="customConfig.qty"
+                                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-extrabold text-xs focus:border-blue-600 text-center" />
+                                </div>
+                            </div>
+
+                            <!-- Selected Product Highlight Preview -->
+                            <div class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                                <div>
+                                    <div class="font-extrabold text-blue-950 text-sm" x-text="customConfig.name"></div>
+                                    <div class="text-[11px] text-blue-800 font-mono mt-0.5">
+                                        SKU: <span class="font-bold" x-text="customConfig.sku"></span> • Kategori: <span x-text="customConfig.category"></span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[10px] text-blue-700 uppercase font-bold">Harga Satuan Unit:</div>
+                                    <div class="text-sm font-black text-blue-950" x-text="formatCurrency(currency === 'USD' ? customConfig.unitPriceUsd : customConfig.unitPriceIdr)"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. LICENSES (MENYESUAIKAN DENGAN PRODUK YANG DIPILIH) -->
+                        <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                            <div class="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-black text-xs">2</span>
+                                    <div>
+                                        <h3 class="font-extrabold text-sm text-slate-900">Licenses: (menyesuaikan dengan produk yang dipilih)</h3>
+                                        <p class="text-[11px] text-slate-500">Lisensi software &amp; aktivasi sistem</p>
+                                    </div>
+                                </div>
+                                <!-- Add License Dropdown & Manual Button -->
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <select @change="const s = $event.target.value; if (s) { const it = getCompatibleLicenses(customConfig.sku).find(x=>x.sku===s); addCustomLicense(it); $event.target.value=''; }"
+                                            class="px-2.5 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-purple-800 text-xs font-bold focus:border-purple-600 cursor-pointer">
+                                        <option value="">+ add : [pilih dari daftar]</option>
+                                        <template x-for="l in getCompatibleLicenses(customConfig.sku)" :key="l.sku">
+                                            <option :value="l.sku" x-text="l.model + ' (' + formatCurrency(currency === 'USD' ? l.price_usd : l.price_idr) + ')'"></option>
+                                        </template>
+                                    </select>
+                                    <button type="button" @click="addCustomLicense(null)"
+                                            class="px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                                            title="Tambah baris lisensi manual">
+                                        <span>+ add manual</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- License Items Table / List -->
+                            <div class="space-y-2">
+                                <template x-if="customConfig.licenses.length === 0">
+                                    <div class="p-6 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl text-xs">
+                                        Belum ada lisensi yang ditambahkan. Gunakan <strong>+ add : [dropdown]</strong> di atas jika memerlukan lisensi IPSC, Capacity Plus, SINC+, WiFi, dsb.
+                                    </div>
+                                </template>
+                                <template x-for="(lic, lIdx) in customConfig.licenses" :key="lic.id || lIdx">
+                                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                                        <div class="flex-1 min-w-[200px]">
+                                            <input type="text" x-model="lic.name" placeholder="Nama Lisensi / Fitur"
+                                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-900 bg-white" />
+                                            <div class="text-[10px] text-slate-400 font-mono mt-0.5" x-text="lic.sku"></div>
+                                        </div>
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <div>
+                                                <label class="block text-[10px] text-slate-500 font-bold text-center">Qty</label>
+                                                <input type="number" min="1" x-model.number="lic.qty"
+                                                       class="w-16 px-2 py-1 rounded-lg border border-slate-300 font-bold text-center bg-white" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] text-slate-500 font-bold text-right">Harga Satuan</label>
+                                                <input type="number" min="0" x-model.number="currency === 'USD' ? lic.priceUsd : lic.priceIdr"
+                                                       @input="if (currency === 'USD') lic.priceIdr = lic.priceUsd * exchangeRate; else lic.priceUsd = lic.priceIdr / exchangeRate;"
+                                                       class="w-28 px-2 py-1 rounded-lg border border-slate-300 font-bold text-right bg-white" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] text-slate-500 font-bold text-right">Subtotal</label>
+                                                <div class="w-28 py-1 text-right font-black text-slate-900"
+                                                     x-text="formatCurrency((currency === 'USD' ? lic.priceUsd : lic.priceIdr) * lic.qty)"></div>
+                                            </div>
+                                            <button type="button" @click="removeCustomLicense(lIdx)"
+                                                    class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-sm cursor-pointer transition"
+                                                    title="Hapus lisensi ini">✕</button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- 3. ACCESSORIES (MENYESUAIKAN DENGAN PRODUK YANG DIPILIH) -->
+                        <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                            <div class="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs">3</span>
+                                    <div>
+                                        <h3 class="font-extrabold text-sm text-slate-900">Accessories: (menyesuaikan dengan produk yang dipilih)</h3>
+                                        <p class="text-[11px] text-slate-500">Aksesoris RF, antena, kabel, baterai, audio &amp; power</p>
+                                    </div>
+                                </div>
+                                <!-- Add Accessory Dropdown & Manual Button -->
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <select @change="const s = $event.target.value; if (s) { const it = getCompatibleAccessories(customConfig.sku).find(x=>x.sku===s); addCustomAccessory(it); $event.target.value=''; }"
+                                            class="px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-bold focus:border-emerald-600 cursor-pointer">
+                                        <option value="">+ add : [pilih dari daftar]</option>
+                                        <template x-for="a in getCompatibleAccessories(customConfig.sku)" :key="a.sku">
+                                            <option :value="a.sku" x-text="a.model + ' (' + formatCurrency(currency === 'USD' ? a.price_usd : a.price_idr) + ')'"></option>
+                                        </template>
+                                    </select>
+                                    <button type="button" @click="addCustomAccessory(null)"
+                                            class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                                            title="Tambah baris aksesoris manual">
+                                        <span>+ add manual</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Accessory Items Table / List -->
+                            <div class="space-y-2">
+                                <template x-if="customConfig.accessories.length === 0">
+                                    <div class="p-6 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl text-xs">
+                                        Belum ada aksesoris yang ditambahkan. Gunakan <strong>+ add : [dropdown]</strong> di atas jika membutuhkan Duplexer, Antena, Kabel Coaxial, Baterai IMPRES, RSM, dsb.
+                                    </div>
+                                </template>
+                                <template x-for="(acc, aIdx) in customConfig.accessories" :key="acc.id || aIdx">
+                                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                                        <div class="flex-1 min-w-[200px]">
+                                            <input type="text" x-model="acc.name" placeholder="Nama Aksesoris / Hardware"
+                                                   class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-900 bg-white" />
+                                            <div class="text-[10px] text-slate-400 font-mono mt-0.5" x-text="acc.sku"></div>
+                                        </div>
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <div>
+                                                <label class="block text-[10px] text-slate-500 font-bold text-center">Qty</label>
+                                                <input type="number" min="1" x-model.number="acc.qty"
+                                                       class="w-16 px-2 py-1 rounded-lg border border-slate-300 font-bold text-center bg-white" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] text-slate-500 font-bold text-right">Harga Satuan</label>
+                                                <input type="number" min="0" x-model.number="currency === 'USD' ? acc.priceUsd : acc.priceIdr"
+                                                       @input="if (currency === 'USD') acc.priceIdr = acc.priceUsd * exchangeRate; else acc.priceUsd = acc.priceIdr / exchangeRate;"
+                                                       class="w-28 px-2 py-1 rounded-lg border border-slate-300 font-bold text-right bg-white" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] text-slate-500 font-bold text-right">Subtotal</label>
+                                                <div class="w-28 py-1 text-right font-black text-slate-900"
+                                                     x-text="formatCurrency((currency === 'USD' ? acc.priceUsd : acc.priceIdr) * acc.qty)"></div>
+                                            </div>
+                                            <button type="button" @click="removeCustomAccessory(aIdx)"
+                                                    class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-sm cursor-pointer transition"
+                                                    title="Hapus aksesoris ini">✕</button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right 1 Col: Commercial Calculation & Transfer to BoQ -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-5 sticky top-20">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-lg">💰</span>
+                                    <h3 class="font-extrabold text-sm text-slate-900">Kalkulasi Finansial Bundle</h3>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800" x-text="getCustomConfigSummary().totalItemsCount + ' Komponen'"></span>
+                            </div>
+
+                            <!-- Cost Breakdown -->
+                            <div class="space-y-2.5 text-xs divide-y divide-slate-100">
+                                <div class="flex justify-between pt-1">
+                                    <span class="text-slate-500">Unit Utama (<span x-text="customConfig.qty"></span>x):</span>
+                                    <span class="font-bold text-slate-800" x-text="formatCurrency(currency === 'USD' ? getCustomConfigSummary().prodCostUsd : getCustomConfigSummary().prodCostIdr)"></span>
+                                </div>
+                                <div class="flex justify-between pt-2">
+                                    <span class="text-slate-500">Total Lisensi (<span x-text="customConfig.licenses.length"></span> item):</span>
+                                    <span class="font-bold text-purple-700" x-text="formatCurrency(currency === 'USD' ? getCustomConfigSummary().licCostUsd : getCustomConfigSummary().licCostIdr)"></span>
+                                </div>
+                                <div class="flex justify-between pt-2">
+                                    <span class="text-slate-500">Total Aksesoris (<span x-text="customConfig.accessories.length"></span> item):</span>
+                                    <span class="font-bold text-emerald-700" x-text="formatCurrency(currency === 'USD' ? getCustomConfigSummary().accCostUsd : getCustomConfigSummary().accCostIdr)"></span>
+                                </div>
+                                <div class="flex justify-between pt-2.5 text-sm font-black border-t-2 border-slate-200">
+                                    <span class="text-slate-700">Total Modal (COGS):</span>
+                                    <span class="text-slate-900" x-text="formatCurrency(currency === 'USD' ? getCustomConfigSummary().totalCostUsd : getCustomConfigSummary().totalCostIdr)"></span>
+                                </div>
+                            </div>
+
+                            <!-- Margin Slider -->
+                            <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 space-y-2">
+                                <div class="flex justify-between items-center text-xs">
+                                    <label class="font-extrabold text-amber-950">Target Margin / Markup:</label>
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" min="0" max="100" x-model.number="customConfig.marginPercent"
+                                               class="w-14 px-2 py-1 text-center font-black rounded-lg border border-amber-300 bg-white text-amber-950 text-xs" />
+                                        <span class="font-extrabold text-amber-900">%</span>
+                                    </div>
+                                </div>
+                                <input type="range" min="0" max="60" step="1" x-model.number="customConfig.marginPercent"
+                                       class="w-full accent-amber-600 cursor-pointer" />
+                                <div class="flex justify-between text-[10px] text-amber-800 font-semibold">
+                                    <span>Tender (10%)</span>
+                                    <span>Standar (20%)</span>
+                                    <span>Premium (35%)</span>
+                                </div>
+                            </div>
+
+                            <!-- Grand Selling Price Highlight -->
+                            <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg space-y-1">
+                                <div class="text-[11px] uppercase font-bold text-emerald-100">Harga Penawaran Klien:</div>
+                                <div class="text-2xl font-black tracking-tight"
+                                     x-text="formatCurrency(currency === 'USD' ? getCustomConfigSummary().sellPriceUsd : getCustomConfigSummary().sellPriceIdr)"></div>
+                                <div class="text-[10px] text-emerald-200 flex justify-between pt-1 border-t border-emerald-500/40">
+                                    <span>Estimasi Gross Profit:</span>
+                                    <span class="font-bold text-white" x-text="formatCurrency(currency === 'USD' ? (getCustomConfigSummary().sellPriceUsd - getCustomConfigSummary().totalCostUsd) : getCustomConfigSummary().grossProfitIdr)"></span>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="space-y-2 pt-2">
+                                <button type="button" @click="transferCustomToBoq()"
+                                        class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                                    <span>📋</span>
+                                    <span>Masukkan Bundle Custom ke BoQ</span>
+                                </button>
+                                <button type="button" @click="onCustomProductSelect(productsCatalog.find(p => p.sku === 'MOT-RPT-SLR5300'))"
+                                        class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition cursor-pointer">
+                                    <span>🔄 Reset Form Konfigurasi</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ SUB-VIEW: MODE PAKET STANDAR (SLR & HT) ═══════════════ -->
+            <div x-show="configuratorMode === 'standard'" class="space-y-6">
+
+                <!-- Control Header & Global Action Bar -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">⚡</span>
+                                <h2 class="text-lg sm:text-xl font-extrabold text-slate-900" x-text="lang === 'en' ? 'Product & System Configurator' : 'Kalkulator Produk dan Sistem'"></h2>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950 uppercase tracking-wide">Multi-Package Engine</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1" x-text="lang === 'en' ? 'Configure turnkey repeater base stations & two-way radio fleets with automated add-ons, cable meter pricing, and 1-click BoQ injection.' : 'Susun paket sistem repeater & armada radio HT lengkap dengan add-on spesifik, kalkulasi meter kabel, rasio charger, dan penawaran instan.'"></p>
+                        </div>
                     </div>
 
                     <!-- Action Buttons -->
@@ -1591,6 +2042,7 @@
                         </div>
                     </div>
                 </template>
+                </div>
             </div>
         </div>
     </main>
@@ -1914,14 +2366,30 @@
                                 </div>
                                 <div class="font-mono text-[11px] text-slate-500 truncate mt-0.5" x-text="f.name"></div>
 
-                                <!-- Metadata info: Creator & Timestamp -->
-                                <div class="flex items-center gap-3 mt-1.5 text-[11px] text-slate-500 flex-wrap">
+                                <!-- Metadata info: Creator, Collaborators & Timestamp -->
+                                <div class="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500 flex-wrap">
                                     <!-- Creator Badge -->
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 font-semibold text-slate-700">
                                         <span>👤</span>
                                         <span x-text="f.creator_name || f.creator_username || 'Admin'"></span>
                                         <span class="text-slate-400 font-mono text-[10px]" x-text="'(@' + (f.creator_username || 'admin') + ')'"></span>
                                     </span>
+
+                                    <!-- Collaborators Badge -->
+                                    <template x-if="f.collaborators && f.collaborators.length > 0">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold">
+                                            <span>🤝 Kolaborator:</span>
+                                            <span x-text="f.collaborators.join(', ')"></span>
+                                        </span>
+                                    </template>
+
+                                    <!-- Received from Handover Badge -->
+                                    <template x-if="f.is_collaborator">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-amber-800 font-bold">
+                                            <span>📥 Dari Handover</span>
+                                        </span>
+                                    </template>
+
                                     <span class="inline-flex items-center gap-1 text-slate-400">
                                         <span>🕒</span>
                                         <span x-text="new Date(f.modifiedTime).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })"></span>
@@ -1937,6 +2405,14 @@
                                 <span>Drive</span>
                                 <span>↗</span>
                             </a>
+                            <template x-if="f.name.endsWith('.cdpk.json')">
+                                <button @click="openHandoverModal(f)"
+                                        class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200 transition flex items-center gap-1 cursor-pointer"
+                                        title="Handover atau bagikan proyek ke rekan tim lain">
+                                    <span>🤝</span>
+                                    <span>Handover</span>
+                                </button>
+                            </template>
                             <template x-if="f.name.endsWith('.cdpk.json')">
                                 <button @click="loadProjectFromDrive(f.id)"
                                         class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-extrabold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
@@ -1961,6 +2437,81 @@
                         <span>↗</span>
                     </a>
                 </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════ MODAL: HANDOVER & BAGIKAN PROYEK ═══════════════════ -->
+    <div x-show="handoverModalOpen" style="z-index: 70;" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div @click.away="handoverModalOpen = false" class="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">🤝</span>
+                    <div>
+                        <h3 class="text-sm font-extrabold">Handover / Bagikan Proyek ke Rekan Tim</h3>
+                        <p class="text-[11px] text-blue-200">Serahkan perhitungan ke Presales atau Sales lain</p>
+                    </div>
+                </div>
+                <button @click="handoverModalOpen = false" class="text-white/80 hover:text-white font-bold text-lg cursor-pointer">✕</button>
+            </div>
+            <div class="p-5 space-y-4 text-xs">
+                <!-- Project info preview -->
+                <div class="p-3 bg-blue-50/70 rounded-xl border border-blue-200">
+                    <div class="text-[10px] uppercase font-bold text-blue-800">Dokumen Proyek Terpilih:</div>
+                    <div class="font-extrabold text-slate-900 text-sm mt-0.5" x-text="handoverFile ? (handoverFile.summary || handoverFile.name) : '-'"></div>
+                    <div class="text-[11px] text-slate-500 font-mono mt-0.5" x-text="handoverFile ? handoverFile.name : ''"></div>
+                </div>
+
+                <!-- Recipient Selection Checklist -->
+                <div>
+                    <label class="block font-bold text-slate-800 mb-1.5">Pilih Rekan Tim Penerima Handover:</label>
+                    <div class="max-h-48 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-xl p-1 bg-white">
+                        <template x-if="activeTeamMembers.length === 0">
+                            <div class="p-4 text-center text-slate-400">Tidak ada rekan tim aktif lain yang tersedia</div>
+                        </template>
+                        <template x-for="m in activeTeamMembers" :key="m.username">
+                            <label class="p-2 flex items-center justify-between hover:bg-slate-50 rounded-lg cursor-pointer transition"
+                                   :class="handoverTargetUsers.includes(m.username) ? 'bg-blue-50 font-bold' : ''">
+                                <div class="flex items-center gap-2.5">
+                                    <input type="checkbox" :value="m.username"
+                                           :checked="handoverTargetUsers.includes(m.username)"
+                                           @change="toggleHandoverTarget(m.username)"
+                                           class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer" />
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                            <span x-text="m.name"></span>
+                                            <span class="text-[10px] text-slate-400 font-mono" x-text="'@' + m.username"></span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-500" x-text="m.email + (m.title ? ' • ' + m.title : '')"></div>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                      :class="m.role === 'engineer' ? 'bg-sky-100 text-sky-700' : (m.role === 'sales' ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700')"
+                                      x-text="m.role === 'engineer' ? 'Presales' : (m.role === 'sales' ? 'Sales' : 'Admin')"></span>
+                            </label>
+                        </template>
+                    </div>
+                    <div class="text-[10px] text-slate-500 mt-1">Dapat memilih 1 atau lebih orang sekaligus (kolaborasi antar-divisi).</div>
+                </div>
+
+                <!-- Notes / Instructions -->
+                <div>
+                    <label class="block font-bold text-slate-800 mb-1">Catatan Handover / Instruksi Pengerjaan (Opsional):</label>
+                    <textarea x-model="handoverNote" rows="2"
+                              placeholder="Contoh: Tolong review spek duplexer dan hitung margin ulang untuk tender minggu depan..."
+                              class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-xs font-medium"></textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                    <button type="button" @click="handoverModalOpen = false"
+                            class="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition cursor-pointer">Batal</button>
+                    <button type="button" @click="submitHandover()" :disabled="handoverLoading || handoverTargetUsers.length === 0"
+                            class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold shadow-md transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50">
+                        <svg x-show="handoverLoading" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span x-text="handoverLoading ? 'Mengirim Handover...' : '🤝 Kirim Handover &amp; Notifikasi'"></span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2426,7 +2977,7 @@
     </div>
 
     <!-- ═══════════════════ SUB-MODAL: TAMBAH PENGGUNA BARU ═══════════════════ -->
-    <div x-show="newUserModalOpen" class="fixed inset-0 z-55 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4">
+    <div x-show="newUserModalOpen" style="z-index: 70;" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
         <div @click.away="newUserModalOpen = false" class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="bg-blue-900 text-white p-4 flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -2490,7 +3041,7 @@
 
     <!-- ═══════════════════ SUB-MODAL: EDIT PENGGUNA ═══════════════════ -->
     <template x-if="editingUser">
-        <div class="fixed inset-0 z-55 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4">
+        <div style="z-index: 70;" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4">
             <div @click.away="editingUser = null" class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
                 <div class="bg-slate-900 text-white p-4 flex items-center justify-between">
                     <div class="flex items-center gap-2">
@@ -2550,7 +3101,7 @@
 
     <!-- ═══════════════════ SUB-MODAL: RESET PASSWORD ═══════════════════ -->
     <template x-if="resetPwdTarget">
-        <div class="fixed inset-0 z-55 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4">
+        <div style="z-index: 70;" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4">
             <div @click.away="resetPwdTarget = null" class="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
                 <div class="bg-amber-600 text-white p-4 flex items-center justify-between">
                     <div class="flex items-center gap-2">

@@ -400,6 +400,21 @@ def authenticate_google_user(id_token: str) -> Tuple[Optional[Dict[str, Any]], O
         _USERS_CACHE["users"] = users
         _USERS_CACHE["last_sync"] = time.time()
         _append_user_row_to_gsheet(new_user, "google_workspace_sso")
+
+        # In-app notification for admin
+        try:
+            from server.notifications import add_notification
+            add_notification(
+                "admin",
+                "Verifikasi Pendaftar Baru",
+                f"{user_name} (@{username}) mendaftar via Google Workspace dan menunggu persetujuan.",
+                notif_type="pending_user",
+                action="open_user_mgmt",
+                action_data={"username": username, "email": email}
+            )
+        except Exception:
+            pass
+
         return None, "Pendaftaran akun Anda via Google Workspace berhasil diajukan dan berstatus 'Menunggu Verifikasi'. Silakan hubungi Administrator (@adrian) untuk aktivasi akun."
 
     if matched_user.get("status") == "pending":
@@ -599,6 +614,20 @@ def register_self_user(reg_data: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any
 
     # Append to Google Sheet tab Team_Users
     _append_user_row_to_gsheet(new_user, password)
+
+    # In-app notification for admin
+    try:
+        from server.notifications import add_notification
+        add_notification(
+            "admin",
+            "Verifikasi Pendaftar Baru",
+            f"{name} (@{username}) mendaftar via formulir dan menunggu persetujuan.",
+            notif_type="pending_user",
+            action="open_user_mgmt",
+            action_data={"username": username, "email": email}
+        )
+    except Exception:
+        pass
 
     return {
         "username": username,
