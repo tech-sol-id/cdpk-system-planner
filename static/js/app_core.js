@@ -97,10 +97,23 @@ window.cdpkSystemPlannerApp = function () {
         currentUser: null, // { username, email, name, role, title }
         sessionToken: localStorage.getItem('cdpk_session_token') || '',
         loginModalOpen: false,
+        authMode: 'login', // 'login' | 'register'
         loginIdentifier: '',
         loginPassword: '',
         loginError: '',
         loginLoading: false,
+        regForm: {
+            name: '',
+            email: '',
+            username: '',
+            role: 'engineer',
+            title: '',
+            password: '',
+            confirmPassword: ''
+        },
+        regLoading: false,
+        regError: '',
+        regSuccess: '',
         googleClientId: '',
         googleButtonRendered: false,
 
@@ -302,6 +315,48 @@ window.cdpkSystemPlannerApp = function () {
                 this.loginError = this.lang === 'en' ? 'Connection error' : 'Kendala koneksi ke server auth';
             } finally {
                 this.loginLoading = false;
+            }
+        },
+
+        async submitRegister() {
+            if (!this.regForm.name || !this.regForm.email || !this.regForm.password) {
+                this.regError = 'Nama, email perusahaan, dan password wajib diisi.';
+                return;
+            }
+            if (this.regForm.password !== this.regForm.confirmPassword) {
+                this.regError = 'Konfirmasi password tidak cocok.';
+                return;
+            }
+            if (this.regForm.password.length < 6) {
+                this.regError = 'Password minimal 6 karakter.';
+                return;
+            }
+            this.regLoading = true;
+            this.regError = '';
+            this.regSuccess = '';
+            try {
+                const resp = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.regForm)
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    this.sessionToken = data.token;
+                    localStorage.setItem('cdpk_session_token', data.token);
+                    this.currentUser = data.user;
+                    this.regSuccess = data.message || 'Pendaftaran berhasil!';
+                    this.salesPic = `${data.user.name} (${data.user.title || 'CDPK'})`;
+                    setTimeout(() => {
+                        this.authMode = 'login';
+                    }, 1500);
+                } else {
+                    this.regError = data.message || 'Pendaftaran gagal';
+                }
+            } catch (e) {
+                this.regError = 'Kendala koneksi ke server auth';
+            } finally {
+                this.regLoading = false;
             }
         },
 

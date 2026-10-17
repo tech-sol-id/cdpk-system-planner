@@ -482,6 +482,103 @@ def add_team_member(creator_role: str, new_user_data: Dict[str, Any]) -> Dict[st
     }
 
 
+def register_self_user(reg_data: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    """
+    Self-service registration for employees with approved enterprise email domain.
+    Enforces @citradata.id and @techsolutions.id, saves to local cache and Google Sheets.
+    Role is strictly non-admin ('engineer' or 'sales') to prevent privilege escalation.
+    """
+    email = (reg_data.get("email") or "").strip().lower()
+    name = (reg_data.get("name") or "").strip()
+    password = (reg_data.get("password") or "").strip()
+    role = (reg_data.get("role") or "engineer").strip().lower()
+    title = (reg_data.get("title") or "").strip()
+    username = (reg_data.get("username") or "").strip().lower()
+
+    if not email or not name or not password:
+        return None, "Nama lengkap, email perusahaan, dan password wajib diisi."
+
+    if len(password) < 6:
+        return None, "Password minimal 6 karakter."
+
+    # Validate enterprise domain
+    user_domain = email.split("@")[1] if "@" in email else ""
+    if not any(user_domain == d for d in ALLOWED_DOMAINS):
+        allowed_str = ", ".join([f"@{d}" for d in ALLOWED_DOMAINS])
+        return None, f"Pendaftaran hanya diizinkan untuk email perusahaan resmi ({allowed_str})."
+
+    # Default username from email prefix if omitted
+    if not username:
+        username = email.split("@")[0].replace(".", "_").replace("-", "_")
+
+    # Clean username: alphanumeric and underscore only
+    username = "".join(c for c in username if c.isalnum() or c == "_")
+    if not username:
+        username = "user_" + secrets.token_hex(4)
+
+    # Restrict role to engineer or sales (prevent self-escalation to admin)
+    if role not in ("engineer", "sales"):
+        role = "engineer"
+
+    if not title:
+        title = "Presales & RF Engineer" if role == "engineer" else "Commercial Account Manager"
+
+    users = load_users()
+    for u in users:
+        if u["username"].lower() == username:
+            return None, f"Username '@{username}' sudah digunakan. Silakan pilih username lain."
+        if u["email"].lower() == email:
+            return None, f"Email '{email}' sudah terdaftar. Silakan langsung login."
+
+    salt = secrets.token_hex(16)
+    pwd_hash = _hash_password(password, salt)
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
+    new_user = {
+        "username": username,
+        "email": email,
+        "name": name,
+        "role": role,
+        "title": title,
+        "salt": salt,
+        "password_hash": pwd_hash,
+        "status": "active",
+        "created_at": now_str
+    }
+    users.append(new_user)
+    save_local_users(users)
+    _USERS_CACHE["users"] = users
+
+    # Append to Google Sheet tab Team_Users
+    token = _get_gdrive_token()
+    if token:
+        try:
+            spreadsheet_id = _get_spreadsheet_id()
+            url_append = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A:J:append?valueInputOption=USER_ENTERED"
+            row_vals = [
+                username, name, email, role, title,
+                password, pwd_hash, salt, "active", now_str
+            ]
+            req_append = urllib.request.Request(
+                url_append,
+                data=json.dumps({"values": [row_vals]}).encode("utf-8"),
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req_append, timeout=12) as resp:
+                pass
+        except Exception as e:
+            logger.warning(f"Failed appending self-registered user to sheet: {e}")
+
+    return {
+        "username": username,
+        "email": email,
+        "name": name,
+        "role": role,
+        "title": title,
+        "status": "active"
+    }, None
+
+
 def update_team_member(creator_role: str, username: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
     """Update user profile, role, title, or status in Google Sheets and local cache."""
     if creator_role != "admin":

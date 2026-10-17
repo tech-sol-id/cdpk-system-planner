@@ -20,6 +20,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from server.auth import (
     authenticate_user,
     authenticate_google_user,
+    register_self_user,
     create_session,
     get_session_user,
     invalidate_session,
@@ -208,6 +209,13 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 token = create_session(user)
                 return self._send_json({"status": "ok", "token": token, "user": user})
             return self._send_json({"status": "error", "message": err or "Username atau Password salah."}, status=401)
+
+        if path == "/api/auth/register":
+            user, err = register_self_user(body)
+            if user:
+                token = create_session(user)
+                return self._send_json({"status": "ok", "token": token, "user": user, "message": "Pendaftaran berhasil. Akun Anda telah aktif dan tersinkron ke Google Sheet."})
+            return self._send_json({"status": "error", "message": err or "Pendaftaran akun gagal."}, status=400)
 
         if path == "/api/auth/logout":
             auth_hdr = self.headers.get("Authorization", "")
