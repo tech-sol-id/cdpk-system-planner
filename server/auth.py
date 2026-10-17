@@ -45,7 +45,7 @@ def _hash_password(password: str, salt: str) -> str:
 
 
 def _get_initial_users() -> List[Dict[str, Any]]:
-    """Seed default team accounts for CDPK team."""
+    """Seed default team accounts for CDPK team (Admin only)."""
     default_users = [
         {
             "username": "adrian",
@@ -53,28 +53,6 @@ def _get_initial_users() -> List[Dict[str, Any]]:
             "name": "Adrian Kansil",
             "role": "admin",
             "title": "Principal Lead & Solutions Architect",
-            "salt": secrets.token_hex(16),
-            "password_hash": "",
-            "status": "active",
-            "created_at": "2026-10-17 00:00:00"
-        },
-        {
-            "username": "presales",
-            "email": "presales@citradata.id",
-            "name": "Presales Engineer",
-            "role": "engineer",
-            "title": "Senior Presales & RF Engineer",
-            "salt": secrets.token_hex(16),
-            "password_hash": "",
-            "status": "active",
-            "created_at": "2026-10-17 00:00:00"
-        },
-        {
-            "username": "sales",
-            "email": "sales@citradata.id",
-            "name": "Sales Account Manager",
-            "role": "sales",
-            "title": "Commercial Account Manager",
             "salt": secrets.token_hex(16),
             "password_hash": "",
             "status": "active",
@@ -315,13 +293,44 @@ ALLOWED_DOMAINS: List[str] = [
 ]
 
 
+def _append_user_row_to_gsheet(u: Dict[str, Any], plain_pwd: str = ""):
+    """Helper to append a user row directly to Google Sheets Team_Users tab."""
+    token = _get_gdrive_token()
+    if not token:
+        return
+    try:
+        spreadsheet_id = _get_spreadsheet_id()
+        url_append = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A:J:append?valueInputOption=USER_ENTERED"
+        row_vals = [
+            u.get("username", ""),
+            u.get("name", ""),
+            u.get("email", ""),
+            u.get("role", "engineer"),
+            u.get("title", ""),
+            plain_pwd or "cdpk2026!",
+            u.get("password_hash", ""),
+            u.get("salt", ""),
+            u.get("status", "pending"),
+            u.get("created_at", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
+        ]
+        req_append = urllib.request.Request(
+            url_append,
+            data=json.dumps({"values": [row_vals]}).encode("utf-8"),
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req_append, timeout=12) as resp:
+            pass
+    except Exception as e:
+        logger.warning(f"Failed appending user to sheet: {e}")
+
+
 def authenticate_google_user(id_token: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
     """
     Verify Google ID token via Google's tokeninfo endpoint.
     1. Checks if domain is in ALLOWED_DOMAINS (@citradata.id, @techsolutions.id, etc.)
-       If not, returns: "Akses ditolak: Masuk menggunakan email perusahaan terdaftar"
     2. Checks if email is registered in Team_Users.
-       If not, returns: "Akses ditolak: email Anda belum terdaftar"
+       If not registered, automatically registers employee with status 'pending' (requires Admin approval).
+    3. Blocks login if status == 'pending'.
     """
     if not id_token:
         return None, "ID Token Google tidak ditemukan."
@@ -364,7 +373,34 @@ def authenticate_google_user(id_token: str) -> Tuple[Optional[Dict[str, Any]], O
             break
 
     if not matched_user:
-        return None, "Akses ditolak: email Anda belum terdaftar"
+        # Auto-register new employee from verified Google Workspace token
+        user_name = (data.get("name") or email.split("@")[0].title()).strip()
+        raw_username = email.split("@")[0].replace(".", "_").replace("-", "_").lower()
+        existing_usernames = {u.get("username", "").lower() for u in users}
+        username = raw_username
+        counter = 1
+        while username in existing_usernames:
+            username = f"{raw_username}_{counter}"
+            counter += 1
+
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        new_user = {
+            "username": username,
+            "name": user_name,
+            "email": email,
+            "role": "engineer",
+            "title": "Presales Engineer",
+            "salt": secrets.token_hex(16),
+            "password_hash": "",
+            "status": "pending",  # Locked until Admin approves
+            "created_at": now_str
+        }
+        users.append(new_user)
+        save_local_users(users)
+        _USERS_CACHE["users"] = users
+        _USERS_CACHE["last_sync"] = time.time()
+        _append_user_row_to_gsheet(new_user, "google_workspace_sso")
+        return None, "Pendaftaran akun Anda via Google Workspace berhasil diajukan dan berstatus 'Menunggu Verifikasi'. Silakan hubungi Administrator (@adrian) untuk aktivasi akun."
 
     if matched_user.get("status") == "pending":
         return None, "Akun Anda sedang menunggu persetujuan Administrator. Silakan hubungi Admin untuk verifikasi & aktivasi akun."
@@ -562,24 +598,7 @@ def register_self_user(reg_data: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any
     _USERS_CACHE["users"] = users
 
     # Append to Google Sheet tab Team_Users
-    token = _get_gdrive_token()
-    if token:
-        try:
-            spreadsheet_id = _get_spreadsheet_id()
-            url_append = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A:J:append?valueInputOption=USER_ENTERED"
-            row_vals = [
-                username, name, email, role, title,
-                password, pwd_hash, salt, "pending", now_str
-            ]
-            req_append = urllib.request.Request(
-                url_append,
-                data=json.dumps({"values": [row_vals]}).encode("utf-8"),
-                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-            )
-            with urllib.request.urlopen(req_append, timeout=12) as resp:
-                pass
-        except Exception as e:
-            logger.warning(f"Failed appending self-registered user to sheet: {e}")
+    _append_user_row_to_gsheet(new_user, password)
 
     return {
         "username": username,

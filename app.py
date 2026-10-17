@@ -43,6 +43,7 @@ from server.gdrive_sync import (
     save_project_to_gdrive,
     list_saved_projects_from_gdrive,
     load_project_data_from_gdrive,
+    parse_project_filename,
     get_diagnostics
 )
 from server.ai_copilot import ALLOWED_MODELS, query_ai_copilot
@@ -156,12 +157,47 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
 
         # ─── Cloud Project Archive ────────────────────────────────────────
         if path == "/api/project/list-drive":
-            files = list_saved_projects_from_gdrive(OUTPUT_SUBFOLDER_ID)
+            cur_user = self._get_auth_user()
+            if not cur_user:
+                return self._send_json({"status": "unauthorized", "message": "Autentikasi diperlukan"}, status=401)
+
+            raw_files = list_saved_projects_from_gdrive(OUTPUT_SUBFOLDER_ID)
+            users = load_users()
+            user_map = {u["username"]: u.get("name", u["username"]) for u in users}
+            known_usernames = list(user_map.keys())
+
+            enriched_files = []
+            for f in raw_files:
+                name = f.get("name", "")
+                if not (name.endswith(".cdpk.json") or name.endswith(".xlsx")):
+                    continue
+
+                app_props = f.get("appProperties") or {}
+                creator = app_props.get("creator_username")
+                creator_name = app_props.get("creator_name")
+
+                parsed = parse_project_filename(name, known_usernames)
+                if not creator:
+                    creator = parsed.get("creator") or "unknown"
+                    creator_name = user_map.get(creator, creator.title())
+
+                f["creator_username"] = creator
+                f["creator_name"] = creator_name or creator.title()
+                f["file_type"] = parsed.get("type", "json")
+                f["summary"] = parsed.get("summary", name)
+                f["timestamp"] = parsed.get("timestamp", "")
+
+                # Access Control: Admin gets full view, regular user only sees their own creations
+                if cur_user.get("role") == "admin" or creator == cur_user.get("username"):
+                    enriched_files.append(f)
+
             return self._send_json({
                 "status": "ok",
+                "is_admin": cur_user.get("role") == "admin",
+                "current_username": cur_user.get("username"),
                 "subfolder_id": OUTPUT_SUBFOLDER_ID,
                 "subfolder_url": f"https://drive.google.com/drive/folders/{OUTPUT_SUBFOLDER_ID}",
-                "files": files
+                "files": enriched_files
             })
 
         # ─── Serve Static Files ───────────────────────────────────────────
@@ -344,13 +380,26 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
 
         # ─── Load Project File from Google Drive ──────────────────────────
         if path == "/api/project/load-from-drive":
+            cur_user = self._get_auth_user()
+            if not cur_user:
+                return self._send_json({"status": "unauthorized", "message": "Autentikasi diperlukan"}, status=401)
             file_id = body.get("file_id")
             if not file_id:
                 return self._send_json({"status": "error", "message": "file_id required"}, status=400)
             proj_data = load_project_data_from_gdrive(file_id)
-            if proj_data:
-                return self._send_json({"status": "ok", "project": proj_data})
-            return self._send_json({"status": "error", "message": "Failed loading project file"}, status=404)
+            if not proj_data:
+                return self._send_json({"status": "error", "message": "Failed loading project file"}, status=404)
+
+            # Access Control: Non-admins cannot load other users' project files
+            if cur_user.get("role") != "admin":
+                file_creator = proj_data.get("creator", {}).get("username")
+                if file_creator and file_creator != cur_user.get("username"):
+                    return self._send_json({
+                        "status": "forbidden",
+                        "message": "Akses ditolak: Anda hanya memiliki izin untuk membuka proyek yang Anda buat sendiri."
+                    }, status=403)
+
+            return self._send_json({"status": "ok", "project": proj_data})
 
         # ─── AI Copilot ───────────────────────────────────────────────────
         if path == "/api/ai/copilot":

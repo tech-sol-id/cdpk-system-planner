@@ -150,6 +150,12 @@ window.cdpkSystemPlannerApp = function () {
         archiveModalOpen: false,
         archiveLoading: false,
         archiveFiles: [],
+        archiveSearchQuery: '',
+        archiveCreatorFilter: 'all',
+        archiveTypeFilter: 'all',
+        archiveIsAdmin: false,
+        userGuideOpen: false,
+        userGuideTab: 'workflow',
         compareModalOpen: false,
 
         // ─── Module 7: Product & System Configurator State ───────────────
@@ -836,12 +842,60 @@ window.cdpkSystemPlannerApp = function () {
                     headers: { 'Authorization': `Bearer ${this.sessionToken}` }
                 });
                 const data = await resp.json();
+                this.archiveIsAdmin = !!data.is_admin;
                 this.archiveFiles = (data.files || []).filter(f => f.name.endsWith('.cdpk.json') || f.name.endsWith('.xlsx'));
             } catch (e) {
                 console.warn('Archive load error:', e);
             } finally {
                 this.archiveLoading = false;
             }
+        },
+
+        getFilteredArchiveFiles() {
+            let files = this.archiveFiles || [];
+            if (this.archiveTypeFilter === 'json') {
+                files = files.filter(f => f.name.endsWith('.cdpk.json'));
+            } else if (this.archiveTypeFilter === 'excel') {
+                files = files.filter(f => f.name.endsWith('.xlsx'));
+            }
+
+            if (this.archiveCreatorFilter && this.archiveCreatorFilter !== 'all') {
+                files = files.filter(f => (f.creator_username || '').toLowerCase() === this.archiveCreatorFilter.toLowerCase());
+            }
+
+            if (this.archiveSearchQuery && this.archiveSearchQuery.trim()) {
+                const q = this.archiveSearchQuery.toLowerCase().trim();
+                files = files.filter(f =>
+                    (f.name || '').toLowerCase().includes(q) ||
+                    (f.creator_name || '').toLowerCase().includes(q) ||
+                    (f.creator_username || '').toLowerCase().includes(q) ||
+                    (f.summary || '').toLowerCase().includes(q)
+                );
+            }
+            return files;
+        },
+
+        getArchiveCreatorsList() {
+            const map = new Map();
+            (this.archiveFiles || []).forEach(f => {
+                if (f.creator_username) {
+                    map.set(f.creator_username, f.creator_name || f.creator_username);
+                }
+            });
+            return Array.from(map.entries()).map(([username, name]) => ({ username, name }));
+        },
+
+        getArchiveStats() {
+            const files = this.archiveFiles || [];
+            const jsonFiles = files.filter(f => f.name.endsWith('.cdpk.json'));
+            const xlsxFiles = files.filter(f => f.name.endsWith('.xlsx'));
+            const creators = new Set(files.map(f => f.creator_username).filter(Boolean));
+            return {
+                total: files.length,
+                jsonCount: jsonFiles.length,
+                xlsxCount: xlsxFiles.length,
+                creatorsCount: creators.size
+            };
         },
 
         async loadProjectFromDrive(fileId) {

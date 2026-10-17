@@ -2,7 +2,10 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#002b5c" />
     <title>CDPK System Planner — Solution Sizing, RF Simulation & Commercial Suite</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,6 +32,18 @@
         [x-cloak] { display: none !important; }
         .cdpk-gradient { background: linear-gradient(135deg, #002b5c 0%, #004b93 55%, #0284c7 100%); }
         .card-shadow { box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04); }
+        /* iOS Safari & Mobile Browser Touch Optimization */
+        @media screen and (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important; /* Prevents auto-zoom in Safari iOS */
+            }
+        }
+        .overflow-x-auto, .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom, 1rem);
+        }
     </style>
 </head>
 <body x-data="cdpkSystemPlannerApp()" x-init="init()" x-cloak class="min-h-screen flex flex-col bg-slate-950">
@@ -252,90 +267,115 @@
 
         <!-- ═══════════════════ TOP HEADER & CLOUD SYNC BAR ═══════════════════ -->
         <header class="cdpk-gradient text-white shadow-lg sticky top-0 z-30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-            <!-- Brand & Logo -->
-            <div class="flex items-center gap-3.5">
-                <div class="bg-white rounded-lg p-1.5 shadow flex items-center justify-center h-11 w-20 overflow-hidden">
-                    <img :src="window.CDPK_LOGO_B64" alt="CDPK Logo" class="max-h-9 object-contain" />
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-lg sm:text-xl font-extrabold tracking-tight" x-text="t('appTitle')"></h1>
-                        <span class="text-[11px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-400/20 border border-sky-300/40 text-sky-100">v8.0 Cloud</span>
+            <!-- Top Row: Logo & Title (Left) | Language Switcher & User Profile/Logout (Upper Right Corner) -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 border-b border-white/10">
+                <!-- Brand & Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-white rounded-lg p-1.5 shadow flex items-center justify-center h-10 w-20 overflow-hidden shrink-0">
+                        <img :src="window.CDPK_LOGO_B64" alt="CDPK Logo" class="max-h-8 object-contain" />
                     </div>
-                    <p class="text-xs text-sky-100/90 font-medium" x-text="t('appSubtitle')"></p>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white" x-text="t('appTitle')"></h1>
+                            <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-400/20 border border-sky-300/40 text-sky-100">v8.3 Cloud</span>
+                        </div>
+                        <p class="text-[11px] text-sky-100/90 font-medium hidden sm:block" x-text="t('appSubtitle')"></p>
+                    </div>
+                </div>
+
+                <!-- Pojok Kanan Atas: (2) Pilihan Bahasa di sebelah kiri (1) Info Login User & Logout -->
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <!-- 2. Pilihan Bahasa (ID / EN) -->
+                    <div class="flex items-center bg-slate-900/60 p-0.5 rounded-lg border border-white/20 text-xs font-bold shadow-inner">
+                        <button @click="setLang('id')"
+                                :class="lang === 'id' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'"
+                                class="px-2 py-1 rounded-md transition text-xs font-bold">ID 🇮🇩</button>
+                        <button @click="setLang('en')"
+                                :class="lang === 'en' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'"
+                                class="px-2 py-1 rounded-md transition text-xs font-bold">EN 🇬🇧</button>
+                    </div>
+
+                    <!-- 1. Info Login User, Role beserta Button Logout -->
+                    <template x-if="currentUser">
+                        <div class="flex items-center gap-2 bg-slate-900/65 border border-white/25 px-2.5 sm:px-3 py-1 rounded-lg text-xs shadow-md">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:gap-1.5">
+                                    <span class="font-bold text-white text-xs truncate max-w-[120px] sm:max-w-none" x-text="currentUser.name"></span>
+                                    <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded w-fit"
+                                          :class="currentUser.role === 'admin' ? 'bg-amber-400/30 text-amber-200 border border-amber-300/40' : 'bg-sky-500/30 text-sky-200'"
+                                          x-text="currentUser.role"></span>
+                                </div>
+                            </div>
+                            <div class="h-4 w-px bg-white/20 hidden sm:block"></div>
+                            <button @click="logout()" class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-rose-600 text-white font-bold text-xs transition" title="Keluar">
+                                <span>🚪</span>
+                                <span class="hidden sm:inline" x-text="t('logoutBtn')"></span>
+                            </button>
+                        </div>
+                    </template>
                 </div>
             </div>
 
-            <!-- Right Controls: Cloud Sync Links, Archive, User Profile, AI Copilot, Bilingual Switcher -->
-            <div class="flex flex-wrap items-center gap-2">
-                <!-- Live Google Drive Links -->
-                <div class="hidden xl:flex items-center gap-1.5 bg-slate-900/35 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs">
-                    <span class="w-2 h-2 rounded-full" :class="syncStatus === 'ok' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'"></span>
-                    <span class="text-sky-100 font-medium" x-text="syncSource === 'google_drive_live' ? 'Drive Cloud Live' : 'Local Cache'"></span>
-                    <span class="text-white/40">|</span>
-                    <a :href="'https://drive.google.com/drive/folders/' + driveFolderId" target="_blank"
-                       class="text-sky-200 hover:text-white underline font-medium" x-text="t('openDriveFolder')"></a>
-                    <span class="text-white/40">•</span>
-                    <a :href="'https://docs.google.com/spreadsheets/d/' + masterSheetId + '/edit'" target="_blank"
-                       class="text-emerald-300 hover:text-white underline font-semibold" x-text="t('openMasterSheet')"></a>
+            <!-- Secondary Toolbar Row: Work Actions (Left) | Admin Privileged Controls (Right) -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <!-- Left Work Actions -->
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <!-- AI Copilot Button -->
+                    <button @click="aiModalOpen = true"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-sm transition">
+                        <span>✨</span>
+                        <span x-text="t('aiCopilotBtn')"></span>
+                    </button>
+
+                    <!-- Project Archive / Dashboard Button -->
+                    <button @click="openProjectArchive()"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/15 hover:bg-white/25 border border-white/25 transition text-white shadow-sm">
+                        <span>📂</span>
+                        <span x-text="currentUser && currentUser.role === 'admin' ? 'Dashboard Arsip Tim' : 'Arsip Proyek Saya'"></span>
+                    </button>
+
+                    <!-- Sync Cloud Pricelist Button -->
+                    <button @click="syncCloudPricelistNow()" :disabled="isSyncing"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition text-sky-100">
+                        <svg class="w-3.5 h-3.5" :class="isSyncing ? 'animate-spin' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span x-text="isSyncing ? t('syncingBtn') : t('syncBtn')"></span>
+                    </button>
+
+                    <!-- User Guide Button -->
+                    <button @click="userGuideOpen = true"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition text-sky-100">
+                        <span>📖</span>
+                        <span>Panduan Pengguna</span>
+                    </button>
                 </div>
 
-                <!-- Sync Cloud Pricelist Button -->
-                <button @click="syncCloudPricelistNow()" :disabled="isSyncing"
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition">
-                    <svg class="w-3.5 h-3.5" :class="isSyncing ? 'animate-spin' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    <span x-text="isSyncing ? t('syncingBtn') : t('syncBtn')"></span>
-                </button>
-
-                <!-- Project Archive Button -->
-                <button @click="openProjectArchive()"
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition">
-                    <span>📂</span>
-                    <span x-text="t('projectArchiveBtn')"></span>
-                </button>
-
-                <!-- Team User Profile / Login Button -->
-                <template x-if="currentUser">
-                    <div class="flex items-center gap-2 bg-slate-900/50 border border-white/20 px-2.5 py-1 rounded-lg text-xs">
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            <span class="font-bold text-white" x-text="currentUser.name"></span>
-                            <span class="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded bg-sky-500/30 text-sky-200" x-text="currentUser.role"></span>
-                        </div>
-                        <button @click="logout()" class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-rose-600 text-white font-bold ml-1 text-[10px] transition" title="Keluar">
-                            <span>🚪</span>
-                            <span x-text="t('logoutBtn')"></span>
+                <!-- Right Side: Admin Only Controls (Hidden for non-admin) -->
+                <div class="flex items-center gap-2">
+                    <!-- Admin User Management Button -->
+                    <template x-if="currentUser && currentUser.role === 'admin'">
+                        <button @click="openUserManagementModal()"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition border border-indigo-400/40">
+                            <span>👥</span>
+                            <span x-text="t('navUserManagement')"></span>
                         </button>
-                    </div>
-                </template>
+                    </template>
 
-                <!-- Admin User Management Button -->
-                <template x-if="currentUser && currentUser.role === 'admin'">
-                    <button @click="openUserManagementModal()"
-                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition border border-indigo-400/40">
-                        <span>👥</span>
-                        <span x-text="t('navUserManagement')"></span>
-                    </button>
-                </template>
-
-                <!-- AI Copilot Button (Gemini 3.8 Flash / Pro) -->
-                <button @click="aiModalOpen = true"
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-sm transition">
-                    <span>✨</span>
-                    <span x-text="t('aiCopilotBtn')"></span>
-                </button>
-
-                <!-- Instant Bilingual Switcher (ID / EN) -->
-                <div class="flex items-center bg-slate-900/50 p-0.5 rounded-lg border border-white/20 text-xs font-bold">
-                    <button @click="setLang('id')"
-                            :class="lang === 'id' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'"
-                            class="px-2.5 py-1 rounded-md transition">ID 🇮🇩</button>
-                    <button @click="setLang('en')"
-                            :class="lang === 'en' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'"
-                            class="px-2.5 py-1 rounded-md transition">EN 🇬🇧</button>
+                    <!-- 3. Buka Folder Drive & Master Pricelist: Strictly Hidden Except for Admin/Owner -->
+                    <template x-if="currentUser && currentUser.role === 'admin'">
+                        <div class="hidden lg:flex items-center gap-1.5 bg-slate-900/40 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-sky-100">
+                            <span class="w-2 h-2 rounded-full" :class="syncStatus === 'ok' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'"></span>
+                            <span class="font-medium">Drive Cloud</span>
+                            <span class="text-white/40">|</span>
+                            <a :href="'https://drive.google.com/drive/folders/' + driveFolderId" target="_blank"
+                               class="text-sky-200 hover:text-white underline font-medium" x-text="t('openDriveFolder')"></a>
+                            <span class="text-white/40">•</span>
+                            <a :href="'https://docs.google.com/spreadsheets/d/' + masterSheetId + '/edit'" target="_blank"
+                               class="text-emerald-300 hover:text-white underline font-semibold" x-text="t('openMasterSheet')"></a>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -1738,44 +1778,349 @@
         </div>
     </div>
 
-    <!-- ═══════════════════ MODAL 3: PROJECT ARCHIVE & LOADER ═══════════════════ -->
-    <div x-show="archiveModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4">
-        <div @click.away="archiveModalOpen = false" class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[85vh]">
-            <div class="cdpk-gradient text-white p-5 flex items-center justify-between">
-                <div>
-                    <h3 class="text-base font-extrabold" x-text="t('projectArchiveTitle')"></h3>
-                    <p class="text-xs text-sky-100 mt-0.5" x-text="t('projectArchiveSubtitle')"></p>
+    <!-- ═══════════════════ MODAL 3: FULL ARCHIVE DASHBOARD ═══════════════════ -->
+    <div x-show="archiveModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-3 sm:p-5">
+        <div @click.away="archiveModalOpen = false" class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]">
+            <!-- Dashboard Header -->
+            <div class="cdpk-gradient text-white p-4 sm:p-5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 rounded-xl bg-white/15 backdrop-blur-xs text-xl">📂</div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-base sm:text-lg font-extrabold" x-text="archiveIsAdmin ? 'Dashboard Arsip Proyek Tim (Google Drive)' : 'Arsip Proyek &amp; Kalkulasi Saya'"></h3>
+                            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full"
+                                  :class="archiveIsAdmin ? 'bg-amber-400 text-slate-950 shadow-xs' : 'bg-sky-400/30 text-sky-100 border border-sky-300/40'"
+                                  x-text="archiveIsAdmin ? 'Admin Full Access' : 'Akses Terisolasi'"></span>
+                        </div>
+                        <p class="text-xs text-sky-100 mt-0.5">
+                            <span x-show="archiveIsAdmin">Akses penuh seluruh dokumen kalkulasi, BoQ, dan quotation yang disimpan oleh tim.</span>
+                            <span x-show="!archiveIsAdmin">Daftar dokumen kalkulasi dan penawaran yang dibuat oleh akun Anda.</span>
+                        </p>
+                    </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button @click="openProjectArchive()" class="px-2.5 py-1 rounded bg-white/20 text-xs font-bold hover:bg-white/30" x-text="t('refreshArchiveBtn')"></button>
-                    <button @click="archiveModalOpen = false" class="text-white/80 hover:text-white font-bold text-lg">✕</button>
+                    <button @click="openProjectArchive()" class="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" :class="archiveLoading ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span class="hidden sm:inline">Segarkan</span>
+                    </button>
+                    <button @click="archiveModalOpen = false" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white font-bold text-base cursor-pointer">✕</button>
                 </div>
             </div>
-            <div class="p-5 flex-1 overflow-y-auto space-y-2.5">
+
+            <!-- Dashboard Stats Summary Cards -->
+            <div class="bg-slate-50 px-4 sm:px-6 py-3 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5">
+                    <span class="text-lg">📁</span>
+                    <div>
+                        <div class="text-[10px] text-slate-500 font-bold uppercase">Total Arsip</div>
+                        <div class="text-sm font-extrabold text-slate-900" x-text="getArchiveStats().total"></div>
+                    </div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5">
+                    <span class="text-lg">⚡</span>
+                    <div>
+                        <div class="text-[10px] text-blue-600 font-bold uppercase">JSON Proyek (Loadable)</div>
+                        <div class="text-sm font-extrabold text-blue-900" x-text="getArchiveStats().jsonCount"></div>
+                    </div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5">
+                    <span class="text-lg">📊</span>
+                    <div>
+                        <div class="text-[10px] text-emerald-600 font-bold uppercase">Dokumen Excel BoQ</div>
+                        <div class="text-sm font-extrabold text-emerald-900" x-text="getArchiveStats().xlsxCount"></div>
+                    </div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5" x-show="archiveIsAdmin">
+                    <span class="text-lg">👥</span>
+                    <div>
+                        <div class="text-[10px] text-indigo-600 font-bold uppercase">Kontributor Tim</div>
+                        <div class="text-sm font-extrabold text-indigo-900" x-text="getArchiveStats().creatorsCount"></div>
+                    </div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5" x-show="!archiveIsAdmin">
+                    <span class="text-lg">👤</span>
+                    <div>
+                        <div class="text-[10px] text-indigo-600 font-bold uppercase">Pemilik Akun</div>
+                        <div class="text-xs font-extrabold text-indigo-900 truncate" x-text="currentUser ? currentUser.name : '-'"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search & Filters Bar -->
+            <div class="p-3 sm:p-4 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                <!-- Search Input -->
+                <div class="relative flex-1 min-w-[200px]">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">🔍</span>
+                    <input type="text" x-model="archiveSearchQuery" placeholder="Cari nama proyek, nama klien, atau file..."
+                           class="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-medium" />
+                </div>
+
+                <!-- Filter by Type -->
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <label class="font-bold text-slate-600 hidden sm:inline">Tipe:</label>
+                    <select x-model="archiveTypeFilter" class="px-3 py-2 rounded-xl border border-slate-300 bg-white font-medium focus:border-blue-600">
+                        <option value="all">Semua Tipe File</option>
+                        <option value="json">⚡ JSON Proyek (.cdpk.json)</option>
+                        <option value="excel">📊 Excel Quotation (.xlsx)</option>
+                    </select>
+                </div>
+
+                <!-- Filter by Creator (Admin Only) -->
+                <template x-if="archiveIsAdmin">
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <label class="font-bold text-slate-600 hidden sm:inline">Dibuat Oleh:</label>
+                        <select x-model="archiveCreatorFilter" class="px-3 py-2 rounded-xl border border-slate-300 bg-white font-medium focus:border-blue-600">
+                            <option value="all">Semua Pembuat (All)</option>
+                            <template x-for="c in getArchiveCreatorsList()" :key="c.username">
+                                <option :value="c.username" x-text="c.name + ' (@' + c.username + ')'"></option>
+                            </template>
+                        </select>
+                    </div>
+                </template>
+            </div>
+
+            <!-- File List Container -->
+            <div class="p-4 sm:p-5 flex-1 overflow-y-auto space-y-2.5 bg-slate-100/50">
                 <template x-if="archiveLoading">
-                    <div class="py-12 text-center text-xs text-slate-500 font-bold">Memuat daftar proyek dari Google Drive...</div>
+                    <div class="py-16 text-center text-xs text-slate-500 font-bold flex flex-col items-center gap-2">
+                        <svg class="w-6 h-6 animate-spin text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Menghubungkan &amp; memuat arsip proyek dari Google Drive...</span>
+                    </div>
                 </template>
-                <template x-if="!archiveLoading && archiveFiles.length === 0">
-                    <div class="py-12 text-center text-xs text-slate-500" x-text="t('noProjectsFound')"></div>
+
+                <template x-if="!archiveLoading && getFilteredArchiveFiles().length === 0">
+                    <div class="py-16 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200 p-8">
+                        <span class="text-3xl block mb-2">📭</span>
+                        <div class="font-bold text-slate-700 text-sm">Tidak ada dokumen arsip yang sesuai</div>
+                        <p class="text-slate-400 mt-1">Coba ubah kata kunci pencarian atau sesuaikan filter di atas.</p>
+                    </div>
                 </template>
-                <template x-for="f in archiveFiles" :key="f.id">
-                    <div class="p-3.5 rounded-xl bg-slate-50 hover:bg-blue-50/50 border border-slate-200 transition flex flex-wrap items-center justify-between gap-2">
-                        <div class="flex-1 min-w-[240px]">
-                            <div class="font-extrabold text-xs sm:text-sm text-slate-900" x-text="f.name"></div>
-                            <div class="text-[11px] text-slate-400 mt-0.5" x-text="'Tersimpan: ' + new Date(f.modifiedTime).toLocaleString()"></div>
+
+                <template x-for="f in getFilteredArchiveFiles()" :key="f.id">
+                    <div class="p-3.5 sm:p-4 rounded-xl bg-white hover:bg-blue-50/40 border border-slate-200/90 shadow-xs transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-start gap-3 flex-1 min-w-0">
+                            <!-- File Icon -->
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-base shadow-xs"
+                                 :class="f.name.endsWith('.cdpk.json') ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'">
+                                <span x-text="f.name.endsWith('.cdpk.json') ? '⚡' : '📊'"></span>
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="font-extrabold text-xs sm:text-sm text-slate-900 truncate" x-text="f.summary || f.name"></span>
+                                    <span class="text-[10px] font-bold uppercase px-2 py-0.2 rounded-full"
+                                          :class="f.name.endsWith('.cdpk.json') ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'"
+                                          x-text="f.name.endsWith('.cdpk.json') ? 'JSON Proyek' : 'Excel BoQ'"></span>
+                                </div>
+                                <div class="font-mono text-[11px] text-slate-500 truncate mt-0.5" x-text="f.name"></div>
+
+                                <!-- Metadata info: Creator & Timestamp -->
+                                <div class="flex items-center gap-3 mt-1.5 text-[11px] text-slate-500 flex-wrap">
+                                    <!-- Creator Badge -->
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 font-semibold text-slate-700">
+                                        <span>👤</span>
+                                        <span x-text="f.creator_name || f.creator_username || 'Admin'"></span>
+                                        <span class="text-slate-400 font-mono text-[10px]" x-text="'(@' + (f.creator_username || 'admin') + ')'"></span>
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 text-slate-400">
+                                        <span>🕒</span>
+                                        <span x-text="new Date(f.modifiedTime).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })"></span>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2">
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
                             <a :href="f.webViewLink" target="_blank"
-                               class="px-2.5 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold">Drive ↗</a>
+                               class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-300 transition flex items-center gap-1 cursor-pointer">
+                                <span>Drive</span>
+                                <span>↗</span>
+                            </a>
                             <template x-if="f.name.endsWith('.cdpk.json')">
                                 <button @click="loadProjectFromDrive(f.id)"
-                                        class="px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold transition">
-                                    <span x-text="t('loadProjectBtn')"></span>
+                                        class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-extrabold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                                    <span>⚡</span>
+                                    <span>Buka Proyek</span>
                                 </button>
                             </template>
                         </div>
                     </div>
                 </template>
+            </div>
+
+            <!-- Footer: Drive Folder Link for Admin -->
+            <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs px-5">
+                <span class="text-slate-500">
+                    Menampilkan <strong x-text="getFilteredArchiveFiles().length"></strong> dari <span x-text="archiveFiles.length"></span> dokumen
+                </span>
+                <template x-if="archiveIsAdmin">
+                    <a :href="'https://drive.google.com/drive/folders/' + outputSubfolderId" target="_blank"
+                       class="text-blue-700 hover:text-blue-900 font-bold underline flex items-center gap-1">
+                        <span>📁 Buka Sub-folder Google Drive</span>
+                        <span>↗</span>
+                    </a>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════ MODAL 3B: INTERACTIVE USER GUIDE ═══════════════════ -->
+    <div x-show="userGuideOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-3 sm:p-5">
+        <div @click.away="userGuideOpen = false" class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]">
+            <!-- Header -->
+            <div class="cdpk-gradient text-white p-4 sm:p-5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 rounded-xl bg-white/15 backdrop-blur-xs text-xl">📖</div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold">Panduan Pengguna (User Guide)</h3>
+                        <p class="text-xs text-sky-100 mt-0.5">Dokumentasi Operasional Solusi Radio Komunikasi &amp; Sizing RF CDPK</p>
+                    </div>
+                </div>
+                <button @click="userGuideOpen = false" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white font-bold text-base cursor-pointer">✕</button>
+            </div>
+
+            <!-- Navigation Tabs in Guide -->
+            <div class="bg-slate-100 border-b border-slate-200 px-4 sm:px-6 flex overflow-x-auto gap-2 py-2 text-xs">
+                <button @click="userGuideTab = 'workflow'"
+                        :class="userGuideTab === 'workflow' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">1. Alur Kerja (Workflow)</button>
+                <button @click="userGuideTab = 'sizing'"
+                        :class="userGuideTab === 'sizing' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">2. Sizing RF &amp; Topologi</button>
+                <button @click="userGuideTab = 'configurator'"
+                        :class="userGuideTab === 'configurator' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">3. Kalkulator Produk &amp; Sistem</button>
+                <button @click="userGuideTab = 'sync_archive'"
+                        :class="userGuideTab === 'sync_archive' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">4. Sinkronisasi &amp; Arsip Drive</button>
+                <button @click="userGuideTab = 'security'"
+                        :class="userGuideTab === 'security' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                        class="px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">5. Hak Akses &amp; Keamanan</button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="p-5 sm:p-6 flex-1 overflow-y-auto text-xs leading-relaxed space-y-4 text-slate-700">
+                <!-- TAB 1: WORKFLOW -->
+                <div x-show="userGuideTab === 'workflow'" class="space-y-4">
+                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span>🔄</span>
+                        <span>Alur Kerja Rekayasa &amp; Penawaran Sistem (End-to-End)</span>
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 space-y-1.5">
+                            <div class="font-extrabold text-blue-900 flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span>
+                                <span>Input Sizing RF</span>
+                            </div>
+                            <p class="text-[11px] text-slate-600">Isi data industri, luas coverage (km² atau Ha), kontur medan (flat, rolling, mountainous), jumlah pengguna aktif radio, dan tipe backhaul.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-200 space-y-1.5">
+                            <div class="font-extrabold text-indigo-900 flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">2</span>
+                                <span>Engine Kalkulasi</span>
+                            </div>
+                            <p class="text-[11px] text-slate-600">Sistem otomatis menghitung rekomendasi topologi (Conventional vs IP Site Connect vs Capacity Plus), jumlah repeater outdoor, node DAS in-building, radio HT &amp; mobile, serta kapasitas UPS daya.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-purple-50/60 border border-purple-200 space-y-1.5">
+                            <div class="font-extrabold text-purple-900 flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px]">3</span>
+                                <span>BoQ &amp; Komersial</span>
+                            </div>
+                            <p class="text-[11px] text-slate-600">Review rincian Bill of Quantity (BoQ), sesuaikan mandays jasa engineering &amp; commissioning, sesuaikan margin komersial, diskon, dan PPN 11%.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-1.5">
+                            <div class="font-extrabold text-emerald-900 flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">4</span>
+                                <span>Simpan &amp; Ekspor</span>
+                            </div>
+                            <p class="text-[11px] text-slate-600">Klik "Simpan ke Drive" untuk arsip otomatis di cloud, atau ekspor Proposal PDF komprehensif dan Excel BoQ resmi siap kirim ke klien.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: SIZING RF -->
+                <div x-show="userGuideTab === 'sizing'" class="space-y-4">
+                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span>📡</span>
+                        <span>Panduan Pemilihan Topologi &amp; Sizing RF</span>
+                    </h4>
+                    <div class="space-y-3">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <strong class="text-blue-900">1. Single Site Conventional (Repeater Tunggal):</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Cocok untuk plant industri tunggal, gudang, atau site tambang terpusat (coverage radius &lt; 8 km, pengguna &lt; 60 unit). Menggunakan repeater Motorola SLR 5300 dengan duplexer cavity.</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <strong class="text-indigo-900">2. IP Site Connect (Multi-Site Tersebar):</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Digunakan bila cakupan area luas melintasi lembah/perbukitan atau beberapa site terpisah (perkebunan sawit, konsesi tambang, jalan haulage). Tiap site dihubungkan via IP/LAN, Microwave, atau Radio Link.</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <strong class="text-purple-900">3. Capacity Plus Trunking (High Traffic):</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Diterapkan ketika pengguna radio sangat padat (&gt; 120 HT) pada area tunggal atau multi-site agar talkgroup tidak saling berebut kanal. Memanfaatkan trunking digital tanpa dedicated control channel.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: CONFIGURATOR -->
+                <div x-show="userGuideTab === 'configurator'" class="space-y-4">
+                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span>⚡</span>
+                        <span>Kalkulator Produk &amp; Sistem Custom</span>
+                    </h4>
+                    <p class="text-slate-600">Tab "Kalkulator Produk dan Sistem" memungkinkan Presales &amp; Sales merakit paket penawaran spesifik secara modular:</p>
+                    <ul class="list-disc pl-5 space-y-1.5 text-slate-600">
+                        <li><strong>Paket Base Station Repeater (SLR 5300 / SLR 1000):</strong> Otomatis menghitung kebutuhan duplexer cavity (termasuk tuning lab), antena omni atau yagi directional, kabel feeder coaxial 7/8" atau 1/2", lightning arrester grounding, rack cabinet 19", dan online UPS backup power.</li>
+                        <li><strong>Paket Terminal Radio Komunikasi:</strong> Menghitung paket HT Motorola (XiR P6620i TIA ATEX atau XiR P8668i) beserta multi-unit charger 6-gang dan remote speaker mic (RSM).</li>
+                        <li><strong>Multi-Package Quotation:</strong> Anda dapat menambahkan beberapa paket sekaligus dalam satu proyek dan mengklik <em>"Transfer Semua ke BoQ Proyek"</em> untuk digabungkan dengan jasa engineering.</li>
+                    </ul>
+                </div>
+
+                <!-- TAB 4: SYNC & ARCHIVE -->
+                <div x-show="userGuideTab === 'sync_archive'" class="space-y-4">
+                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span>☁️</span>
+                        <span>Sinkronisasi Harga Cloud &amp; Arsip Google Drive</span>
+                    </h4>
+                    <div class="space-y-2.5">
+                        <p class="text-slate-600">Aplikasi terintegrasi langsung dengan Google Drive resmi perusahaan:</p>
+                        <div class="p-3 rounded-xl bg-blue-50/70 border border-blue-200">
+                            <strong>🔄 Sinkronisasi Harga Cloud:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Master harga perangkat, jasa mandays, dan hardware diambil dari tab Google Spreadsheet master. Klik tombol <em>"Sinkronisasi Harga Cloud"</em> untuk memperbarui harga real-time tanpa perlu redeploy server.</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                            <strong>💾 Simpan &amp; Muat Proyek:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Setiap kali Anda mengklik <em>"Simpan ke Drive"</em>, sistem mengunggah dokumen kalkulasi (.cdpk.json) dan Excel Quotation (.xlsx) ke subfolder resmi. File tersebut dapat Anda muat kembali kapan saja melalui menu <em>"Arsip Proyek Tim"</em>.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: ROLES & SECURITY -->
+                <div x-show="userGuideTab === 'security'" class="space-y-4">
+                    <h4 class="text-sm font-extrabold text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span>🛡️</span>
+                        <span>Kebijakan Hak Akses &amp; Keamanan Akun</span>
+                    </h4>
+                    <div class="space-y-2.5">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <strong class="text-amber-800">👑 Administrator (Adrian Kansil):</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Memiliki hak akses penuh untuk: menyetujui (approve) pendaftaran karyawan baru, mengangkat Admin, mengakses folder master Google Drive &amp; Spreadsheet pricelist, serta melihat seluruh dashboard arsip tim.</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <strong class="text-blue-800">🛠️ Presales &amp; RF Engineer / Commercial Sales:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Dapat melakukan kalkulasi sizing RF, merakit paket BoQ, menyimpan proyek ke Google Drive, dan <em>hanya dapat mengakses arsip proyek yang dibuat oleh dirinya sendiri</em>. Tautan folder master cloud disembunyikan untuk menjaga integritas data.</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200">
+                            <strong class="text-indigo-900">⏳ Mekanisme Pending Approval:</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Setiap anggota tim yang mendaftar (baik via form registrasi maupun 1-Click Google Workspace) wajib diverifikasi dan disetujui terlebih dahulu oleh Admin sebelum dapat mengakses sistem.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs px-6">
+                <span class="text-slate-500 font-medium">CDPK System Planner v8.3 Cloud • Solusi Motorola Solutions &amp; Avigilon</span>
+                <button @click="userGuideOpen = false" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer transition">Tutup Panduan</button>
             </div>
         </div>
     </div>
