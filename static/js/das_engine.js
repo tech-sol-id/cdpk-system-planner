@@ -1609,10 +1609,10 @@
             floors = [{ f: "General", q: ant }];
         }
 
-        var rep = parseFloat(s.rep != null ? s.rep : 2);
-        var radio = parseFloat(s.radio != null ? s.radio : 20);
-        var outo = parseFloat(s.outo != null ? s.outo : 1);
-        var outd = parseFloat(s.outd != null ? s.outd : 1);
+        var rep = s.rep === "" || s.rep == null ? 0 : Math.max(0, parseFloat(s.rep) || 0);
+        var radio = s.radio === "" || s.radio == null ? 0 : Math.max(0, parseFloat(s.radio) || 0);
+        var outo = s.outo === "" || s.outo == null ? 0 : Math.max(0, parseFloat(s.outo) || 0);
+        var outd = s.outd === "" || s.outd == null ? 0 : Math.max(0, parseFloat(s.outd) || 0);
 
         var archMode = s.archMode === "analog" ? "analog" : "digital";
         var fiberTopo = s.fiberTopo === "ring" ? "ring" : (s.fiberTopo === "cascade" ? "cascade" : "star");
@@ -1625,11 +1625,11 @@
         var r_cable = parseFloat(s.r_cable != null ? s.r_cable : 25.0);
 
         // Core equipment counts
-        var oruQty = Math.ceil(ant / Math.max(r_oru, 1));
-        var omuQty = Math.ceil(oruQty / Math.max(r_omu, 1));
+        var oruQty = ant > 0 ? Math.ceil(ant / Math.max(r_oru, 1)) : 0;
+        var omuQty = oruQty > 0 ? Math.ceil(oruQty / Math.max(r_omu, 1)) : 0;
         var sigSplitQty = omuQty * 2;
-        var combQty = Math.max(1, Math.ceil(rep / 8));
-        var muxQty = Math.max(1, Math.ceil(rep / 8));
+        var combQty = rep > 0 ? Math.max(1, Math.ceil(rep / 8)) : 0;
+        var muxQty = rep > 0 ? Math.max(1, Math.ceil(rep / 8)) : 0;
         var pwrSplitQty = Math.round(ant * r_split);
         var couplerQty = Math.round(ant * r_coup);
         var cableQty = Math.round(ant * r_cable);
@@ -4663,7 +4663,7 @@ var qrcode = function() {
      * 8. EXPOSE GLOBAL WINDOW OBJECT
      * ========================================================================= */
     var CDPK_DAS_ENGINE = {
-        version: "8.4.2",
+        version: "8.5.0",
         i18n: I18N,
         devices: DEVICES,
         cables: CABLES,

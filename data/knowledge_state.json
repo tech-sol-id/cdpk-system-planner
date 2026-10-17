@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_checked": "2026-10-17T16:46:42.676282+00:00",
+  "last_checked": "2026-10-17T17:04:08.654629+00:00",
   "markdown_folder_id": "1-rv_4obDjZ3ZqxSQIvx6u-bYfUnH1zMV",
   "files": {
     "1hcDB7o7TsyDee1tBoJljAIA4gkIv-j8K": {
@@ -871,11 +871,174 @@
       "char_count": 34149,
       "synced_at": "2026-10-17T16:46:42.674310+00:00",
       "status": "ready"
+    },
+    "1r8oRPTfd_8_YeWiZByWU-KwFpIyaaTjM": {
+      "name": "3_Hazardous_Area_Blueprint.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-21T15:40:56.000Z",
+      "md_filename": "3_Hazardous_Area_Blueprint.md",
+      "drive_md_id": "1bbHbq0973M7UnMakmMdd7whp9pFGdCj7",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/3_Hazardous_Area_Blueprint.md",
+      "char_count": 1151,
+      "synced_at": "2026-10-17T17:02:44.738365+00:00",
+      "status": "ready"
+    },
+    "1WFt6I4wGrhJZ6DELx6oCAMWHTh21giMo": {
+      "name": "Handbook_ATEX_Ex_HazLoc_v16Rev_final.docx",
+      "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "modifiedTime": "2026-07-21T09:56:16.997Z",
+      "md_filename": "Handbook_ATEX_Ex_HazLoc_v16Rev_final.md",
+      "drive_md_id": "1j0AP1GCnlA-S8CJ4aJ1PMVso8Lg3lPK0",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/Handbook_ATEX_Ex_HazLoc_v16Rev_final.md",
+      "char_count": 374500,
+      "synced_at": "2026-10-17T17:02:51.123444+00:00",
+      "status": "ready"
+    },
+    "1w03ym7Oo9Ul8BnP4ggILpZW6mElbtrxu": {
+      "name": "Handbook_ATEX_Ex_HazLoc_v2.3.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-21T09:54:55.000Z",
+      "md_filename": "Handbook_ATEX_Ex_HazLoc_v2.3.md",
+      "drive_md_id": "1IYtooANZFvJkkxNC86sbvCoDwOJ-g_GG",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/Handbook_ATEX_Ex_HazLoc_v2.3.md",
+      "char_count": 94318,
+      "synced_at": "2026-10-17T17:03:01.510915+00:00",
+      "status": "ready"
+    },
+    "1oxzGygXLcCas9tqb-DPjcbjsGuudx6mN": {
+      "name": "718822233-1-ATEX-2014-34-EU-Guidelines-1st-Edition-April-2016.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-20T09:23:04.000Z",
+      "md_filename": "718822233-1-ATEX-2014-34-EU-Guidelines-1st-Edition-April-2016.md",
+      "drive_md_id": "1DANLuAFGioRtEAtE7rPtIpf7wwGkEMFa",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/718822233-1-ATEX-2014-34-EU-Guidelines-1st-Edition-April-2016.md",
+      "char_count": 71992,
+      "synced_at": "2026-10-17T17:03:07.984215+00:00",
+      "status": "ready"
+    },
+    "1r9XiMEzPDUhIdxO1ry5mHOc1Jj0HtHS3": {
+      "name": "325845468-Atex-2014-34-Eu-Guidelines-2016-First-Edition.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-20T09:22:50.000Z",
+      "md_filename": "325845468-Atex-2014-34-Eu-Guidelines-2016-First-Edition.md",
+      "drive_md_id": "1QwnfobvqwdkWRVDMiYW3zQmUNFVU-Qxg",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/325845468-Atex-2014-34-Eu-Guidelines-2016-First-Edition.md",
+      "char_count": 69587,
+      "synced_at": "2026-10-17T17:03:15.259757+00:00",
+      "status": "ready"
+    },
+    "1EFpFypdvnWpRtK-awK7SPHiwIHa-KcaK": {
+      "name": "161349468-111010-Directiva-ATEX-1999-92-EC-Doc-134-05-E.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-20T09:21:56.000Z",
+      "md_filename": "161349468-111010-Directiva-ATEX-1999-92-EC-Doc-134-05-E.md",
+      "drive_md_id": "1OV9-PEpS40sV6udw0O2DT8d3VvYMBSck",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/161349468-111010-Directiva-ATEX-1999-92-EC-Doc-134-05-E.md",
+      "char_count": 63743,
+      "synced_at": "2026-10-17T17:03:19.741940+00:00",
+      "status": "ready"
+    },
+    "1Kk0YX8wWQ7LEAriIYOo7NRv4UoS2NDim": {
+      "name": "888982701-Marechal-Hazardous-Area-Zone-1-Zone-2-Plugs-Sockets-Decontactors-ATEX-Certfied.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-20T09:02:56.000Z",
+      "md_filename": "888982701-Marechal-Hazardous-Area-Zone-1-Zone-2-Plugs-Sockets-Decontactors-ATEX-Certfied.md",
+      "drive_md_id": "1t_95VAG3PXFOa6i0HCDxd_hMGZUqZLf6",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/888982701-Marechal-Hazardous-Area-Zone-1-Zone-2-Plugs-Sockets-Decontactors-ATEX-Certfied.md",
+      "char_count": 40592,
+      "synced_at": "2026-10-17T17:03:27.402577+00:00",
+      "status": "ready"
+    },
+    "1Tb3RgiyFE7qudfBeZwuBDVnJmqGw_n0N": {
+      "name": "564607519-ATEX-Caltech.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-20T08:37:33.000Z",
+      "md_filename": "564607519-ATEX-Caltech.md",
+      "drive_md_id": "1eVvpIKBfF_wsptx6Q_b9pN_8HsqlFKzZ",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/564607519-ATEX-Caltech.md",
+      "char_count": 12375,
+      "synced_at": "2026-10-17T17:03:32.486253+00:00",
+      "status": "ready"
+    },
+    "1mK8VrXZTdL-D_rnb56a4k7Un4yIly_Mw": {
+      "name": "251298738-Ex-Basic-Electrical-Installations-in-Hazardous-Area.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-20T07:59:46.000Z",
+      "md_filename": "251298738-Ex-Basic-Electrical-Installations-in-Hazardous-Area.md",
+      "drive_md_id": "1BrYbfipuIn93RJN4aEzcJgjIrWRhLsN5",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/251298738-Ex-Basic-Electrical-Installations-in-Hazardous-Area.md",
+      "char_count": 48338,
+      "synced_at": "2026-10-17T17:03:37.422556+00:00",
+      "status": "ready"
+    },
+    "1f9zbswmLlvXpqnvS8znTvHF0B1BMXARC": {
+      "name": "363167857-ATEX-IECEx-Seminar-presentation.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-20T07:59:37.000Z",
+      "md_filename": "363167857-ATEX-IECEx-Seminar-presentation.md",
+      "drive_md_id": "1K374DT65S9jizbthfHlz0WUPRQdVD99O",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/363167857-ATEX-IECEx-Seminar-presentation.md",
+      "char_count": 4533,
+      "synced_at": "2026-10-17T17:03:44.273540+00:00",
+      "status": "ready"
+    },
+    "1VHwuhLK9zF_sZM1e44vSXErsr-pIwGHl": {
+      "name": "809897083-Hazardous-Areas-Classification.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-20T07:47:43.000Z",
+      "md_filename": "809897083-Hazardous-Areas-Classification.md",
+      "drive_md_id": "1fJ495DGdQrf862--FFC_Nvo-gb94PBoY",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/809897083-Hazardous-Areas-Classification.md",
+      "char_count": 6027,
+      "synced_at": "2026-10-17T17:03:48.117957+00:00",
+      "status": "ready"
+    },
+    "1ClFG2ZDZ6pCrux7Ym2oxQEjdlAvDVwtO": {
+      "name": "106215314-Hazardous-Zone-Class-Division.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-20T07:47:40.000Z",
+      "md_filename": "106215314-Hazardous-Zone-Class-Division.md",
+      "drive_md_id": "1OsSv1NzsHWOw6-xfbrh11b3K8OXwqMH9",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/106215314-Hazardous-Zone-Class-Division.md",
+      "char_count": 44621,
+      "synced_at": "2026-10-17T17:03:53.114062+00:00",
+      "status": "ready"
+    },
+    "1cfQk3i-ngH-KzKLHNHhe1ItNT67D6SbS": {
+      "name": "618882393-Fike-Webinar-Dust-Hazard-Analysis-4th-May.pdf",
+      "mimeType": "application/pdf",
+      "modifiedTime": "2026-07-20T07:47:30.000Z",
+      "md_filename": "618882393-Fike-Webinar-Dust-Hazard-Analysis-4th-May.md",
+      "drive_md_id": "1icKACD_t6d3jEfZPJk4YeUINzlGhabL9",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/618882393-Fike-Webinar-Dust-Hazard-Analysis-4th-May.md",
+      "char_count": 10923,
+      "synced_at": "2026-10-17T17:03:59.314805+00:00",
+      "status": "ready"
+    },
+    "13uGUidgVEub-d_XuMZyhKjGt2P3b8NjQ": {
+      "name": "Comparation SOTI with Others.xlsx",
+      "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "modifiedTime": "2026-08-27T05:14:49.722Z",
+      "md_filename": "Comparation_SOTI_with_Others.md",
+      "drive_md_id": "1ZqbVOSK0BdC0W-VtGLlw_LC9_7jchXpU",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/Comparation_SOTI_with_Others.md",
+      "char_count": 26261,
+      "synced_at": "2026-10-17T17:04:02.969073+00:00",
+      "status": "ready"
+    },
+    "1d3mdbPxICvIolTV7sE0Ah_2_J2YhOM06": {
+      "name": "SafeUEM - Introduction 2026.pptx",
+      "mimeType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "modifiedTime": "2026-08-27T05:13:55.321Z",
+      "md_filename": "SafeUEM_-_Introduction_2026.md",
+      "drive_md_id": "1B9bQ2x5vT5x3oMIWEfzzNpHhgGYAneuA",
+      "local_path": "/Users/adriankansil/Documents/Project Calculator - CDPK/data/knowledge_base/SafeUEM_-_Introduction_2026.md",
+      "char_count": 10371,
+      "synced_at": "2026-10-17T17:04:08.652585+00:00",
+      "status": "ready"
     }
   },
   "remote_md_files": {
-    "AVERTEC SOLUTIONS.md": "1aUqNZZ6gHPjMxKMjB3O7tGw9wmQ_zwJ9",
-    "Copy of AVERTEC SOLUTIONS.md": "1-7Rp-Zw3jWlnbAZWQTu2HkIdBGurJXPW",
     "218758933-International-Reference-Guide-to-Hazardous-Areas.md": "1DuYjSOnb8kqQEcXr2xSrAHWQ4Z97UwoU",
     "Smart_Digital_Two-Way_Radio_PNR2000.md": "10YOKSSxXzKwNXvTC1QRL76eMrqshhJE5",
     "Smart_Digital_Two-Way_Radio_PNR2100.md": "1m_nU6MkrSXZmlrHG1a3xexdIW15IZCwR",
@@ -886,6 +1049,8 @@
     "SafeUEM_Whitepaper24.md": "1_LJ37rBNnjBow87A5mnhZwG1snb6ZgNl",
     "Flow_Chart_service_Citradata.md": "1jmU8PaL6okSo7dwzfe_pk1OSC00OiF_A",
     "User_Niagahoster_citradata.md": "1OEe9zx8vYIbRtU2btR7_urGjkeeDIod4",
+    "AVERTEC SOLUTIONS.md": "1aUqNZZ6gHPjMxKMjB3O7tGw9wmQ_zwJ9",
+    "Copy of AVERTEC SOLUTIONS.md": "1-7Rp-Zw3jWlnbAZWQTu2HkIdBGurJXPW",
     "XIR M8600 SERIES detailed service manual.md": "1AbDNed6QGvgvZ82pky0v6DHsQQYjHstX",
     "FMTCS_DAS_09_Installation_and_Commissioning_Guide.md": "1ZxBBf2ofd1aVxmnDri0ujBO_p-UgAeZF",
     "FMTCS_DAS_08_System_Architecture_LinkBudget_and_Projects.md": "1wJPXRaITtnFEfL-mwKJSsKp3psDnL0XQ",
@@ -1016,7 +1181,9 @@
     "ATEX_IS540.1.md": "1AAA1ZFwf0UoWk3Jnq1Xx2qTmjhz9DNtM",
     "ATEX_IS540.2.md": "1lOZ4cJ2kwEsUri0HVOrL2EFiuclDfdp2",
     "ATEX_IS940.1.md": "1JxjBA8-_F-jleZvapHXrKW1XrbBC6GOH",
-    "ATEX_IS940.2.md": "1Xd3LvWRfld03kdOOgDuzxmDVkcw0RBmK"
+    "ATEX_IS940.2.md": "1Xd3LvWRfld03kdOOgDuzxmDVkcw0RBmK",
+    "Comparation_SOTI_with_Others.md": "1ZqbVOSK0BdC0W-VtGLlw_LC9_7jchXpU",
+    "SafeUEM_-_Introduction_2026.md": "1B9bQ2x5vT5x3oMIWEfzzNpHhgGYAneuA"
   },
-  "total_documents": 79
+  "total_documents": 94
 }

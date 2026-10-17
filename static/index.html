@@ -212,9 +212,9 @@
                         <div class="flex items-center gap-1.5 text-slate-500 text-[11px]">
                             <span class="text-base">🤖</span>
                             <span class="font-semibold text-slate-600">Aplikasi Android</span>
-                            <span class="text-[9px] px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-bold">APK v8.4.2</span>
+                            <span class="text-[9px] px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded font-bold">APK v8.5.0</span>
                         </div>
-                        <a href="/download/apk" download="CDPK_System_Planner_v8.4.2.apk"
+                        <a href="/download/apk" download="CDPK_System_Planner_v8.5.0.apk"
                            class="text-blue-600 hover:text-blue-800 font-bold text-[11px] flex items-center gap-1 hover:underline">
                             <span>Unduh APK</span>
                             <span>⬇️</span>
@@ -226,7 +226,7 @@
 
         <!-- Footer on Login Screen -->
         <footer class="relative z-10 py-4 text-center text-xs text-sky-200/60">
-            © 2026 PT Citra Data Purnama Karya • Solution Sizing, RF Simulation & Commercial Suite
+            © 2026 PT Citra Data Purnama Karya • Solution Sizing, RF Simulation & Commercial Suite (v8.5.0)
         </footer>
     </div>
 
@@ -245,26 +245,25 @@
                     <div>
                         <div class="flex items-center gap-1.5 sm:gap-2">
                             <h1 class="text-sm sm:text-lg font-extrabold tracking-tight text-white whitespace-nowrap" x-text="t('appTitle')"></h1>
-                            <span class="hidden sm:inline-block text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-400/20 border border-sky-300/40 text-sky-100">v8.4.1</span>
+                            <span class="hidden sm:inline-block text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-400/20 border border-sky-300/40 text-sky-100">v8.5.0</span>
                         </div>
                         <p class="text-[11px] text-sky-100/90 font-medium hidden sm:block" x-text="t('appSubtitle')"></p>
                     </div>
                 </div>
 
                 <!-- Prominent Workspace Switcher (Top Header) -->
-                <div class="hidden md:flex items-center bg-slate-900/65 p-1 rounded-xl border border-white/20 shadow-inner gap-1">
+                <div class="hidden md:flex items-center bg-slate-900/65 p-1 rounded-xl border border-white/20 shadow-inner gap-1 shrink-0">
                     <button @click="activeWorkspace = 'dmr'"
                             :class="activeWorkspace === 'dmr' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
-                            class="px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
                         <span>📡</span>
-                        <span>DMR System Planner</span>
+                        <span>DMR System</span>
                     </button>
                     <button @click="activeWorkspace = 'das'"
                             :class="activeWorkspace === 'das' ? 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
-                            class="px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5 cursor-pointer">
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
                         <span>🏢</span>
-                        <span>RFoF DAS by FMTCS</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[9px] bg-amber-400 text-slate-950 font-black uppercase tracking-tight">RF over Fiber DAS</span>
+                        <span>RFoF Distributed Antenna System</span>
                     </button>
                 </div>
 
@@ -2428,12 +2427,24 @@
                             <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600" x-text="lang === 'en' ? 'DAS Architecture & Optical Routing' : 'Arsitektur DAS & Routing Optik'"></span>
                             <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'System Sizing & Fiber Distribution Parameters' : 'Parameter Sizing Sistem & Distribusi Fiber Optik'"></h3>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold"
                                   :class="das.archMode === 'digital' ? 'bg-blue-100 text-blue-800 border border-blue-300' : 'bg-purple-100 text-purple-800 border border-purple-300'"
                                   x-text="das.archMode === 'digital' ? 'Digital C-RAN (CPRI)' : 'Analog Direct RFoF'"></span>
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800 border border-slate-300 uppercase"
                                   x-text="'Topologi ' + das.fiberTopo"></span>
+                            <button type="button" @click="resetDasBoq(true)"
+                                    class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center gap-1 cursor-pointer"
+                                    :title="lang === 'en' ? 'Reset all DAS quantities to 0' : 'Kosongkan seluruh isian & kuantitas DAS ke 0'">
+                                <span>🔄</span>
+                                <span x-text="lang === 'en' ? 'Reset DAS (0)' : 'Reset DAS (0)'"></span>
+                            </button>
+                            <button type="button" @click="resetDasBoq(false)"
+                                    class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer"
+                                    :title="lang === 'en' ? 'Load default 4-floor reference design' : 'Muat contoh standar 4 lantai (44 antena)'">
+                                <span>📋</span>
+                                <span x-text="lang === 'en' ? 'Load Sample' : 'Contoh Standar'"></span>
+                            </button>
                         </div>
                     </div>
 
@@ -2478,12 +2489,12 @@
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <span class="text-[10px] text-slate-500 font-medium">Repeater:</span>
-                                    <input type="number" min="1" max="32" x-model.number="das.rep"
+                                    <input type="number" min="0" max="32" x-model.number="das.rep"
                                            class="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
                                 </div>
                                 <div>
                                     <span class="text-[10px] text-slate-500 font-medium">Radio HT:</span>
-                                    <input type="number" min="1" max="1000" x-model.number="das.radio"
+                                    <input type="number" min="0" max="1000" x-model.number="das.radio"
                                            class="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none" />
                                 </div>
                             </div>
@@ -2515,7 +2526,13 @@
                             <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600" x-text="lang === 'en' ? 'Indoor Building Zones' : 'Zona & Lantai Gedung'"></span>
                             <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Multi-Floor Distribution Matrix' : 'Matriks Distribusi Multi-Lantai'"></h3>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button @click="resetDasBoq(true)"
+                                    class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center gap-1 cursor-pointer"
+                                    :title="lang === 'en' ? 'Clear floor zones & reset antennas to 0' : 'Kosongkan daftar lantai & reset antena ke 0'">
+                                <span>🔄</span>
+                                <span x-text="lang === 'en' ? 'Reset Floors (0)' : 'Reset Lantai (0)'"></span>
+                            </button>
                             <button @click="applyPlannerToDasBoq()"
                                     class="px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer"
                                     :title="lang === 'en' ? 'Sync antenna density from Planner module' : 'Terapkan rekomendasi jumlah antena dari modul Link Budget & Planner'">
@@ -2551,11 +2568,11 @@
                                                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-semibold text-slate-800 text-xs focus:border-indigo-600 focus:outline-none" />
                                         </td>
                                         <td class="py-2 px-3 text-center">
-                                            <input type="number" min="1" max="100" x-model.number="fl.q"
+                                            <input type="number" min="0" max="100" x-model.number="fl.q"
                                                    class="w-24 text-center px-2 py-1.5 rounded-lg border border-slate-300 font-black text-indigo-700 text-xs focus:border-indigo-600 focus:outline-none mx-auto" />
                                         </td>
                                         <td class="py-2 px-3 text-center font-semibold text-slate-600">
-                                            <span x-text="Math.ceil(fl.q / (das.r_oru || 30))"></span>
+                                            <span x-text="fl.q > 0 ? Math.ceil(fl.q / (das.r_oru || 30)) : 0"></span>
                                             <span class="text-[10px] text-slate-400">Unit</span>
                                         </td>
                                         <td class="py-2 px-3 text-center">
@@ -2619,19 +2636,36 @@
                     </div>
                 </div>
 
-                <!-- 4. Calculated Bill of Quantities (BoQ) Table Card -->
+                <!-- 4. Calculated Bill of Quantities (BoQ) & Commercial Estimator Card -->
                 <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
                         <div>
-                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="lang === 'en' ? 'Automated Bill of Quantities' : 'Rincian Komponen & BoQ Otomatis'"></span>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="lang === 'en' ? 'Automated Bill of Quantities & Commercial Estimator' : 'Rincian Komponen, Estimator Harga & BoQ Otomatis'"></span>
                             <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'FMTCS DAS Turnkey Hardware & Passive Equipment BOM' : 'Daftar Kebutuhan Perangkat Aktif & Pasif FMTCS DAS'"></h3>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <template x-if="currentUser && currentUser.role === 'engineer'">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <template x-if="canAccessDasEstimator()">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300"
+                                      x-text="lang === 'en' ? '🔓 Estimator & Commercial Access Open (' + (currentUser ? currentUser.role.toUpperCase() : '') + ')' : '🔓 Akses Estimator & BoQ Terbuka (' + (currentUser ? (currentUser.role === 'admin' ? 'Admin' : (currentUser.role === 'overseer' ? 'Overseer' : 'Product Expert')) : '') + ')'">
+                                </span>
+                            </template>
+                            <template x-if="currentUser && !canAccessDasEstimator()">
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800 border border-sky-300">
                                     🛠️ Mode Akses Engineer: Nilai Harga Terproteksi
                                 </span>
                             </template>
+                            <button type="button" @click="resetDasBoq(true)"
+                                    class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs transition flex items-center gap-1 cursor-pointer"
+                                    :title="lang === 'en' ? 'Reset all DAS quantities and custom prices to 0' : 'Reset seluruh jumlah perangkat & harga kustom DAS ke 0'">
+                                <span>🔄</span>
+                                <span x-text="lang === 'en' ? 'Reset BoQ (0)' : 'Reset BoQ (0)'"></span>
+                            </button>
+                            <button type="button" @click="resetDasBoq(false)"
+                                    class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer"
+                                    :title="lang === 'en' ? 'Restore standard 4-floor reference design' : 'Kembalikan ke contoh standar 4 lantai'">
+                                <span>📋</span>
+                                <span x-text="lang === 'en' ? 'Load Default' : 'Muat Default'"></span>
+                            </button>
                             <button @click="injectDasBoqToMasterBoq()"
                                     class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                                 <span>📥</span>
@@ -2639,6 +2673,59 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Estimator Design Ratios & Currency Controls (Open for Admin, Overseer, and Product Expert) -->
+                    <template x-if="canAccessDasEstimator()">
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div class="font-extrabold text-slate-800 flex items-center gap-1.5">
+                                    <span>⚙️</span>
+                                    <span x-text="lang === 'en' ? 'Estimator Design Ratios & Currency Controls (Admin / Overseer / Product Expert)' : 'Parameter Rasio Estimator & Mata Uang (Terbuka untuk Admin / Overseer / Product Expert)'"></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[11px] font-bold text-slate-600" x-text="lang === 'en' ? 'Currency:' : 'Mata Uang:'"></span>
+                                    <div class="inline-flex rounded-lg border border-slate-300 bg-white p-0.5">
+                                        <button type="button" @click="currency = 'IDR'"
+                                                :class="currency === 'IDR' ? 'bg-indigo-600 text-white font-extrabold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
+                                                class="px-2.5 py-1 rounded-md text-[11px] transition cursor-pointer">IDR (Rp)</button>
+                                        <button type="button" @click="currency = 'USD'"
+                                                :class="currency === 'USD' ? 'bg-indigo-600 text-white font-extrabold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
+                                                class="px-2.5 py-1 rounded-md text-[11px] transition cursor-pointer">USD ($)</button>
+                                    </div>
+                                    <span class="text-[11px] font-bold text-slate-600 ml-1" x-text="lang === 'en' ? 'Rate:' : 'Kurs USD:'"></span>
+                                    <input type="number" step="100" x-model.number="exchangeRate"
+                                           class="w-24 px-2 py-1 rounded-lg border border-slate-300 bg-white font-bold text-right text-slate-800" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+                                <div class="bg-white p-2 rounded-lg border border-slate-200">
+                                    <label class="block text-[10px] font-bold text-slate-500" x-text="lang === 'en' ? 'Antennas per ORU' : 'Maks Antena / ORU'"></label>
+                                    <input type="number" min="1" max="64" x-model.number="das.r_oru"
+                                           class="w-full mt-1 px-2 py-1 rounded border border-slate-300 font-extrabold text-indigo-900 text-xs" />
+                                </div>
+                                <div class="bg-white p-2 rounded-lg border border-slate-200">
+                                    <label class="block text-[10px] font-bold text-slate-500" x-text="lang === 'en' ? 'ORUs per OMU' : 'Maks ORU / OMU'"></label>
+                                    <input type="number" min="1" max="64" x-model.number="das.r_omu"
+                                           class="w-full mt-1 px-2 py-1 rounded border border-slate-300 font-extrabold text-indigo-900 text-xs" />
+                                </div>
+                                <div class="bg-white p-2 rounded-lg border border-slate-200">
+                                    <label class="block text-[10px] font-bold text-slate-500" x-text="lang === 'en' ? 'Splitter Ratio / Ant' : 'Rasio Splitter / Ant'"></label>
+                                    <input type="number" step="0.05" min="0" max="2" x-model.number="das.r_split"
+                                           class="w-full mt-1 px-2 py-1 rounded border border-slate-300 font-extrabold text-indigo-900 text-xs" />
+                                </div>
+                                <div class="bg-white p-2 rounded-lg border border-slate-200">
+                                    <label class="block text-[10px] font-bold text-slate-500" x-text="lang === 'en' ? 'Coupler Ratio / Ant' : 'Rasio Coupler / Ant'"></label>
+                                    <input type="number" step="0.05" min="0" max="2" x-model.number="das.r_coup"
+                                           class="w-full mt-1 px-2 py-1 rounded border border-slate-300 font-extrabold text-indigo-900 text-xs" />
+                                </div>
+                                <div class="bg-white p-2 rounded-lg border border-slate-200">
+                                    <label class="block text-[10px] font-bold text-slate-500" x-text="lang === 'en' ? 'Coax Feeder (m/Ant)' : 'Kabel Coax (m/Ant)'"></label>
+                                    <input type="number" step="1" min="1" max="100" x-model.number="das.r_cable"
+                                           class="w-full mt-1 px-2 py-1 rounded border border-slate-300 font-extrabold text-indigo-900 text-xs" />
+                                </div>
+                            </div>
+                        </div>
+                    </template>
 
                     <!-- BoQ Table -->
                     <div class="overflow-x-auto">
@@ -2651,17 +2738,17 @@
                                     <th class="py-2.5 px-3 font-mono" x-text="lang === 'en' ? 'SKU' : 'SKU'"></th>
                                     <th class="py-2.5 px-3 text-center" x-text="lang === 'en' ? 'Qty' : 'Jumlah'"></th>
                                     <th class="py-2.5 px-3 text-center" x-text="lang === 'en' ? 'Unit' : 'Satuan'"></th>
-                                    <!-- Commercial columns: Hidden for role === 'engineer' -->
-                                    <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                    <!-- Commercial columns: Open to Admin, Overseer, and Product Expert -->
+                                    <template x-if="canAccessDasEstimator()">
                                         <th class="py-2.5 px-3 text-right" x-text="lang === 'en' ? 'Unit Price (' + currency + ')' : 'Harga Satuan (' + currency + ')'"></th>
                                     </template>
-                                    <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                    <template x-if="canAccessDasEstimator()">
                                         <th class="py-2.5 px-3 text-right" x-text="lang === 'en' ? 'Amount (' + currency + ')' : 'Total Harga (' + currency + ')'"></th>
                                     </template>
-                                    <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                    <template x-if="canAccessDasEstimator()">
                                         <th class="py-2.5 px-3 text-right" x-text="lang === 'en' ? 'COGS (' + currency + ')' : 'Modal COGS (' + currency + ')'"></th>
                                     </template>
-                                    <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                    <template x-if="canAccessDasEstimator()">
                                         <th class="py-2.5 px-3 text-center" x-text="lang === 'en' ? 'Margin (%)' : 'Margin (%)'"></th>
                                     </template>
                                 </tr>
@@ -2679,20 +2766,26 @@
                                         <td class="py-2.5 px-3 text-center font-black text-slate-900" x-text="it.qty"></td>
                                         <td class="py-2.5 px-3 text-center text-slate-600 font-medium" x-text="it.unit"></td>
 
-                                        <!-- Commercial price & margin: Hidden for role === 'engineer' -->
-                                        <template x-if="!currentUser || currentUser.role !== 'engineer'">
-                                            <td class="py-2.5 px-3 text-right font-semibold text-slate-800"
-                                                x-text="currency === 'USD' ? it.formatted.unitPrice : formatCurrency(it.unitPriceIdr)"></td>
+                                        <!-- Commercial price & margin: Open to Admin, Overseer, and Product Expert -->
+                                        <template x-if="canAccessDasEstimator()">
+                                            <td class="py-2.5 px-3 text-right">
+                                                <input type="number"
+                                                       :step="currency === 'USD' ? '0.5' : '10000'"
+                                                       min="0"
+                                                       :value="getDasItemPrice(it)"
+                                                       @change="setDasItemPrice(it, $event.target.value)"
+                                                       class="w-28 sm:w-32 px-2 py-1 text-right font-bold text-slate-900 rounded-lg border border-slate-300 hover:border-indigo-400 focus:border-indigo-600 focus:outline-none bg-white" />
+                                            </td>
                                         </template>
-                                        <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                        <template x-if="canAccessDasEstimator()">
                                             <td class="py-2.5 px-3 text-right font-black text-slate-900"
                                                 x-text="currency === 'USD' ? it.formatted.lineSellUsd : it.formatted.lineSellIdr"></td>
                                         </template>
-                                        <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                        <template x-if="canAccessDasEstimator()">
                                             <td class="py-2.5 px-3 text-right font-mono text-[11px] text-slate-500"
                                                 x-text="currency === 'USD' ? ('US$ ' + (it.lineCogsUsd).toFixed(2)) : formatCurrency(it.lineCogsIdr)"></td>
                                         </template>
-                                        <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                        <template x-if="canAccessDasEstimator()">
                                             <td class="py-2.5 px-3 text-center">
                                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-black"
                                                       :class="it.marginPct >= 15 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
@@ -2705,8 +2798,8 @@
                         </table>
                     </div>
 
-                    <!-- Commercial Totals Banner (Hidden for Engineer Role) -->
-                    <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                    <!-- Commercial Totals Banner (Open to Admin, Overseer, and Product Expert) -->
+                    <template x-if="canAccessDasEstimator()">
                         <div class="p-4 rounded-xl bg-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg border border-slate-800">
                             <div class="space-y-1">
                                 <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400" x-text="lang === 'en' ? 'Total Hardware & Passive Scope' : 'Total Estimasi Investasi DAS'"></div>
@@ -2734,7 +2827,7 @@
                     </template>
 
                     <!-- Technical Totals for Engineer Role -->
-                    <template x-if="currentUser && currentUser.role === 'engineer'">
+                    <template x-if="currentUser && !canAccessDasEstimator()">
                         <div class="p-3.5 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 flex flex-wrap items-center justify-between gap-3 text-xs">
                             <div class="flex items-center gap-2">
                                 <span class="text-base">🛠️</span>
@@ -3513,14 +3606,14 @@
                             </div>
 
                             <div class="pt-3 border-t border-slate-100 mt-3 flex items-center justify-between text-xs">
-                                <template x-if="!currentUser || currentUser.role !== 'engineer'">
+                                <template x-if="canAccessDasEstimator()">
                                     <div>
                                         <span class="text-[10px] text-slate-400 font-medium">Estimasi Harga Jual:</span>
                                         <div class="font-extrabold text-indigo-700"
                                              x-text="currency === 'USD' ? ('US$ ' + (d.priceUsd || 0).toLocaleString('en-US', {minimumFractionDigits: 2})) : formatCurrency((d.priceUsd || 0) * exchangeRate)"></div>
                                     </div>
                                 </template>
-                                <template x-if="currentUser && currentUser.role === 'engineer'">
+                                <template x-if="currentUser && !canAccessDasEstimator()">
                                     <span class="text-[10px] font-semibold text-slate-500 italic">Spesifikasi Teknik PT CDPK</span>
                                 </template>
                                 <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700" x-text="d.unit"></span>
@@ -3746,12 +3839,12 @@
             </button>
 
             <!-- Download Standalone Android APK Button -->
-            <a href="/download/apk" download="CDPK_System_Planner_v8.4.2.apk"
+            <a href="/download/apk" download="CDPK_System_Planner_v8.5.0.apk"
                class="w-full p-2.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-950 shadow-2xs flex items-center justify-between cursor-pointer transition">
                 <div class="flex items-center gap-2.5">
                     <span class="text-xl">🤖</span>
                     <div class="text-left">
-                        <div class="text-xs font-extrabold text-emerald-900">Unduh APK Android (v8.4.2)</div>
+                        <div class="text-xs font-extrabold text-emerald-900">Unduh APK Android (v8.5.0)</div>
                         <div class="text-[10px] text-emerald-700 font-medium">Installer mandiri offline • 4.4 MB</div>
                     </div>
                 </div>
@@ -3767,7 +3860,7 @@
                             class="p-2.5 rounded-xl text-left flex flex-col gap-1 transition cursor-pointer">
                         <div class="flex items-center gap-1.5">
                             <span class="text-base">📡</span>
-                            <span class="text-xs font-bold">DMR Planner</span>
+                            <span class="text-xs font-bold">DMR System</span>
                         </div>
                         <span class="text-[10px] text-sky-200">Radio & MOTOTRBO</span>
                     </button>
@@ -3776,9 +3869,9 @@
                             class="p-2.5 rounded-xl text-left flex flex-col gap-1 transition cursor-pointer">
                         <div class="flex items-center gap-1.5">
                             <span class="text-base">🏢</span>
-                            <span class="text-xs font-bold">RFoF DAS</span>
+                            <span class="text-xs font-bold">RFoF Distributed Antenna System</span>
                         </div>
-                        <span class="text-[9px] px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black w-fit uppercase">RF over Fiber</span>
+                        <span class="text-[9px] px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black w-fit uppercase">RFoF DAS by FMTCS</span>
                     </button>
                 </div>
             </div>
@@ -4686,9 +4779,9 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h3 class="text-base sm:text-lg font-extrabold tracking-tight" x-text="t('guideTitle')">Panduan Pengguna Interaktif</h3>
-                            <span class="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-bold uppercase tracking-wider text-white">v8.4.0</span>
+                            <span class="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-bold uppercase tracking-wider text-white">v8.5.0</span>
                         </div>
-                        <p class="text-xs text-sky-100 mt-0.5" x-text="t('guideSubtitle')">Dokumentasi Operasional Solusi Radio Komunikasi &amp; Sizing RF CDPK</p>
+                        <p class="text-xs text-sky-100 mt-0.5" x-text="t('guideSubtitle')">Dokumentasi Operasional Solusi Radio Komunikasi DMR &amp; RFoF Distributed Antenna System</p>
                     </div>
                 </div>
                 <button @click="userGuideOpen = false" 
@@ -4715,21 +4808,24 @@
                     <button @click="userGuideTab = 'sizing'"
                             :class="userGuideTab === 'sizing' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
                             class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabSizing')">2. Sizing &amp; Reset</button>
+                    <button @click="userGuideTab = 'rfof_das'"
+                            :class="userGuideTab === 'rfof_das' ? 'bg-indigo-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer">3. RFoF DAS (FMTCS)</button>
                     <button @click="userGuideTab = 'configurator'"
                             :class="userGuideTab === 'configurator' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabConfigurator')">3. Kalkulator Produk</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabConfigurator')">4. Kalkulator Produk</button>
                     <button @click="userGuideTab = 'sync_archive'"
                             :class="userGuideTab === 'sync_archive' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabSyncArchive')">4. Sinkronisasi &amp; Arsip</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabSyncArchive')">5. Sinkronisasi &amp; Arsip</button>
                     <button @click="userGuideTab = 'security'"
                             :class="userGuideTab === 'security' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabSecurity')">5. Hak Akses (RBAC)</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabSecurity')">6. Hak Akses (RBAC)</button>
                     <button @click="userGuideTab = 'audit_handover'"
                             :class="userGuideTab === 'audit_handover' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabHandover')">6. Handover &amp; Audit</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabHandover')">7. Handover &amp; Audit</button>
                     <button @click="userGuideTab = 'faq'"
                             :class="userGuideTab === 'faq' ? 'bg-blue-600 text-white font-extrabold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-200 font-semibold'"
-                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabFaq')">7. FAQ &amp; Tips</button>
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg whitespace-nowrap transition cursor-pointer" x-text="t('guideTabFaq')">8. FAQ &amp; Tips</button>
                 </div>
             </div>
 
@@ -4752,7 +4848,7 @@
                             <span>🔄</span>
                             <span>Alur Kerja Rekayasa &amp; Penawaran Sistem (End-to-End Workflow)</span>
                         </h4>
-                        <p class="text-slate-500 mt-1 text-[11px]">Proses perancangan sistem terstruktur dari input spesifikasi lapangan hingga penyerahan tugas (handover) dan proposal tender resmi.</p>
+                        <p class="text-slate-500 mt-1 text-[11px]">Proses perancangan sistem terstruktur untuk <strong>📡 DMR System</strong> maupun <strong>🏢 RFoF Distributed Antenna System (FMTCS)</strong> dalam satu pintu terpadu.</p>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-3.5">
@@ -4762,7 +4858,7 @@
                                     <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">1</span>
                                     <span>Input Sizing RF</span>
                                 </div>
-                                <p class="text-[11px] text-slate-600">Pilih sektor industri, masukkan luas area (km² / Ha), kontur medan, estimasi total pengguna radio aktif, dan media backhaul.</p>
+                                <p class="text-[11px] text-slate-600">Pilih sektor industri, masukkan luas area (km² / Ha), kontur medan, jumlah lantai gedung, estimasi pengguna radio aktif, dan media backhaul.</p>
                             </div>
                             <button @click="jumpFromGuide('sizing')" class="w-full py-1.5 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] cursor-pointer transition text-center">
                                 👉 Buka Modul Sizing RF
@@ -4773,12 +4869,12 @@
                             <div class="space-y-1.5">
                                 <div class="font-extrabold text-indigo-900 flex items-center gap-2">
                                     <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">2</span>
-                                    <span>Engine Kalkulasi</span>
+                                    <span>Perluas ke RFoF DAS</span>
                                 </div>
-                                <p class="text-[11px] text-slate-600">Sistem otomatis menghitung arsitektur topologi optimal (Conventional, IP Site Connect, atau Capacity Plus), unit repeater outdoor, node DAS indoor, dan kapasitas UPS.</p>
+                                <p class="text-[11px] text-slate-600">Untuk gedung bertingkat, basement, data center, atau terowongan, klik <strong>🏢 Perluas ke RFoF DAS by FMTCS</strong> untuk menghitung OMU, ORU, splitter, coupler, dan antena indoor.</p>
                             </div>
-                            <button @click="jumpFromGuide(null, 'compare')" class="w-full py-1.5 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] cursor-pointer transition text-center">
-                                👉 Lihat Matriks Solusi
+                            <button @click="activeWorkspace = 'das'; dasActiveTab = 'boq'; userGuideOpen = false" class="w-full py-1.5 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] cursor-pointer transition text-center">
+                                👉 Buka RFoF DAS System
                             </button>
                         </div>
 
@@ -4786,9 +4882,9 @@
                             <div class="space-y-1.5">
                                 <div class="font-extrabold text-purple-900 flex items-center gap-2">
                                     <span class="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold">3</span>
-                                    <span>BoQ &amp; Komersial</span>
+                                    <span>BoQ &amp; Estimator</span>
                                 </div>
-                                <p class="text-[11px] text-slate-600">Periksa rincian BoQ bertingkat, sesuaikan mandays engineering, atur target margin (standar &ge;15%), diskon, dan tarif PPN 11%.</p>
+                                <p class="text-[11px] text-slate-600">Gabungkan BoQ RFoF DAS ke BoQ Utama DMR dengan 1 klik, sesuaikan mandays engineering, dan kelola margin (&ge;15%), diskon, serta PPN 11%.</p>
                             </div>
                             <button @click="jumpFromGuide('boq')" class="w-full py-1.5 px-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-[10px] cursor-pointer transition text-center">
                                 👉 Buka Bill of Quantity
@@ -4799,23 +4895,14 @@
                             <div class="space-y-1.5">
                                 <div class="font-extrabold text-emerald-900 flex items-center gap-2">
                                     <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">4</span>
-                                    <span>Simpan &amp; Handover</span>
+                                    <span>Simpan, SAT &amp; Handover</span>
                                 </div>
-                                <p class="text-[11px] text-slate-600">Simpan kalkulasi ke Google Drive (.cdpk.json &amp; .xlsx), serahkan ke tim via Handover, atau cetak proposal penawaran PDF/Excel resmi.</p>
+                                <p class="text-[11px] text-slate-600">Simpan kalkulasi ke Google Drive (.cdpk.json &amp; .xlsx), cetak Laporan Uji Terima (SAT PDF), atau serahkan ke tim via Handover.</p>
                             </div>
                             <button @click="jumpFromGuide(null, 'archive')" class="w-full py-1.5 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] cursor-pointer transition text-center">
                                 👉 Buka Arsip Proyek Tim
                             </button>
                         </div>
-                    </div>
-
-                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                        <strong class="text-slate-900 font-extrabold flex items-center gap-1.5">
-                            <span>💡</span> <span>Tips Kolaborasi Efektif:</span>
-                        </strong>
-                        <p class="text-slate-600 text-[11px]">
-                            Product Expert dapat memulai perakitan paket radio HT &amp; aksesoris di Tab 7 atau Tab 2, kemudian menyerahkan proyek ke Engineer / Technician untuk validasi teknis RF melalui fitur <strong>🤝 Handover</strong>. Rekan tim akan langsung menerima notifikasi lonceng kuning dan dapat melanjutkan kalkulasi dengan satu klik.
-                        </p>
                     </div>
                 </div>
 
@@ -4833,24 +4920,19 @@
                     <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 space-y-2.5">
                         <div class="flex items-center justify-between">
                             <strong class="text-rose-900 font-extrabold flex items-center gap-2">
-                                <span>🔄</span> <span>Fitur Baru: Tombol Reset Isian (Mulai Rancangan Baru)</span>
+                                <span>🔄</span> <span>Fitur Tombol Reset Isian (DMR &amp; RFoF DAS)</span>
                             </strong>
-                            <span class="px-2 py-0.5 rounded-full bg-rose-200 text-rose-800 text-[10px] font-bold">Baru di Tab Sizing</span>
+                            <span class="px-2 py-0.5 rounded-full bg-rose-200 text-rose-800 text-[10px] font-bold">Reset 1-Klik</span>
                         </div>
                         <p class="text-rose-900/80 text-[11px]">
-                            Jika Anda telah selesai merancang atau ingin memulai kalkulasi proyek dari awal tanpa data sisa sebelumnya, gunakan tombol <strong>"🔄 Reset Isian"</strong> yang terletak di pojok kanan atas kartu <em>Parameter Teknis &amp; Lingkungan Operasi</em> (di sebelah tombol <em>"✨ Isi dengan AI"</em>).
+                            Anda dapat melakukan reset pada <strong>DMR System</strong> maupun pada <strong>RFoF Distributed Antenna System</strong> kapan saja:
                         </p>
                         <div class="bg-white/80 p-2.5 rounded-lg border border-rose-200 text-[11px] space-y-1">
-                            <div class="font-bold text-slate-800">Karakteristik Reset Isian:</div>
-                            <ul class="list-disc pl-4 space-y-0.5 text-slate-600">
-                                <li>Dilengkapi konfirmasi pencegahan untuk menghindari penghapusan data secara tidak sengaja.</li>
-                                <li>Mengembalikan sektor industri, luas area (35 km²), medan (Hilly), jumlah user (120), frekuensi (UHF), dan media backhaul (Fiber) ke baseline default.</li>
-                                <li>Menyinkronkan ulang BoQ dan simulasi propagasi secara instan tanpa perlu memuat ulang (*refresh*) browser.</li>
+                            <ul class="list-disc pl-4 space-y-1 text-slate-600">
+                                <li><strong>Reset Proyek Menyeluruh:</strong> Klik tombol <strong>"🔄 Proyek Baru / Reset Isian"</strong> pada banner Informasi Proyek di bagian atas untuk mengosongkan seluruh formulir DMR &amp; DAS ke 0 atau memuat ulang template standar.</li>
+                                <li><strong>Reset Khusus RFoF DAS (0):</strong> Pada modul RFoF DAS, klik tombol <strong>"🔄 Reset BoQ (0)"</strong> atau <strong>"🔄 Reset DAS (0)"</strong> untuk mengosongkan seluruh jumlah lantai, repeater, radio, antena, dan harga kustom menjadi <code>0</code>, atau klik <strong>"📋 Muat Default"</strong> untuk memuat contoh standar 4 lantai.</li>
                             </ul>
                         </div>
-                        <button @click="jumpFromGuide('sizing')" class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] cursor-pointer transition shadow-xs">
-                            <span>👉 Buka Tab Sizing untuk Mencoba Reset</span>
-                        </button>
                     </div>
 
                     <!-- Topologies Explanation -->
@@ -4861,16 +4943,55 @@
                         </div>
                         <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
                             <strong class="text-indigo-900 font-extrabold">2. IP Site Connect (Multi-Site Tersebar):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Diterapkan bila cakupan area membentang luas melintasi lembah/perbukitan atau beberapa site terpisah (perkebunan kelapa sawit, konsesi tambang, jalan haulage, pelabuhan multi-dermaga). Site dihubungkan melalui jaringan LAN/WAN korporat, link microwave radio IP, atau satelit Starlink.</p>
+                            <p class="text-[11px] text-slate-600 mt-1">Diterapkan bila cakupan area membentang luas melintasi lembah/perbukitan atau beberapa site terpisah (perkebunan kelapa sawit, konsesi tambang, jalan haulage, pelabuhan multi-dermaga).</p>
                         </div>
                         <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
                             <strong class="text-purple-900 font-extrabold">3. Capacity Plus Trunking (High Traffic Density):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Wajib digunakan jika kuantitas pengguna radio padat (&gt; 120 HT) pada site tunggal atau jam sibuk tinggi agar talkgroup tidak saling bertabrakan atau sibuk. Memanfaatkan trunking dinamis tanpa memerlukan kanal kontrol khusus (*no dedicated control channel*).</p>
+                            <p class="text-[11px] text-slate-600 mt-1">Wajib digunakan jika kuantitas pengguna radio padat (&gt; 120 HT) pada site tunggal atau jam sibuk tinggi agar talkgroup tidak saling bertabrakan.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- ══════════ TAB 3: CONFIGURATOR ══════════ -->
+                <!-- ══════════ TAB 3: RFoF DAS BY FMTCS ══════════ -->
+                <div x-show="userGuideTab === 'rfof_das'" class="space-y-5">
+                    <div class="border-b border-slate-200 pb-3">
+                        <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>🏢</span>
+                            <span>Modul RFoF Distributed Antenna System (RFoF DAS by FMTCS)</span>
+                        </h4>
+                        <p class="text-slate-500 mt-1 text-[11px]">Solusi terpadu <em>RF over Fiber Distributed Antenna System</em> yang menggabungkan kalkulator teknis engineer dan estimator komersial dalam satu platform.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200 space-y-1.5">
+                            <div class="font-extrabold text-indigo-950">1. BoQ, Estimator &amp; Topologi Multi-Lantai</div>
+                            <p class="text-[11px] text-slate-600">Pilih arsitektur <strong>Digital C-RAN (DOMU400C + DORU400CH)</strong> atau <strong>Analog RFoF (AOMU400C + AORU400CH)</strong> serta topologi fiber <em>Star, Cascade, atau Redundant Ring</em>. Jumlah OMU, ORU, Signal Splitter, Power Splitter, Coupler, dan Kabel Koaksial dihitung otomatis dari matriks lantai.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-1.5">
+                            <div class="font-extrabold text-emerald-950">2. Akses Estimator Terbuka (Admin, Overseer &amp; Product Expert)</div>
+                            <p class="text-[11px] text-slate-600">Pengguna dengan peran <strong>👑 Administrator</strong>, <strong>👁️ Overseer</strong>, dan <strong>💼 Product Expert</strong> memiliki akses penuh ke Estimator: mengatur rasio desain (Antena/ORU, ORU/OMU, Splitter, Coupler, Kabel), mengubah harga satuan langsung di tabel, serta memantau COGS &amp; Guardrail Margin (&ge;15%).</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-sky-50/70 border border-sky-200 space-y-1.5">
+                            <div class="font-extrabold text-sky-950">3. Link Budget, Planner Antena &amp; Konversi RF</div>
+                            <p class="text-[11px] text-slate-600">Hitung rantai redaman pasif dari output ORU (40 dBm / 10W) hingga input antena indoor, estimasi jumlah antena berdasarkan luas gedung (m²), serta konversi instan dBm &harr; Watt, VSWR &harr; Return Loss, dan dB&mu;V &harr; dBm.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-purple-50/70 border border-purple-200 space-y-1.5">
+                            <div class="font-extrabold text-purple-950">4. Commissioning &amp; Laporan SAT PDF Resmi</div>
+                            <p class="text-[11px] text-slate-600">Catat hasil pengukuran lapangan per titik antena (VSWR &le; 1.5, TX Power, RX Signal, dan kualitas panggilan suara), lalu cetak dokumen <strong>Berita Acara Uji Terima (SAT Report PDF)</strong> lengkap dengan kolom tanda tangan.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-3">
+                        <div class="text-[11px] text-amber-950">
+                            <strong>Jembatan 2 Arah (DMR &harr; RFoF DAS):</strong> Gunakan tombol <em>"🔄 Sinkronkan dari Sizing DMR"</em> untuk menarik jumlah lantai &amp; repeater dari DMR, dan tombol <em>"📥 Tambahkan ke BoQ Utama DMR"</em> untuk menggabungkan seluruh perangkat FMTCS DAS ke penawaran utama.
+                        </div>
+                        <button @click="activeWorkspace = 'das'; dasActiveTab = 'boq'; userGuideOpen = false" class="py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] whitespace-nowrap cursor-pointer transition">
+                            👉 Buka RFoF DAS
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ══════════ TAB 4: CONFIGURATOR ══════════ -->
                 <div x-show="userGuideTab === 'configurator'" class="space-y-5">
                     <div class="border-b border-slate-200 pb-3">
                         <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
@@ -4883,9 +5004,9 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                         <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                             <div class="font-extrabold text-slate-900 flex items-center gap-1.5">
-                                <span>📡</span> <span>Paket Repeater Base Station</span>
+                                <span>📡</span> <span>Paket Repeater &amp; RFoF DAS</span>
                             </div>
-                            <p class="text-[11px] text-slate-600">Mencakup unit SLR 5300 / SLR 1000, duplexer cavity + tuning lab, antena omni fiberglass/yagi, kabel feeder coaxial 7/8" atau 1/2", lightning arrester surge protector, rak kabinet 19", dan online UPS backup power.</p>
+                            <p class="text-[11px] text-slate-600">Mencakup paket Repeater SLR 5300 / SLR 1000 maupun paket turnkey <strong>RFoF DAS by FMTCS Digital (DOMU+DORU)</strong> dan <strong>Analog (AOMU+AORU)</strong>.</p>
                         </div>
                         <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                             <div class="font-extrabold text-slate-900 flex items-center gap-1.5">
@@ -4911,7 +5032,7 @@
                     </div>
                 </div>
 
-                <!-- ══════════ TAB 4: SYNC & ARCHIVE ══════════ -->
+                <!-- ══════════ TAB 5: SYNC & ARCHIVE ══════════ -->
                 <div x-show="userGuideTab === 'sync_archive'" class="space-y-5">
                     <div class="border-b border-slate-200 pb-3">
                         <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
@@ -4923,12 +5044,12 @@
 
                     <div class="space-y-3">
                         <div class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200">
-                            <strong class="text-blue-900 font-extrabold">🔄 Sinkronisasi Master Harga Cloud:</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Master harga perangkat Motorola, jasa mandays, dan hardware diambil dari tab Google Spreadsheet master. Klik tombol <em>"Sinkronisasi Harga Cloud"</em> untuk memperbarui harga real-time tanpa perlu redeploy server.</p>
+                            <strong class="text-blue-900 font-extrabold">🔄 Sinkronisasi Master Harga Cloud (DMR &amp; Tab RFoF_DAS_FMTCS):</strong>
+                            <p class="text-[11px] text-slate-600 mt-1">Master harga perangkat Motorola, jasa mandays, serta seluruh 17 SKU perangkat aktif/pasif FMTCS DAS (tab khusus <code>RFoF_DAS_FMTCS</code>) diambil langsung dari Google Spreadsheet Master Pricelist. Klik tombol <em>"Sinkronisasi Harga Cloud"</em> untuk memperbarui harga dan modal COGS real-time tanpa redeploy server.</p>
                         </div>
                         <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
                             <strong class="text-emerald-900 font-extrabold">💾 Simpan &amp; Muat Proyek (.cdpk.json &amp; .xlsx):</strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Setiap kali Anda mengklik <em>"Simpan ke Drive"</em>, sistem secara otomatis mengunggah dokumen kalkulasi (.cdpk.json) dan lembar kerja Excel Quotation (.xlsx) resmi ke subfolder Google Drive. File tersebut dapat Anda buka kembali kapan saja melalui menu <em>"Arsip Proyek Tim"</em>.</p>
+                            <p class="text-[11px] text-slate-600 mt-1">Setiap kali Anda mengklik <em>"Simpan ke Drive"</em>, sistem menyimpan seluruh state DMR maupun state RFoF DAS ke dalam berkas <code>.cdpk.json</code> dan lembar kerja Excel Quotation (<code>.xlsx</code>) di Google Drive.</p>
                         </div>
                         <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200">
                             <strong class="text-indigo-900 font-extrabold">📊 Ringkasan Portofolio Eksekutif &amp; Guardrail Margin:</strong>
@@ -4946,7 +5067,7 @@
                     </div>
                 </div>
 
-                <!-- ══════════ TAB 5: ROLES & SECURITY ══════════ -->
+                <!-- ══════════ TAB 6: ROLES & SECURITY ══════════ -->
                 <div x-show="userGuideTab === 'security'" class="space-y-5">
                     <div class="border-b border-slate-200 pb-3">
                         <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
@@ -4961,25 +5082,25 @@
                             <strong class="text-amber-900 font-extrabold flex items-center gap-1.5">
                                 <span>👑</span> <span>Administrator:</span>
                             </strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Pemilik sistem dengan hak akses mutlak: menyetujui (approve) pendaftaran pengguna baru, mengelola akun tim, mengakses folder master Google Drive &amp; master pricelist Spreadsheet, serta melihat dan mengelola seluruh arsip tim, portofolio eksekutif, dan jejak audit.</p>
+                            <p class="text-[11px] text-slate-600 mt-1">Pemilik sistem dengan hak akses mutlak: menyetujui pendaftaran pengguna baru, mengelola akun tim, mengakses folder master Google Drive &amp; master pricelist Spreadsheet (termasuk tab <code>RFoF_DAS_FMTCS</code>), membuka penuh Estimator &amp; BoQ DMR/DAS, serta mengelola seluruh arsip tim, portofolio eksekutif, dan jejak audit.</p>
                         </div>
                         <div class="p-3.5 rounded-xl bg-teal-50/70 border border-teal-200">
                             <strong class="text-teal-900 font-extrabold flex items-center gap-1.5">
                                 <span>👁️</span> <span>Overseer (Pemantau &amp; Peninjau Eksekutif):</span>
                             </strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Diperuntukkan bagi Direksi, General Manager, dan Head of Department. Memiliki hak akses lihat menyeluruh seperti Administrator terhadap akun tim, seluruh dokumen arsip proyek tim, ringkasan portofolio, dan jejak audit (*audit trail*). Dapat menggunakan seluruh kalkulator, namun tautan folder master Google Drive &amp; Spreadsheet master disembunyikan untuk menjaga integritas data.</p>
+                            <p class="text-[11px] text-slate-600 mt-1">Diperuntukkan bagi Direksi, General Manager, dan Head of Department. Memiliki hak akses penuh terhadap Estimator &amp; BoQ Komersial (baik DMR System maupun RFoF Distributed Antenna System), melihat akun tim, membuka seluruh dokumen arsip proyek tim, ringkasan portofolio, dan jejak audit (*audit trail*). Tautan mentah folder master Google Drive &amp; Spreadsheet master disembunyikan untuk menjaga integritas data sumber.</p>
                         </div>
                         <div class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200">
                             <strong class="text-blue-900 font-extrabold flex items-center gap-1.5">
                                 <span>🛠️</span> <span>Engineer / Technician:</span>
                             </strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Tim teknis dan rekayasa sistem: fokus pada kalkulasi sizing RF, perakitan BoQ, estimasi mandays jasa, penyimpanan berkas ke Google Drive, dan menerima serah terima (handover) dari tim Product Expert.</p>
+                            <p class="text-[11px] text-slate-600 mt-1">Tim teknis dan rekayasa sistem: fokus pada kalkulasi sizing RF, desain topologi multi-lantai RFoF DAS, Link Budget, laporan Commissioning SAT PDF, estimasi mandays jasa, penyimpanan berkas ke Google Drive, dan serah terima (handover).</p>
                         </div>
                         <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
                             <strong class="text-emerald-900 font-extrabold flex items-center gap-1.5">
                                 <span>💼</span> <span>Product Expert:</span>
                             </strong>
-                            <p class="text-[11px] text-slate-600 mt-1">Tim penjualan dan konsultan produk komersial: fokus pada konfigurasi penawaran klien, perakitan paket radio HT &amp; aksesoris, pengaturan diskon/margin, ekspor proposal tender PDF/Excel resmi, dan melakukan serah terima ke tim Engineer.</p>
+                            <p class="text-[11px] text-slate-600 mt-1">Tim penjualan dan konsultan produk komersial: memiliki akses penuh ke BoQ &amp; Estimator harga DMR maupun RFoF DAS, konfigurasi paket produk, pengaturan diskon/margin, ekspor proposal tender PDF/Excel resmi, dan serah terima ke tim Engineer.</p>
                         </div>
                         <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200 space-y-1.5">
                             <strong class="text-indigo-900 font-extrabold flex items-center gap-1.5">
@@ -4988,29 +5109,26 @@
                             <p class="text-[11px] text-slate-600">
                                 Akses sistem dibatasi secara ketat hanya untuk domain resmi <strong>@citradata.id</strong> dan <strong>@techsolutions.id</strong>. Karyawan yang mendaftar mandiri via Google SSO akan tercatat dalam antrean <em>"Pending Approval"</em>.
                             </p>
-                            <p class="text-[11px] text-indigo-950 font-bold bg-white/70 p-2 rounded-lg border border-indigo-200">
-                                💡 Catatan: Untuk mempercepat verifikasi akun dan penetapan peran, anggota tim baru cukup <u>hubungi Admin</u>.
-                            </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- ══════════ TAB 6: AUDIT TRAIL & HANDOVER ══════════ -->
+                <!-- ══════════ TAB 7: AUDIT TRAIL & HANDOVER ══════════ -->
                 <div x-show="userGuideTab === 'audit_handover'" class="space-y-5">
                     <div class="border-b border-slate-200 pb-3">
                         <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
                             <span>🤝</span>
                             <span>Kolaborasi Handover, Notifikasi Lonceng &amp; Jejak Audit</span>
                         </h4>
-                        <p class="text-slate-500 mt-1 text-[11px]">Mendukung kerja sama lintas divisi antara tim komersial (Product Expert) dan tim teknis (Engineer / Technician).</p>
+                        <p class="text-slate-500 mt-1 text-[11px]">Mendukung kerja sama lintas divisi antara tim komersial (Product Expert), tim teknis (Engineer / Technician), serta pengawasan Overseer &amp; Admin.</p>
                     </div>
 
                     <div class="space-y-3">
                         <div class="p-3.5 rounded-xl bg-purple-50/70 border border-purple-200 space-y-1.5">
                             <strong class="text-purple-900 font-extrabold flex items-center gap-1.5">
-                                <span>🤝</span> <span>Fitur Handover Proyek Antardivisi:</span>
+                                <span>🤝</span> <span>Fitur Handover Proyek Antardivisi &amp; QR Handoff DAS:</span>
                             </strong>
-                            <p class="text-[11px] text-slate-600">Untuk menyerahkan proyek (misal: dari Product Expert ke Engineer), buka <em>"Arsip Proyek Tim"</em>, klik tombol <strong>"🤝 Handover"</strong> pada proyek, pilih rekan tim penerima, dan berikan memo kerja. Dokumen otomatis dibagikan dan riwayat serah terima tersimpan permanen.</p>
+                            <p class="text-[11px] text-slate-600">Untuk menyerahkan proyek via Cloud, buka <em>"Arsip Proyek Tim"</em>, klik <strong>"🤝 Handover"</strong>, dan pilih rekan tim penerima. Selain itu, pada modul RFoF DAS tersedia fitur <strong>📱 QR Handoff</strong> untuk mentransfer topologi lantai secara offline melalui kode token/QR.</p>
                         </div>
                         <div class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 space-y-1.5">
                             <strong class="text-amber-900 font-extrabold flex items-center gap-1.5">
@@ -5027,7 +5145,7 @@
                     </div>
                 </div>
 
-                <!-- ══════════ TAB 7: FAQ & PANDUAN PRAKTIS ══════════ -->
+                <!-- ══════════ TAB 8: FAQ & PANDUAN PRAKTIS ══════════ -->
                 <div x-show="userGuideTab === 'faq'" class="space-y-4">
                     <div class="border-b border-slate-200 pb-3">
                         <h4 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
@@ -5044,13 +5162,13 @@
                                     class="w-full p-3.5 text-left font-bold text-slate-900 flex items-center justify-between hover:bg-slate-100 cursor-pointer">
                                 <span class="flex items-center gap-2">
                                     <span class="text-blue-600">Q1:</span>
-                                    <span>Bagaimana cara melakukan reset isian jika ingin memulai kalkulasi proyek baru?</span>
+                                    <span>Bagaimana cara me-reset isian pada DMR System maupun RFoF Distributed Antenna System?</span>
                                 </span>
                                 <span class="text-slate-400 font-bold" x-text="activeFaqIdx === 0 ? '▲' : '▼'"></span>
                             </button>
                             <div x-show="activeFaqIdx === 0" class="p-3.5 pt-0 text-slate-600 border-t border-slate-200 bg-white text-[11px] space-y-2">
-                                <p>Buka <strong>Tab 1 (Sizing RF &amp; Penentuan Topologi)</strong>. Pada bagian atas kartu <em>"Parameter Teknis &amp; Lingkungan Operasi"</em>, klik tombol merah <strong>"🔄 Reset Isian"</strong> (di samping tombol <em>"✨ Isi dengan AI"</em>).</p>
-                                <p>Sistem akan menampilkan konfirmasi untuk mencegah hilangnya data secara tidak sengaja. Setelah Anda menyetujui, seluruh input dikembalikan ke nilai awal baseline (35 km², Hilly, 120 user, UHF, PLN Backup, Fiber Optic) dan BoQ diperbarui secara otomatis.</p>
+                                <p>1. <strong>Reset Khusus RFoF DAS:</strong> Di dalam ruang kerja <em>RFoF Distributed Antenna System</em> (Tab 1: BoQ &amp; Topologi Multi-Lantai), klik tombol merah <strong>"🔄 Reset BoQ (0)"</strong> pada kartu tabel BoQ atau <strong>"🔄 Reset DAS (0)"</strong> pada kartu parameter atas untuk mengosongkan seluruh jumlah perangkat dan antena lantai menjadi <code>0</code>. Klik <strong>"📋 Muat Default"</strong> jika ingin mengembalikan contoh standar 4 lantai.</p>
+                                <p>2. <strong>Reset Proyek Menyeluruh:</strong> Klik tombol <strong>"🔄 Proyek Baru / Reset Isian"</strong> pada banner Informasi Proyek di bagian atas halaman untuk mereset baik DMR System maupun RFoF DAS sekaligus.</p>
                             </div>
                         </div>
 
@@ -5060,13 +5178,13 @@
                                     class="w-full p-3.5 text-left font-bold text-slate-900 flex items-center justify-between hover:bg-slate-100 cursor-pointer">
                                 <span class="flex items-center gap-2">
                                     <span class="text-blue-600">Q2:</span>
-                                    <span>Mengapa akun baru saya berstatus 'Pending Approval' dan tidak bisa langsung login?</span>
+                                    <span>Siapa saja yang memiliki akses ke tabel harga BoQ &amp; Estimator pada modul RFoF DAS?</span>
                                 </span>
                                 <span class="text-slate-400 font-bold" x-text="activeFaqIdx === 1 ? '▲' : '▼'"></span>
                             </button>
                             <div x-show="activeFaqIdx === 1" class="p-3.5 pt-0 text-slate-600 border-t border-slate-200 bg-white text-[11px] space-y-2">
-                                <p>Sesuai dengan <strong>CDPK Security Policy (Zero Trust)</strong>, seluruh akun baru yang mendaftar mandiri melalui Google Workspace SSO wajib melalui audit dan verifikasi persetujuan sebelum diberikan hak akses ke dalam aplikasi dan data komersial.</p>
-                                <p>Jika Anda memerlukan percepatan aktivasi akun dan penetapan peran (misal sebagai <em>Product Expert</em> atau <em>Engineer / Technician</em>), Anda cukup <strong>hubungi Admin</strong> untuk melakukan verifikasi instan.</p>
+                                <p>Akses penuh ke BoQ Komersial &amp; Estimator (termasuk pengubahan rasio desain, kurs mata uang, pengeditan harga satuan, rincian modal COGS, dan persentase Gross Margin) terbuka otomatis untuk <strong>👑 Administrator</strong>, <strong>👁️ Overseer</strong>, dan <strong>💼 Product Expert (Sales)</strong> tanpa memerlukan kode PIN terpisah.</p>
+                                <p>Sementara itu, pengguna dengan peran <strong>🛠️ Engineer / Technician</strong> tetap dapat menggunakan seluruh fitur rekayasa teknis, topologi, Link Budget, dan kuantitas BOM dengan proteksi nilai harga komersial.</p>
                             </div>
                         </div>
 
@@ -5076,15 +5194,13 @@
                                     class="w-full p-3.5 text-left font-bold text-slate-900 flex items-center justify-between hover:bg-slate-100 cursor-pointer">
                                 <span class="flex items-center gap-2">
                                     <span class="text-blue-600">Q3:</span>
-                                    <span>Bagaimana cara menyerahkan (handover) kalkulasi proyek ke rekan kerja?</span>
+                                    <span>Bagaimana cara menghubungkan hasil sizing DMR ke RFoF DAS dan sebaliknya?</span>
                                 </span>
                                 <span class="text-slate-400 font-bold" x-text="activeFaqIdx === 2 ? '▲' : '▼'"></span>
                             </button>
                             <div x-show="activeFaqIdx === 2" class="p-3.5 pt-0 text-slate-600 border-t border-slate-200 bg-white text-[11px] space-y-2">
-                                <p>1. Simpan proyek Anda terlebih dahulu dengan mengklik tombol <strong>"💾 Simpan ke Drive"</strong>.</p>
-                                <p>2. Buka menu <strong>"📂 Arsip Proyek Tim"</strong> di bilah atas.</p>
-                                <p>3. Temukan proyek yang bersangkutan, lalu klik tombol <strong>"🤝 Handover"</strong>.</p>
-                                <p>4. Pilih rekan tim penerima (bisa 1 orang atau lebih), sertakan memo instruksi kerja, lalu klik <strong>"Kirim Handover"</strong>. Penerima akan langsung menerima notifikasi lonceng kuning dengan tombol pintas buka proyek.</p>
+                                <p>1. <strong>Dari DMR ke RFoF DAS:</strong> Setelah menghitung kebutuhan radio di <em>DMR System</em>, klik tombol <strong>"🏢 Perluas ke RFoF DAS by FMTCS"</strong> (atau tombol <em>"🔄 Sinkronkan dari Sizing DMR"</em> di banner DAS). Jumlah lantai gedung, repeater, dan jumlah pengguna HT akan langsung ditransfer ke modul RFoF DAS.</p>
+                                <p>2. <strong>Dari RFoF DAS ke BoQ Utama DMR:</strong> Setelah selesai merancang distribusi antena per lantai di <em>RFoF DAS</em>, klik tombol hijau <strong>"📥 Tambahkan ke BoQ Utama DMR"</strong>. Seluruh komponen aktif (OMU, ORU) dan pasif (Splitter, Coupler, Antena, Kabel) akan langsung digabungkan ke dalam BoQ Utama DMR.</p>
                             </div>
                         </div>
 
@@ -5099,27 +5215,7 @@
                                 <span class="text-slate-400 font-bold" x-text="activeFaqIdx === 3 ? '▲' : '▼'"></span>
                             </button>
                             <div x-show="activeFaqIdx === 3" class="p-3.5 pt-0 text-slate-600 border-t border-slate-200 bg-white text-[11px] space-y-2">
-                                <p>Ya, 100%! CDPK System Planner dirancang responsif penuh dengan standar target sentuh minimum 44px ramah jari. Aplikasi dapat dibuka langsung melalui Safari di iPhone &amp; iPad (iOS/iPadOS) serta Google Chrome di smartphone &amp; tablet Android.</p>
-                                <p>Navigasi atas, tabel BoQ, kartu ringkasan, dan modal otomatis menyesuaikan orientasi portrait maupun landscape.</p>
-                            </div>
-                        </div>
-
-                        <!-- FAQ 5 -->
-                        <div class="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 transition">
-                            <button @click="activeFaqIdx = (activeFaqIdx === 4 ? null : 4)" 
-                                    class="w-full p-3.5 text-left font-bold text-slate-900 flex items-center justify-between hover:bg-slate-100 cursor-pointer">
-                                <span class="flex items-center gap-2">
-                                    <span class="text-blue-600">Q5:</span>
-                                    <span>Bagaimana cara menghasilkan BoQ tanpa harga untuk tender vs penawaran komersial lengkap?</span>
-                                </span>
-                                <span class="text-slate-400 font-bold" x-text="activeFaqIdx === 4 ? '▲' : '▼'"></span>
-                            </button>
-                            <div x-show="activeFaqIdx === 4" class="p-3.5 pt-0 text-slate-600 border-t border-slate-200 bg-white text-[11px] space-y-2">
-                                <p>Buka <strong>Tab 2 (Bill of Quantity &amp; Finansial)</strong>. Di bagian atas tabel terdapat toggle <strong>"Mode Ekspor"</strong>:</p>
-                                <ul class="list-disc pl-4 space-y-1 text-slate-600">
-                                    <li><strong>Mode Technical BoQ:</strong> Menghilangkan kolom harga satuan, diskon, margin, dan total harga. Sangat ideal untuk lampiran teknis tender / RFP pengadaan.</li>
-                                    <li><strong>Mode Commercial Quotation:</strong> Menampilkan kalkulasi harga lengkap, subtotal perangkat, mandays instalasi, margin komersial, PPN 11%, dan grand total siap kirim ke klien.</li>
-                                </ul>
+                                <p>Ya, 100%! CDPK System Planner v8.5.0 dirancang responsif penuh untuk iOS/iPadOS dan Android, serta menyediakan pengunduhan APK Android mandiri dan instalasi PWA langsung dari browser.</p>
                             </div>
                         </div>
                     </div>
@@ -5132,7 +5228,7 @@
                 <!-- Navigation Stepper Buttons -->
                 <div class="flex items-center gap-2">
                     <button @click="
-                        const tabs = ['workflow', 'sizing', 'configurator', 'sync_archive', 'security', 'audit_handover', 'faq'];
+                        const tabs = ['workflow', 'sizing', 'rfof_das', 'configurator', 'sync_archive', 'security', 'audit_handover', 'faq'];
                         let idx = tabs.indexOf(userGuideTab);
                         if (idx > 0) userGuideTab = tabs[idx - 1];
                     " :disabled="userGuideTab === 'workflow'"
@@ -5142,7 +5238,7 @@
                     </button>
 
                     <button @click="
-                        const tabs = ['workflow', 'sizing', 'configurator', 'sync_archive', 'security', 'audit_handover', 'faq'];
+                        const tabs = ['workflow', 'sizing', 'rfof_das', 'configurator', 'sync_archive', 'security', 'audit_handover', 'faq'];
                         let idx = tabs.indexOf(userGuideTab);
                         if (idx < tabs.length - 1) userGuideTab = tabs[idx + 1];
                     " :disabled="userGuideTab === 'faq'"
@@ -5154,7 +5250,7 @@
 
                 <!-- Close CTA -->
                 <div class="flex items-center gap-3">
-                    <span class="text-slate-400 font-medium hidden sm:inline">CDPK System Planner v8.4.0 Cloud</span>
+                    <span class="text-slate-400 font-medium hidden sm:inline">CDPK System Planner v8.5.0 Cloud</span>
                     <button @click="userGuideOpen = false" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold cursor-pointer transition shadow-xs" x-text="t('closeGuideBtn')">
                         Tutup Panduan
                     </button>

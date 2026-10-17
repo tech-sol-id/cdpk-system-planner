@@ -1,8 +1,8 @@
 # Panduan Pengguna Resmi (User Guide)
-## CDPK System Planner — Versi 8.4.0
+## CDPK System Planner — Versi 8.5.0
 
-> **Sistem:** CDPK System Planner *(Solution Sizing, RF Simulation, Commercial Suite & Enterprise Team Collaboration)*  
-> **Distributor Resmi:** PT Citradata Purnakharisma (CDPK) — Authorized Distributor Motorola Solutions & Avigilon  
+> **Sistem:** CDPK System Planner *(DMR System & RFoF Distributed Antenna System — Solution Sizing, RF Simulation, Commercial Suite & Enterprise Team Collaboration)*  
+> **Distributor Resmi:** PT Citradata Purnakharisma (CDPK) — Authorized Distributor Motorola Solutions, Avigilon & FMTCS Fiber DAS  
 > **Akses Web Produksi:** [https://cdpk-system-planner.onrender.com/](https://cdpk-system-planner.onrender.com/)  
 > **Bahasa:** Dwi-Bahasa (**🇮🇩 Bahasa Indonesia** & **🇬🇧 English**)  
 
@@ -10,23 +10,26 @@
 
 ## Daftar Isi
 1. [Akses Sistem & Panduan Masuk (Login)](#1-akses-sistem--panduan-masuk-login)
-2. [Tingkatan Peran Pengguna (User Roles & Access Levels)](#2-tingkatan-peran-pengguna-user-roles--access-levels)
-3. [Alur Kerja Rekayasa & Penawaran (End-to-End Workflow)](#3-alur-kerja-rekayasa--penawaran-end-to-end-workflow)
-4. [Panduan Modul 1: Sizing RF & Penentuan Topologi](#4-panduan-modul-1-sizing-rf--penentuan-topologi)
+2. [Tingkatan Peran Pengguna & Hak Akses Estimator (RBAC)](#2-tingkatan-peran-pengguna--hak-akses-estimator-rbac)
+3. [Alur Kerja Rekayasa & Workspace Switcher (DMR ↔ RFoF DAS)](#3-alur-kerja-rekayasa--workspace-switcher-dmr--rfof-das)
+4. [Panduan Modul 1: Sizing RF & Penentuan Topologi (DMR System)](#4-panduan-modul-1-sizing-rf--penentuan-topologi)
 5. [Panduan Modul 2: BoQ & Konfigurasi Finansial](#5-panduan-modul-2-boq--konfigurasi-finansial)
 6. [Panduan Modul 3: Katalog Produk & Spesifikasi](#6-panduan-modul-3-katalog-produk--spesifikasi)
 7. [Panduan Modul 4: Estimasi Jasa & Mandays (Metode WES)](#7-panduan-modul-4-estimasi-jasa--mandays-metode-wes)
 8. [Panduan Modul 5: Simulasi Propagasi Canvas RF](#8-panduan-modul-5-simulasi-propagasi-canvas-rf)
 9. [Panduan Modul 6: Multi-Model AI Copilot](#9-panduan-modul-6-multi-model-ai-copilot)
 10. [Panduan Modul 7: Kalkulator Produk & Sistem Kustom](#10-panduan-modul-7-kalkulator-produk--sistem-kustom)
-11. [Kolaborasi Tim & Fitur Handover Proyek](#11-kolaborasi-tim--fitur-handover-proyek)
-12. [Pusat Notifikasi & Serah Terima Tugas](#12-pusat-notifikasi--serah-terima-tugas)
-13. [Penyimpanan Cloud & Dashboard Arsip Google Drive](#13-penyimpanan-cloud--dashboard-arsip-google-drive)
-14. [Panduan Khusus Eksekutif (Administrator & Overseer)](#14-panduan-khusus-eksekutif-administrator--overseer)
+11. [Panduan Workspace 2: RFoF Distributed Antenna System (`RFoF DAS by FMTCS`)](#11-panduan-workspace-2-rfof-distributed-antenna-system-rfof-das-by-fmtcs)
+    - [Cara Me-Reset BoQ & Input RFoF DAS (`🔄 Reset DAS (0)`)](#cara-me-reset-boq--input-rfof-das--reset-das-0)
+    - [Akses Estimator & BoQ Komersial (`Admin`, `Overseer`, `Product Expert`)](#akses-estimator--boq-komersial-admin-overseer-product-expert)
+12. [Kolaborasi Tim & Fitur Handover Proyek](#12-kolaborasi-tim--fitur-handover-proyek)
+13. [Pusat Notifikasi & Serah Terima Tugas](#13-pusat-notifikasi--serah-terima-tugas)
+14. [Penyimpanan Cloud & Dashboard Arsip Google Drive](#14-penyimpanan-cloud--dashboard-arsip-google-drive)
+15. [Panduan Khusus Eksekutif (Administrator & Overseer)](#15-panduan-khusus-eksekutif-administrator--overseer)
     - [Ringkasan Portofolio Eksekutif](#ringkasan-portofolio-eksekutif)
     - [Kebijakan Guardrail Margin (< 15%)](#kebijakan-guardrail-margin--15)
     - [Jejak Audit Aktivitas (Audit Trail)](#jejak-audit-aktivitas-audit-trail)
-15. [Penggunaan pada Smartphone & Tablet](#15-penggunaan-pada-smartphone--tablet)
+16. [Penggunaan pada Smartphone & Tablet (PWA & Versi Mobile)](#16-penggunaan-pada-smartphone--tablet-pwa--versi-mobile)
 
 ---
 
@@ -70,31 +73,35 @@ Untuk menjamin keamanan tingkat enterprise, sistem menerapkan standar kriptograf
 
 ### 1.5. Dukungan Dwibahasa Penuh (Full Bilingual Support ID/EN)
 Aplikasi mendukung peralihan bahasa instan antara **Bahasa Indonesia (ID)** dan **English (EN)** melalui toggle di pojok kanan atas:
-- **Cakupan Dwibahasa:** Seluruh elemen aplikasi, mulai dari formulir login, navigasi, kalkulator sizing, BoQ komersial, simulasi RF & GIS heatmap, katalog produk, modul configurator mandiri, dialog kirim email, hingga panduan pengguna interaktif, merespons perubahan bahasa secara *real-time*.
+- **Cakupan Dwibahasa:** Seluruh elemen aplikasi, mulai dari formulir login, navigasi kedua workspace (`📡 DMR System` dan `🏢 RFoF Distributed Antenna System`), kalkulator sizing, BoQ komersial, simulasi RF & GIS heatmap, katalog produk, modul configurator mandiri, dialog kirim email, hingga panduan pengguna interaktif, merespons perubahan bahasa secara *real-time*.
 
 ---
 
-## 2. Tingkatan Peran Pengguna (User Roles & Access Levels)
+## 2. Tingkatan Peran Pengguna & Hak Akses Estimator (RBAC)
 
 Sistem membedakan hak akses berdasarkan 4 peran resmi:
 
-| Peran | Simbol | Deskripsi & Hak Akses | Akses Folder Master Cloud |
-| :--- | :---: | :--- | :---: |
-| **Administrator** | 👑 | Pemilik sistem dengan akses mutlak: mengelola seluruh akun tim, menyetujui pendaftaran, membuka link folder master Google Drive & Google Sheet pricelist, serta meninjau seluruh arsip proyek, audit trail, dan portofolio. | **YA** (Akses Penuh) |
-| **Overseer** | 👁️ | Pemantau & Peninjau Eksekutif (Direksi, GM, Head of Department). Dapat melihat seluruh akun tim (*view-only*), membuka seluruh arsip proyek tim, meninjau jejak audit (*audit trail*), dan memantau kepatuhan margin eksekutif. | **TIDAK** (Folder & Sheet Master disembunyikan) |
-| **Engineer / Technician** | 🛠️ | Tim teknis & presales rekayasa sistem. Fokus pada kalkulasi RF, topologi repeater, node DAS, estimasi mandays jasa, kustomisasi BoQ, penyimpanan berkas, dan penerimaan handover dari sales. | **TIDAK** (Hanya arsip sendiri / yang dibagikan) |
-| **Product Expert** | 💼 | Tim penjualan & konsultan produk komersial. Fokus pada perakitan paket produk, optimasi harga penawaran klien, pengaturan diskon/margin, ekspor proposal, dan handover ke presales. | **TIDAK** (Hanya arsip sendiri / yang dibagikan) |
+| Peran | Simbol | Deskripsi & Hak Akses | Akses Estimator & Harga BoQ (DMR & RFoF DAS) | Akses Folder Master Cloud |
+| :--- | :---: | :--- | :---: | :---: |
+| **Administrator** | 👑 | Pemilik sistem dengan akses mutlak: mengelola seluruh akun tim, menyetujui pendaftaran, membuka link folder master Google Drive & Google Sheet pricelist (`Products_Catalog` & `RFoF_DAS_FMTCS`), serta meninjau seluruh arsip proyek, audit trail, dan portofolio. | **PENUH** (Edit Harga Satuan, Rasio Desain Estimator DAS, COGS, Margin & Diskon) | **YA** (Akses Penuh) |
+| **Overseer** | 👁️ | Pemantau & Peninjau Eksekutif (Direksi, GM, Head of Department). Dapat melihat seluruh akun tim (*view-only*), membuka seluruh arsip proyek tim, meninjau jejak audit (*audit trail*), memantau kepatuhan margin eksekutif, serta mengevaluasi & mengubah simulasi harga/rasio pada BoQ & Estimator. | **PENUH** (Edit Harga Satuan, Rasio Desain Estimator DAS, COGS, Margin & Diskon) | **TIDAK** (Folder & Sheet Master disembunyikan) |
+| **Product Expert** | 💼 | Tim penjualan & konsultan produk komersial. Fokus pada perakitan paket produk, optimasi harga penawaran klien, pengaturan diskon/margin, kustomisasi harga & rasio Estimator RFoF DAS, ekspor proposal, dan handover ke presales. | **PENUH** (Edit Harga Satuan, Rasio Desain Estimator DAS, COGS, Margin & Diskon) | **TIDAK** (Hanya arsip sendiri / yang dibagikan) |
+| **Engineer / Technician** | 🛠️ | Tim teknis & presales rekayasa sistem. Fokus pada kalkulasi RF, topologi repeater, perencanaan zona antena RFoF DAS, Link Budget, Commissioning SAT PDF, estimasi mandays jasa, kuantitas teknis BoQ, dan penerimaan handover dari sales. | **TEKNIS SAJA** (Kuantitas & Spesifikasi terbuka; kolom Harga, COGS, dan Margin disembunyikan) | **TIDAK** (Hanya arsip sendiri / yang dibagikan) |
 
 ---
 
-## 3. Alur Kerja Rekayasa & Penawaran (End-to-End Workflow)
+## 3. Alur Kerja Rekayasa & Workspace Switcher (DMR ↔ RFoF DAS)
+
+Di bagian atas layar (serta di dalam menu laci *mobile*), tersedia **Workspace Switcher** untuk berpindah antar modul utama secara instan:
+- **`📡 DMR System`** — Workspace perencanaan sistem radio MOTOTRBO (Conventional, IP Site Connect, Capacity Plus), simulasi peta propagasi RF, estimasi mandays WES, dan Master BoQ.
+- **`🏢 RFoF Distributed Antenna System`** — Workspace rekayasa sistem distribusi antena serat optik (**RFoF DAS by FMTCS**) untuk gedung bertingkat, basement, terowongan, dan kompleks industri.
 
 ```mermaid
 flowchart LR
-    Step1["1. Sizing RF & Topologi (Tab 1)"] --> Step2["2. Periksa BoQ & Finansial (Tab 2)"]
-    Step2 --> Step3["3. Tambah Paket Kustom (Tab 7)"]
-    Step3 --> Step4["4. Estimasi Mandays (Tab 4)"]
-    Step4 --> Step5["5. Simulasi Coverage Canvas (Tab 5)"]
+    Step1["1. Sizing RF & Topologi (📡 DMR System)"] --> Step2["2. Perluas ke 🏢 RFoF Distributed Antenna System (Jika Gedung/Basement)"]
+    Step2 --> Step3["3. Desain Zona Lantai, Link Budget & BoQ FMTCS"]
+    Step3 --> Step4["4. Gabungkan BoQ DAS ke Master BoQ DMR"]
+    Step4 --> Step5["5. Estimasi Mandays & Simulasi Coverage Canvas"]
     Step5 --> Step6["6. Simpan ke Google Drive & Ekspor PDF/Excel"]
     Step6 --> Step7["7. Serah Terima (Handover) ke Rekan Tim"]
 ```
@@ -196,7 +203,44 @@ Dilengkapi pemilih model AI resmi Google Gemini:
 
 ---
 
-## 11. Kolaborasi Tim & Fitur Handover Proyek
+## 11. Panduan Workspace 2: RFoF Distributed Antenna System (`RFoF DAS by FMTCS`)
+
+Workspace kedua dirancang khusus untuk merancang solusi **RF over Fiber Distributed Antenna System (`RFoF DAS by FMTCS`)** pada gedung bertingkat, basement, terowongan tambang, dan fasilitas data center. Untuk membuka modul ini, klik tombol **`🏢 RFoF Distributed Antenna System`** pada **Workspace Switcher** di bilah atas aplikasi.
+
+### 11.1. Enam Tab Rekayasa RFoF DAS
+1. **📋 BoQ & Topologi Multi-Lantai:**
+   - Pilih mode arsitektur **Digital RFoF** (`DOMU400C.RI` + `DORU400CH.RI`, rasio hingga 1:32) atau **Analog RFoF** (`AOMU400C.RI` + `AORU400CH.RI`, rasio 1:8).
+   - Pilih topologi jaringan fiber optik: **Star (Point-to-Multipoint)**, **Cascade (Daisy-Chain)**, atau **Redundant Ring**.
+   - Atur daftar lantai/zona beserta jumlah antena indoor (`ANTI400R.M`) per lantai, jumlah repeater base station, HT, dan antena outdoor.
+   - Sistem otomatis menghitung jumlah unit aktif (OMU & ORU), pasif (`FMTCS-CFH8`, `FMTCS-DJF8`, `DSGQ400C.RI`, `UDSS400C`, `PD400R.M`, `CP400R.M`), kabel koaksial 1/2", konektor N-K, dan patchcord fiber, serta merender **Diagram Topologi SVG Interaktif**.
+2. **🔗 Link Budget & Planner Antena:**
+   - Menghitung rantai sinyal (*Signal Chain*) dari daya output ORU (40 dBm / 10W), redaman kabel koaksial, splitter, hingga gain antena untuk menampilkan **EIRP**, **Status Kesehatan Sinyal**, **Radius Cakupan (m)**, dan **Jumlah Antena per Lantai**.
+   - Klik tombol **"Terapkan ke BoQ"** untuk mengirim hasil perhitungan jumlah antena ke daftar lantai BoQ DAS.
+3. **⚡ Konversi RF & VSWR:**
+   - Alat bantu konversi 4-arah instan untuk **Daya RF** ($\text{dBm} \leftrightarrow \text{mW} \leftrightarrow \text{W} \leftrightarrow \text{dBW}$), **Gain/Loss** ($\text{dB} \leftrightarrow \text{Rasio}$), **VSWR & Return Loss** ($\text{VSWR} \leftrightarrow \text{RL dB} \leftrightarrow \Gamma \leftrightarrow \text{Reflected Power \%}$), dan **Field Strength** ($\text{dB}\mu\text{V} \leftrightarrow \text{dBm @ } 50\,\Omega$).
+4. **📡 Cakupan Outdoor (Okumura-Hata):**
+   - Menghitung link budget Uplink/Downlink dan estimasi jarak jangkauan maksimum (km) untuk 6 profil lingkungan (*Urban Small/Medium, Urban Metropolitan, Suburban, Open/Rural*).
+5. **✅ Commissioning & Laporan SAT PDF:**
+   - Formulir inspeksi penerimaan lapangan (*Site Acceptance Test*) per titik antena untuk memvalidasi ambang batas lulus/gagal (VSWR $\le 1.50$, Tx Power $\ge 8.0\text{ dBm}$, Rx Level $\ge -85.0\text{ dBm}$, dan Kualitas Panggilan), lengkap dengan tombol **Ekspor PDF Laporan Commissioning Resmi** siap tanda tangan.
+6. **📦 Katalog Perangkat FMTCS:**
+   - Menampilkan spesifikasi teknis lengkap untuk 17 SKU perangkat aktif, pasif, antena, dan aksesoris resmi FMTCS Fiber DAS.
+
+### Cara Me-Reset BoQ & Input RFoF DAS (`🔄 Reset DAS (0)`)
+Jika Anda ingin mengosongkan seluruh perhitungan BoQ RFoF DAS menjadi **`0`** untuk memulai proyek baru dari nol, tersedia **3 tombol Reset cepat** di dalam Tab **BoQ & Topologi Multi-Lantai**:
+1. **Tombol `🔄 Reset DAS (0)` (di Banner Atas RFoF DAS):** Mengosongkan seluruh zona lantai menjadi 1 baris lantai dengan `0` antena, mengatur Repeater = `0`, Radio HT = `0`, Antena Outdoor = `0`, menghapus seluruh harga kustom, dan me-reset seluruh kuantitas perangkat aktif/pasif di tabel BoQ menjadi **`0`**.
+2. **Tombol `🔄 Reset Lantai (0)` (di Panel Zona Lantai & Antena Indoor):** Mengosongkan daftar zona lantai & jumlah antena indoor menjadi `0`.
+3. **Tombol `🔄 Reset BoQ (0)` (di Header Tabel Ringkasan BoQ):** Mengosongkan seluruh item tabel BoQ menjadi `0` dalam 1 klik.
+4. **Tombol `📋 Contoh Standar` / `📋 Muat Default`:** Mengembalikan contoh konfigurasi referensi standar 4 lantai (44 antena indoor, 2 repeater, 40 radio HT) kapan saja.
+
+### Akses Estimator & BoQ Komersial (`Admin`, `Overseer`, `Product Expert`)
+Pengguna dengan peran **👑 Administrator**, **👁️ Overseer**, dan **💼 Product Expert** mendapatkan **akses terbuka penuh** ke fitur **Estimator & Komersial BoQ RFoF DAS** (ditandai dengan lencana hijau `🔓 Akses Estimator & BoQ Terbuka`):
+- **Edit Harga Satuan Langsung di Tabel BoQ:** Anda dapat mengubah nilai **Harga Satuan (Unit Price)** setiap perangkat FMTCS secara langsung pada kolom input di tabel Ringkasan BoQ. Total harga, nilai konversi IDR/USD, COGS, dan persentase Margin akan dihitung ulang secara *real-time*.
+- **Panel Parameter Rasio Desain & Mata Uang Estimator:** Mengatur rasio perhitungan otomatis (`Maks Antena / ORU`, `Maks ORU / OMU`, `Rasio Splitter / Antena`, `Rasio Coupler / Antena`, dan `Kabel Coax m / Antena`), memilih mata uang (`IDR` / `USD`), serta menyesuaikan kurs USD/IDR.
+- **Jembatan Dua Arah DMR ↔ RFoF DAS:** Gunakan tombol **`🏢 Perluas ke RFoF DAS by FMTCS`** dari hasil sizing DMR untuk mentransfer kebutuhan gedung ke workspace DAS, dan klik **`📥 Gabungkan ke Master BoQ DMR`** untuk menyatukan seluruh perangkat FMTCS ke tabel penawaran utama DMR.
+
+---
+
+## 12. Kolaborasi Tim & Fitur Handover Proyek
 
 Fitur serah terima proyek resmi memudahkan kerja sama antardivisi (misal: Product Expert menyerahkan rancangan awal ke Engineer untuk divalidasi):
 
@@ -227,7 +271,7 @@ sequenceDiagram
 
 ---
 
-## 12. Pusat Notifikasi & Serah Terima Tugas
+## 13. Pusat Notifikasi & Serah Terima Tugas
 
 - Terletak di bilah atas aplikasi dengan simbol **Lonceng Kuning** (🔔).
 - Badge angka merah menunjukkan jumlah pemberitahuan belum dibaca (*unread*).
@@ -236,23 +280,23 @@ sequenceDiagram
 
 ---
 
-## 13. Penyimpanan Cloud & Dashboard Arsip Google Drive
+## 14. Penyimpanan Cloud & Dashboard Arsip Google Drive
 
-### 13.1. Menyimpan Proyek ke Cloud
+### 14.1. Menyimpan Proyek ke Cloud
 - Klik tombol **"💾 Simpan ke Drive"** di bilah atas aplikasi.
 - Sistem mengunggah dua berkas secara otomatis ke subfolder Google Drive tim:
-  1. **Berkas Data JSON (`.cdpk.json`):** Berisi data kalkulasi menyeluruh agar proyek dapat dimuat dan disunting kembali kapan saja.
+  1. **Berkas Data JSON (`.cdpk.json`):** Berisi data kalkulasi menyeluruh (baik workspace **DMR System** maupun **RFoF Distributed Antenna System**) agar proyek dapat dimuat dan disunting kembali kapan saja.
   2. **Lembar Kerja Excel (`.xlsx`):** Berisi ringkasan proyek dan tabel penawaran komersial BoQ multi-sheet resmi berformat profesional.
 
-### 13.2. Memuat Kembali Proyek yang Disimpan
+### 14.2. Memuat Kembali Proyek yang Disimpan
 - Buka menu **"📂 Arsip Proyek Tim"**.
 - Cari nama proyek atau nama klien.
 - Klik tombol **"⚡ Buka Proyek"** pada berkas yang diinginkan.
-- Seluruh input sizing, konfigurasi BoQ, dan parameter kalkulasi akan dipulihkan secara instan.
+- Seluruh input sizing DMR, zona lantai & BoQ RFoF DAS, serta parameter kalkulasi akan dipulihkan secara instan.
 
 ---
 
-## 14. Panduan Khusus Eksekutif (Administrator & Overseer)
+## 15. Panduan Khusus Eksekutif (Administrator & Overseer)
 
 Bagi pengguna dengan peran **Administrator (👑)** dan **Overseer (👁️)**, dashboard arsip dilengkapi dengan modul pengawasan tingkat lanjut:
 
@@ -280,7 +324,7 @@ Terletak di bagian atas modal Arsip Proyek, menampilkan 4 metrik finansial real-
 
 ---
 
-## 15. Penggunaan pada Smartphone & Tablet (PWA & Versi Mobile)
+## 16. Penggunaan pada Smartphone & Tablet (PWA & Versi Mobile)
 
 CDPK System Planner dioptimalkan secara penuh untuk survei lapangan menggunakan perangkat bergerak:
 - **Progressive Web App (PWA):** Dapat dipasang langsung ke layar utama HP tanpa melalui App Store / Play Store dan berjalan dalam mode *standalone* layar penuh tanpa bilah URL browser.
@@ -295,10 +339,10 @@ CDPK System Planner dioptimalkan secara penuh untuk survei lapangan menggunakan 
 - **Dukungan Multi-Akun Google:**
   - Jika browser HP terhubung ke beberapa akun Google (pribadi dan kerja), gunakan tombol **"🔄 Pilih / Ganti Akun Google Lain"** di halaman login untuk memilih akun resmi perusahaan (`@citradata.id` atau `@techsolutions.id`).
 - **Navigasi Bawah Ramah Jempol (Bottom Navigation Bar):**
-  - Pada layar smartphone, navigasi utama dipindahkan ke bilah bawah: 📐 **Sizing**, 📋 **BoQ**, 🗺️ **Peta GIS**, ✨ **AI Copilot**, dan 📂 **Menu**.
+  - Pada layar smartphone, navigasi utama dipindahkan ke bilah bawah: 📐 **Sizing**, 📋 **BoQ**, 🗺️ **Peta GIS**, ✨ **AI Copilot**, dan 📂 **Menu** (termasuk pengalih workspace **DMR System** & **RFoF Distributed Antenna System**).
 - **Deteksi GPS Satelit Lapangan:**
   - Modul deteksi GPS memanfaatkan antena satelit perangkat dengan opsi presisi tinggi (*high accuracy*) dan pelaporan toleransi akurasi seketika.
 
 ---
 
-*CDPK System Planner v8.4.1 — Solusi Rekayasa Komunikasi Radio Motorola Solutions & Keamanan Avigilon.*
+*CDPK System Planner v8.5.0 — Solusi Rekayasa Komunikasi Radio Motorola Solutions, Keamanan Avigilon & RFoF Distributed Antenna System (FMTCS).*

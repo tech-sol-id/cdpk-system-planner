@@ -1891,6 +1891,7 @@ window.cdpkSystemPlannerApp = function () {
             this.needCctv = false;
             this.cctvCount = 0;
             this.activeTechSlide = 0;
+            this.resetDasBoq(true, true);
             this.syncBoqFromSizing();
             this.runCoverageSimulation();
             this.resetModalOpen = false;
@@ -1921,6 +1922,7 @@ window.cdpkSystemPlannerApp = function () {
             this.needCctv = false;
             this.cctvCount = 8;
             this.activeTechSlide = 0;
+            this.resetDasBoq(false, true);
             this.syncBoqFromSizing();
             this.runCoverageSimulation();
             this.resetModalOpen = false;
@@ -3812,6 +3814,83 @@ window.cdpkSystemPlannerApp = function () {
                 return window.CDPK_DAS_ENGINE.calcFieldMeterConversion(this.das.fSrc, this.das.fVal);
             }
             return {};
+        },
+
+        canAccessDasEstimator() {
+            if (!this.currentUser) return false;
+            const role = (this.currentUser.role || '').toLowerCase();
+            // Full Commercial BoQ & Estimator is open to Admin, Overseer, and Product Expert (Sales)
+            return role === 'admin' || role === 'overseer' || role === 'sales';
+        },
+
+        getDasItemPrice(it) {
+            if (!it) return 0;
+            if (this.currency === 'USD') {
+                return Math.round((Number(it.unitPriceUsd) || 0) * 100) / 100;
+            }
+            return Math.round(Number(it.unitPriceIdr) || 0);
+        },
+
+        setDasItemPrice(it, rawVal) {
+            if (!it || !this.das) return;
+            const val = parseFloat(rawVal);
+            if (!isFinite(val) || val < 0) return;
+            if (!this.das.customPrices) this.das.customPrices = {};
+            if (!this.das.customCurrencies) this.das.customCurrencies = {};
+            const usdVal = this.currency === 'USD' ? val : (val / (this.exchangeRate || 16200));
+            this.das.customPrices[it.key] = Math.round(usdVal * 100) / 100;
+            this.das.customCurrencies[it.key] = 'USD';
+        },
+
+        resetDasBoq(toZero = true, silent = false) {
+            if (!this.das) return;
+            if (toZero) {
+                this.das.floors = [
+                    { f: this.lang === 'en' ? 'Floor 1 / Zone 1' : 'Lantai 1 / Zona 1', q: 0 }
+                ];
+                this.das.rep = 0;
+                this.das.radio = 0;
+                this.das.outo = 0;
+                this.das.outd = 0;
+                this.das.customPrices = {};
+                this.das.customCurrencies = {};
+                if (!silent) {
+                    this.showToast(
+                        this.lang === 'en'
+                            ? 'RFoF DAS floor zones, equipment quantities, and custom prices have been reset to 0.'
+                            : 'Seluruh jumlah perangkat, zona lantai, dan kustomisasi harga RFoF DAS telah di-reset ke 0.',
+                        'success'
+                    );
+                }
+            } else {
+                this.das.archMode = 'digital';
+                this.das.fiberTopo = 'star';
+                this.das.floors = [
+                    { f: 'Basement 1', q: 4 },
+                    { f: 'Floor 1 / Lobby', q: 12 },
+                    { f: 'Floor 2 / Office', q: 16 },
+                    { f: 'Floor 3 / Data Hall', q: 12 }
+                ];
+                this.das.rep = 2;
+                this.das.radio = 20;
+                this.das.outo = 1;
+                this.das.outd = 1;
+                this.das.r_oru = 30;
+                this.das.r_omu = 32;
+                this.das.r_split = 0.30;
+                this.das.r_coup = 0.72;
+                this.das.r_cable = 34;
+                this.das.customPrices = {};
+                this.das.customCurrencies = {};
+                if (!silent) {
+                    this.showToast(
+                        this.lang === 'en'
+                            ? 'Loaded standard 4-floor RFoF DAS reference baseline (44 indoor antennas).'
+                            : 'Template standar RFoF DAS 4 lantai (44 antena indoor) berhasil dimuat.',
+                        'info'
+                    );
+                }
+            }
         },
 
         addDasFloor() {

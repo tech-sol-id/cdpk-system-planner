@@ -1,8 +1,8 @@
-# PRD — CDPK System Planner (PRD-New v8.4.0)
+# PRD — CDPK System Planner (PRD-New v8.5.0)
 
-> **Nama Aplikasi Resmi:** **CDPK System Planner** *(Solution Sizing, RF Simulation, Commercial Suite & Enterprise Team Collaboration)*  
-> **Pemilik / Entitas:** PT Citradata Purnakharisma (CDPK) — Authorized Distributor Motorola Solutions & Avigilon  
-> **Versi Saat Ini:** `8.4.0 (Enterprise Production Build)`  
+> **Nama Aplikasi Resmi:** **CDPK System Planner** *(DMR System & RFoF Distributed Antenna System — Solution Sizing, RF Simulation, Commercial Suite & Enterprise Team Collaboration)*  
+> **Pemilik / Entitas:** PT Citradata Purnakharisma (CDPK) — Authorized Distributor Motorola Solutions, Avigilon & FMTCS Fiber DAS  
+> **Versi Saat Ini:** `8.5.0 (Enterprise Production Build)`  
 > **Target Bahasa:** Dwi-Bahasa Penuh / Bilingual (**Bahasa Indonesia `ID`** & **English `EN`**)  
 > **AI Copilot Engine:** Multi-Model AI Selector (**Google Gemini 3.8 Flash** & **Google Gemini 3.8 Pro**)  
 > **Arsitektur & Cloud Hosting:** GitHub (`tech-sol-id`) + Render Cloud Container (Singapore Region) + Google Drive Live API (`drive citradata`)  
@@ -13,26 +13,29 @@
 
 ## 1. Visi Produk & Ringkasan Eksekutif
 
-**CDPK System Planner** adalah platform rekayasa sistem komunikasi radio DMR terintegrasi (*end-to-end*) yang memadukan perhitungan teknis propagasi RF, perencanaan kapasitas talkgroup & timeslot, perakitan paket solusi komposit (*Parent-Child BOM*), kalkulasi komersial presisi, kolaborasi tim lintas-divisi (*Product Expert* & *Engineer / Technician*), serta tata kelola pengawasan eksekutif (*Overseer* & *Administrator*) berbasis Google Drive Cloud.
+**CDPK System Planner** adalah platform rekayasa sistem komunikasi radio **DMR System** dan **RFoF Distributed Antenna System (`RFoF DAS by FMTCS`)** terintegrasi (*end-to-end*) dalam satu pintu login (*Single Sign-On*), yang memadukan perhitungan teknis propagasi RF, perencanaan kapasitas talkgroup & timeslot, desain topologi Fiber DAS multi-lantai (Digital DOMU/DORU & Analog AOMU/AORU), perakitan paket solusi komposit (*Parent-Child BOM*), kalkulasi komersial presisi, kolaborasi tim lintas-divisi (*Product Expert* & *Engineer / Technician*), serta tata kelola pengawasan eksekutif (*Overseer* & *Administrator*) berbasis Google Drive Cloud.
 
-### Pilar Utama Platform (Versi 8.4.0):
-1. **Precision Engineering:** Sizing RF geometrik, rekomendasi topologi bertingkat (Conventional, IP Site Connect, Capacity Plus Trunking), kalkulasi node DAS indoor (SLR 1000), estimasi mandays (WES Method), dan simulasi canvas propagasi CloudRF-style.
-2. **Modular Product & System Configurator:** Menghitung paket repeater base station (SLR 5300, SLR 8000), radio terminal portabel (R7, P6620i, P8668i), serta konfigurator kustom dinamis dengan pemilihan lisensi (*Licenses*) dan aksesoris (*Accessories*) per produk.
+### Pilar Utama Platform (Versi 8.5.0):
+1. **Dual-Workspace Engineering (`📡 DMR System` & `🏢 RFoF Distributed Antenna System`):**
+   - **Workspace 1 (`📡 DMR System`):** Sizing RF geometrik, rekomendasi topologi bertingkat (Conventional, IP Site Connect, Capacity Plus Trunking), kalkulasi node DAS kompak (SLR 1000), estimasi mandays (WES Method), dan simulasi canvas propagasi CloudRF-style.
+   - **Workspace 2 (`🏢 RFoF Distributed Antenna System` — `RFoF DAS by FMTCS`):** 6 modul lengkap rekayasa Fiber DAS multi-zona untuk gedung bertingkat, basement, terowongan, dan data center (BoQ & Topologi Multi-Lantai SVG, Link Budget & Planner Antena, Konversi RF & VSWR, Cakupan Outdoor Okumura-Hata, Commissioning & Laporan SAT PDF, serta Katalog 17 Perangkat FMTCS).
+   - **Two-Way Bridge DMR ↔ RFoF DAS:** Ekspansi 1-klik dari hasil sizing DMR ke perencanaan zona lantai RFoF DAS (`🏢 Perluas ke RFoF DAS by FMTCS`) serta injeksi 1-klik seluruh perangkat aktif/pasif FMTCS ke Master BoQ DMR (`📥 Gabungkan ke Master BoQ DMR`).
+2. **Modular Product & System Configurator:** Menghitung paket repeater base station (SLR 5300, SLR 8000), radio terminal portabel (R7, P6620i, P8668i), paket turnkey Fiber DAS FMTCS (`SYS-DAS-FMTCS-DIGITAL` & `SYS-DAS-FMTCS-ANALOG`), serta konfigurator kustom dinamis dengan pemilihan lisensi (*Licenses*) dan aksesoris (*Accessories*) per produk.
 3. **Enterprise Zero-Trust Security & Gatekeeping:**
    - Halaman depan terisolasi 100% (*Zero DOM Leakage*) dengan perlindungan CSS `x-cloak` dan otentikasi wajib sebelum akses workspace.
    - Pembatasan domain korporat ketat: hanya `@citradata.id` dan `@techsolutions.id`.
    - Mekanisme persetujuan wajib (*Admin Pending Approval*) untuk setiap pengguna baru.
-4. **Empat Tingkat Peran Pengguna (Four-Tier RBAC):**
-   - **👑 Administrator:** Kontrol penuh pengguna, persetujuan akun, akses link folder master Drive & master pricelist, jejak audit, dan ringkasan portofolio.
-   - **👁️ Overseer:** Mode pantau eksekutif. Dapat melihat seluruh akun tim (view-only), membuka seluruh dokumen arsip tim, meninjau jejak audit (*audit trail*), serta memantau kepatuhan margin eksekutif, tanpa akses modifikasi akun atau tautan master cloud.
-   - **🛠️ Engineer / Technician:** Fokus pada rekayasa teknis, sizing RF, estimasi mandays, kustomisasi BoQ, penyimpanan berkas, dan penerimaan handover.
-   - **💼 Product Expert:** Fokus pada penawaran komersial, konfigurasi paket produk, margin & diskon, ekspor quotation, serta handover proyek ke tim engineering.
+4. **Empat Tingkat Peran Pengguna (Four-Tier RBAC) & Akses Terbuka Estimator DAS:**
+   - **👑 Administrator:** Kontrol penuh pengguna, persetujuan akun, akses link folder master Drive & master pricelist (termasuk tab `RFoF_DAS_FMTCS`), akses penuh **Estimator & Komersial BoQ RFoF DAS** (edit harga satuan, rasio desain OMU/ORU/splitter/coupler/kabel, COGS, dan margin), jejak audit, dan ringkasan portofolio.
+   - **👁️ Overseer:** Mode pantau & evaluasi eksekutif. Dapat melihat seluruh akun tim (view-only), membuka seluruh dokumen arsip tim, meninjau jejak audit (*audit trail*), memantau kepatuhan margin eksekutif, serta memiliki **akses terbuka penuh ke Estimator & Komersial BoQ RFoF DAS** (termasuk edit harga satuan, rasio desain, COGS, dan margin).
+   - **💼 Product Expert:** Fokus pada penawaran komersial, konfigurasi paket produk, akses penuh **Estimator & Komersial BoQ RFoF DAS**, margin & diskon, ekspor quotation, serta handover proyek ke tim engineering.
+   - **🛠️ Engineer / Technician:** Fokus pada rekayasa teknis, sizing RF, kalkulasi Link Budget & Commissioning SAT RFoF DAS, estimasi mandays, kuantitas teknis BoQ (tanpa kolom harga/margin finansial), penyimpanan berkas, dan penerimaan handover.
 5. **Kolaborasi Handover & Notifikasi Terpusat:**
-   - Serah terima proyek resmi antardivisi dengan riwayat handover (*handover history*) yang tersimpan pada metadata berkas Google Drive.
+   - Serah terima proyek resmi antardivisi dengan riwayat handover (*handover history*) yang tersimpan pada metadata berkas Google Drive, ditambah fitur **Token & QR Code Handoff Offline (`FMTCSDAS1-...`)** pada modul RFoF DAS.
    - Pusat notifikasi in-app (ikon lonceng kuning dengan penghitung belum dibaca) untuk alert penugasan dan jalan pintas pembukaan proyek.
 6. **Executive Portfolio & Margin Guardrails:**
    - Bar ringkasan eksekutif: total pipeline nilai proyek (IDR), rata-rata margin tim, kepatuhan guardrail, dan jumlah proyek berisiko.
-   - Kebijakan Guardrail Margin: Peringatan visual otomatis `⚠️ <15%` pada tabel BoQ, konfigurator paket, dan dashboard arsip jika margin berada di bawah standar perusahaan.
+   - Kebijakan Guardrail Margin: Peringatan visual otomatis `⚠️ <15%` pada tabel BoQ DMR, BoQ RFoF DAS, konfigurator paket, dan dashboard arsip jika margin berada di bawah standar perusahaan.
 7. **Jejak Audit Terdesentralisasi (Tamper-Evident Audit Trail):**
    - Pencatatan otomatis aktivitas login, mutasi pengguna, penyimpanan proyek, pembukaan berkas, serah terima, serta ekspor dokumen PDF/Excel.
 
@@ -73,6 +76,26 @@ flowchart TD
 ### 2.3. Simulasi Propagasi Canvas RF
 - Mensimulasikan estimasi cakupan sinyal (*Strong, Fair, Weak, Dead Zone*) pada canvas HTML5 interaktif berdasarkan koordinat geografis, daya pancar repeater (Watt), gain antena (dBi), dan redaman kabel/feeder (dB).
 - Mendukung ekspor tangkapan peta simulasi ke format PNG beresolusi tinggi.
+
+### 2.4. Workspace 2: RFoF Distributed Antenna System (`RFoF DAS by FMTCS`)
+Workspace khusus untuk perancangan sistem distribusi antena berbasis *RF over Fiber* pada gedung bertingkat, basement, terowongan tambang, dan fasilitas data center (`static/js/das_engine.js`):
+1. **Tab 1 — BoQ & Topologi Multi-Lantai:**
+   - Pilihan Arsitektur: **Digital RFoF** (`DOMU400C.RI` + `DORU400CH.RI`, rasio hingga 1:32) atau **Analog RFoF** (`AOMU400C.RI` + `AORU400CH.RI`, rasio 1:8).
+   - Pilihan Topologi Fiber: **Star (Point-to-Multipoint)**, **Cascade (Daisy-Chain)**, atau **Redundant Ring**.
+   - Perencanaan Zona Lantai: Input jumlah antena indoor (`ANTI400R.M`) per lantai/basement dan kuantitas repeater/radio/antena outdoor, menghasilkan kalkulasi otomatis perangkat aktif (OMU, ORU), perangkat pasif (`FMTCS-CFH8`, `FMTCS-DJF8`, `DSGQ400C.RI`, `UDSS400C`, `PD400R.M`, `CP400R.M`), kabel koaksial 1/2", konektor N-K, dan patchcord fiber, disertai **Diagram Topologi SVG Interaktif**.
+   - **Tombol Reset 1-Klik (`🔄 Reset DAS (0)`, `🔄 Reset BoQ (0)`, `🔄 Reset Lantai (0)`) & `📋 Contoh Standar`:** Memungkinkan pengguna mengosongkan seluruh zona lantai, repeater, radio, harga kustom, dan kuantitas BoQ menjadi `0` dalam 1 klik untuk memulai proyek baru dari nol, atau memuat kembali contoh standar 4 lantai.
+   - **Akses Terbuka Estimator & BoQ Komersial (`Admin`, `Overseer`, `Product Expert`):** Pengguna dengan peran **Administrator**, **Overseer**, dan **Product Expert** dapat mengedit langsung **Harga Satuan (Unit Price)** tiap item di tabel BoQ DAS, mengatur **Rasio Desain Estimator** (`Antena/ORU`, `ORU/OMU`, `Rasio Splitter`, `Rasio Coupler`, `Kabel Coax m/Antena`), memilih mata uang (`IDR`/`USD`), serta memantau **COGS** dan **Margin %** dengan guardrail $\ge 15\%$.
+   - **Jembatan Dua Arah (`Two-Way Bridge`):** Tombol `🏢 Perluas ke RFoF DAS by FMTCS` dari hasil sizing DMR dan tombol `📥 Gabungkan ke Master BoQ DMR` untuk menyatukan seluruh perangkat FMTCS ke Master BoQ DMR.
+2. **Tab 2 — Link Budget & Planner Antena:**
+   - Kalkulasi rantai sinyal (*Signal Chain*) tahap demi tahap dari output ORU (40 dBm / 10W) melewati redaman kabel koaksial, splitter, dan gain antena hingga menghasilkan **EIRP**, **Status Kesehatan Sinyal**, **Radius Cakupan (m)**, dan **Jumlah Antena per Lantai** yang dapat ditransfer langsung ke BoQ DAS.
+3. **Tab 3 — Konversi RF & VSWR:**
+   - Kalkulator rekayasa instan 4-arah: **Daya RF** ($\text{dBm} \leftrightarrow \text{mW} \leftrightarrow \text{W} \leftrightarrow \text{dBW}$), **Gain/Loss** ($\text{dB} \leftrightarrow \text{Rasio Daya/Tegangan}$), **VSWR & Return Loss** ($\text{VSWR} \leftrightarrow \text{RL dB} \leftrightarrow \Gamma \leftrightarrow \text{Reflected Power \%}$), dan **Field Strength** ($\text{dB}\mu\text{V} \leftrightarrow \text{dBm @ } 50\,\Omega$).
+4. **Tab 4 — Cakupan Outdoor (Model Empiris Okumura-Hata):**
+   - Evaluasi link budget Uplink & Downlink dan jarak jangkauan maksimum (km) pada 6 profil lingkungan (*Urban Small/Medium*, *Urban Metropolitan*, *Suburban*, *Open/Rural*).
+5. **Tab 5 — Commissioning & Laporan SAT PDF:**
+   - Formulir inspeksi penerimaan lapangan (*Site Acceptance Test*) per titik antena (VSWR $\le 1.50$, Tx Power $\ge 8.0\text{ dBm}$, Rx Level $\ge -85.0\text{ dBm}$, dan Kualitas Panggilan) dengan fitur **Ekspor Laporan Resmi Commissioning PDF** siap tanda tangan.
+6. **Tab 6 — Katalog Perangkat FMTCS:**
+   - Referensi spesifikasi teknis lengkap untuk 17 SKU perangkat aktif, pasif, antena, dan aksesoris resmi FMTCS Fiber DAS.
 
 ---
 
@@ -237,7 +260,8 @@ Fitur AI Copilot:
 ### 8.1. Sumber Daya Google Drive Terhubung (`drive citradata`)
 - **Master Google Drive Folder:** `1OB_UaNyd65Ccb3lmdwJuw5raufCwhgbS` (Folder Utama CDPK System Planner).
 - **Sub-folder Arsip Output:** `11NLBY5EAPLb4q753r1TRVKgYRe0JpO8W` (*Kalkulasi & Penawaran Tim*).
-- **Master Spreadsheet Pricelist:** `1Kp85v81JXeRC5ti-ZXYBChgrj2ztnnwrCHokI02LX6U`.
+- **Sub-folder Markdown Knowledge Bank:** `1-rv_4obDjZ3ZqxSQIvx6u-bYfUnH1zMV` (`_Markdown_Knowledge_Base`, termasuk 9 dokumen teknis `FMTCS_DAS_01` s/d `FMTCS_DAS_09`).
+- **Master Spreadsheet Pricelist:** `1Kp85v81JXeRC5ti-ZXYBChgrj2ztnnwrCHokI02LX6U` (mencakup tab `Products_Catalog`, `RFoF_DAS_FMTCS`, `System_Bundles`, `Custom_Builder_Rules`, `Environment_Multipliers`, `System_Config`, `Team_Users`, `Saved_Projects_Log`, dan `Audit_Trail_Log`).
 - **Token OAuth2 Terisolasi:** Disimpan di sisi server (`GDRIVE_CITRADATA_CRED`) dengan auto-refresh tanpa melibatkan browser klien.
 
 ### 8.2. Spesifikasi Deployment Render Cloud
@@ -254,14 +278,14 @@ Fitur AI Copilot:
 Aplikasi dirancang agar dapat diakses optimal di lapangan (*field survey*):
 - **Cross-Platform:** Kompatibel penuh dengan smartphone dan tablet (Apple iOS Safari, iPadOS, dan Android Chrome).
 - **Responsive Layout:**
-  - Header dengan layout fleksibel membungkus logo, pemilih bahasa, pusat notifikasi, info pengguna, dan tombol aksi tanpa terpotong (*no horizontal scroll overflow*).
+  - Header dengan layout fleksibel membungkus logo, Workspace Switcher (`📡 DMR System` | `🏢 RFoF Distributed Antenna System` dengan `whitespace-nowrap`), pemilih bahasa, pusat notifikasi, info pengguna, dan tombol aksi tanpa terpotong (*no horizontal scroll overflow*).
   - Sentuhan ramah jari (*touch target $\ge 44\text{px}$*).
   - Tabel BoQ dengan pembungkus *horizontal scroll* halus untuk layar sempit.
   - Modal dan drawer dengan tinggi adaptif (`max-h-[92vh]`) dan penutup sentuhan luar (*click outside*).
 
 ---
 
-## 10. Struktur Direktori Proyek (Production v8.4.0)
+## 10. Struktur Direktori Proyek (Production v8.5.0)
 
 ```text
 Project Calculator - CDPK/
@@ -277,23 +301,24 @@ Project Calculator - CDPK/
 ├── server/
 │   ├── auth.py                       # Autentikasi PBKDF2, Sesi, Google OAuth, & RBAC
 │   ├── audit.py                      # Engine Tamper-Evident Audit Trail Logger
-│   ├── gdrive_sync.py                # Integrasi Google Drive API & Spreadsheet Reader
+│   ├── gdrive_sync.py                # Integrasi Google Drive API & Spreadsheet Reader (Tab RFoF_DAS_FMTCS)
+│   ├── knowledge_search.py           # Hybrid RAG Search Engine (DMR + FMTCS Fiber DAS)
+│   ├── knowledge_sync.py             # Sinkronisasi Knowledge Bank Markdown ke Google Drive
 │   ├── notifications.py              # In-App Notification Center
 │   └── ai_copilot.py                 # Multi-Model Gemini 3.8 Flash & Pro Engine
 ├── data/
 │   ├── audit_log.json                # Log aktivitas audit trail
-│   ├── default_knowledge.json        # Cache lokal katalog produk & konfigurasi
+│   ├── default_knowledge.json        # Cache lokal katalog produk DMR, Avigilon & FMTCS Fiber DAS
+│   ├── knowledge_base/               # Dokumen Markdown RAG (termasuk FMTCS_DAS_01..09.md)
 │   ├── notifications.json            # Database notifikasi pengguna
 │   └── users.json                    # Cache data akun pengguna lokal
 └── static/
-    ├── index.html                    # Single Page Application Shell (Bilingual, Tailored UI)
+    ├── index.html                    # Single Page Application Shell (Dual-Workspace Bilingual UI)
+    ├── service-worker.js             # PWA Service Worker (cdpk-pwa-v8.5.0)
     └── js/
-        ├── app_core.js               # Alpine.js Controller & State Management
+        ├── app_core.js               # Alpine.js Controller, State Management & Two-Way DMR<->DAS Bridge
+        ├── das_engine.js             # Engine Rekayasa RFoF Distributed Antenna System (FMTCS)
         ├── i18n.js                   # Kamus Bahasa Indonesia (ID) & English (EN)
         ├── exporters.js              # PDF, Excel (.xlsx), & PNG Coverage Exporters
-        ├── sizing_engine.js          # Engine Sizing Geometrik RF & Alokasi Perangkat
-        ├── catalog_data.js           # Knowledge Bank Produk Motorola & Avigilon
-        ├── rf_simulation.js          # Engine Propagasi Canvas HTML5
-        ├── mandays_engine.js         # Estimator Hari Kerja Presales (WES)
-        └── ai_assistant.js           # Handler Dialog & State Transfer AI Copilot
+        └── engines.js                # Engine Sizing Geometrik RF, Canvas Propagasi & Mandays WES
 ```
