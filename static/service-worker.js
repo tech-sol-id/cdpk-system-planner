@@ -1,13 +1,13 @@
 /**
  * CDPK System Planner - Progressive Web App Service Worker
- * Version: v8.4.1-pwa
+ * Version: v8.4.2-pwa
  * Strategy: 
  *  - Stale-While-Revalidate for app static assets (JS, CSS, Leaflet, fonts, icons)
  *  - Network-First for HTML navigation
  *  - Network-Only for /api/*, /health, and Google Auth (Zero stale project data)
  */
 
-const CACHE_NAME = 'cdpk-pwa-v8.4.1';
+const CACHE_NAME = 'cdpk-pwa-v8.4.2';
 
 const STATIC_PRECACHE = [
   '/',
