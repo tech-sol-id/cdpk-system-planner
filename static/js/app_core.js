@@ -651,12 +651,20 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         handleGoogleCredentialResponse(response) {
+            if (window.CDPKAndroidBridge && typeof window.CDPKAndroidBridge.closeAuthPopup === 'function') {
+                try {
+                    window.CDPKAndroidBridge.closeAuthPopup();
+                } catch (e) {}
+            }
             if (response && response.credential) {
                 this.loginWithGoogleToken(response.credential);
             }
         },
 
         handleGoogleSignInClick() {
+            try {
+                document.cookie = 'g_state=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT';
+            } catch (e) {}
             if (window.google && window.google.accounts && window.google.accounts.id && this.googleClientId) {
                 window.google.accounts.id.prompt();
             } else {
@@ -669,6 +677,9 @@ window.cdpkSystemPlannerApp = function () {
         switchGoogleAccount() {
             this.loginError = '';
             this.googleDomainMismatch = false;
+            try {
+                document.cookie = 'g_state=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT';
+            } catch (e) {}
             if (window.google && window.google.accounts && window.google.accounts.id) {
                 try {
                     window.google.accounts.id.disableAutoSelect();
