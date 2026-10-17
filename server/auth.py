@@ -307,6 +307,109 @@ def authenticate_user(identifier: str, password: str) -> Tuple[Optional[Dict[str
     return None, "Username atau Password salah."
 
 
+def authenticate_google_user(id_token: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    """
+    Verify Google ID token via Google's tokeninfo endpoint, enforce @citradata.id domain,
+    and find or auto-register user in Team_Users.
+    """
+    if not id_token:
+        return None, "ID Token Google tidak ditemukan."
+
+    try:
+        url = f"https://oauth2.googleapis.com/tokeninfo?id_token={urllib.parse.quote(id_token)}"
+        req = urllib.request.Request(url, headers={"User-Agent": "CDPK-System-Planner/8.3.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except Exception as e:
+        logger.error(f"Google tokeninfo validation failed: {e}")
+        return None, f"Verifikasi Google Token gagal: {e}"
+
+    email = (data.get("email") or "").strip().lower()
+    email_verified = data.get("email_verified") in ("true", True, "1", 1)
+    hd = (data.get("hd") or "").strip().lower()
+    name = (data.get("name") or email.split("@")[0]).strip()
+
+    if not email or not email_verified:
+        return None, "Email Google tidak terverifikasi atau tidak valid."
+
+    # Enforce Google Workspace domain: MUST be @citradata.id
+    if not (email.endswith("@citradata.id") or hd == "citradata.id"):
+        return None, f"Akses ditolak: Akun ({email}) bukan akun Google Workspace resmi @citradata.id."
+
+    # Find existing user in Team_Users
+    users = load_users()
+    matched_user = None
+    for u in users:
+        if u.get("email", "").lower() == email:
+            matched_user = u
+            break
+
+    if matched_user:
+        if matched_user.get("status", "active") != "active":
+            return None, "Akun Anda telah dinonaktifkan oleh Administrator."
+        return {
+            "username": matched_user["username"],
+            "email": matched_user["email"],
+            "name": matched_user["name"],
+            "role": matched_user.get("role", "engineer"),
+            "title": matched_user.get("title", "Solutions Engineer"),
+            "status": matched_user.get("status", "active")
+        }, None
+
+    # Auto-register new team member from @citradata.id
+    raw_username = email.split("@")[0].replace(".", "_").replace("-", "_")
+    assigned_role = "admin" if raw_username == "adrian" else "engineer"
+    assigned_title = "Principal Solutions Architect" if assigned_role == "admin" else "Presales & Systems Engineer"
+
+    salt = secrets.token_hex(16)
+    pwd_hash = _hash_password(secrets.token_urlsafe(16), salt)
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
+    new_user = {
+        "username": raw_username,
+        "email": email,
+        "name": name,
+        "role": assigned_role,
+        "title": assigned_title,
+        "salt": salt,
+        "password_hash": pwd_hash,
+        "status": "active",
+        "created_at": now_str
+    }
+    users.append(new_user)
+    save_local_users(users)
+    _USERS_CACHE["users"] = users
+
+    # Append to Google Sheet tab Team_Users
+    token = _get_gdrive_token()
+    if token:
+        try:
+            spreadsheet_id = _get_spreadsheet_id()
+            url_append = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Team_Users!A:J:append?valueInputOption=USER_ENTERED"
+            row_vals = [
+                raw_username, name, email, assigned_role, assigned_title,
+                "Google Workspace SSO", pwd_hash, salt, "active", now_str
+            ]
+            req_append = urllib.request.Request(
+                url_append,
+                data=json.dumps({"values": [row_vals]}).encode("utf-8"),
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req_append, timeout=12) as resp:
+                pass
+        except Exception as e:
+            logger.warning(f"Failed auto-appending Google user to sheet: {e}")
+
+    return {
+        "username": new_user["username"],
+        "email": new_user["email"],
+        "name": new_user["name"],
+        "role": new_user["role"],
+        "title": new_user["title"],
+        "status": new_user["status"]
+    }, None
+
+
 def create_session(user_profile: Dict[str, Any]) -> str:
     """Create a new session token for the authenticated user."""
     token = secrets.token_urlsafe(32)

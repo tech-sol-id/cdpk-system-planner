@@ -19,6 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from server.auth import (
     authenticate_user,
+    authenticate_google_user,
     create_session,
     get_session_user,
     invalidate_session,
@@ -90,7 +91,8 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             return self._send_json({
                 "status": "healthy",
                 "app": "CDPK System Planner",
-                "version": "8.2.1",
+                "version": "8.3.0",
+                "google_client_id": os.environ.get("GOOGLE_CLIENT_ID", "1071006060591-tmhssin2h21lcre235vtolojh4g403ep.apps.googleusercontent.com"),
                 "gdrive_folder_id": DEFAULT_FOLDER_ID,
                 "gdrive_output_subfolder_id": OUTPUT_SUBFOLDER_ID,
                 "gdrive_spreadsheet_id": DEFAULT_SPREADSHEET_ID,
@@ -190,6 +192,14 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             body = {}
 
         # ─── Auth Endpoints ───────────────────────────────────────────────
+        if path == "/api/auth/google":
+            id_token = body.get("id_token") or body.get("credential")
+            user, err = authenticate_google_user(id_token)
+            if user:
+                token = create_session(user)
+                return self._send_json({"status": "ok", "token": token, "user": user})
+            return self._send_json({"status": "error", "message": err or "Google Workspace authentication failed."}, status=401)
+
         if path == "/api/auth/login":
             ident = body.get("identifier") or body.get("username") or body.get("email")
             pwd = body.get("password") or ""

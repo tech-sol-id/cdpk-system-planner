@@ -101,6 +101,8 @@ window.cdpkSystemPlannerApp = function () {
         loginPassword: '',
         loginError: '',
         loginLoading: false,
+        googleClientId: '',
+        googleButtonRendered: false,
 
         // ─── Team User Management State (Admin Only) ────────────────────
         userMgmtModalOpen: false,
@@ -139,12 +141,28 @@ window.cdpkSystemPlannerApp = function () {
 
         // ─── Lifecycle Init ──────────────────────────────────────────────
         async init() {
+            await this.fetchHealthConfig();
             await this.checkCurrentAuth();
             await this.loadCloudKnowledge(false);
             this.syncBoqFromSizing();
             this.$nextTick(() => {
                 this.runCoverageSimulation();
+                this.initGoogleAuth();
             });
+        },
+
+        async fetchHealthConfig() {
+            try {
+                const resp = await fetch('/health');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.google_client_id) {
+                        this.googleClientId = data.google_client_id;
+                    }
+                }
+            } catch (e) {
+                console.warn('Health check fallback:', e);
+            }
         },
 
         // ─── Authentication Methods ──────────────────────────────────────
@@ -205,14 +223,79 @@ window.cdpkSystemPlannerApp = function () {
             }
         },
 
-        quickLogin(roleKey) {
-            const presets = {
-                adrian: { id: 'adrian', pwd: 'cdpk2026!' },
-                presales: { id: 'presales', pwd: 'cdpk2026!' },
-                sales: { id: 'sales', pwd: 'cdpk2026!' }
+        initGoogleAuth() {
+            if (!this.googleClientId) return;
+            const initGIS = () => {
+                if (window.google && window.google.accounts && window.google.accounts.id) {
+                    try {
+                        window.google.accounts.id.initialize({
+                            client_id: this.googleClientId,
+                            callback: (res) => this.handleGoogleCredentialResponse(res),
+                            auto_select: false
+                        });
+                        const btnEl = document.getElementById('googleSignInBtn');
+                        if (btnEl) {
+                            window.google.accounts.id.renderButton(btnEl, {
+                                type: 'standard',
+                                theme: 'outline',
+                                size: 'large',
+                                width: 320,
+                                text: 'signin_with',
+                                shape: 'pill'
+                            });
+                            this.googleButtonRendered = true;
+                        }
+                    } catch (e) {
+                        console.warn('GIS Init Error:', e);
+                    }
+                } else {
+                    setTimeout(initGIS, 500);
+                }
             };
-            const p = presets[roleKey] || presets.adrian;
-            this.login(p.id, p.pwd);
+            initGIS();
+        },
+
+        handleGoogleCredentialResponse(response) {
+            if (response && response.credential) {
+                this.loginWithGoogleToken(response.credential);
+            }
+        },
+
+        handleGoogleSignInClick() {
+            if (window.google && window.google.accounts && window.google.accounts.id && this.googleClientId) {
+                window.google.accounts.id.prompt();
+            } else {
+                alert(this.lang === 'en'
+                    ? 'To enable 1-Click Google Workspace sign-in, configure GOOGLE_CLIENT_ID in your Render environment variables with an authorized OAuth Client ID for this domain.'
+                    : 'Untuk mengaktifkan login instan Google Workspace, pastikan GOOGLE_CLIENT_ID telah dikonfigurasi di Environment Variable server Render dengan domain https://cdpk-system-planner.onrender.com.');
+            }
+        },
+
+        async loginWithGoogleToken(idToken) {
+            this.loginLoading = true;
+            this.loginError = '';
+            try {
+                const resp = await fetch('/api/auth/google', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_token: idToken })
+                });
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    this.sessionToken = data.token;
+                    localStorage.setItem('cdpk_session_token', data.token);
+                    this.currentUser = data.user;
+                    this.loginModalOpen = false;
+                    this.loginPassword = '';
+                    this.salesPic = `${data.user.name} (${data.user.title || 'CDPK'})`;
+                } else {
+                    this.loginError = data.message || (this.lang === 'en' ? 'Google Workspace login failed' : 'Gagal login akun Google Workspace');
+                }
+            } catch (e) {
+                this.loginError = this.lang === 'en' ? 'Network error during Google auth' : 'Kendala jaringan verifikasi Google Workspace';
+            } finally {
+                this.loginLoading = false;
+            }
         },
 
         async logout(callApi = true) {
