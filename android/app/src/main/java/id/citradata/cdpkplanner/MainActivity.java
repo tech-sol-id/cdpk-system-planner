@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Custom User-Agent tag to identify Android Standalone APK
         String defaultUa = settings.getUserAgentString();
-        settings.setUserAgentString(defaultUa + " CDPKAndroidApp/8.4.2");
+        settings.setUserAgentString(defaultUa + " CDPKAndroidApp/8.5.0");
 
         // WebViewClient
         webView.setWebViewClient(new WebViewClient() {

@@ -121,7 +121,7 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             return self._send_json({
                 "status": "healthy",
                 "app": "CDPK System Planner",
-                "version": "8.4.2",
+                "version": "8.5.0",
                 "google_client_id": os.environ.get("GOOGLE_CLIENT_ID", "423480156983-n52244lq61g7u3qub5p2khlfvtd3hs0f.apps.googleusercontent.com"),
                 "gdrive_folder_id": DEFAULT_FOLDER_ID,
                 "gdrive_output_subfolder_id": OUTPUT_SUBFOLDER_ID,
@@ -132,15 +132,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
 
         # ─── Android Standalone APK Download Endpoint ─────────────────────
         if path in ("/download/apk", "/download/android", "/apk", "/download"):
-            local_apk = os.path.join(STATIC_DIR, "download", "CDPK_System_Planner_v8.4.2.apk")
+            local_apk = os.path.join(STATIC_DIR, "download", "CDPK_System_Planner_v8.5.0.apk")
             if not os.path.isfile(local_apk):
-                local_apk = os.path.join(BASE_DIR, "CDPK_System_Planner_v8.4.2.apk")
+                local_apk = os.path.join(BASE_DIR, "CDPK_System_Planner_v8.5.0.apk")
 
             if os.path.isfile(local_apk):
                 file_size = os.path.getsize(local_apk)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/vnd.android.package-archive")
-                self.send_header("Content-Disposition", 'attachment; filename="CDPK_System_Planner_v8.4.2.apk"')
+                self.send_header("Content-Disposition", 'attachment; filename="CDPK_System_Planner_v8.5.0.apk"')
                 self.send_header("Content-Length", str(file_size))
                 self.send_header("Cache-Control", "public, max-age=3600")
                 self.send_header("X-Content-Type-Options", "nosniff")
