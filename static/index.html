@@ -29,11 +29,118 @@
         .card-shadow { box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04); }
     </style>
 </head>
-<body x-data="cdpkSystemPlannerApp()" x-init="init()" x-cloak class="min-h-screen flex flex-col">
+<body x-data="cdpkSystemPlannerApp()" x-init="init()" x-cloak class="min-h-screen flex flex-col bg-slate-950">
 
-    <!-- ═══════════════════ TOP HEADER & CLOUD SYNC BAR ═══════════════════ -->
-    <header class="cdpk-gradient text-white shadow-lg sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+    <!-- ═══════════════════ DEDICATED FULL-SCREEN LOGIN PAGE (WHEN !currentUser) ═══════════════════ -->
+    <div x-show="!currentUser" class="min-h-screen flex flex-col justify-between bg-slate-950 relative overflow-hidden">
+        <!-- Background Ambient Glow & Grid -->
+        <div class="absolute inset-0 bg-[radial-gradient(#0284c7_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
+        <div class="absolute -top-40 -right-40 w-96 h-96 bg-blue-600/30 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Top Navigation on Login Screen -->
+        <header class="relative z-10 max-w-6xl w-full mx-auto px-6 py-6 flex items-center justify-between">
+            <div class="flex items-center gap-3.5">
+                <div class="bg-white rounded-xl p-2 shadow-lg flex items-center justify-center h-12 w-24">
+                    <img :src="window.CDPK_LOGO_B64" alt="CDPK Logo" class="max-h-9 object-contain" />
+                </div>
+                <div>
+                    <h1 class="text-white font-extrabold text-base tracking-tight">PT Citra Data Purnama Karya</h1>
+                    <p class="text-xs text-sky-200">Motorola Solutions & Avigilon Elite Partner</p>
+                </div>
+            </div>
+            <!-- Language Switcher -->
+            <div class="flex items-center bg-white/10 backdrop-blur-md p-1 rounded-xl border border-white/20 text-xs font-bold text-white">
+                <button @click="setLang('id')" :class="lang === 'id' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'" class="px-3 py-1 rounded-lg transition">ID 🇮🇩</button>
+                <button @click="setLang('en')" :class="lang === 'en' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'" class="px-3 py-1 rounded-lg transition">EN 🇬🇧</button>
+            </div>
+        </header>
+
+        <!-- Main Login Card -->
+        <main class="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
+            <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden">
+                <div class="cdpk-gradient p-7 text-white text-center relative">
+                    <div class="w-14 h-14 bg-white rounded-2xl shadow-md mx-auto flex items-center justify-center mb-3 p-1.5">
+                        <img :src="window.CDPK_LOGO_B64" alt="CDPK" class="max-h-9 object-contain" />
+                    </div>
+                    <h2 class="text-xl font-black tracking-tight" x-text="t('appTitle')"></h2>
+                    <p class="text-xs text-sky-100 mt-1" x-text="t('loginSubtitle')"></p>
+                    <div class="inline-flex items-center gap-1.5 mt-3.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span x-text="syncSource === 'google_drive_live' ? t('cloudConnected') : 'Google Drive Cloud Sync Ready'"></span>
+                    </div>
+                </div>
+
+                <!-- Form Login -->
+                <form @submit.prevent="login()" class="p-6 space-y-4">
+                    <template x-if="loginError">
+                        <div class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
+                            <span>⚠️</span>
+                            <span x-text="loginError"></span>
+                        </div>
+                    </template>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5" x-text="t('usernameLabel')"></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm">👤</span>
+                            <input type="text" x-model="loginIdentifier" placeholder="adrian / presales / sales" required autofocus
+                                   class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-medium" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5" x-text="t('passwordLabel')"></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm">🔒</span>
+                            <input type="password" x-model="loginPassword" placeholder="••••••••" required
+                                   class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-medium" />
+                        </div>
+                    </div>
+
+                    <button type="submit" :disabled="loginLoading"
+                            class="w-full py-3 rounded-xl cdpk-gradient text-white text-sm font-extrabold shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 cursor-pointer">
+                        <svg x-show="loginLoading" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span x-text="loginLoading ? t('loggingInBtn') : t('loginBtn')"></span>
+                    </button>
+
+                    <!-- Quick Team Login Selector -->
+                    <div class="pt-4 border-t border-slate-200">
+                        <p class="text-[11px] font-bold uppercase text-slate-400 text-center mb-2.5" x-text="t('quickDemoUsers')"></p>
+                        <div class="grid grid-cols-3 gap-2 text-[11px]">
+                            <button type="button" @click="quickLogin('adrian')" class="p-2.5 rounded-xl border border-purple-200 bg-purple-50/60 hover:bg-purple-100 text-purple-900 font-bold transition text-center flex flex-col items-center gap-0.5 cursor-pointer">
+                                <span class="text-base">👑</span>
+                                <span>Adrian</span>
+                                <span class="text-[9px] text-purple-600 font-normal">Admin Lead</span>
+                            </button>
+                            <button type="button" @click="quickLogin('presales')" class="p-2.5 rounded-xl border border-sky-200 bg-sky-50/60 hover:bg-sky-100 text-sky-900 font-bold transition text-center flex flex-col items-center gap-0.5 cursor-pointer">
+                                <span class="text-base">🛠️</span>
+                                <span>Presales</span>
+                                <span class="text-[9px] text-sky-600 font-normal">RF Engineer</span>
+                            </button>
+                            <button type="button" @click="quickLogin('sales')" class="p-2.5 rounded-xl border border-amber-200 bg-amber-50/60 hover:bg-amber-100 text-amber-900 font-bold transition text-center flex flex-col items-center gap-0.5 cursor-pointer">
+                                <span class="text-base">💼</span>
+                                <span>Sales</span>
+                                <span class="text-[9px] text-amber-600 font-normal">Commercial</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <!-- Footer on Login Screen -->
+        <footer class="relative z-10 py-4 text-center text-xs text-sky-200/60">
+            © 2026 PT Citra Data Purnama Karya • Solution Sizing, RF Simulation & Commercial Suite
+        </footer>
+    </div>
+
+    <!-- ═══════════════════ MAIN APPLICATION WORKSPACE (WHEN currentUser) ═══════════════════ -->
+    <div x-show="currentUser" class="min-h-screen flex flex-col bg-slate-100 text-slate-900">
+
+        <!-- ═══════════════════ TOP HEADER & CLOUD SYNC BAR ═══════════════════ -->
+        <header class="cdpk-gradient text-white shadow-lg sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
             <!-- Brand & Logo -->
             <div class="flex items-center gap-3.5">
                 <div class="bg-white rounded-lg p-1.5 shadow flex items-center justify-center h-11 w-20 overflow-hidden">
@@ -86,7 +193,10 @@
                             <span class="font-bold text-white" x-text="currentUser.name"></span>
                             <span class="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded bg-sky-500/30 text-sky-200" x-text="currentUser.role"></span>
                         </div>
-                        <button @click="logout()" class="text-white/60 hover:text-red-300 font-bold ml-1 text-xs" title="Logout">✕</button>
+                        <button @click="logout()" class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-rose-600 text-white font-bold ml-1 text-[10px] transition" title="Keluar">
+                            <span>🚪</span>
+                            <span x-text="t('logoutBtn')"></span>
+                        </button>
                     </div>
                 </template>
 
@@ -96,13 +206,6 @@
                             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition border border-indigo-400/40">
                         <span>👥</span>
                         <span x-text="t('navUserManagement')"></span>
-                    </button>
-                </template>
-                <template x-if="!currentUser">
-                    <button @click="loginModalOpen = true"
-                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-sm transition">
-                        <span>🔐</span>
-                        <span x-text="t('loginBtn')"></span>
                     </button>
                 </template>
 
@@ -861,8 +964,8 @@
                 </div>
             </div>
         </div>
-
     </main>
+    </div> <!-- ═══════════════════ END OF MAIN APPLICATION WORKSPACE ═══════════════════ -->
 
     <!-- ═══════════════════ MULTI-MODEL AI COPILOT DRAWER ═══════════════════ -->
     <div x-show="aiModalOpen" class="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-xs">
