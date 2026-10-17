@@ -7,7 +7,7 @@
  *  - Network-Only for /api/*, /health, and Google Auth (Zero stale project data)
  */
 
-const CACHE_NAME = 'cdpk-pwa-v8.5.0';
+const CACHE_NAME = 'cdpk-pwa-v8.5.1';
 
 const STATIC_PRECACHE = [
   '/',
@@ -19,12 +19,12 @@ const STATIC_PRECACHE = [
   '/apple-touch-icon.png',
   '/favicon.png',
   '/favicon.ico',
-  '/js/logo_b64.js',
-  '/js/i18n.js',
-  '/js/engines.js',
-  '/js/exporters.js',
-  '/js/das_engine.js',
-  '/js/app_core.js'
+  '/js/logo_b64.js?v=8.5.1',
+  '/js/i18n.js?v=8.5.1',
+  '/js/engines.js?v=8.5.1',
+  '/js/exporters.js?v=8.5.1',
+  '/js/das_engine.js?v=8.5.1',
+  '/js/app_core.js?v=8.5.1'
 ];
 
 // Install: Cache critical app shell
@@ -83,8 +83,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Navigation requests: Network-first, fallback to cached index.html
-  if (req.mode === 'navigate') {
+  // 2. Navigation & local /js/ requests: Network-first, fallback to cache
+  if (req.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html' || url.pathname.startsWith('/js/')) {
     event.respondWith(
       fetch(req)
         .then((res) => {
@@ -95,7 +95,7 @@ self.addEventListener('fetch', (event) => {
           return res;
         })
         .catch(() => {
-          return caches.match('/index.html') || caches.match('/');
+          return caches.match(req) || caches.match('/index.html') || caches.match('/');
         })
     );
     return;
