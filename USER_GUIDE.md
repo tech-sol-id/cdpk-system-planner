@@ -354,8 +354,32 @@ Katalog kamera dilengkapi bilah filter multi-parameter komprehensif:
 - **Filter Merk (Brand):** Pilihan 12 merk terintegrasi (**Pelco, Avigilon, Ava, Milesight, VIGI by TP-Link, Axis, Hanwha Vision, Hikvision, Dahua, Bosch, Uniview, Generic ONVIF**).
 - **Filter Form Factor:** *Bullet, Dome, PTZ Speed Dome, Multi-Sensor Panorama 180°, Thermal Radiometrik, Explosion-Proof ATEX*.
 - **Filter Proteksi Lingkungan:** *Outdoor IP66/IP67/IK10, Indoor / Kantor, Anti-Ledakan ATEX/IECEx (Migas/Tambang), Marine Stainless Steel AISI 316L (Laut/Kimia)*.
-- **Filter Resolusi Sensor:** *1080p Full HD, 4MP QHD, 5MP Super HD, 4K UHD 8MP, 12MP Panorama, Bispectral Thermal*.
-- **Tampilan 2 Section Terpisah:** Membedakan dengan tegas produk *Partner Resmi Flagship PT CDPK* (aksen emas/amber) dan *Brand Pihak Ketiga & Terbuka* (aksen hijau zamrud/teal) untuk memudahkan tim sales memprioritaskan lini produk resmi perusahaan.
+### Tab 5: Visual 2D Floor Plan FoV & DORI Simulator
+Modul visual interaktif berbasis HTML5 Canvas untuk merancang penempatan kamera dan antena indoor langsung di atas denah arsitektur:
+- **Kanvas Interaktif:**
+  - **Muat Denah Contoh / Upload Denah:** Buka denah blueprint arsitektur standar (ruang server, meeting VIP, open space, koridor evakuasi, warehouse, workshop, dan loading dock) atau unggah denah kustom proyek (JPG, PNG, SVG).
+  - **Navigasi Kanvas Penuh:** Geser (Pan ✋), Pilih/Pindahkan (👆), Zooming roda mouse, dan Pusatkan Tampilan (🔄).
+- **Kalibrasi Skala Jarak Nyata (PPM):**
+  - Klik tombol **`📏 Kalibrasi`** dan tentukan 2 titik pada objek dengan dimensi terukur (misal koridor 5.0m atau pintu 1.0m).
+  - Masukkan jarak nyata dalam meter untuk memperbarui rasio *Pixels Per Meter* (PPM) secara akurat.
+- **Simulator Kerucut Forensik DORI (EN 62676-4):**
+  - Pasang kamera CCTV dengan satu klik **`📹 + Kamera CCTV`**.
+  - **Handle Rotasi Interaktif:** Putar arah pandang kamera ($0^\circ - 360^\circ$) langsung di kanvas.
+  - **Pemilihan Fokal Lensa & Sensor:** Pilih lensa fokal 2.8mm, 4.0mm, 6.0mm, atau 12.0mm serta sensor 1/2.8" atau 1/1.8".
+  - **Proyeksi Sektor Busur 4-Lapis:**
+    - 🔴 **Identifikasi ($\ge 250\text{ PPM}$):** Jangkauan pengenalan wajah tanpa keraguan.
+    - 🟡 **Pengenalan ($\ge 125\text{ PPM}$):** Pengenalan individu yang sudah dikenal.
+    - 🔵 **Observasi ($\ge 62\text{ PPM}$):** Memperhatikan detail pakaian atau aktivitas.
+    - 🔷 **Deteksi ($\ge 25\text{ PPM}$):** Mendeteksi pergerakan atau kehadiran manusia.
+- **Simulator Heatmap DAS FMTCS (UHF DMR 450 MHz):**
+  - Pasang antena plafon **`ANTI400R.M`** (3 dBi) dengan satu klik **`📶 + Antena DAS`**.
+  - Visualisasi propagasi sinyal indoor multi-gradien ($\ge -75\text{ dBm}$ Hijau, $\ge -85\text{ dBm}$ SAT Pass Standar Kuning, $\ge -95\text{ dBm}$ Batas Sinyal Oranye).
+  - **Live Probe Sinyal Kursor:** Arahkan kursor ke area mana pun di denah untuk melihat nilai RSSI (dBm), jarak ke antena terdekat, dan status kelulusan SAT seketika.
+- **Sinkronisasi Dua Arah (Two-Way Engineering Sync):**
+  - **`🚀 Sinkronkan ke Fleet Sizing CCTV`**: Menambahkan/memperbarui armada kamera di denah ke tab Sizing Kamera, NVR Storage, dan PoE Switch.
+  - **`📶 Sinkronkan ke Tabel Topologi DAS`**: Memperbarui jumlah antena plafon per lantai pada tabel BoQ DAS.
+- **Ekspor Gambar Denah Resolusi Tinggi (`💾 Export PNG`):**
+  - Menghasilkan gambar PNG 2x Retina lengkap dengan kop PT Citradata Purnakharisma, legenda warna DORI & DAS, skala grafis metrik, dan metadata proyek.
 
 ---
 

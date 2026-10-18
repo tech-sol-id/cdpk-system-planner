@@ -7,7 +7,7 @@ mime_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 folder_path: "AI Bank Knowledge/Technicians/TANDA TERIMA MASUK/2023/"
 last_modified: "2023-10-17T03:53:20.000Z"
 image_reference_note: "Gambar skematik, diagram blok, kurva grafis, dan foto fisik perangkat dapat dilihat langsung pada file asli di link di atas."
-extracted_at: "2026-10-17T20:59:56.734360+00:00"
+extracted_at: "2026-10-18T03:49:57.523803+00:00"
 ---
 
 # 0372 PT MERAK ENERGI INDONESIA.xlsx

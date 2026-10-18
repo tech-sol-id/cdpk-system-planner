@@ -1477,7 +1477,7 @@ def query_ai_copilot(
     )
 
     # Security Policy (AGENTS.md): Only use server-side environment credentials; ignore client-supplied API keys
-    api_key = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
+    api_key = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or os.environ.get("CITRADATA_GEMINI_KEY") or "").strip()
     if not api_key:
         return expert_res
 
@@ -1502,7 +1502,14 @@ def query_ai_copilot(
         f"{rag_context}"
     )
 
-    candidate_models = [model_id, "gemini-2.5-flash" if "flash" in model_id else "gemini-2.5-pro"]
+    raw_candidates = [
+        model_id,
+        "gemini-3.8-flash",
+        "gemini-flash-lite-latest",
+        "gemini-3.5-flash-lite",
+        "gemini-3.8-pro" if "pro" in model_id else "gemini-pro-latest"
+    ]
+    candidate_models = list(dict.fromkeys(raw_candidates))
     for cand in candidate_models:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand}:generateContent?key={urllib.parse.quote(api_key)}"

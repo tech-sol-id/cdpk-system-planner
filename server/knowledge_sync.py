@@ -23,6 +23,7 @@ Smart Hybrid Architecture:
 """
 
 import base64
+import glob
 import io
 import json
 import logging
@@ -363,42 +364,54 @@ def extract_pdf_via_gemini_ocr(content_bytes: bytes, filename: str, api_key: str
     if not api_key:
         return None
 
-    try:
-        b64_data = base64.b64encode(content_bytes).decode("utf-8")
-        prompt_text = (
-            "You are a Senior RF Telecom Documentation Engineer. Extract all technical specifications, "
-            "model numbers, frequency bands, ATEX certifications, RF power, and tables from this document into clean Markdown."
-        )
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={urllib.parse.quote(api_key)}"
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {"inlineData": {"mimeType": "application/pdf", "data": b64_data}},
-                        {"text": prompt_text}
-                    ]
-                }
-            ],
-            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 3000}
-        }
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=35) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-        candidates = data.get("candidates", [])
-        if candidates:
-            parts = candidates[0].get("content", {}).get("parts", [])
-            text = "".join(p.get("text", "") for p in parts).strip()
-            if text:
-                return text.replace("```markdown", "").replace("```", "").strip()
-    except Exception as e:
-        logger.info(f"Gemini OCR fallback skipped for {filename}: {e}")
+    b64_data = base64.b64encode(content_bytes).decode("utf-8")
+    prompt_text = (
+        "You are a Senior RF Telecom Documentation Engineer. Extract all technical specifications, "
+        "model numbers, frequency bands, ATEX certifications, RF power, and tables from this document into clean Markdown."
+    )
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"inlineData": {"mimeType": "application/pdf", "data": b64_data}},
+                    {"text": prompt_text}
+                ]
+            }
+        ],
+        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 3000}
+    }
 
-    return None
+    # Step 1: Run fast & quota-friendly Lite model first
+    # Step 2: Escalate to Advanced model (gemini-3.8-flash) ONLY if Lite is inadequate (< 250 chars) or errors
+    ocr_models = ["gemini-flash-lite-latest", "gemini-3.8-flash"]
+    best_text = ""
+
+    for model_name in ocr_models:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={urllib.parse.quote(api_key)}"
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=35) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            candidates = data.get("candidates", [])
+            if candidates:
+                parts = candidates[0].get("content", {}).get("parts", [])
+                text = "".join(p.get("text", "") for p in parts).strip()
+                text_clean = text.replace("```markdown", "").replace("```", "").strip()
+                if len(text_clean) >= 250:
+                    logger.info(f"Gemini OCR success using {model_name} for {filename} ({len(text_clean)} chars).")
+                    return text_clean
+                elif len(text_clean) > len(best_text):
+                    best_text = text_clean
+                    logger.info(f"Gemini OCR output with {model_name} was sparse ({len(text_clean)} chars), escalating to next model...")
+        except Exception as e:
+            logger.info(f"Gemini OCR with {model_name} skipped for {filename}: {e}")
+
+    return best_text if len(best_text) > 40 else None
 
 
 def extract_pdf_text(content_bytes: bytes, max_pages: int = 30) -> str:
@@ -864,15 +877,65 @@ def sync_knowledge_base(force: bool = False, max_items_per_run: int = 25) -> Dic
         _SYNC_LOCK.release()
 
 
-def get_knowledge_status() -> Dict[str, Any]:
+def reconcile_knowledge_state_with_disk() -> Dict[str, Any]:
     state = load_knowledge_state()
+    files = state.setdefault("files", {})
+    md_files = glob.glob(os.path.join(LOCAL_KB_DIR, "*.md"))
+    tracked_filenames = {v.get("md_filename") for v in files.values() if v.get("md_filename")}
+
+    dirty = False
+    for fp in md_files:
+        fname = os.path.basename(fp)
+        if fname not in tracked_filenames:
+            stat = os.stat(fp)
+            title = fname[:-3].replace("_", " ")
+            view_url = ""
+            file_id = f"local_{fname}"
+            try:
+                with open(fp, "r", encoding="utf-8", errors="ignore") as mf:
+                    header_lines = [mf.readline() for _ in range(25)]
+                    for line in header_lines:
+                        if line.startswith("title:"):
+                            title = line.split(":", 1)[1].strip().strip("\"'")
+                        elif line.startswith("drive_view_url:"):
+                            view_url = line.split(":", 1)[1].strip().strip("\"'")
+                        elif line.startswith("drive_file_id:"):
+                            file_id = line.split(":", 1)[1].strip().strip("\"'")
+            except Exception:
+                pass
+
+            files[file_id] = {
+                "name": title,
+                "mimeType": "text/markdown",
+                "modifiedTime": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+                "md_filename": fname,
+                "local_path": os.path.abspath(fp),
+                "drive_view_url": view_url,
+                "char_count": stat.st_size,
+                "synced_at": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+                "status": "ready"
+            }
+            tracked_filenames.add(fname)
+            dirty = True
+
+    if dirty:
+        state["last_checked"] = datetime.now(timezone.utc).isoformat()
+        save_knowledge_state(state)
+
+    return state
+
+
+def get_knowledge_status() -> Dict[str, Any]:
+    state = reconcile_knowledge_state_with_disk()
     files_list = list(state.get("files", {}).values())
     files_list.sort(key=lambda x: x.get("synced_at", ""), reverse=True)
+    md_files = glob.glob(os.path.join(LOCAL_KB_DIR, "*.md"))
+    total_docs = len(md_files) if md_files else len([f for f in files_list if f.get("status") == "ready"])
     return {
         "status": "ok",
         "is_syncing": _SYNC_STATUS["is_syncing"],
         "last_synced": state.get("last_checked") or _SYNC_STATUS.get("last_synced"),
-        "total_documents": len([f for f in files_list if f.get("status") == "ready"]),
+        "total_documents": total_docs,
         "markdown_folder_url": f"https://drive.google.com/drive/folders/{MARKDOWN_SUBFOLDER_ID}",
         "recent_documents": files_list[:10]
     }

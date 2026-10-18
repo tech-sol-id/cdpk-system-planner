@@ -37,6 +37,7 @@
     <script src="/js/exporters.js?v=8.5.2"></script>
     <script src="/js/das_engine.js?v=8.6.0"></script>
     <script src="/js/cctv_engine.js?v=8.6.0"></script>
+    <script src="/js/floorplan_engine.js?v=8.6.0"></script>
     <script src="/js/app_core.js?v=8.6.0"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
@@ -583,6 +584,12 @@
                         <span>📦</span>
                         <span x-text="lang === 'en' ? '6. FMTCS Device Catalog' : '6. Katalog Perangkat FMTCS'"></span>
                     </button>
+                    <button @click="dasActiveTab = 'floorplan'; $nextTick(() => initFloorPlan('cdpkFloorPlanCanvasDas'))"
+                            :class="dasActiveTab === 'floorplan' ? 'bg-amber-400 text-slate-950 font-black shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
+                        <span>🗺️</span>
+                        <span x-text="t('dasNavFloorplan') || '7. Visual Denah & Heatmap'"></span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -614,6 +621,12 @@
                             class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
                         <span>📦</span>
                         <span x-text="t('cctvNavCatalog') || '4. Katalog Kamera Multi-Brand'"></span>
+                    </button>
+                    <button @click="cctvActiveTab = 'floorplan'; $nextTick(() => initFloorPlan('cdpkFloorPlanCanvasCctv'))"
+                            :class="cctvActiveTab === 'floorplan' ? 'bg-amber-400 text-slate-950 font-black shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
+                        <span>🗺️</span>
+                        <span x-text="t('cctvNavFloorplan') || '5. Visual Denah FoV & DORI'"></span>
                     </button>
                 </div>
             </div>
@@ -2597,6 +2610,9 @@
                     <button @click="dasActiveTab = 'prod'"
                             :class="dasActiveTab === 'prod' ? 'bg-amber-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
                             class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">6. Katalog</button>
+                    <button @click="dasActiveTab = 'floorplan'; $nextTick(() => initFloorPlan('cdpkFloorPlanCanvasDas'))"
+                            :class="dasActiveTab === 'floorplan' ? 'bg-amber-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">7. Denah & Heatmap</button>
                 </div>
             </div>
 
@@ -3989,8 +4005,423 @@
 
             </div>
 
-        </div>
-        <!-- ══════════════════ END WORKSPACE 2: RFoF DAS ═════════════════ -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 7: VISUAL 2D FLOOR PLAN & HEATMAP (dasActiveTab === 'floorplan') -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="dasActiveTab === 'floorplan'" class="space-y-6"
+                 x-init="$watch('dasActiveTab', val => { if(val === 'floorplan') $nextTick(() => initFloorPlan('cdpkFloorPlanCanvasDas')) })">
+
+                <!-- 1. Simulator Header & Control Bar -->
+                <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-5 text-white shadow-xl border border-indigo-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 shadow-sm">
+                                CAD / GIS Blueprint Simulator
+                            </span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                                UHF DMR 450 MHz & EN 62676-4 DORI
+                            </span>
+                        </div>
+                        <h2 class="text-lg font-black text-white flex items-center gap-2">
+                            <span>🗺️</span>
+                            <span x-text="lang === 'en' ? 'Visual 2D Floor Plan Heatmap & FoV Simulator' : 'Simulator Visual 2D Denah, Heatmap DAS & FoV Kamera'"></span>
+                        </h2>
+                        <p class="text-xs text-sky-200/80" x-text="lang === 'en' ? 'Interactive indoor log-distance propagation heatmap & forensic camera coverage cones' : 'Simulasi cakupan sinyal radio indoor (EIRP 13 dBm) & kerucut forensic identifikasi kamera CCTV'"></p>
+                    </div>
+
+                    <!-- Blueprint Floor Name & Scale Status -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/80 flex items-center gap-2 text-xs">
+                            <span class="text-slate-400 font-semibold" x-text="lang === 'en' ? 'Floor:' : 'Lantai:'"></span>
+                            <input type="text" x-model="floorplan.floorName" class="bg-transparent text-white font-bold text-xs focus:outline-none border-b border-indigo-400 w-36 sm:w-44" />
+                        </div>
+                        <div class="bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/80 flex items-center gap-1.5 text-xs">
+                            <span class="text-amber-400">📏</span>
+                            <span class="text-slate-300 font-mono text-[11px]" x-text="`1m = ${floorplan.scalePpm} px`"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Interactive Canvas Workbench -->
+                <div class="bg-slate-900 rounded-2xl border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col">
+                    
+                    <!-- Floating Top Workbench Toolbar -->
+                    <div class="bg-slate-800/95 border-b border-slate-700/80 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+                        
+                        <!-- Tool Selectors -->
+                        <div class="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-700">
+                            <button type="button" @click="setFloorPlanTool('pan')"
+                                    :class="floorplan.activeTool === 'pan' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+                                    class="px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Geser / Pan Kanvas">
+                                <span>✋</span>
+                                <span class="hidden sm:inline" x-text="lang === 'en' ? 'Pan' : 'Geser'"></span>
+                            </button>
+                            <button type="button" @click="setFloorPlanTool('select')"
+                                    :class="floorplan.activeTool === 'select' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+                                    class="px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Pilih / Pindahkan Objek">
+                                <span>👆</span>
+                                <span class="hidden sm:inline" x-text="lang === 'en' ? 'Select / Move' : 'Pilih / Geser'"></span>
+                            </button>
+                            <button type="button" @click="setFloorPlanTool('calibrate')"
+                                    :class="floorplan.activeTool === 'calibrate' ? 'bg-amber-500 text-slate-950 font-black ring-2 ring-amber-300' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+                                    class="px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Kalibrasi Skala Jarak Nyata">
+                                <span>📏</span>
+                                <span x-text="lang === 'en' ? 'Calibrate' : 'Kalibrasi'"></span>
+                            </button>
+                            <button type="button" @click="addFloorPlanAntennaQuick()"
+                                    :class="floorplan.activeTool === 'antenna' ? 'bg-blue-600 text-white font-bold ring-2 ring-blue-300' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+                                    class="px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Letakkan Antena Plafon DAS">
+                                <span>📶</span>
+                                <span x-text="lang === 'en' ? '+ Antenna' : '+ Antena DAS'"></span>
+                            </button>
+                            <button type="button" @click="addFloorPlanCameraQuick()"
+                                    :class="floorplan.activeTool === 'camera' ? 'bg-emerald-600 text-white font-bold ring-2 ring-emerald-300' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+                                    class="px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Letakkan Kamera CCTV">
+                                <span>📹</span>
+                                <span x-text="lang === 'en' ? '+ Camera' : '+ Kamera CCTV'"></span>
+                            </button>
+                        </div>
+
+                        <!-- Layer Toggles -->
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-1.5 text-slate-300 cursor-pointer select-none">
+                                <input type="checkbox" x-model="floorplan.showDasHeatmap" @change="_floorPlanViewer && _floorPlanViewer.requestRender()" class="rounded text-indigo-500 focus:ring-0 w-3.5 h-3.5" />
+                                <span class="text-[11px] font-semibold text-emerald-400">Heatmap DAS</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-slate-300 cursor-pointer select-none">
+                                <input type="checkbox" x-model="floorplan.showCctvDori" @change="_floorPlanViewer && _floorPlanViewer.requestRender()" class="rounded text-indigo-500 focus:ring-0 w-3.5 h-3.5" />
+                                <span class="text-[11px] font-semibold text-cyan-400">FoV & DORI</span>
+                            </label>
+                            <label class="hidden sm:flex items-center gap-1.5 text-slate-300 cursor-pointer select-none">
+                                <input type="checkbox" x-model="floorplan.showProbe" class="rounded text-indigo-500 focus:ring-0 w-3.5 h-3.5" />
+                                <span class="text-[11px] font-semibold text-amber-400">Probe Kursor</span>
+                            </label>
+                        </div>
+
+                        <!-- File Actions & Reset -->
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" @click="loadSampleFloorPlan()"
+                                    class="px-2.5 py-1.5 rounded-lg bg-slate-700/70 hover:bg-slate-700 text-slate-200 font-semibold transition flex items-center gap-1 cursor-pointer" title="Muat denah arsitektur contoh">
+                                <span>🖼️</span>
+                                <span class="hidden md:inline" x-text="lang === 'en' ? 'Sample Plan' : 'Denah Contoh'"></span>
+                            </button>
+                            <label class="px-2.5 py-1.5 rounded-lg bg-slate-700/70 hover:bg-slate-700 text-slate-200 font-semibold transition flex items-center gap-1 cursor-pointer" title="Unggah file denah JPG/PNG/SVG">
+                                <span>📤</span>
+                                <span class="hidden md:inline" x-text="lang === 'en' ? 'Upload Image' : 'Upload Denah'"></span>
+                                <input type="file" @change="uploadFloorPlanImage($event)" accept="image/*" class="hidden" />
+                            </label>
+                            <button type="button" @click="resetFloorPlanView()"
+                                    class="p-1.5 rounded-lg bg-slate-700/70 hover:bg-slate-700 text-slate-200 transition cursor-pointer" title="Reset Zoom & Pusatkan">
+                                <span>🔄</span>
+                            </button>
+                            <button type="button" @click="exportFloorPlanPng()"
+                                    class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1 shadow-md cursor-pointer" title="Unduh gambar denah beresolusi tinggi">
+                                <span>💾</span>
+                                <span x-text="lang === 'en' ? 'Export PNG' : 'Export PNG'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main Canvas Workspace Container -->
+                    <div class="relative w-full h-[620px] bg-slate-950 overflow-hidden select-none">
+                        
+                        <!-- Calibration floating banner overlay -->
+                        <div x-show="floorplan.activeTool === 'calibrate' || floorplan.calibrating" x-cloak
+                             class="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-slate-900/95 border-2 border-amber-400 text-white p-3 rounded-2xl shadow-2xl flex flex-wrap items-center gap-3 max-w-xl text-xs">
+                            <span class="text-xl">📏</span>
+                            <div class="flex-1">
+                                <div class="font-extrabold text-amber-300" x-text="lang === 'en' ? 'Real-World Scale Calibration' : 'Kalibrasi Skala Jarak Nyata'"></div>
+                                <div class="text-[11px] text-slate-300" x-text="!floorplan.calibrating ? (lang === 'en' ? 'Click 2 points on a known distance (e.g. 5m hallway or 1m door)' : 'Klik 2 titik di kanvas pada objek dengan ukuran terukur (misal koridor 5m)') : (lang === 'en' ? `Pixel distance measured: ${floorplan.calibPixelDist} px. Enter real distance in meters:` : `Jarak piksel terukur: ${floorplan.calibPixelDist} px. Masukkan jarak nyata dalam meter:`)"></div>
+                            </div>
+                            <template x-if="floorplan.calibrating">
+                                <div class="flex items-center gap-2">
+                                    <input type="number" step="0.1" min="0.5" max="500" x-model.number="floorplan.calibDistM" class="w-20 px-2 py-1 rounded bg-slate-800 border border-amber-400 text-white font-bold text-center text-xs" />
+                                    <span class="text-amber-300 font-bold">m</span>
+                                    <button @click="applyFloorPlanCalibration()" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition cursor-pointer">Simpan</button>
+                                </div>
+                            </template>
+                            <button @click="cancelFloorPlanCalibration()" class="text-slate-400 hover:text-white font-bold px-1.5 cursor-pointer">✕</button>
+                        </div>
+
+                        <!-- Real-Time Cursor Signal Probe Tooltip HUD -->
+                        <div x-show="floorplan.showProbe && floorplan.probeInfo" x-cloak
+                             class="absolute top-4 left-4 z-10 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-xl p-2.5 text-white shadow-xl text-xs space-y-1 pointer-events-none">
+                            <div class="flex items-center gap-1.5 font-bold">
+                                <span>📍</span>
+                                <span x-text="lang === 'en' ? 'DAS Signal Probe' : 'Probe Sinyal RF DAS'"></span>
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-extrabold text-white" :class="floorplan.probeInfo ? floorplan.probeInfo.statusBadge : ''" x-text="floorplan.probeInfo ? floorplan.probeInfo.statusText : ''"></span>
+                            </div>
+                            <div class="text-[11px] font-mono text-slate-300 flex items-center gap-2">
+                                <span>RSSI: <strong class="text-amber-400" x-text="floorplan.probeInfo ? floorplan.probeInfo.rssi + ' dBm' : ''"></strong></span>
+                                <span>|</span>
+                                <span>Dist: <span class="text-sky-300" x-text="floorplan.probeInfo ? floorplan.probeInfo.distM + ' m' : ''"></span> (<span x-text="floorplan.probeInfo ? floorplan.probeInfo.antId : ''"></span>)</span>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Element -->
+                        <canvas id="cdpkFloorPlanCanvasDas" class="w-full h-full block cursor-default"></canvas>
+                    </div>
+                </div>
+
+                <!-- 3. Inspector & Two-Way Sync Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                    <!-- Inspector Column (Lg: 7 cols) -->
+                    <div class="lg:col-span-7 bg-white rounded-2xl p-5 card-shadow border border-slate-200 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl" x-text="floorplan.selectedItemType === 'camera' ? '📹' : (floorplan.selectedItemType === 'antenna' ? '📶' : '⚙️')"></span>
+                                <div>
+                                    <h3 class="font-extrabold text-sm text-slate-900" x-text="floorplan.selectedItemType === 'camera' ? (lang === 'en' ? 'Camera Inspector & DORI Optics' : 'Inspektor Kamera & Optik DORI') : (floorplan.selectedItemType === 'antenna' ? (lang === 'en' ? 'DAS Antenna RF Inspector' : 'Inspektor Antena RFoF DAS') : (lang === 'en' ? 'Floor Plan Elements Overview' : 'Ringkasan Elemen Denah'))"></h3>
+                                    <p class="text-[10px] text-slate-500" x-text="floorplan.selectedItemId ? `ID: ${floorplan.selectedItemId}` : (lang === 'en' ? 'Select an item on the canvas to configure parameters' : 'Pilih antena atau kamera di kanvas untuk konfigurasi teknis')"></p>
+                                </div>
+                            </div>
+                            <template x-if="floorplan.selectedItemId">
+                                <button type="button" @click="removeSelectedFloorPlanItem()"
+                                        class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition flex items-center gap-1 cursor-pointer">
+                                    <span>🗑️</span>
+                                    <span x-text="lang === 'en' ? 'Delete' : 'Hapus'"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                        <!-- INSPECTOR: CAMERA SELECTED -->
+                        <template x-if="floorplan.selectedItemType === 'camera' && selectedFloorPlanItem">
+                            <div class="space-y-4 text-xs">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Camera Label:' : 'Label Kamera:'"></label>
+                                        <input type="text" x-model="selectedFloorPlanItem.label" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-medium text-xs focus:border-indigo-500 focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Camera Model & Brand:' : 'Model & Brand:'"></label>
+                                        <input type="text" x-model="selectedFloorPlanItem.model" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-medium text-xs focus:border-indigo-500 focus:outline-none" />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Resolution:' : 'Resolusi:'"></label>
+                                        <select x-model="selectedFloorPlanItem.resolution" @change="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs bg-white">
+                                            <option value="1080p">1080p (2MP)</option>
+                                            <option value="4MP">4MP (2560px)</option>
+                                            <option value="4K">4K (8MP - 3840px)</option>
+                                            <option value="12MP">12MP Ultra</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Lens (Focal):' : 'Lensa (Fokal):'"></label>
+                                        <select x-model.number="selectedFloorPlanItem.focalMm" @change="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs bg-white">
+                                            <option value="2.8">2.8 mm (Wide)</option>
+                                            <option value="4.0">4.0 mm (Standard)</option>
+                                            <option value="6.0">6.0 mm (Corridor)</option>
+                                            <option value="12.0">12.0 mm (Tele)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Sensor Format:' : 'Format Sensor:'"></label>
+                                        <select x-model="selectedFloorPlanItem.sensorFormat" @change="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs bg-white">
+                                            <option value="1/2.8">1/2.8" (5.18mm)</option>
+                                            <option value="1/1.8">1/1.8" (7.18mm)</option>
+                                            <option value="1/3">1/3" (4.80mm)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Mount Height:' : 'Tinggi Pasang:'"></label>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" step="0.1" min="1.5" max="15" x-model.number="selectedFloorPlanItem.mountingHeightM" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs text-center" />
+                                            <span class="text-slate-500 font-semibold">m</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Rotation Deg Slider -->
+                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="font-bold text-slate-700" x-text="lang === 'en' ? 'Orientation Angle (Rotation):' : 'Sudut Arah Kamera (Orientasi):'"></span>
+                                        <span class="font-mono font-bold text-indigo-600" x-text="`${selectedFloorPlanItem.rotationDeg}°`"></span>
+                                    </div>
+                                    <input type="range" min="0" max="360" step="1" x-model.number="selectedFloorPlanItem.rotationDeg" @input="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full accent-indigo-600 cursor-pointer" />
+                                </div>
+
+                                <!-- Live DORI Breakdown Cards -->
+                                <template x-if="selectedCameraDori">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold text-slate-700" x-text="lang === 'en' ? 'EN 62676-4 DORI Coverage Zones:' : 'Zonasi Jangkauan DORI (EN 62676-4):'"></span>
+                                            <span class="text-[11px] font-semibold text-slate-500" x-text="`HFoV: ${selectedCameraDori.hfov}°`"></span>
+                                        </div>
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                                            <div class="p-2 rounded-xl bg-rose-50 border border-rose-200">
+                                                <div class="text-[10px] font-bold text-rose-700">Identifikasi</div>
+                                                <div class="text-xs font-black text-rose-900" x-text="`≤ ${selectedCameraDori.dists.identification} m`"></div>
+                                                <div class="text-[9px] text-rose-600">≥250 PPM</div>
+                                            </div>
+                                            <div class="p-2 rounded-xl bg-amber-50 border border-amber-200">
+                                                <div class="text-[10px] font-bold text-amber-700">Pengenalan</div>
+                                                <div class="text-xs font-black text-amber-900" x-text="`≤ ${selectedCameraDori.dists.recognition} m`"></div>
+                                                <div class="text-[9px] text-amber-600">≥125 PPM</div>
+                                            </div>
+                                            <div class="p-2 rounded-xl bg-cyan-50 border border-cyan-200">
+                                                <div class="text-[10px] font-bold text-cyan-700">Observasi</div>
+                                                <div class="text-xs font-black text-cyan-900" x-text="`≤ ${selectedCameraDori.dists.observation} m`"></div>
+                                                <div class="text-[9px] text-cyan-600">≥62 PPM</div>
+                                            </div>
+                                            <div class="p-2 rounded-xl bg-blue-50 border border-blue-200">
+                                                <div class="text-[10px] font-bold text-blue-700">Deteksi</div>
+                                                <div class="text-xs font-black text-blue-900" x-text="`≤ ${selectedCameraDori.dists.detection} m`"></div>
+                                                <div class="text-[9px] text-blue-600">≥25 PPM</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- INSPECTOR: ANTENNA SELECTED -->
+                        <template x-if="floorplan.selectedItemType === 'antenna' && selectedFloorPlanItem">
+                            <div class="space-y-4 text-xs">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Antenna Label:' : 'Label Antena:'"></label>
+                                        <input type="text" x-model="selectedFloorPlanItem.label" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-medium text-xs focus:border-indigo-500 focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Antenna Model:' : 'Model Antena Plafon:'"></label>
+                                        <input type="text" x-model="selectedFloorPlanItem.model" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-medium text-xs focus:border-indigo-500 focus:outline-none" />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">EIRP Power:</label>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" step="1" x-model.number="selectedFloorPlanItem.eirpDbm" @input="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs text-center" />
+                                            <span class="text-slate-500 font-semibold">dBm</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Frekuensi:</label>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" step="1" x-model.number="selectedFloorPlanItem.freqMhz" @input="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs text-center" />
+                                            <span class="text-slate-500 font-semibold">MHz</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Path Loss n:</label>
+                                        <input type="number" step="0.1" min="1.8" max="4.5" x-model.number="selectedFloorPlanItem.nExp" @input="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs text-center" />
+                                    </div>
+                                </div>
+
+                                <!-- Radii Card -->
+                                <template x-if="selectedAntennaRadii">
+                                    <div class="bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-200/80 space-y-2">
+                                        <div class="font-bold text-indigo-950 flex items-center justify-between">
+                                            <span>Radius Jangkauan Sinyal Indoor (UHF DMR):</span>
+                                            <span class="text-[11px] font-semibold text-indigo-700">FMTCS Standard</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2 text-center">
+                                            <div class="bg-white p-2 rounded-lg border border-emerald-200 shadow-xs">
+                                                <div class="text-[10px] font-bold text-emerald-700">Sangat Kuat (≥-75 dBm)</div>
+                                                <div class="text-xs font-black text-emerald-900" x-text="`R ≤ ${selectedAntennaRadii.excellentM} m`"></div>
+                                            </div>
+                                            <div class="bg-white p-2 rounded-lg border border-amber-200 shadow-xs">
+                                                <div class="text-[10px] font-bold text-amber-700">Standar SAT (≥-85 dBm)</div>
+                                                <div class="text-xs font-black text-amber-900" x-text="`R ≤ ${selectedAntennaRadii.acceptableM} m`"></div>
+                                            </div>
+                                            <div class="bg-white p-2 rounded-lg border border-orange-200 shadow-xs">
+                                                <div class="text-[10px] font-bold text-orange-700">Batas Jangkauan (≥-95 dBm)</div>
+                                                <div class="text-xs font-black text-orange-900" x-text="`R ≤ ${selectedAntennaRadii.weakM} m`"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- INSPECTOR: NOTHING SELECTED (OVERVIEW) -->
+                        <template x-if="!floorplan.selectedItemId">
+                            <div class="space-y-3 text-xs text-slate-600">
+                                <div class="grid grid-cols-3 gap-3 text-center">
+                                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                        <div class="text-[10px] font-bold text-slate-500 uppercase">Antena Terpasang</div>
+                                        <div class="text-lg font-black text-indigo-600" x-text="floorplan.antennas.length"></div>
+                                        <div class="text-[9px] text-slate-400">ANTI400R.M</div>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                        <div class="text-[10px] font-bold text-slate-500 uppercase">Kamera Terpasang</div>
+                                        <div class="text-lg font-black text-emerald-600" x-text="floorplan.cameras.length"></div>
+                                        <div class="text-[9px] text-slate-400">DORI Forensic</div>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                        <div class="text-[10px] font-bold text-slate-500 uppercase">Skala Denah</div>
+                                        <div class="text-lg font-black text-amber-600" x-text="floorplan.scalePpm"></div>
+                                        <div class="text-[9px] text-slate-400">Piksel / Meter</div>
+                                    </div>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 border border-dashed border-slate-300 text-slate-500 text-center italic">
+                                    💡 <span x-text="lang === 'en' ? 'Tip: Click any placed antenna or camera on the floor plan above to customize optics, lenses, rotation angles, or transmit power.' : 'Tip: Klik salah satu antena atau kamera di kanvas denah di atas untuk mengatur parameter lensa, sudut orientasi rotasi, atau daya pancar.'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Sync & Standards Column (Lg: 5 cols) -->
+                    <div class="lg:col-span-5 space-y-4">
+                        
+                        <!-- Two-Way Sync Cards -->
+                        <div class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl p-5 text-white shadow-xl border border-indigo-500/30 space-y-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🔄</span>
+                                <div>
+                                    <h4 class="font-extrabold text-sm" x-text="lang === 'en' ? 'Two-Way Engineering Synchronization' : 'Sinkronisasi Dua Arah ke BoQ & Sizing'"></h4>
+                                    <p class="text-[10px] text-sky-200/70" x-text="lang === 'en' ? 'Instant push to BoQ topology & camera fleet' : 'Terapkan jumlah perangkat di denah langsung ke perhitungan master'"></p>
+                                </div>
+                            </div>
+
+                            <!-- Sync to DAS Button -->
+                            <div class="p-3 rounded-xl bg-white/10 border border-white/10 space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-bold text-indigo-200">Topologi Multi-Lantai DAS:</span>
+                                    <span class="font-black text-amber-300" x-text="`${floorplan.antennas.length} Antena Plafon`"></span>
+                                </div>
+                                <button type="button" @click="syncFloorPlanToDas()"
+                                        class="w-full py-2 px-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>📶</span>
+                                    <span x-text="lang === 'en' ? 'Sync to DAS Multi-Floor Table' : 'Sinkronkan ke Tabel Topologi DAS'"></span>
+                                </button>
+                            </div>
+
+                            <!-- Sync to CCTV Fleet Button -->
+                            <div class="p-3 rounded-xl bg-white/10 border border-white/10 space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-bold text-emerald-200">Fleet Kamera CCTV:</span>
+                                    <span class="font-black text-emerald-300" x-text="`${floorplan.cameras.length} Unit Kamera`"></span>
+                                </div>
+                                <button type="button" @click="syncFloorPlanToCctv()"
+                                        class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>📹</span>
+                                    <span x-text="lang === 'en' ? 'Sync to CCTV Sizing Fleet' : 'Sinkronkan ke Fleet Sizing CCTV'"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Technical Standards Reference Card -->
+                        <div class="bg-white rounded-2xl p-4 card-shadow border border-slate-200 text-xs space-y-2">
+                            <h4 class="font-extrabold text-slate-900 flex items-center gap-1.5">
+                                <span>📚</span>
+                                <span x-text="lang === 'en' ? 'Engineering Reference Standards' : 'Acuan Standar Rekayasa Teknis'"></span>
+                            </h4>
+                            <ul class="text-[11px] text-slate-600 space-y-1.5 list-disc pl-4">
+                                <li><strong class="text-slate-800">EN 62676-4:</strong> Standar DORI internasional CCTV (Identifikasi ≥250 PPM, Pengenalan ≥125 PPM, Observasi ≥62 PPM, Deteksi ≥25 PPM).</li>
+                                <li><strong class="text-slate-800">UHF DMR 450 MHz:</strong> Model Log-Distance Indoor Path Loss dengan redaman partisi dinding komersial (Standar SAT pass: ≥ -85 dBm).</li>
+                                <li><strong class="text-slate-800">FMTCS ANTI400R.M:</strong> Antena indoor ceiling omni-directional 3 dBi low-PIM broadband RFoF.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
 
         <!-- ══════════════════════════════════════════════════════════════ -->
         <!-- WORKSPACE 3: VIDEO SECURITY & CCTV SURVEILLANCE PLANNER       -->
@@ -4077,6 +4508,9 @@
                     <button @click="cctvActiveTab = 'catalog'"
                             :class="cctvActiveTab === 'catalog' ? 'bg-emerald-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
                             class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">4. Katalog</button>
+                    <button @click="cctvActiveTab = 'floorplan'; $nextTick(() => initFloorPlan('cdpkFloorPlanCanvasCctv'))"
+                            :class="cctvActiveTab === 'floorplan' ? 'bg-amber-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">5. Denah FoV & DORI</button>
                 </div>
             </div>
 
@@ -5250,8 +5684,423 @@
 
             </div>
 
-        </div>
-        <!-- ═══════════════ END WORKSPACE 3: CCTV SURVEILLANCE ══════════ -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 5: VISUAL FOV & DORI SIMULATOR (cctvActiveTab === 'floorplan') -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="cctvActiveTab === 'floorplan'" class="space-y-6"
+                 x-init="$watch('cctvActiveTab', val => { if(val === 'floorplan') $nextTick(() => initFloorPlan('cdpkFloorPlanCanvasCctv')) })">
+
+                <!-- 1. Simulator Header & Control Bar -->
+                <div class="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 rounded-2xl p-5 text-white shadow-xl border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-emerald-400 text-slate-950 shadow-sm">
+                                CCTV Blueprint Optics Simulator
+                            </span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/30 text-emerald-200 border border-emerald-400/30">
+                                EN 62676-4 DORI & HFoV Geometry
+                            </span>
+                        </div>
+                        <h2 class="text-lg font-black text-white flex items-center gap-2">
+                            <span>🗺️</span>
+                            <span x-text="lang === 'en' ? 'Visual 2D Floor Plan FoV & DORI Simulator' : 'Simulator Visual 2D Denah, FoV & DORI Kamera CCTV'"></span>
+                        </h2>
+                        <p class="text-xs text-emerald-200/80" x-text="lang === 'en' ? 'Interactive camera placement, rotation angle, lens focal sizing & forensic coverage cones' : 'Simulasi penempatan kamera, sudut rotasi arah, fokal lensa (2.8mm - 12mm), dan kerucut forensic DORI'"></p>
+                    </div>
+
+                    <!-- Blueprint Floor Name & Scale Status -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/80 flex items-center gap-2 text-xs">
+                            <span class="text-slate-400 font-semibold" x-text="lang === 'en' ? 'Floor:' : 'Lantai:'"></span>
+                            <input type="text" x-model="floorplan.floorName" class="bg-transparent text-white font-bold text-xs focus:outline-none border-b border-emerald-400 w-36 sm:w-44" />
+                        </div>
+                        <div class="bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/80 flex items-center gap-1.5 text-xs">
+                            <span class="text-amber-400">📏</span>
+                            <span class="text-slate-300 font-mono text-[11px]" x-text="`1m = ${floorplan.scalePpm} px`"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Interactive Canvas Workbench -->
+                <div class="bg-slate-900 rounded-2xl border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col">
+                    
+                    <!-- Floating Top Workbench Toolbar -->
+                    <div class="bg-slate-800/95 border-b border-slate-700/80 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+                        
+                        <!-- Tool Selectors -->
+                        <div class="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-700">
+                            <button type="button" @click="setFloorPlanTool('pan')"
+                                    :class="floorplan.activeTool === 'pan' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+                                    class="px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Geser / Pan Kanvas">
+                                <span>✋</span>
+                                <span class="hidden sm:inline" x-text="lang === 'en' ? 'Pan' : 'Geser'"></span>
+                            </button>
+                            <button type="button" @click="setFloorPlanTool('select')"
+                                    :class="floorplan.activeTool === 'select' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+                                    class="px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Pilih / Pindahkan Objek">
+                                <span>👆</span>
+                                <span class="hidden sm:inline" x-text="lang === 'en' ? 'Select / Move' : 'Pilih / Geser'"></span>
+                            </button>
+                            <button type="button" @click="setFloorPlanTool('calibrate')"
+                                    :class="floorplan.activeTool === 'calibrate' ? 'bg-amber-500 text-slate-950 font-black ring-2 ring-amber-300' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+                                    class="px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Kalibrasi Skala Jarak Nyata">
+                                <span>📏</span>
+                                <span x-text="lang === 'en' ? 'Calibrate' : 'Kalibrasi'"></span>
+                            </button>
+                            <button type="button" @click="addFloorPlanCameraQuick()"
+                                    :class="floorplan.activeTool === 'camera' ? 'bg-emerald-600 text-white font-bold ring-2 ring-emerald-300' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+                                    class="px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Letakkan Kamera CCTV">
+                                <span>📹</span>
+                                <span x-text="lang === 'en' ? '+ Camera' : '+ Kamera CCTV'"></span>
+                            </button>
+                            <button type="button" @click="addFloorPlanAntennaQuick()"
+                                    :class="floorplan.activeTool === 'antenna' ? 'bg-blue-600 text-white font-bold ring-2 ring-blue-300' : 'text-slate-300 hover:text-white hover:bg-slate-800'"
+                                    class="px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Letakkan Antena Plafon DAS">
+                                <span>📶</span>
+                                <span x-text="lang === 'en' ? '+ Antenna' : '+ Antena DAS'"></span>
+                            </button>
+                        </div>
+
+                        <!-- Layer Toggles -->
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-1.5 text-slate-300 cursor-pointer select-none">
+                                <input type="checkbox" x-model="floorplan.showCctvDori" @change="_floorPlanViewer && _floorPlanViewer.requestRender()" class="rounded text-emerald-500 focus:ring-0 w-3.5 h-3.5" />
+                                <span class="text-[11px] font-semibold text-cyan-400">FoV & DORI</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-slate-300 cursor-pointer select-none">
+                                <input type="checkbox" x-model="floorplan.showDasHeatmap" @change="_floorPlanViewer && _floorPlanViewer.requestRender()" class="rounded text-emerald-500 focus:ring-0 w-3.5 h-3.5" />
+                                <span class="text-[11px] font-semibold text-emerald-400">Heatmap DAS</span>
+                            </label>
+                            <label class="hidden sm:flex items-center gap-1.5 text-slate-300 cursor-pointer select-none">
+                                <input type="checkbox" x-model="floorplan.showProbe" class="rounded text-emerald-500 focus:ring-0 w-3.5 h-3.5" />
+                                <span class="text-[11px] font-semibold text-amber-400">Probe Kursor</span>
+                            </label>
+                        </div>
+
+                        <!-- File Actions & Reset -->
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" @click="loadSampleFloorPlan()"
+                                    class="px-2.5 py-1.5 rounded-lg bg-slate-700/70 hover:bg-slate-700 text-slate-200 font-semibold transition flex items-center gap-1 cursor-pointer" title="Muat denah arsitektur contoh">
+                                <span>🖼️</span>
+                                <span class="hidden md:inline" x-text="lang === 'en' ? 'Sample Plan' : 'Denah Contoh'"></span>
+                            </button>
+                            <label class="px-2.5 py-1.5 rounded-lg bg-slate-700/70 hover:bg-slate-700 text-slate-200 font-semibold transition flex items-center gap-1 cursor-pointer" title="Unggah file denah JPG/PNG/SVG">
+                                <span>📤</span>
+                                <span class="hidden md:inline" x-text="lang === 'en' ? 'Upload Image' : 'Upload Denah'"></span>
+                                <input type="file" @change="uploadFloorPlanImage($event)" accept="image/*" class="hidden" />
+                            </label>
+                            <button type="button" @click="resetFloorPlanView()"
+                                    class="p-1.5 rounded-lg bg-slate-700/70 hover:bg-slate-700 text-slate-200 transition cursor-pointer" title="Reset Zoom & Pusatkan">
+                                <span>🔄</span>
+                            </button>
+                            <button type="button" @click="exportFloorPlanPng()"
+                                    class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1 shadow-md cursor-pointer" title="Unduh gambar denah beresolusi tinggi">
+                                <span>💾</span>
+                                <span x-text="lang === 'en' ? 'Export PNG' : 'Export PNG'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main Canvas Workspace Container -->
+                    <div class="relative w-full h-[620px] bg-slate-950 overflow-hidden select-none">
+                        
+                        <!-- Calibration floating banner overlay -->
+                        <div x-show="floorplan.activeTool === 'calibrate' || floorplan.calibrating" x-cloak
+                             class="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-slate-900/95 border-2 border-amber-400 text-white p-3 rounded-2xl shadow-2xl flex flex-wrap items-center gap-3 max-w-xl text-xs">
+                            <span class="text-xl">📏</span>
+                            <div class="flex-1">
+                                <div class="font-extrabold text-amber-300" x-text="lang === 'en' ? 'Real-World Scale Calibration' : 'Kalibrasi Skala Jarak Nyata'"></div>
+                                <div class="text-[11px] text-slate-300" x-text="!floorplan.calibrating ? (lang === 'en' ? 'Click 2 points on a known distance (e.g. 5m hallway or 1m door)' : 'Klik 2 titik di kanvas pada objek dengan ukuran terukur (misal koridor 5m)') : (lang === 'en' ? `Pixel distance measured: ${floorplan.calibPixelDist} px. Enter real distance in meters:` : `Jarak piksel terukur: ${floorplan.calibPixelDist} px. Masukkan jarak nyata dalam meter:`)"></div>
+                            </div>
+                            <template x-if="floorplan.calibrating">
+                                <div class="flex items-center gap-2">
+                                    <input type="number" step="0.1" min="0.5" max="500" x-model.number="floorplan.calibDistM" class="w-20 px-2 py-1 rounded bg-slate-800 border border-amber-400 text-white font-bold text-center text-xs" />
+                                    <span class="text-amber-300 font-bold">m</span>
+                                    <button @click="applyFloorPlanCalibration()" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition cursor-pointer">Simpan</button>
+                                </div>
+                            </template>
+                            <button @click="cancelFloorPlanCalibration()" class="text-slate-400 hover:text-white font-bold px-1.5 cursor-pointer">✕</button>
+                        </div>
+
+                        <!-- Real-Time Cursor Signal Probe Tooltip HUD -->
+                        <div x-show="floorplan.showProbe && floorplan.probeInfo" x-cloak
+                             class="absolute top-4 left-4 z-10 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-xl p-2.5 text-white shadow-xl text-xs space-y-1 pointer-events-none">
+                            <div class="flex items-center gap-1.5 font-bold">
+                                <span>📍</span>
+                                <span x-text="lang === 'en' ? 'DAS Signal Probe' : 'Probe Sinyal RF DAS'"></span>
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-extrabold text-white" :class="floorplan.probeInfo ? floorplan.probeInfo.statusBadge : ''" x-text="floorplan.probeInfo ? floorplan.probeInfo.statusText : ''"></span>
+                            </div>
+                            <div class="text-[11px] font-mono text-slate-300 flex items-center gap-2">
+                                <span>RSSI: <strong class="text-amber-400" x-text="floorplan.probeInfo ? floorplan.probeInfo.rssi + ' dBm' : ''"></strong></span>
+                                <span>|</span>
+                                <span>Dist: <span class="text-sky-300" x-text="floorplan.probeInfo ? floorplan.probeInfo.distM + ' m' : ''"></span> (<span x-text="floorplan.probeInfo ? floorplan.probeInfo.antId : ''"></span>)</span>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Element -->
+                        <canvas id="cdpkFloorPlanCanvasCctv" class="w-full h-full block cursor-default"></canvas>
+                    </div>
+                </div>
+
+                <!-- 3. Inspector & Two-Way Sync Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                    <!-- Inspector Column (Lg: 7 cols) -->
+                    <div class="lg:col-span-7 bg-white rounded-2xl p-5 card-shadow border border-slate-200 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl" x-text="floorplan.selectedItemType === 'camera' ? '📹' : (floorplan.selectedItemType === 'antenna' ? '📶' : '⚙️')"></span>
+                                <div>
+                                    <h3 class="font-extrabold text-sm text-slate-900" x-text="floorplan.selectedItemType === 'camera' ? (lang === 'en' ? 'Camera Inspector & DORI Optics' : 'Inspektor Kamera & Optik DORI') : (floorplan.selectedItemType === 'antenna' ? (lang === 'en' ? 'DAS Antenna RF Inspector' : 'Inspektor Antena RFoF DAS') : (lang === 'en' ? 'Floor Plan Elements Overview' : 'Ringkasan Elemen Denah'))"></h3>
+                                    <p class="text-[10px] text-slate-500" x-text="floorplan.selectedItemId ? `ID: ${floorplan.selectedItemId}` : (lang === 'en' ? 'Select an item on the canvas to configure parameters' : 'Pilih antena atau kamera di kanvas untuk konfigurasi teknis')"></p>
+                                </div>
+                            </div>
+                            <template x-if="floorplan.selectedItemId">
+                                <button type="button" @click="removeSelectedFloorPlanItem()"
+                                        class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition flex items-center gap-1 cursor-pointer">
+                                    <span>🗑️</span>
+                                    <span x-text="lang === 'en' ? 'Delete' : 'Hapus'"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                        <!-- INSPECTOR: CAMERA SELECTED -->
+                        <template x-if="floorplan.selectedItemType === 'camera' && selectedFloorPlanItem">
+                            <div class="space-y-4 text-xs">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Camera Label:' : 'Label Kamera:'"></label>
+                                        <input type="text" x-model="selectedFloorPlanItem.label" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-medium text-xs focus:border-indigo-500 focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Camera Model & Brand:' : 'Model & Brand:'"></label>
+                                        <input type="text" x-model="selectedFloorPlanItem.model" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-medium text-xs focus:border-indigo-500 focus:outline-none" />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Resolution:' : 'Resolusi:'"></label>
+                                        <select x-model="selectedFloorPlanItem.resolution" @change="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs bg-white">
+                                            <option value="1080p">1080p (2MP)</option>
+                                            <option value="4MP">4MP (2560px)</option>
+                                            <option value="4K">4K (8MP - 3840px)</option>
+                                            <option value="12MP">12MP Ultra</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Lens (Focal):' : 'Lensa (Fokal):'"></label>
+                                        <select x-model.number="selectedFloorPlanItem.focalMm" @change="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs bg-white">
+                                            <option value="2.8">2.8 mm (Wide)</option>
+                                            <option value="4.0">4.0 mm (Standard)</option>
+                                            <option value="6.0">6.0 mm (Corridor)</option>
+                                            <option value="12.0">12.0 mm (Tele)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Sensor Format:' : 'Format Sensor:'"></label>
+                                        <select x-model="selectedFloorPlanItem.sensorFormat" @change="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs bg-white">
+                                            <option value="1/2.8">1/2.8" (5.18mm)</option>
+                                            <option value="1/1.8">1/1.8" (7.18mm)</option>
+                                            <option value="1/3">1/3" (4.80mm)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Mount Height:' : 'Tinggi Pasang:'"></label>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" step="0.1" min="1.5" max="15" x-model.number="selectedFloorPlanItem.mountingHeightM" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs text-center" />
+                                            <span class="text-slate-500 font-semibold">m</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Rotation Deg Slider -->
+                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="font-bold text-slate-700" x-text="lang === 'en' ? 'Orientation Angle (Rotation):' : 'Sudut Arah Kamera (Orientasi):'"></span>
+                                        <span class="font-mono font-bold text-emerald-600" x-text="`${selectedFloorPlanItem.rotationDeg}°`"></span>
+                                    </div>
+                                    <input type="range" min="0" max="360" step="1" x-model.number="selectedFloorPlanItem.rotationDeg" @input="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full accent-emerald-600 cursor-pointer" />
+                                </div>
+
+                                <!-- Live DORI Breakdown Cards -->
+                                <template x-if="selectedCameraDori">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold text-slate-700" x-text="lang === 'en' ? 'EN 62676-4 DORI Coverage Zones:' : 'Zonasi Jangkauan DORI (EN 62676-4):'"></span>
+                                            <span class="text-[11px] font-semibold text-slate-500" x-text="`HFoV: ${selectedCameraDori.hfov}°`"></span>
+                                        </div>
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                                            <div class="p-2 rounded-xl bg-rose-50 border border-rose-200">
+                                                <div class="text-[10px] font-bold text-rose-700">Identifikasi</div>
+                                                <div class="text-xs font-black text-rose-900" x-text="`≤ ${selectedCameraDori.dists.identification} m`"></div>
+                                                <div class="text-[9px] text-rose-600">≥250 PPM</div>
+                                            </div>
+                                            <div class="p-2 rounded-xl bg-amber-50 border border-amber-200">
+                                                <div class="text-[10px] font-bold text-amber-700">Pengenalan</div>
+                                                <div class="text-xs font-black text-amber-900" x-text="`≤ ${selectedCameraDori.dists.recognition} m`"></div>
+                                                <div class="text-[9px] text-amber-600">≥125 PPM</div>
+                                            </div>
+                                            <div class="p-2 rounded-xl bg-cyan-50 border border-cyan-200">
+                                                <div class="text-[10px] font-bold text-cyan-700">Observasi</div>
+                                                <div class="text-xs font-black text-cyan-900" x-text="`≤ ${selectedCameraDori.dists.observation} m`"></div>
+                                                <div class="text-[9px] text-cyan-600">≥62 PPM</div>
+                                            </div>
+                                            <div class="p-2 rounded-xl bg-blue-50 border border-blue-200">
+                                                <div class="text-[10px] font-bold text-blue-700">Deteksi</div>
+                                                <div class="text-xs font-black text-blue-900" x-text="`≤ ${selectedCameraDori.dists.detection} m`"></div>
+                                                <div class="text-[9px] text-blue-600">≥25 PPM</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- INSPECTOR: ANTENNA SELECTED -->
+                        <template x-if="floorplan.selectedItemType === 'antenna' && selectedFloorPlanItem">
+                            <div class="space-y-4 text-xs">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Antenna Label:' : 'Label Antena:'"></label>
+                                        <input type="text" x-model="selectedFloorPlanItem.label" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-medium text-xs focus:border-emerald-500 focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1" x-text="lang === 'en' ? 'Antenna Model:' : 'Model Antena Plafon:'"></label>
+                                        <input type="text" x-model="selectedFloorPlanItem.model" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-medium text-xs focus:border-emerald-500 focus:outline-none" />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">EIRP Power:</label>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" step="1" x-model.number="selectedFloorPlanItem.eirpDbm" @input="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs text-center" />
+                                            <span class="text-slate-500 font-semibold">dBm</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Frekuensi:</label>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" step="1" x-model.number="selectedFloorPlanItem.freqMhz" @input="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs text-center" />
+                                            <span class="text-slate-500 font-semibold">MHz</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Path Loss n:</label>
+                                        <input type="number" step="0.1" min="1.8" max="4.5" x-model.number="selectedFloorPlanItem.nExp" @input="_floorPlanViewer && _floorPlanViewer.requestRender()" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-medium text-xs text-center" />
+                                    </div>
+                                </div>
+
+                                <!-- Radii Card -->
+                                <template x-if="selectedAntennaRadii">
+                                    <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200/80 space-y-2">
+                                        <div class="font-bold text-emerald-950 flex items-center justify-between">
+                                            <span>Radius Jangkauan Sinyal Indoor (UHF DMR):</span>
+                                            <span class="text-[11px] font-semibold text-emerald-700">FMTCS Standard</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2 text-center">
+                                            <div class="bg-white p-2 rounded-lg border border-emerald-200 shadow-xs">
+                                                <div class="text-[10px] font-bold text-emerald-700">Sangat Kuat (≥-75 dBm)</div>
+                                                <div class="text-xs font-black text-emerald-900" x-text="`R ≤ ${selectedAntennaRadii.excellentM} m`"></div>
+                                            </div>
+                                            <div class="bg-white p-2 rounded-lg border border-amber-200 shadow-xs">
+                                                <div class="text-[10px] font-bold text-amber-700">Standar SAT (≥-85 dBm)</div>
+                                                <div class="text-xs font-black text-amber-900" x-text="`R ≤ ${selectedAntennaRadii.acceptableM} m`"></div>
+                                            </div>
+                                            <div class="bg-white p-2 rounded-lg border border-orange-200 shadow-xs">
+                                                <div class="text-[10px] font-bold text-orange-700">Batas Jangkauan (≥-95 dBm)</div>
+                                                <div class="text-xs font-black text-orange-900" x-text="`R ≤ ${selectedAntennaRadii.weakM} m`"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- INSPECTOR: NOTHING SELECTED (OVERVIEW) -->
+                        <template x-if="!floorplan.selectedItemId">
+                            <div class="space-y-3 text-xs text-slate-600">
+                                <div class="grid grid-cols-3 gap-3 text-center">
+                                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                        <div class="text-[10px] font-bold text-slate-500 uppercase">Kamera Terpasang</div>
+                                        <div class="text-lg font-black text-emerald-600" x-text="floorplan.cameras.length"></div>
+                                        <div class="text-[9px] text-slate-400">DORI Forensic</div>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                        <div class="text-[10px] font-bold text-slate-500 uppercase">Antena Terpasang</div>
+                                        <div class="text-lg font-black text-indigo-600" x-text="floorplan.antennas.length"></div>
+                                        <div class="text-[9px] text-slate-400">ANTI400R.M</div>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                        <div class="text-[10px] font-bold text-slate-500 uppercase">Skala Denah</div>
+                                        <div class="text-lg font-black text-amber-600" x-text="floorplan.scalePpm"></div>
+                                        <div class="text-[9px] text-slate-400">Piksel / Meter</div>
+                                    </div>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 border border-dashed border-slate-300 text-slate-500 text-center italic">
+                                    💡 <span x-text="lang === 'en' ? 'Tip: Click any placed antenna or camera on the floor plan above to customize optics, lenses, rotation angles, or transmit power.' : 'Tip: Klik salah satu antena atau kamera di kanvas denah di atas untuk mengatur parameter lensa, sudut orientasi rotasi, atau daya pancar.'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Sync & Standards Column (Lg: 5 cols) -->
+                    <div class="lg:col-span-5 space-y-4">
+                        
+                        <!-- Two-Way Sync Cards -->
+                        <div class="bg-gradient-to-br from-emerald-900 to-slate-900 rounded-2xl p-5 text-white shadow-xl border border-emerald-500/30 space-y-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🔄</span>
+                                <div>
+                                    <h4 class="font-extrabold text-sm" x-text="lang === 'en' ? 'Two-Way Engineering Synchronization' : 'Sinkronisasi Dua Arah ke BoQ & Sizing'"></h4>
+                                    <p class="text-[10px] text-emerald-200/70" x-text="lang === 'en' ? 'Instant push to BoQ topology & camera fleet' : 'Terapkan jumlah perangkat di denah langsung ke perhitungan master'"></p>
+                                </div>
+                            </div>
+
+                            <!-- Sync to CCTV Fleet Button -->
+                            <div class="p-3 rounded-xl bg-white/10 border border-white/10 space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-bold text-emerald-200">Fleet Kamera CCTV:</span>
+                                    <span class="font-black text-emerald-300" x-text="`${floorplan.cameras.length} Unit Kamera`"></span>
+                                </div>
+                                <button type="button" @click="syncFloorPlanToCctv()"
+                                        class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>📹</span>
+                                    <span x-text="lang === 'en' ? 'Sync to CCTV Sizing Fleet' : 'Sinkronkan ke Fleet Sizing CCTV'"></span>
+                                </button>
+                            </div>
+
+                            <!-- Sync to DAS Button -->
+                            <div class="p-3 rounded-xl bg-white/10 border border-white/10 space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-bold text-indigo-200">Topologi Multi-Lantai DAS:</span>
+                                    <span class="font-black text-amber-300" x-text="`${floorplan.antennas.length} Antena Plafon`"></span>
+                                </div>
+                                <button type="button" @click="syncFloorPlanToDas()"
+                                        class="w-full py-2 px-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>📶</span>
+                                    <span x-text="lang === 'en' ? 'Sync to DAS Multi-Floor Table' : 'Sinkronkan ke Tabel Topologi DAS'"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Technical Standards Reference Card -->
+                        <div class="bg-white rounded-2xl p-4 card-shadow border border-slate-200 text-xs space-y-2">
+                            <h4 class="font-extrabold text-slate-900 flex items-center gap-1.5">
+                                <span>📚</span>
+                                <span x-text="lang === 'en' ? 'Engineering Reference Standards' : 'Acuan Standar Rekayasa Teknis'"></span>
+                            </h4>
+                            <ul class="text-[11px] text-slate-600 space-y-1.5 list-disc pl-4">
+                                <li><strong class="text-slate-800">EN 62676-4:</strong> Standar DORI internasional CCTV (Identifikasi ≥250 PPM, Pengenalan ≥125 PPM, Observasi ≥62 PPM, Deteksi ≥25 PPM).</li>
+                                <li><strong class="text-slate-800">UHF DMR 450 MHz:</strong> Model Log-Distance Indoor Path Loss dengan redaman partisi dinding komersial (Standar SAT pass: ≥ -85 dBm).</li>
+                                <li><strong class="text-slate-800">FMTCS ANTI400R.M:</strong> Antena indoor ceiling omni-directional 3 dBi low-PIM broadband RFoF.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
 
 
         <!-- ══════════════════ DAS HANDOFF QR CODE MODAL ═════════════════ -->
@@ -5606,6 +6455,10 @@
                             class="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-left flex items-center gap-2 text-xs font-bold text-emerald-900">
                         <span>📄</span> <span>Export SAT PDF</span>
                     </button>
+                    <button @click="dasActiveTab = 'floorplan'; $nextTick(() => initFloorPlan('cdpkFloorPlanCanvasDas')); mobileMenuOpen = false"
+                            class="p-2.5 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-left flex items-center gap-2 text-xs font-bold text-amber-900 col-span-2">
+                        <span>🗺️</span> <span>Visual Denah & Heatmap DAS</span>
+                    </button>
                 </div>
 
                 <!-- CCTV Shortcuts -->
@@ -5625,6 +6478,10 @@
                     <button @click="cctvActiveTab = 'catalog'; mobileMenuOpen = false"
                             class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left flex items-center gap-2 text-xs font-bold text-slate-800">
                         <span>📦</span> <span>Katalog Multi-Brand</span>
+                    </button>
+                    <button @click="cctvActiveTab = 'floorplan'; $nextTick(() => initFloorPlan('cdpkFloorPlanCanvasCctv')); mobileMenuOpen = false"
+                            class="p-2.5 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-left flex items-center gap-2 text-xs font-bold text-amber-900 col-span-2">
+                        <span>🗺️</span> <span>Visual Denah FoV & DORI Simulator</span>
                     </button>
                 </div>
             </div>

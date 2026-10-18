@@ -247,6 +247,103 @@ window.cdpkSystemPlannerApp = function () {
             ]
         },
 
+        // ─── Module 2D Floor Plan Heatmap & Camera FoV Simulator State ────
+        floorplan: {
+            initialized: false,
+            activeTool: 'select', // 'pan' | 'select' | 'antenna' | 'camera' | 'calibrate'
+            floorName: 'Lantai 1 - Office & Engineering',
+            scalePpm: 40.0,
+            showDasHeatmap: true,
+            showCctvDori: true,
+            showGrid: true,
+            showProbe: true,
+            calibrating: false,
+            calibDistM: 5.0,
+            calibPixelDist: 200,
+            selectedItemId: null,
+            selectedItemType: null, // 'antenna' | 'camera'
+            antennas: [
+                {
+                    id: 'ANT-01',
+                    x: 180,
+                    y: 190,
+                    label: 'Antena Server & Kontrol',
+                    model: 'ANTI400R.M (FMTCS Ceiling Omni 3dBi)',
+                    eirpDbm: 13.0,
+                    freqMhz: 450.0,
+                    nExp: 2.8,
+                    floor: 'Lantai 1'
+                },
+                {
+                    id: 'ANT-02',
+                    x: 750,
+                    y: 190,
+                    label: 'Antena Ruang Rapat VIP',
+                    model: 'ANTI400R.M (FMTCS Ceiling Omni 3dBi)',
+                    eirpDbm: 13.0,
+                    freqMhz: 450.0,
+                    nExp: 2.8,
+                    floor: 'Lantai 1'
+                },
+                {
+                    id: 'ANT-03',
+                    x: 600,
+                    y: 630,
+                    label: 'Antena Warehouse & Workshop',
+                    model: 'ANTI400R.M (FMTCS Ceiling Omni 3dBi)',
+                    eirpDbm: 13.0,
+                    freqMhz: 450.0,
+                    nExp: 2.8,
+                    floor: 'Lantai 1'
+                }
+            ],
+            cameras: [
+                {
+                    id: 'CAM-01',
+                    x: 80,
+                    y: 400,
+                    label: 'Kamera Lobby & Koridor Barat',
+                    model: 'Sarix Professional 4 Dome 4MP IR',
+                    brand: 'pelco',
+                    resolution: '4MP',
+                    sensorFormat: '1/2.8',
+                    focalMm: 4.0,
+                    rotationDeg: 0,
+                    mountingHeightM: 2.8,
+                    floor: 'Lantai 1'
+                },
+                {
+                    id: 'CAM-02',
+                    x: 1120,
+                    y: 400,
+                    label: 'Kamera Koridor Timur & Exit',
+                    model: 'Sarix Professional 4 Dome 4MP IR',
+                    brand: 'pelco',
+                    resolution: '4MP',
+                    sensorFormat: '1/2.8',
+                    focalMm: 4.0,
+                    rotationDeg: 180,
+                    mountingHeightM: 2.8,
+                    floor: 'Lantai 1'
+                },
+                {
+                    id: 'CAM-03',
+                    x: 600,
+                    y: 350,
+                    label: 'Kamera Persimpangan Koridor',
+                    model: 'Avigilon Unity H6X Bullet 8MP 4K',
+                    brand: 'avigilon',
+                    resolution: '4K',
+                    sensorFormat: '1/2.8',
+                    focalMm: 6.0,
+                    rotationDeg: 90,
+                    mountingHeightM: 3.2,
+                    floor: 'Lantai 1'
+                }
+            ],
+            probeInfo: null
+        },
+
         // ─── Module 1B: DMR Trunking (Erlang-B) & Backup Power Sizing ───
         dmrBhca: 2.0,
         dmrCallDurationSec: 20,
@@ -1501,7 +1598,8 @@ window.cdpkSystemPlannerApp = function () {
                 },
                 systemPackages: this.systemPackages,
                 dasState: JSON.parse(JSON.stringify(this.das)),
-                cctvState: JSON.parse(JSON.stringify(this.cctv))
+                cctvState: JSON.parse(JSON.stringify(this.cctv)),
+                floorplanState: JSON.parse(JSON.stringify(this.floorplan))
             };
         },
 
@@ -1721,6 +1819,12 @@ window.cdpkSystemPlannerApp = function () {
                     }
                     if (p.cctvState) {
                         this.cctv = Object.assign(this.cctv, p.cctvState);
+                    }
+                    if (p.floorplanState) {
+                        this.floorplan = Object.assign(this.floorplan, p.floorplanState);
+                        if (this._floorPlanViewer) {
+                            this._floorPlanViewer.requestRender();
+                        }
                     }
                     if (p.activeWorkspace) {
                         this.activeWorkspace = p.activeWorkspace;
@@ -5449,6 +5553,268 @@ window.cdpkSystemPlannerApp = function () {
             this.cctv.catalogResolutionFilter = 'all';
             this.cctv.catalogSearch = '';
             this.showToast(this.lang === 'en' ? 'Catalog filters reset.' : 'Filter katalog direset.', 'info');
+        },
+
+        // ─── Module 2D Floor Plan Heatmap & Camera FoV Simulator Controller ──
+        get selectedFloorPlanItem() {
+            if (!this.floorplan || !this.floorplan.selectedItemId) return null;
+            if (this.floorplan.selectedItemType === 'antenna') {
+                return (this.floorplan.antennas || []).find(a => a.id === this.floorplan.selectedItemId) || null;
+            }
+            if (this.floorplan.selectedItemType === 'camera') {
+                return (this.floorplan.cameras || []).find(c => c.id === this.floorplan.selectedItemId) || null;
+            }
+            return null;
+        },
+
+        get selectedCameraDori() {
+            const cam = this.selectedFloorPlanItem;
+            if (!cam || this.floorplan.selectedItemType !== 'camera' || !window.CDPK_FLOORPLAN_ENGINE) return null;
+            const hfov = window.CDPK_FLOORPLAN_ENGINE.calcHFoVDegrees(cam.focalMm, cam.sensorFormat);
+            const dists = window.CDPK_FLOORPLAN_ENGINE.calcDoriDistances(cam.focalMm, cam.sensorFormat, cam.resolution);
+            return { hfov, dists };
+        },
+
+        get selectedAntennaRadii() {
+            const ant = this.selectedFloorPlanItem;
+            if (!ant || this.floorplan.selectedItemType !== 'antenna' || !window.CDPK_FLOORPLAN_ENGINE) return null;
+            return window.CDPK_FLOORPLAN_ENGINE.calcDasCoverageRadii(ant.eirpDbm, ant.nExp, ant.freqMhz);
+        },
+
+        initFloorPlan(targetCanvasId) {
+            const canvasId = targetCanvasId || (this.activeWorkspace === 'cctv' ? 'cdpkFloorPlanCanvasCctv' : 'cdpkFloorPlanCanvasDas');
+            const canvas = document.getElementById(canvasId);
+            if (!canvas || !window.CDPKFloorPlanViewer) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const w = Math.max(800, Math.floor(rect.width || 1100));
+            const h = Math.max(500, Math.floor(rect.height || 650));
+            canvas.width = w;
+            canvas.height = h;
+
+            if (!this._floorPlanViewer || this._floorPlanViewer.canvas !== canvas) {
+                this._floorPlanViewer = new window.CDPKFloorPlanViewer(canvas, this.floorplan, (ev) => {
+                    if (ev && ev.calibReady) {
+                        this.floorplan.calibrating = true;
+                        this.floorplan.calibPixelDist = Math.round(ev.pxDist * 10) / 10;
+                    }
+                });
+            } else {
+                this._floorPlanViewer.requestRender();
+            }
+            this.floorplan.initialized = true;
+        },
+
+        setFloorPlanTool(tool) {
+            this.floorplan.activeTool = tool;
+            if (tool === 'calibrate') {
+                this.showToast(
+                    this.lang === 'en'
+                        ? 'Calibration active: Click Point A and Point B on a known dimension.'
+                        : 'Kalibrasi aktif: Klik Titik A dan Titik B pada objek dengan ukuran terukur.',
+                    'info'
+                );
+            }
+            if (this._floorPlanViewer) this._floorPlanViewer.requestRender();
+        },
+
+        applyFloorPlanCalibration() {
+            const distM = Number(this.floorplan.calibDistM);
+            const pxDist = Number(this.floorplan.calibPixelDist);
+            if (!distM || distM <= 0 || !pxDist || pxDist <= 0) {
+                this.showToast('Jarak referensi tidak valid.', 'error');
+                return;
+            }
+            const newPpm = Math.round((pxDist / distM) * 10) / 10;
+            this.floorplan.scalePpm = newPpm;
+            this.floorplan.calibrating = false;
+            this.floorplan.activeTool = 'select';
+            if (this._floorPlanViewer) {
+                this._floorPlanViewer.calibPointA = null;
+                this._floorPlanViewer.calibPointB = null;
+                this._floorPlanViewer.requestRender();
+            }
+            this.showToast(
+                this.lang === 'en'
+                    ? `Scale calibrated: 1 meter = ${newPpm} pixels.`
+                    : `Kalibrasi berhasil: 1 meter = ${newPpm} px.`,
+                'success'
+            );
+        },
+
+        cancelFloorPlanCalibration() {
+            this.floorplan.calibrating = false;
+            this.floorplan.activeTool = 'select';
+            if (this._floorPlanViewer) {
+                this._floorPlanViewer.calibPointA = null;
+                this._floorPlanViewer.calibPointB = null;
+                this._floorPlanViewer.requestRender();
+            }
+        },
+
+        addFloorPlanAntennaQuick() {
+            this.floorplan.activeTool = 'antenna';
+            this.showToast(
+                this.lang === 'en' ? 'Click on floor plan to place DAS antenna.' : 'Klik pada denah untuk meletakkan Antena DAS.',
+                'info'
+            );
+        },
+
+        addFloorPlanCameraQuick() {
+            this.floorplan.activeTool = 'camera';
+            this.showToast(
+                this.lang === 'en' ? 'Click on floor plan to place CCTV camera.' : 'Klik pada denah untuk meletakkan Kamera CCTV.',
+                'info'
+            );
+        },
+
+        removeSelectedFloorPlanItem() {
+            const id = this.floorplan.selectedItemId;
+            const type = this.floorplan.selectedItemType;
+            if (!id) return;
+
+            if (type === 'antenna') {
+                this.floorplan.antennas = this.floorplan.antennas.filter(a => a.id !== id);
+                this.showToast(`Antena ${id} dihapus.`, 'info');
+            } else if (type === 'camera') {
+                this.floorplan.cameras = this.floorplan.cameras.filter(c => c.id !== id);
+                this.showToast(`Kamera ${id} dihapus.`, 'info');
+            }
+
+            this.floorplan.selectedItemId = null;
+            this.floorplan.selectedItemType = null;
+            if (this._floorPlanViewer) this._floorPlanViewer.requestRender();
+        },
+
+        uploadFloorPlanImage(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (this._floorPlanViewer) {
+                    this._floorPlanViewer.setImageFromDataUrl(e.target.result);
+                }
+                this.showToast(
+                    this.lang === 'en' ? 'Floor plan blueprint uploaded successfully!' : 'Denah arsitektur berhasil diunggah!',
+                    'success'
+                );
+            };
+            reader.readAsDataURL(file);
+        },
+
+        loadSampleFloorPlan() {
+            if (this._floorPlanViewer && window.CDPK_FLOORPLAN_ENGINE) {
+                const sampleUrl = window.CDPK_FLOORPLAN_ENGINE.createDefaultFloorPlanDataUrl(1200, 800);
+                this._floorPlanViewer.setImageFromDataUrl(sampleUrl);
+                this.showToast(
+                    this.lang === 'en' ? 'Sample architectural blueprint loaded.' : 'Denah blueprint contoh berhasil dimuat.',
+                    'info'
+                );
+            }
+        },
+
+        resetFloorPlanView() {
+            if (this._floorPlanViewer) {
+                this._floorPlanViewer.fitToScreen();
+                this._floorPlanViewer.requestRender();
+            }
+        },
+
+        syncFloorPlanToDas() {
+            const count = (this.floorplan.antennas || []).length;
+            if (count === 0) {
+                this.showToast('Tidak ada antena di denah untuk disinkronkan.', 'warning');
+                return;
+            }
+            const floorName = this.floorplan.floorName || 'Lantai 1';
+            let found = (this.das.floors || []).find(fl => fl.f.toLowerCase().includes(floorName.toLowerCase()) || floorName.toLowerCase().includes(fl.f.toLowerCase()));
+            if (found) {
+                found.q = count;
+            } else {
+                if (this.das.floors && this.das.floors.length > 0) {
+                    this.das.floors[0].f = floorName;
+                    this.das.floors[0].q = count;
+                } else {
+                    this.das.floors = [{ f: floorName, q: count }];
+                }
+            }
+            this.showToast(
+                this.lang === 'en'
+                    ? `Synced ${count} antenna(s) to DAS Multi-Floor Table (${floorName})!`
+                    : `Berhasil menyinkronkan ${count} antena ke Tabel Topologi DAS (${floorName})!`,
+                'success'
+            );
+        },
+
+        syncFloorPlanToCctv() {
+            const cameras = this.floorplan.cameras || [];
+            if (cameras.length === 0) {
+                this.showToast('Tidak ada kamera di denah untuk disinkronkan.', 'warning');
+                return;
+            }
+
+            const groups = {};
+            for (const cam of cameras) {
+                const key = `${cam.brand || 'pelco'}_${cam.resolution || '4MP'}`;
+                if (!groups[key]) {
+                    groups[key] = {
+                        brand: cam.brand || 'pelco',
+                        brandName: cam.brand === 'avigilon' ? 'Avigilon' : 'Pelco',
+                        model: cam.model || 'IP Camera 4MP',
+                        resolution: cam.resolution || '4MP',
+                        formFactor: (cam.model || '').toLowerCase().includes('bullet') ? 'bullet' : 'dome',
+                        qty: 0
+                    };
+                }
+                groups[key].qty += 1;
+            }
+
+            let totalSynced = 0;
+            for (const g of Object.values(groups)) {
+                const existing = this.cctv.cameraGroups.find(cg => cg.resolution === g.resolution && cg.brand === g.brand);
+                if (existing) {
+                    existing.qty = g.qty;
+                } else {
+                    this.cctv.cameraGroups.push({
+                        id: 'cg-fp-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+                        sku: `FP-${g.brand.toUpperCase()}-${g.resolution}`,
+                        brand: g.brand,
+                        brandName: g.brandName,
+                        model: g.model,
+                        formFactor: g.formFactor,
+                        resolution: g.resolution,
+                        qty: g.qty,
+                        fps: 25,
+                        codec: 'SmartCodec',
+                        sceneMotion: 'medium',
+                        customBitrate: 0,
+                        poeClass: g.resolution === '4K' ? 'at' : 'af',
+                        poeWatts: g.resolution === '4K' ? 15.0 : 12.0,
+                        unitPriceUsd: g.resolution === '4K' ? 1650 : 680,
+                        unitPriceIdr: g.resolution === '4K' ? 26400000 : 10880000,
+                        cogsUsd: g.resolution === '4K' ? 1240 : 510,
+                        marginPct: 25.0
+                    });
+                }
+                totalSynced += g.qty;
+            }
+
+            this.showToast(
+                this.lang === 'en'
+                    ? `Synced ${totalSynced} camera(s) to CCTV Sizing Fleet!`
+                    : `Berhasil menyinkronkan ${totalSynced} kamera ke Fleet CCTV Sizing!`,
+                'success'
+            );
+        },
+
+        exportFloorPlanPng() {
+            if (this._floorPlanViewer) {
+                this._floorPlanViewer.exportHighResPng(this.projectName || 'Proyek');
+                this.showToast(
+                    this.lang === 'en' ? 'Floor plan PNG exported successfully!' : 'Denah PNG beresolusi tinggi berhasil diunduh!',
+                    'success'
+                );
+            }
         }
     };
 };

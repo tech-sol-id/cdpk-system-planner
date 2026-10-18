@@ -449,18 +449,28 @@ Berdasarkan keselarasan portofolio produk PT Citradata Purnakharisma (Motorola S
   2. **IS Accessory Safety Guard:** Peringatan otomatis jika aksesoris non-IS (baterai standar atau mic non-ATEX) dipasangkan pada radio bersertifikasi ATEX (MOTOTRBO ATEX / i.safe MOBILE IS541.1/IS941.1).
   3. **Cetak HazLoc Compliance Sheet:** Lembar verifikasi kepatuhan sertifikasi ATEX/IECEx untuk lampiran dokumen tender resmi.
 
-### 12.5. Fase 4: Visual 2D Indoor Floor Plan Heatmap & Outdoor GIS Coverage Map
-* **Objektif:** Menyajikan simulasi visual interaktif sebaran propagasi sinyal RF dan sudut pandang kamera untuk meyakinkan pemilik gedung dan konsultan proyek.
-* **Fitur Utama:**
-  1. **Indoor Floor Plan Heatmap Canvas (RFoF DAS & CCTV):**
-     * Penempatan di Tab 2 modul RFoF DAS FMTCS.
-     * Pengunggahan denah lantai arsitektur (JPG/PNG).
-     * Penempatan antena indoor FMTCS `ANTI400R.M` dan ORU secara drag-and-drop.
-     * Rendering gradien warna panas RSSI (dBm) untuk mendeteksi *dead spot* secara visual.
-     * Proyeksi kerucut sudut pandang (Field of View / FoV cone) untuk kamera CCTV Pelco/Avigilon.
-  2. **Outdoor GIS Coverage Map (DMR Base Station):**
-     * Penempatan di Tab 2 modul DMR System Planner.
-     * Peta geografis satelit / OpenStreetMap berbasis Leaflet.js.
-     * Plotting koordinat GPS site repeater tower dengan proyeksi lingkaran radius jangkauan efektif (Okumura-Hata) di atas peta wilayah operasional klien.
+### 12.5. Fase 4: Visual 2D Indoor Floor Plan Heatmap & Camera FoV Simulator (Status: SELESAI & OPERASIONAL v8.6.0)
+* **Objektif:** Menyajikan simulasi visual interaktif sebaran propagasi sinyal RF indoor dan sudut pandang kamera DORI untuk konsultan tender dan pemilik gedung.
+* **Fitur Utama yang Telah Diimplementasikan:**
+  1. **Interactive HTML5 Canvas Blueprint Workbench (`static/js/floorplan_engine.js`):**
+     * Terintegrasi mulus di Modul 2 RFoF DAS (Tab 7) dan Modul 3 CCTV (Tab 5).
+     * Pengunggahan denah lantai arsitektur (JPG/PNG/SVG) atau pemuatan denah blueprint contoh prosedural secara instan.
+     * Fitur navigasi kanvas: Pan (✋), Select/Drag (👆), Zooming kursor mouse, dan Reset Zoom (🔄).
+  2. **Kalibrasi Skala Jarak Nyata (Real-World Calibration):**
+     * Pengukuran interaktif 2 titik referensi di kanvas untuk menghitung rasio Pixels Per Meter (PPM).
+     * Pembaruan dinamis skala metrik ke seluruh kalkulasi radius jangkauan RF dan optik DORI kamera.
+  3. **Simulator Heatmap RFoF DAS (UHF DMR 450 MHz):**
+     * Penempatan antena plafon FMTCS `ANTI400R.M` (3 dBi) dengan model *Indoor Log-Distance Path Loss* ($n = 2.8$, $L_{\text{wall}} = 8\text{ dB}$).
+     * Visualisasi gradien radial multi-zona: Sinyal Sangat Kuat ($\ge -75\text{ dBm}$ / Hijau), Standar SAT Acceptance ($\ge -85\text{ dBm}$ / Kuning), Batas Jangkauan ($\ge -95\text{ dBm}$ / Oranye), dan Dead Zone.
+     * Fitur **Probe Sinyal Kursor Real-time**: Menampilkan estimasi RSSI, jarak terdekat ke antena, dan status kelulusan di mana saja kursor digerakkan.
+  4. **Simulator Kerucut Forensik DORI Kamera CCTV (EN 62676-4):**
+     * Penempatan kamera CCTV multi-brand dengan penyesuaian sudut orientasi rotasi $0^\circ - 360^\circ$ via handle rotasi interaktif.
+     * Kalkulasi Horizontal FoV (HFoV) berdasarkan fokal lensa (2.8mm, 4.0mm, 6.0mm, 12.0mm) dan format sensor (1/2.8", 1/1.8", 1/3").
+     * Proyeksi sektor busur 4-lapis standar forensik EN 62676-4: Identifikasi ($\ge 250\text{ PPM}$), Pengenalan ($\ge 125\text{ PPM}$), Observasi ($\ge 62\text{ PPM}$), dan Deteksi ($\ge 25\text{ PPM}$).
+  5. **Sinkronisasi Rekayasa Dua Arah (Two-Way Engineering Sync):**
+     * Tombol *"Sinkronkan ke Tabel Topologi DAS"*: Memperbarui kuantitas antena per lantai di modul DAS BoQ secara otomatis.
+     * Tombol *"Sinkronkan ke Fleet Sizing CCTV"*: Mengelompokkan dan mengirim armada kamera dari denah ke kalkulator penyimpanan NVR & switch PoE.
+  6. **Ekspor Gambar Resolusi Tinggi (High-Res PNG Export):**
+     * Menghasilkan berkas PNG denah teknik beresolusi tinggi (2x Retina) lengkap dengan kop teknis PT Citradata Purnakharisma, legenda warna DORI & DAS, skala grafis metrik, dan metadata proyek untuk lampiran dokumen tender resmi.
 
 
