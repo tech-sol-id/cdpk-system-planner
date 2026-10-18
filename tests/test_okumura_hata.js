@@ -112,4 +112,25 @@ assert.ok(urbanResult.radiiKm.fair < urbanResult.radiiKm.fringe, 'Fair zone (< -
 assert.ok(urbanResult.radiiKm.fringe < urbanResult.radiiKm.limit, 'Fringe zone radius must be smaller than sensitivity limit (< -118dBm)');
 console.log(`✔ Test 6 Passed: Signal zone radii progression validated (${urbanResult.radiiKm.core}km -> ${urbanResult.radiiKm.strong}km -> ${urbanResult.radiiKm.fair}km -> ${urbanResult.radiiKm.fringe}km -> ${urbanResult.radiiKm.limit}km)`);
 
-console.log('\n=== All 6 Okumura-Hata Unit Tests PASSED Successfully! ===\n');
+// Test 7: Indonesian Spectrum 4-Band Propagation Progression (VHF > 350 MHz > UHF > 800 MHz)
+const vhfRes = window.CDPK_ENGINES.calculateOkumuraHata({ freqMHz: 155, envProfile: 'urban', towerHeight: 35, txWatts: 50 });
+const band350Res = window.CDPK_ENGINES.calculateOkumuraHata({ freqMHz: 360, envProfile: 'urban', towerHeight: 35, txWatts: 50 });
+const uhfRes = window.CDPK_ENGINES.calculateOkumuraHata({ freqMHz: 450, envProfile: 'urban', towerHeight: 35, txWatts: 50 });
+const band800Res = window.CDPK_ENGINES.calculateOkumuraHata({ freqMHz: 850, envProfile: 'urban', towerHeight: 35, txWatts: 50 });
+
+assert.ok(vhfRes.radiiKm.strong > band350Res.radiiKm.strong, `VHF radius (${vhfRes.radiiKm.strong} km) must exceed 350 MHz (${band350Res.radiiKm.strong} km)`);
+assert.ok(band350Res.radiiKm.strong > uhfRes.radiiKm.strong, `350 MHz radius (${band350Res.radiiKm.strong} km) must exceed UHF (${uhfRes.radiiKm.strong} km)`);
+assert.ok(uhfRes.radiiKm.strong > band800Res.radiiKm.strong, `UHF radius (${uhfRes.radiiKm.strong} km) must exceed 800 MHz (${band800Res.radiiKm.strong} km)`);
+
+// Custom frequency within allowable range check
+const customRes = window.CDPK_ENGINES.calculateOkumuraHata({ freqMHz: 142.125, envProfile: 'open', towerHeight: 45, txWatts: 50 });
+assert.ok(customRes.radiiKm.strong > 10.0, `VHF open custom frequency 142.125MHz should provide extensive open reach, got ${customRes.radiiKm.strong} km`);
+
+console.log(`✔ Test 7 Passed: Indonesian 4-Band Frequency hierarchy validated:`);
+console.log(`   - VHF (155 MHz): ~${vhfRes.radiiKm.strong} km`);
+console.log(`   - 350 MHz (360 MHz): ~${band350Res.radiiKm.strong} km`);
+console.log(`   - UHF (450 MHz): ~${uhfRes.radiiKm.strong} km`);
+console.log(`   - 800 MHz (850 MHz): ~${band800Res.radiiKm.strong} km`);
+console.log(`   - Custom VHF (142.125 MHz Open): ~${customRes.radiiKm.strong} km`);
+
+console.log('\n=== All 7 Okumura-Hata Unit Tests PASSED Successfully! ===\n');

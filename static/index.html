@@ -748,8 +748,9 @@
                         <select x-model="freqBand" @change="syncBoqFromSizing()"
                                 class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-slate-50 font-medium">
                             <option value="vhf">VHF (136–174 MHz)</option>
-                            <option value="uhf">UHF (403–470 MHz)</option>
-                            <option value="800">800/900 MHz Trunking</option>
+                            <option value="350">350 MHz (350–380 MHz - Alokasi Pemerintah/Polri)</option>
+                            <option value="uhf">UHF (400–470 MHz)</option>
+                            <option value="800">800/900 MHz (806–870 MHz Trunking)</option>
                         </select>
                     </div>
                 </div>
@@ -1497,7 +1498,7 @@
                 <div class="flex items-center justify-between border-b border-slate-200 pb-2.5">
                     <div>
                         <h2 class="text-base font-extrabold text-slate-900" x-text="t('gisCoverage.title') || 'Outdoor GIS Coverage Map'"></h2>
-                        <div class="text-[10px] text-blue-700 font-bold uppercase tracking-wider">Okumura-Hata 450 MHz DMR</div>
+                        <div class="text-[10px] text-blue-700 font-bold uppercase tracking-wider" x-text="`Okumura-Hata Model • ${covFreqBand.toUpperCase()} (${covFreqMhz} MHz)`"></div>
                     </div>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800">CDPK v8.6</span>
                 </div>
@@ -1553,6 +1554,68 @@
                         </button>
                     </div>
                     <div class="text-[10px] text-slate-500 italic" x-text="t('gisCoverage.dragTip') || '💡 Seret marker R1, R2... pada peta untuk memindahkan posisi site secara real-time'"></div>
+                </div>
+
+                <!-- Indonesian Spectrum Frequency Selector -->
+                <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-extrabold text-blue-950 flex items-center gap-1.5">
+                            <span>📻</span> <span x-text="t('gisCoverage.freqBandSelectorTitle') || 'Pita Frekuensi Spektrum Indonesia (SDPPI)'"></span>
+                        </span>
+                        <button type="button" @click="showFreqGuideModal = true" class="text-[11px] font-bold text-blue-700 hover:text-blue-900 underline flex items-center gap-1 cursor-pointer">
+                            <span x-text="t('gisCoverage.freqGuideBtn') || 'ℹ️ Panduan Spektrum SDPPI'"></span>
+                        </button>
+                    </div>
+
+                    <!-- 4-Band Pill Buttons -->
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <button type="button" @click="setCovFreqBand('vhf')"
+                                :class="covFreqBand === 'vhf' ? 'bg-blue-700 text-white font-black shadow-xs ring-2 ring-blue-400' : 'bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200'"
+                                class="py-1.5 px-1 rounded-lg text-xs transition cursor-pointer text-center">
+                            <div class="font-bold text-[11px]">VHF</div>
+                            <div class="text-[9px] opacity-75">136–174</div>
+                        </button>
+                        <button type="button" @click="setCovFreqBand('350')"
+                                :class="covFreqBand === '350' ? 'bg-blue-700 text-white font-black shadow-xs ring-2 ring-blue-400' : 'bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200'"
+                                class="py-1.5 px-1 rounded-lg text-xs transition cursor-pointer text-center">
+                            <div class="font-bold text-[11px]">350 MHz</div>
+                            <div class="text-[9px] opacity-75">350–380</div>
+                        </button>
+                        <button type="button" @click="setCovFreqBand('uhf')"
+                                :class="covFreqBand === 'uhf' ? 'bg-blue-700 text-white font-black shadow-xs ring-2 ring-blue-400' : 'bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200'"
+                                class="py-1.5 px-1 rounded-lg text-xs transition cursor-pointer text-center">
+                            <div class="font-bold text-[11px]">UHF</div>
+                            <div class="text-[9px] opacity-75">400–470</div>
+                        </button>
+                        <button type="button" @click="setCovFreqBand('800')"
+                                :class="covFreqBand === '800' ? 'bg-blue-700 text-white font-black shadow-xs ring-2 ring-blue-400' : 'bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200'"
+                                class="py-1.5 px-1 rounded-lg text-xs transition cursor-pointer text-center">
+                            <div class="font-bold text-[11px]">800 MHz</div>
+                            <div class="text-[9px] opacity-75">806–870</div>
+                        </button>
+                    </div>
+
+                    <!-- Custom Frequency Input within Band Limits -->
+                    <div class="p-2.5 rounded-lg bg-white border border-blue-200 space-y-1.5">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-bold text-slate-700" x-text="t('gisCoverage.freqCustomInputLabel') || 'Frekuensi Kerja (Carrier)'"></span>
+                            <span class="font-mono font-extrabold text-blue-700" x-text="`${Number(covFreqMhz).toFixed(3)} MHz`"></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="number" 
+                                   :min="getCovFreqRange().min" 
+                                   :max="getCovFreqRange().max" 
+                                   :step="getCovFreqRange().step || 0.125"
+                                   x-model.number="covFreqMhz" 
+                                   @input="runCoverageSimulation()"
+                                   class="flex-1 px-2.5 py-1 text-xs font-mono font-bold rounded-lg border border-slate-300 bg-slate-50 text-slate-900" />
+                            <span class="text-xs font-bold text-slate-500">MHz</span>
+                        </div>
+                        <div class="text-[10px] text-slate-500 flex justify-between">
+                            <span>Rentang: <strong class="font-mono text-slate-700" x-text="`${getCovFreqRange().min} – ${getCovFreqRange().max} MHz`"></strong></span>
+                            <span class="text-blue-600 font-semibold cursor-pointer hover:underline" @click="setCovFreqBand(covFreqBand)">Reset Baseline</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Okumura-Hata Model Parameters -->
@@ -8987,6 +9050,180 @@
                 <button @click="resetModalOpen = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 rounded-lg cursor-pointer">
                     <span x-text="lang === 'en' ? 'Cancel' : 'Batal'"></span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL: PANDUAN SPEKTRUM FREKUENSI RADIO SDPPI KOMINFO                -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div x-show="showFreqGuideModal" 
+         x-cloak
+         style="z-index: 80;"
+         class="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-3 sm:p-5 overflow-y-auto">
+        <div @click.away="showFreqGuideModal = false" class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]">
+            <!-- Header -->
+            <div class="cdpk-gradient text-white p-4 sm:p-5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 rounded-xl bg-white/15 backdrop-blur-xs text-xl">📡</div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold" x-text="t('gisCoverage.sdppiModalTitle') || 'Panduan Alokasi Spektrum Frekuensi Radio Indonesia (Ditjen SDPPI Kominfo)'"></h3>
+                        <p class="text-xs text-sky-100 mt-0.5" x-text="t('gisCoverage.sdppiModalSubtitle') || 'Ketentuan Alokasi Spektrum Resmi & Karakteristik Propagasi Model Okumura-Hata untuk DMR / LMR'"></p>
+                    </div>
+                </div>
+                <button type="button" @click="showFreqGuideModal = false" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white font-bold text-base cursor-pointer">✕</button>
+            </div>
+
+            <!-- Content / Reference Table -->
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
+                <div class="p-3 rounded-xl bg-blue-50/80 border border-blue-200 text-slate-700 leading-relaxed">
+                    <strong class="text-blue-900">Ketentuan Alokasi SDPPI Kominfo:</strong> Pemilihan pita frekuensi sangat menentukan jangkauan efektif (coverage footprint), daya tembus hambatan alam/buatan, dan ukuran fisik antena. Di bawah ini adalah ringkasan teknis alokasi frekuensi radio komunikasi darat (Land Mobile Radio / DMR Tier II &amp; Tier III) di Indonesia sesuai Master Plan Spektrum Frekuensi Radio Nasional:
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 font-extrabold uppercase text-[10px] border-b border-slate-200">
+                                <th class="p-3" x-text="t('gisCoverage.colBand') || 'Pita Frekuensi'"></th>
+                                <th class="p-3" x-text="t('gisCoverage.colRange') || 'Rentang Alokasi'"></th>
+                                <th class="p-3" x-text="t('gisCoverage.colUsers') || 'Alokasi & Pengguna Utama'"></th>
+                                <th class="p-3" x-text="t('gisCoverage.colProp') || 'Karakteristik Propagasi Okumura-Hata'"></th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-xs">
+                            <!-- VHF -->
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-3 font-extrabold text-blue-900 whitespace-nowrap">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                        <span>VHF</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-500 font-medium font-mono">136–174 MHz</span>
+                                </td>
+                                <td class="p-3 font-mono font-bold text-slate-700 whitespace-nowrap">
+                                    <div>136.000 – 174.000 MHz</div>
+                                    <span class="text-[10px] text-emerald-600 font-semibold">(Baseline: 155 MHz)</span>
+                                </td>
+                                <td class="p-3 text-slate-700 leading-snug">
+                                    <ul class="list-disc list-inside space-y-0.5 text-[11px]">
+                                        <li>Perkebunan Kelapa Sawit (Agroindustri)</li>
+                                        <li>Kehutanan (KPHP/Konservasi) &amp; Perikanan/Maritim</li>
+                                        <li>Operasi remote luar kota dengan bentang alam luas</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3 text-slate-700 leading-snug">
+                                    <div class="font-semibold text-emerald-800 mb-0.5">Jangkauan Luar Ruang Terjauh (~7–12+ km)</div>
+                                    <div class="text-[11px] text-slate-600">Path loss rendah, difraksi medan berbukit sangat baik. Membutuhkan panjang antena fisik HT lebih besar (~15–17 cm).</div>
+                                </td>
+                                <td class="p-3 text-center whitespace-nowrap">
+                                    <button type="button" @click="setCovFreqBand('vhf'); showFreqGuideModal = false" class="px-2.5 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-[11px] transition cursor-pointer">
+                                        Pilih Band
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- 350 MHz -->
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-3 font-extrabold text-blue-900 whitespace-nowrap">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                        <span>350 MHz</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-500 font-medium font-mono">350–380 MHz</span>
+                                </td>
+                                <td class="p-3 font-mono font-bold text-slate-700 whitespace-nowrap">
+                                    <div>350.000 – 380.000 MHz</div>
+                                    <span class="text-[10px] text-amber-600 font-semibold">(Baseline: 360 MHz)</span>
+                                </td>
+                                <td class="p-3 text-slate-700 leading-snug">
+                                    <ul class="list-disc list-inside space-y-0.5 text-[11px]">
+                                        <li><strong>Khusus Pemerintah &amp; Polri</strong> (PPDR)</li>
+                                        <li>Badan Penanggulangan Bencana (BNPB/BPBD)</li>
+                                        <li>Basarnas &amp; Keamanan Ketertiban Publik</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3 text-slate-700 leading-snug">
+                                    <div class="font-semibold text-amber-800 mb-0.5">Optimal Hybrid Penetrasi &amp; Jangkauan (~4–7 km)</div>
+                                    <div class="text-[11px] text-slate-600">Kombinasi seimbang antara kemampuan tembus kanopi/bangunan dan jangkauan radius outdoor. Bebas polusi interferensi komersial.</div>
+                                </td>
+                                <td class="p-3 text-center whitespace-nowrap">
+                                    <button type="button" @click="setCovFreqBand('350'); showFreqGuideModal = false" class="px-2.5 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-[11px] transition cursor-pointer">
+                                        Pilih Band
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- UHF -->
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-3 font-extrabold text-blue-900 whitespace-nowrap">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                                        <span>UHF</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-500 font-medium font-mono">400–470 MHz</span>
+                                </td>
+                                <td class="p-3 font-mono font-bold text-slate-700 whitespace-nowrap">
+                                    <div>400.000 – 470.000 MHz</div>
+                                    <span class="text-[10px] text-blue-600 font-semibold">(Baseline: 450 MHz)</span>
+                                </td>
+                                <td class="p-3 text-slate-700 leading-snug">
+                                    <ul class="list-disc list-inside space-y-0.5 text-[11px]">
+                                        <li><strong>Standar Komersial Industri Indonesia</strong></li>
+                                        <li>Tambang Terbuka (Open-Pit WIUP Batubara/Mineral)</li>
+                                        <li>Migas (Oil &amp; Gas), Kilang, Petrokimia &amp; Pelabuhan</li>
+                                        <li>Gedung Tinggi &amp; Kompleks Pabrik Manufaktur</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3 text-slate-700 leading-snug">
+                                    <div class="font-semibold text-blue-800 mb-0.5">Daya Tembus Hambatan Kuat &amp; Stabil (~3.5–6 km)</div>
+                                    <div class="text-[11px] text-slate-600">Penetrasi beton/baja sangat kuat, redaman pantulan multipath terkontrol, ukuran antena portabel kompak (~8–10 cm).</div>
+                                </td>
+                                <td class="p-3 text-center whitespace-nowrap">
+                                    <button type="button" @click="setCovFreqBand('uhf'); showFreqGuideModal = false" class="px-2.5 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-[11px] transition cursor-pointer">
+                                        Pilih Band
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- 800 MHz -->
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-3 font-extrabold text-blue-900 whitespace-nowrap">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
+                                        <span>800 MHz</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-500 font-medium font-mono">806–870 MHz</span>
+                                </td>
+                                <td class="p-3 font-mono font-bold text-slate-700 whitespace-nowrap">
+                                    <div>806.000 – 870.000 MHz</div>
+                                    <span class="text-[10px] text-purple-600 font-semibold">(Baseline: 850 MHz)</span>
+                                </td>
+                                <td class="p-3 text-slate-700 leading-snug">
+                                    <ul class="list-disc list-inside space-y-0.5 text-[11px]">
+                                        <li>Trunking Skala Besar (TETRA / APCO P25 / SmartNet)</li>
+                                        <li>Sistem Transportasi Publik (MRT, LRT, Kereta Cepat)</li>
+                                        <li>Bandara Internasional &amp; Kawasan Urban Padat</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3 text-slate-700 leading-snug">
+                                    <div class="font-semibold text-purple-800 mb-0.5">Kapasitas Tinggi &amp; Sel Kompak (~2–3.5 km)</div>
+                                    <div class="text-[11px] text-slate-600">Redaman ruang bebas lebih tinggi, radius coverage lebih terlokalisir sehingga memudahkan reuse kanal frekuensi pada multi-site padat.</div>
+                                </td>
+                                <td class="p-3 text-center whitespace-nowrap">
+                                    <button type="button" @click="setCovFreqBand('800'); showFreqGuideModal = false" class="px-2.5 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-[11px] transition cursor-pointer">
+                                        Pilih Band
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 flex items-center justify-between">
+                    <span>💡 <strong>Catatan Teknis CDPK:</strong> Formula Okumura-Hata berlaku secara matematis dan empiris pada rentang 150–1500 MHz. Frekuensi VHF (136–174 MHz) dikalkulasikan dengan koreksi tinggi antena bergerak `aL` & `aS` untuk frekuensi &le; 200 MHz.</span>
+                    <button type="button" @click="showFreqGuideModal = false" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg cursor-pointer transition shrink-0 ml-3" x-text="t('gisCoverage.modalClose') || 'Tutup Panduan'"></button>
+                </div>
             </div>
         </div>
     </div>

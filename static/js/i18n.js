@@ -331,7 +331,18 @@ window.CDPK_I18N = {
             basemapGoogleHybrid: "Google Hybrid",
             dragTip: "💡 Seret marker R1, R2... pada peta untuk memindahkan posisi site secara real-time",
             clickTip: "💡 Klik pada peta untuk memposisikan site yang aktif",
-            brandHeader: "PT CITRADATA PURNAKHARISMA (CDPK)"
+            brandHeader: "PT CITRADATA PURNAKHARISMA (CDPK)",
+            freqBandSelectorTitle: "Pita Frekuensi Spektrum Indonesia (SDPPI)",
+            freqCustomInputLabel: "Frekuensi Kerja (Carrier)",
+            freqGuideBtn: "ℹ️ Panduan Spektrum SDPPI",
+            sdppiModalTitle: "Panduan Alokasi Spektrum Frekuensi Radio Indonesia (Ditjen SDPPI Kominfo)",
+            sdppiModalSubtitle: "Ketentuan Alokasi Spektrum Resmi & Karakteristik Propagasi Model Okumura-Hata untuk DMR / LMR",
+            colBand: "Pita Frekuensi",
+            colRange: "Rentang Alokasi",
+            colUsers: "Alokasi & Pengguna Utama",
+            colProp: "Karakteristik Propagasi Okumura-Hata",
+            btnSelectThisBand: "Terapkan Frekuensi Ini",
+            modalClose: "Tutup Panduan"
         },
 
         // Reset Isian Modal
@@ -859,7 +870,18 @@ window.CDPK_I18N = {
             basemapGoogleHybrid: "Google Hybrid",
             dragTip: "💡 Drag markers R1, R2... on the map to update site coordinates in real time",
             clickTip: "💡 Click anywhere on map to reposition active site",
-            brandHeader: "PT CITRADATA PURNAKHARISMA (CDPK)"
+            brandHeader: "PT CITRADATA PURNAKHARISMA (CDPK)",
+            freqBandSelectorTitle: "Indonesian Radio Spectrum Bands (SDPPI)",
+            freqCustomInputLabel: "Carrier Frequency",
+            freqGuideBtn: "ℹ️ SDPPI Spectrum Guide",
+            sdppiModalTitle: "Indonesian Radio Frequency Spectrum Allocation (SDPPI Kominfo)",
+            sdppiModalSubtitle: "Official Spectrum Allocation & Okumura-Hata RF Propagation Characteristics for DMR / LMR",
+            colBand: "Frequency Band",
+            colRange: "Allocation Range",
+            colUsers: "Typical Allocation & Users",
+            colProp: "Okumura-Hata Propagation Profile",
+            btnSelectThisBand: "Apply This Frequency",
+            modalClose: "Close Guide"
         },
 
         // Reset Isian Modal

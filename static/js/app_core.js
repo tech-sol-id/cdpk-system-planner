@@ -455,9 +455,11 @@ window.cdpkSystemPlannerApp = function () {
         covCableLossDb: 2.1,
         covEnvProfile: 'urbanS', // 'urbanL' | 'urbanS' | 'subS' | 'openS'
         covTopography: 'flat', // 'flat' | 'rolling' | 'mountainous' | 'foliage'
-        covFreqMhz: 450, // DMR standard 450 MHz
+        covFreqBand: 'uhf', // 'vhf' | '350' | 'uhf' | '800' | 'custom'
+        covFreqMhz: 450, // Active carrier frequency in MHz
         covTowerHeight: 35,
         covMobileHeight: 1.5,
+        showFreqGuideModal: false,
         covMetrics: { strongPct: 68, fairPct: 24, weakPct: 8, deadZones: [] },
         coverageViewMode: 'grid', // 'grid' | 'gis'
         gisBasemap: 'osm', // 'osm' | 'google_sat' | 'google_hybrid'
@@ -2057,7 +2059,9 @@ window.cdpkSystemPlannerApp = function () {
 
             const baseR = this.freqBand === 'vhf'
                 ? Number(indObj.vhf_radius_km || 16)
-                : (this.freqBand === '800' ? Number(indObj['800_radius_km'] || 8.5) : Number(indObj.uhf_radius_km || 11.5));
+                : (this.freqBand === '350'
+                    ? Number((indObj.vhf_radius_km || 16) * 0.82)
+                    : (this.freqBand === '800' ? Number(indObj['800_radius_km'] || 8.5) : Number(indObj.uhf_radius_km || 11.5)));
 
             const terrainFactors = {
                 flat: 1.0,
@@ -2893,6 +2897,32 @@ window.cdpkSystemPlannerApp = function () {
                 getPathLoss: (dKm) => aTotal + bSlope * Math.log10(Math.max(0.01, dKm)),
                 getRssi: (dKm) => eirpDbm + htGainDbi - htFeederLossDb - (aTotal + bSlope * Math.log10(Math.max(0.01, dKm)))
             };
+        },
+
+        setCovFreqBand(band) {
+            this.covFreqBand = band;
+            const defaults = {
+                vhf: { baseline: 155, min: 136, max: 174 },
+                '350': { baseline: 360, min: 350, max: 380 },
+                uhf: { baseline: 450, min: 400, max: 470 },
+                '800': { baseline: 850, min: 806, max: 870 },
+                custom: { baseline: this.covFreqMhz || 450, min: 130, max: 1000 }
+            };
+            const b = defaults[band] || defaults.uhf;
+            this.covFreqMhz = b.baseline;
+            if (['vhf', '350', 'uhf', '800'].includes(band)) this.freqBand = band;
+            this.runCoverageSimulation();
+        },
+
+        getCovFreqRange() {
+            const ranges = {
+                vhf: { min: 136, max: 174, step: 0.125, label: 'VHF (136–174 MHz)' },
+                '350': { min: 350, max: 380, step: 0.125, label: '350 MHz (350–380 MHz)' },
+                uhf: { min: 400, max: 470, step: 0.125, label: 'UHF (400–470 MHz)' },
+                '800': { min: 806, max: 870, step: 0.125, label: '800 MHz (806–870 MHz)' },
+                custom: { min: 130, max: 1000, step: 0.125, label: 'Custom Band (130–1000 MHz)' }
+            };
+            return ranges[this.covFreqBand] || ranges.uhf;
         },
 
         runCoverageSimulation() {
