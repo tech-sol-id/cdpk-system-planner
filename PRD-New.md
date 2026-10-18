@@ -374,3 +374,51 @@ Project Calculator - CDPK/
   - *Pemasangan Master Unit DOMU/AOMU & Remote Unit DORU/AORU*.
 - Ekspor PDF Penawaran Komersial dan BoQ Teknis otomatis mencantumkan ringkasan topologi RFoF DAS dan rincian multi-lantai di bawah kotak ringkasan DMR.
 
+---
+
+## 12. Usulan Roadmap Pengembangan Sistem Masa Depan (Proposed Future Roadmap)
+
+Berdasarkan keselarasan portofolio produk PT Citradata Purnakharisma (Motorola Solutions, FMTCS Fiber DAS, Pelco Video Security, Avigilon Unity/Alta, dan i.safe MOBILE HazLoc), berikut adalah 4 pilar usulan pengembangan terencana:
+
+### 12.1. Fase 1: Modul CCTV Pelco & Avigilon Planner (Video Security & NVR Sizing)
+* **Status:** Disetujui untuk Pengerjaan Tahap Berikutnya (*Approved for Next Implementation*).
+* **Objektif:** Mengintegrasikan perencanaan sistem kamera pengawas industri (CCTV Surveillance) ke dalam ekosistem CDPK System Planner sehingga penawaran turnkey dapat menggabungkan Radio Komunikasi DMR, RFoF DAS, dan Video Security dalam satu proposal utuh.
+* **Fitur Utama:**
+  1. **Bandwidth & Storage NVR Estimator:**
+     * Menghitung throughput *network bandwidth* (Mbps) dan total *storage* (TB) berdasarkan jumlah kamera, resolusi (2MP, 4MP, 4K, Bispectral Thermal), frame rate (15/25/30 fps), format kompresi (H.264, H.265, Pelco SmartCompression / Avigilon HDSM), dan masa retensi rekaman (30, 60, 90 hari).
+     * Rekomendasi kapasitas NVR/VMS Server, konfigurasi RAID (RAID 5 / RAID 6), dan *storage overhead safety factor* 20%.
+  2. **Kalkulator Daya PoE & Industrial Network Switch Sizing:**
+     * Menghitung total daya konsumsi PoE (IEEE 802.3af 15.4W, 802.3at PoE+ 30W, dan 802.3bt PoE++ 60W/90W untuk kamera PTZ luar ruang dengan wiper & heater).
+     * Rekomendasi jumlah port dan tipe Industrial Core/Distribution PoE Switch yang dibutuhkan.
+  3. **Bridge ke Master BoQ CDPK:**
+     * Seluruh item kamera Pelco (Spectra Pro, Esprit, Sarix), Avigilon (Ava Compact Dome, Unity), lisensi VMS, NVR, dan Switch langsung di-inject ke BoQ gabungan bersama DMR & DAS dengan perhitungan live FX, COGS, dan margin guardrail.
+
+### 12.2. Fase 2: Formal Commercial Quotation Engine (Surat Penawaran Resmi PT CDPK)
+* **Objektif:** Menjembatani hasil kalkulasi engineering langsung menjadi dokumen komersial legal siap kirim ke meja direksi atau tim procurement pelanggan.
+* **Fitur Utama:**
+  1. **Template Kop Surat Resmi CDPK:** Penomoran otomatis (`CDPK/QUO/{YYYY}/{MM}/{NO}`), identitas pelanggan/proyek, dan syarat ketentuan komersial (Terms of Payment, Franco Jakarta, Waktu Pengiriman, Masa Garansi, dan Masa Berlaku Penawaran 14/30 hari).
+  2. **Tanda Tangan Digital & Stempel:** Otorisasi tanda tangan digital Sales Manager / Direktur yang diproteksi PIN keamanan.
+  3. **Ekspor PDF Penawaran Resmi:** Menghasilkan dokumen penawaran harga formal siap kirim (lengkap dengan lampiran BoQ dan Term of Reference).
+
+### 12.3. Fase 3: Modul Kepatuhan ATEX & HazLoc Intrinsically Safe (IS Compliance Checker)
+* **Objektif:** Memastikan seluruh perangkat komunikasi di area berbahaya (Hazardous Locations) memenuhi regulasi keselamatan ledakan untuk tender sektor Oil & Gas (Pertamina, Medco), Petrokimia, dan Pertambangan.
+* **Fitur Utama:**
+  1. **HazLoc Zone Matrix Validator:** Validasi kecocokan perangkat terhadap zona bahaya: Zone 0, 1, 2 (Gas) atau Zone 20, 21, 22 (Debu), Gas Group (IIC/IIB/IIA), dan Kelas Suhu (T1–T6) atau Class I/II/III Div 1/2.
+  2. **IS Accessory Safety Guard:** Peringatan otomatis jika aksesoris non-IS (baterai standar atau mic non-ATEX) dipasangkan pada radio bersertifikasi ATEX (MOTOTRBO ATEX / i.safe MOBILE IS541.1/IS941.1).
+  3. **Cetak HazLoc Compliance Sheet:** Lembar verifikasi kepatuhan sertifikasi ATEX/IECEx untuk lampiran dokumen tender resmi.
+
+### 12.4. Fase 4: Visual 2D Indoor Floor Plan Heatmap & Outdoor GIS Coverage Map
+* **Objektif:** Menyajikan simulasi visual interaktif sebaran propagasi sinyal RF dan sudut pandang kamera untuk meyakinkan pemilik gedung dan konsultan proyek.
+* **Fitur Utama:**
+  1. **Indoor Floor Plan Heatmap Canvas (RFoF DAS & CCTV):**
+     * Penempatan di Tab 2 modul RFoF DAS FMTCS.
+     * Pengunggahan denah lantai arsitektur (JPG/PNG).
+     * Penempatan antena indoor FMTCS `ANTI400R.M` dan ORU secara drag-and-drop.
+     * Rendering gradien warna panas RSSI (dBm) untuk mendeteksi *dead spot* secara visual.
+     * Proyeksi kerucut sudut pandang (Field of View / FoV cone) untuk kamera CCTV Pelco/Avigilon.
+  2. **Outdoor GIS Coverage Map (DMR Base Station):**
+     * Penempatan di Tab 2 modul DMR System Planner.
+     * Peta geografis satelit / OpenStreetMap berbasis Leaflet.js.
+     * Plotting koordinat GPS site repeater tower dengan proyeksi lingkaran radius jangkauan efektif (Okumura-Hata) di atas peta wilayah operasional klien.
+
+
