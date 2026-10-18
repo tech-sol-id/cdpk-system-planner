@@ -4971,77 +4971,212 @@
             <!-- ══════════════════════════════════════════════════════════════ -->
             <div x-show="cctvActiveTab === 'catalog'" class="space-y-6">
 
-                <!-- 1. Catalog Filter & Search Card -->
+                <!-- 1. Catalog Advanced Multi-Filter & Search Bar -->
                 <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
                     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                         <div>
                             <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="lang === 'en' ? 'Hardware Catalog & Specifications' : 'Katalog Kamera Pengawas & Spesifikasi Pabrikan'"></span>
-                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Multi-Brand Portfolio (Pelco, Avigilon, Axis, Hanwha, Hikvision, Dahua, Bosch, Uniview)' : 'Portofolio Multi-Brand (Pelco, Avigilon, Axis, Hanwha, Hikvision, Dahua, Bosch, Uniview)'"></h3>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Multi-Brand Portfolio & Environmental Search' : 'Portofolio Kamera Multi-Brand & Filter Lingkungan Operasional'"></h3>
                         </div>
-                    </div>
-
-                    <!-- Brand Filter Pills -->
-                    <div class="flex flex-wrap items-center gap-1.5">
-                        <button type="button" @click="cctv.catalogBrandFilter = 'all'"
-                                :class="cctv.catalogBrandFilter === 'all' ? 'bg-emerald-600 text-white font-extrabold' : 'bg-slate-100 text-slate-700 font-semibold'"
-                                class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">Semua Brand</button>
-                        <template x-for="b in (window.CDPK_CCTV_ENGINE ? window.CDPK_CCTV_ENGINE.brands : [])" :key="b.id">
-                            <button type="button" @click="cctv.catalogBrandFilter = b.id"
-                                    :class="cctv.catalogBrandFilter === b.id ? 'bg-emerald-600 text-white font-extrabold' : 'bg-slate-100 text-slate-700 font-semibold'"
-                                    class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer"
-                                    x-text="b.name"></button>
-                        </template>
+                        <button type="button" @click="resetCctvCatalogFilters()"
+                                class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                            <span>🔄</span>
+                            <span x-text="lang === 'en' ? 'Reset Filters' : 'Reset Filter'"></span>
+                        </button>
                     </div>
 
                     <!-- Search Input -->
                     <div>
-                        <input type="text" x-model="cctv.catalogSearch"
-                               placeholder="Cari model, seri, resolusi (4K/PTZ/Thermal/Explosion-Proof)..."
-                               class="w-full p-2.5 text-xs rounded-xl border border-slate-300 focus:border-emerald-600 focus:outline-none" />
+                        <div class="relative">
+                            <input type="text" x-model="cctv.catalogSearch"
+                                   placeholder="Cari merk, model, resolusi (4K/PTZ/Thermal/Explosion-Proof/ColorVu/Wiper)..."
+                                   class="w-full pl-9 pr-4 py-2.5 text-xs rounded-xl border border-slate-300 focus:border-emerald-600 focus:outline-none font-medium" />
+                            <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+                        </div>
+                    </div>
+
+                    <!-- Multi-Filter Selectors Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+                        <!-- Filter 1: Kerjasama / Tier -->
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvFilterTier') || 'Kategori Kerjasama:'"></label>
+                            <select x-model="cctv.catalogTierFilter"
+                                    class="w-full p-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-900 focus:border-emerald-600">
+                                <option value="all" x-text="t('cctvFilterTierAll') || 'Semua Kategori'"></option>
+                                <option value="official" x-text="t('cctvFilterTierOfficial') || '⭐ Partner Resmi CDPK'"></option>
+                                <option value="thirdparty" x-text="t('cctvFilterTierThirdParty') || '🌐 Pihak Ketiga & ONVIF'"></option>
+                            </select>
+                        </div>
+
+                        <!-- Filter 2: Brand / Merk -->
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1" x-text="lang === 'en' ? 'Brand / Manufacturer:' : 'Merk / Brand:'"></label>
+                            <select x-model="cctv.catalogBrandFilter"
+                                    class="w-full p-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-900 focus:border-emerald-600">
+                                <option value="all">Semua Merk (12 Brand)</option>
+                                <template x-for="b in (window.CDPK_CCTV_ENGINE ? window.CDPK_CCTV_ENGINE.brands : [])" :key="b.id">
+                                    <option :value="b.id" x-text="b.name"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <!-- Filter 3: Form Factor / Tipe Bodi -->
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvFilterType') || 'Form Factor / Tipe:'"></label>
+                            <select x-model="cctv.catalogTypeFilter"
+                                    class="w-full p-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-900 focus:border-emerald-600">
+                                <option value="all" x-text="t('cctvFilterTypeAll') || 'Semua Form Factor'"></option>
+                                <option value="bullet">Bullet (Outdoor/Lensa Panjang)</option>
+                                <option value="dome">Dome (Indoor/Vandal IK10)</option>
+                                <option value="ptz">PTZ Speed Dome (Zoom)</option>
+                                <option value="multisensor">Multi-Sensor / Panorama 180°</option>
+                                <option value="thermal">Thermal / Bispectral</option>
+                                <option value="hazloc">Explosion-Proof (ATEX)</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter 4: Proteksi Lingkungan (Ex / Marine / IP) -->
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvFilterEnv') || 'Lingkungan Operasional:'"></label>
+                            <select x-model="cctv.catalogEnvFilter"
+                                    class="w-full p-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-900 focus:border-emerald-600">
+                                <option value="all" x-text="t('cctvFilterEnvAll') || 'Semua Lingkungan'"></option>
+                                <option value="outdoor" x-text="t('cctvFilterEnvOutdoor') || 'Outdoor IP66/IP67/IK10'"></option>
+                                <option value="indoor" x-text="t('cctvFilterEnvIndoor') || 'Indoor / Kantor'"></option>
+                                <option value="ex" x-text="t('cctvFilterEnvEx') || 'Anti-Ledakan ATEX (Migas)'"></option>
+                                <option value="marine" x-text="t('cctvFilterEnvMarine') || 'Marine Stainless Steel 316L'"></option>
+                            </select>
+                        </div>
+
+                        <!-- Filter 5: Resolusi Sensor -->
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvFilterRes') || 'Resolusi Sensor:'"></label>
+                            <select x-model="cctv.catalogResolutionFilter"
+                                    class="w-full p-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-900 focus:border-emerald-600">
+                                <option value="all" x-text="t('cctvFilterResAll') || 'Semua Resolusi'"></option>
+                                <option value="1080p">1080p Full HD (2MP)</option>
+                                <option value="4MP">4MP QHD (2560x1440)</option>
+                                <option value="5MP">5MP Super HD</option>
+                                <option value="4K">4K UHD 8MP (3840x2160)</option>
+                                <option value="12MP">12MP Panorama / Multi</option>
+                                <option value="thermal">Thermal Radiometrik</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 2. Catalog Cards Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <template x-for="cam in ((window.CDPK_CCTV_ENGINE ? window.CDPK_CCTV_ENGINE.presets : []).filter(c => {
-                        const matchBrand = cctv.catalogBrandFilter === 'all' || c.brand === cctv.catalogBrandFilter;
-                        const matchSearch = !cctv.catalogSearch || (c.model + ' ' + c.sku + ' ' + c.brandName + ' ' + c.resolution).toLowerCase().includes(cctv.catalogSearch.toLowerCase());
-                        return matchBrand && matchSearch;
-                    }))" :key="cam.sku">
-                        <div class="bg-white rounded-2xl p-5 card-shadow border border-slate-200 flex flex-col justify-between space-y-4 hover:border-emerald-400 transition">
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between gap-2">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase"
-                                          :class="cam.brand === 'pelco' || cam.brand === 'avigilon' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-800 border border-slate-200'"
-                                          x-text="cam.brandName"></span>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200"
-                                          x-text="cam.resolution"></span>
-                                </div>
-                                <h4 class="font-extrabold text-slate-900 text-sm leading-snug" x-text="cam.model"></h4>
-                                <div class="text-[11px] font-mono text-slate-400" x-text="cam.sku"></div>
-                                <p class="text-xs text-slate-600 leading-relaxed" x-text="lang === 'en' ? cam.desc_en : cam.desc_id"></p>
-
-                                <div class="flex flex-wrap gap-1 pt-1">
-                                    <template x-for="f in cam.features" :key="f">
-                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700" x-text="f"></span>
-                                    </template>
-                                </div>
-                            </div>
-
-                            <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                                <div>
-                                    <div class="text-[10px] text-slate-400 font-semibold" x-text="cam.poeClass.toUpperCase() + ' (' + cam.poeWatts + 'W)'"></div>
-                                    <div class="font-black text-slate-900 text-sm"
-                                         x-text="currency === 'USD' ? ('$' + cam.unitPriceUsd.toLocaleString()) : ('Rp ' + (cam.unitPriceIdr || Math.round(cam.unitPriceUsd * exchangeRate)).toLocaleString())"></div>
-                                </div>
-                                <button type="button" @click="addCameraGroupFromPreset(cam.sku, 1); showToast(lang === 'en' ? 'Added to camera sizing planner' : 'Ditambahkan ke planner kamera', 'success')"
-                                        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition flex items-center gap-1 cursor-pointer">
-                                    <span>➕</span>
-                                    <span>Tambah</span>
-                                </button>
-                            </div>
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- SECTION 1: PARTNER RESMI FLAGSHIP PT CDPK                  -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <div x-show="cctv.catalogTierFilter === 'all' || cctv.catalogTierFilter === 'official'" class="space-y-4">
+                    <div class="bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-l-4 border-amber-500 p-4 rounded-r-2xl space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950">
+                                ⭐ Partner Resmi CDPK
+                            </span>
+                            <h3 class="font-black text-sm sm:text-base text-slate-900" x-text="t('cctvCatalogOfficialHeader') || '⭐ Partner Resmi Flagship PT CDPK (Prioritas Distribusi)'"></h3>
                         </div>
-                    </template>
+                        <p class="text-xs text-slate-600 leading-relaxed max-w-4xl"
+                           x-text="t('cctvCatalogOfficialDesc') || 'Lini produk unggulan resmi Motorola Solutions (Pelco, Avigilon Unity, Ava Cloud) dengan dukungan teknis purna jual penuh, garansi manufaktur resmi, dan integrasi native tanpa celah.'"></p>
+                    </div>
+
+                    <!-- Official Partner Cameras Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <template x-for="cam in ((window.CDPK_CCTV_ENGINE ? window.CDPK_CCTV_ENGINE.presets : []).filter(c => {
+                            const isOfficial = c.partnerTier === 'official' || c.brand === 'pelco' || c.brand === 'avigilon' || c.brand === 'ava';
+                            return isOfficial && matchesCctvCatalogFilter(c);
+                        }))" :key="cam.sku">
+                            <div class="bg-white rounded-2xl p-5 card-shadow border border-amber-200/80 hover:border-amber-400 flex flex-col justify-between space-y-4 transition">
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300"
+                                              x-text="cam.brandName"></span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200"
+                                              x-text="cam.resolution"></span>
+                                    </div>
+                                    <h4 class="font-extrabold text-slate-900 text-sm leading-snug" x-text="cam.model"></h4>
+                                    <div class="text-[11px] font-mono text-slate-400" x-text="cam.sku"></div>
+                                    <p class="text-xs text-slate-600 leading-relaxed" x-text="lang === 'en' ? cam.desc_en : cam.desc_id"></p>
+
+                                    <div class="flex flex-wrap gap-1 pt-1">
+                                        <template x-for="f in cam.features" :key="f">
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50/80 text-amber-900 border border-amber-200/60" x-text="f"></span>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                                    <div>
+                                        <div class="text-[10px] text-slate-400 font-semibold" x-text="cam.poeClass.toUpperCase() + ' (' + cam.poeWatts + 'W)'"></div>
+                                        <div class="font-black text-slate-900 text-sm"
+                                             x-text="currency === 'USD' ? ('$' + cam.unitPriceUsd.toLocaleString()) : ('Rp ' + (cam.unitPriceIdr || Math.round(cam.unitPriceUsd * exchangeRate)).toLocaleString())"></div>
+                                    </div>
+                                    <button type="button" @click="addCameraGroupFromPreset(cam.sku, 1); showToast(lang === 'en' ? 'Added to camera sizing planner' : 'Ditambahkan ke planner kamera', 'success')"
+                                            class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow transition flex items-center gap-1 cursor-pointer">
+                                        <span>➕</span>
+                                        <span>Tambah</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- SECTION 2: BRAND PIHAK KETIGA & TERBUKA (OPEN ONVIF)       -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <div x-show="cctv.catalogTierFilter === 'all' || cctv.catalogTierFilter === 'thirdparty'" class="space-y-4 pt-2">
+                    <div class="bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent border-l-4 border-emerald-500 p-4 rounded-r-2xl space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">
+                                🌐 Open Brand & Universal ONVIF
+                            </span>
+                            <h3 class="font-black text-sm sm:text-base text-slate-900" x-text="t('cctvCatalogThirdPartyHeader') || '🌐 Brand Pihak Ketiga & Terbuka (Open Multi-Brand via Universal ONVIF)'"></h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed max-w-4xl"
+                           x-text="t('cctvCatalogThirdPartyDesc') || 'Katalog kamera multi-merk pihak ketiga terkemuka (Milesight, VIGI by TP-Link, Axis, Hanwha Vision, Hikvision, Dahua, Bosch, Uniview) dan generic ONVIF yang kompatibel melalui profil standar industri.'"></p>
+                    </div>
+
+                    <!-- Third-Party Cameras Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <template x-for="cam in ((window.CDPK_CCTV_ENGINE ? window.CDPK_CCTV_ENGINE.presets : []).filter(c => {
+                            const isThirdParty = c.partnerTier === 'thirdparty' || (c.brand !== 'pelco' && c.brand !== 'avigilon' && c.brand !== 'ava');
+                            return isThirdParty && matchesCctvCatalogFilter(c);
+                        }))" :key="cam.sku">
+                            <div class="bg-white rounded-2xl p-5 card-shadow border border-slate-200 hover:border-emerald-400 flex flex-col justify-between space-y-4 transition">
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-100 text-slate-800 border border-slate-200"
+                                              x-text="cam.brandName"></span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200"
+                                              x-text="cam.resolution"></span>
+                                    </div>
+                                    <h4 class="font-extrabold text-slate-900 text-sm leading-snug" x-text="cam.model"></h4>
+                                    <div class="text-[11px] font-mono text-slate-400" x-text="cam.sku"></div>
+                                    <p class="text-xs text-slate-600 leading-relaxed" x-text="lang === 'en' ? cam.desc_en : cam.desc_id"></p>
+
+                                    <div class="flex flex-wrap gap-1 pt-1">
+                                        <template x-for="f in cam.features" :key="f">
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700" x-text="f"></span>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                                    <div>
+                                        <div class="text-[10px] text-slate-400 font-semibold" x-text="cam.poeClass.toUpperCase() + ' (' + cam.poeWatts + 'W)'"></div>
+                                        <div class="font-black text-slate-900 text-sm"
+                                             x-text="currency === 'USD' ? ('$' + cam.unitPriceUsd.toLocaleString()) : ('Rp ' + (cam.unitPriceIdr || Math.round(cam.unitPriceUsd * exchangeRate)).toLocaleString())"></div>
+                                    </div>
+                                    <button type="button" @click="addCameraGroupFromPreset(cam.sku, 1); showToast(lang === 'en' ? 'Added to camera sizing planner' : 'Ditambahkan ke planner kamera', 'success')"
+                                            class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition flex items-center gap-1 cursor-pointer">
+                                        <span>➕</span>
+                                        <span>Tambah</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
             </div>

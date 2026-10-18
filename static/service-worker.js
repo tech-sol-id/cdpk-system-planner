@@ -1,6 +1,6 @@
 /**
  * CDPK System Planner - Progressive Web App Service Worker
- * Version: v8.5.0-pwa
+ * Version: v8.6.0-pwa
  * Strategy: 
  *  - Stale-While-Revalidate for app static assets (JS, CSS, Leaflet, fonts, icons)
  *  - Network-First for HTML navigation

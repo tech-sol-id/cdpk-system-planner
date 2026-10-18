@@ -254,76 +254,107 @@ Pengguna dengan peran **👑 Administrator**, **👁️ Overseer**, dan **💼 P
 
 ## 12. Panduan Workspace 3: Video Security & CCTV Surveillance Planner (Open Multi-Brand)
 
-Workspace **`📹 Video Security & CCTV`** merupakan modul rekayasa surveillance modern berbasis filosofi **Open Multi-Brand & Universal ONVIF**. Modul ini dirancang untuk menangani perencanaan sistem CCTV skala enterprise (mining site, oil & gas facility, pabrik, gedung bertingkat, dan pelabuhan) secara akurat, mulai dari kalkulasi throughput bandwidth jaringan, kapasitas hard disk NVR dengan overhead RAID, alokasi daya switch industri PoE (802.3af/at/bt), hingga estimasi BoQ terpadu.
+Workspace **`📹 Video Security & CCTV`** merupakan modul rekayasa surveillance modern berbasis filosofi **Open Multi-Brand & Universal ONVIF**. Modul ini dirancang untuk menangani perencanaan sistem CCTV skala enterprise (mining site, oil & gas facility, pabrik, gedung bertingkat, dan pelabuhan) secara akurat, mulai dari audit kepatuhan interoperabilitas antar-merk, kalkulasi standar DORI, transmisi kabel tembaga & voltage drop, throughput bandwidth jaringan, kapasitas hard disk NVR dengan overhead RAID, alokasi daya switch industri PoE (802.3af/at/bt), hingga integrasi Master BoQ.
 
-### Arsitektur Multi-Brand & Custom Camera Builder
-Sistem mendukung dua metode pemilihan kamera:
-1. **Pilihan Brand & Model Flagship / Pihak Ketiga:**
-   - **Flagship CDPK:** **Pelco** (*Spectra Enhanced PTZ, Sarix Multi 360°, ExSite Pro Explosion-Proof ATEX, Sarix Pro, Sarix Value, Esprit Compact Bispectral Thermal*) dan **Avigilon** (*Unity H6A Dome/Bullet AI, H5A PTZ, H5A Thermal, Ava Compact Cloud*).
-   - **Brand Pihak Ketiga:** **Axis Communications** (*Q63 PTZ, P32 Dome, M30 Mini*), **Hanwha Vision** (*XNV Dome, QNO Bullet, PNM Multi-sensor*), **Hikvision** (*DarkFighterX PTZ, ColorVu 4K, DeepinView*), **Dahua Technology** (*WizMind 4K, WizSense PTZ, TiOC 2.0*), **Bosch Security** (*FLEXIDOME panoramic, AUTODOME inteox*), dan **Uniview** (*Prime-I Bullet, LightHunter*).
-2. **Generic ONVIF / Custom Camera Builder:**
-   - Tambahkan kamera custom dengan memilih resolusi sensor (*1080p / 2MP, 3MP, 4MP, 5MP, 4K / 8MP, 12MP, Multi-Sensor, atau Thermal/VGA*).
-   - Tentukan standar kompresi video (*H.264, H.265, SmartCodec / Zipstream / WiseStream / HDSM*).
-   - Tentukan frame rate (*10, 15, 20, 25, 30 fps*) dan rasio deteksi gerakan (*Low Activity 10%, Medium Activity 25%, High Continuous 50%*).
-   - Tentukan standar daya PoE (*802.3af 15.4W, 802.3at PoE+ 30W, 802.3bt Type 3 60W, 802.3bt Type 4 90W*).
-   - Tentukan harga satuan kamera dalam **USD** atau **IDR**.
+### Arsitektur Multi-Brand & Organisasi Katalog 2 Bagian
+Katalog CCTV CDPK diorganisasi secara ketat ke dalam **dua bagian terpisah**:
+1. **Section 1: Partner Resmi Flagship PT CDPK (Prioritas Distribusi):**
+   - **Pelco (Motorola Solutions):** *Spectra Enhanced 8 PTZ 4MP 30x, Sarix Multi Enhanced 12MP 360°, ExSite Pro Bullet 4K ATEX Explosion-Proof, Sarix Professional 4 Dome 4MP, Sarix Value Bullet 1080p, Esprit Compact Bispectral Thermal & Visible PTZ*.
+   - **Avigilon Unity (Motorola Solutions):** *Unity H6A Dome 8MP 4K AI, Unity H6X Bullet 8MP 4K Rugged, Unity H5A PTZ 8MP 36x Wiper, Unity H5A Thermal VGA Radiometric*.
+   - **Ava Security (Avigilon Alta Cloud):** *Ava Compact Dome 5MP Cloud-AI, Ava Cloud Quad Bullet 4K AI Outdoor*.
+   - *Keunggulan Partner Resmi:* Didukung garansi resmi manufaktur, ketersediaan suku cadang terjamin, dukungan teknis tier-1 CDPK, dan integrasi native tanpa celah.
+
+2. **Section 2: Brand Pihak Ketiga & Terbuka (Open Multi-Brand via Universal ONVIF):**
+   - **Milesight:** *4K H.265+ AI Motorized Pro Bullet, 5MP Vandal-Proof Mini Dome, 4MP 30x Speed Dome PTZ, 4K AI Color+ 180° Panoramic Dome, 2MP AI 12x Mini PTZ Bullet*.
+   - **VIGI (by TP-Link):** *VIGI C340-W 4MP Full-Color Bullet, VIGI C440-I 4MP Turret Dome IR, VIGI C540 Outdoor Pan/Tilt 4MP, VIGI C385 4K 8MP Ultra HD Bullet*.
+   - **Axis Communications:** *Axis P1468-LE 4K (ARTPEC-8), Axis M3216-LVE 4MP Dome, Axis Q6135-LE 1080p 32x PTZ*.
+   - **Hanwha Vision (Wisenet):** *Wisenet XNV-8081R 4K AI Dome, XNO-6080R 2MP Bullet, XNP-6400RW 2MP 40x PTZ Wiper*.
+   - **Hikvision:** *ColorVu Pro Turret 4K, ColorVu Pro Dome 4MP, Ultra DarkFighter PTZ 4MP 42x Laser*.
+   - **Dahua Technology:** *WizMind 5-Series Dome 4K, WizMind 5-Series Bullet 4MP, Ultra PTZ 4MP 45x Laser*.
+   - **Bosch Security:** *FLEXIDOME IP starlight 8000i 4K, AUTODOME IP 7000i PTZ 1080p 30x*.
+   - **Uniview (UNV):** *Prime-I 4MP Bullet LightHunter, OmniView 4K Multi-Sensor 180°*.
+   - **Generic ONVIF / Custom Builder:** Standar ONVIF Profile S/T/M 1080p, 4MP, 4K UHD.
 
 ---
 
-### Tab 1: Estimator Bandwidth Throughput & Kapasitas Storage NVR
-- **Manajemen Armada Kamera (Camera Fleet):**
-  - Buat beberapa grup kamera (misal: *Area Pintu Masuk / Gate*, *Perimeter Pagar*, *Ruang Kontrol*, *Tower Tambang*).
-  - Setiap grup dapat disesuaikan kuantitas kamera, resolusi, frame rate, kompresi, motion activity, masa retensi (*30, 60, 90, 120, 180 hari*), dan jam operasional (*24 jam/hari*).
-- **Hasil Kalkulasi Deterministik:**
-  - **Total Throughput Bandwidth (Mbps):** Akumulasi bandwidth streaming seluruh kamera secara real-time.
-  - **Peak Bandwidth (+20% Surge Headroom):** Perkiraan throughput puncak saat aktivitas gerakan tinggi untuk perancangan port uplink switch & router.
-  - **Laju Data Harian (GB/hari):** Dihitung dengan rumus murni:
-    $$\text{Data Harian (GB)} = \frac{\text{Throughput (Mbps)} \times 10^6 \times 3600 \times \text{Jam}}{8 \times 10^9} \approx 10.8 \times \text{Throughput (Mbps)}$$
-  - **Total Raw Storage (TB):** Total kapasitas penyimpanan murni sebelum proteksi redundansi.
-  - **Total Usable Storage Terproteksi (TB):** Memperhitungkan overhead konfigurasi RAID (*RAID 5: +20%, RAID 6: +30%, RAID 10: +100%*) ditambah faktor keselamatan *storage format & bookmark headroom* (+20%).
-- **Rekomendasi Hardware NVR & Enterprise HDD:**
-  - **Sizing Chassis NVR:** Rekomendasi otomatis tipe server NVR (*Pelco VideoXpert Enterprise / Avigilon AI NVR / Universal Enterprise Industrial 4-Bay, 8-Bay, 16-Bay, 24-Bay Chassis*).
-  - **Sizing Enterprise Hard Disk:** Pemilihan otomatis ukuran disk surveillance kelas enterprise (*4TB, 8TB, 12TB, 16TB, 20TB*) beserta jumlah drive yang dibutuhkan dan sisa slot kosong untuk ekspansi di masa mendatang.
+### Tab 1: Sizing Kamera, NVR, Audit Interoperabilitas, DORI & Voltage Drop
+
+#### 1. Mesin Audit Interoperabilitas & Kompatibilitas Multi-Brand
+Sistem menjalankan audit kepatuhan otomatis secara deterministik terhadap armada kamera:
+- **Blocker Analitik AI Avigilon:** Kamera pihak ketiga (*Milesight, VIGI, Axis, Hikvision, Dahua*) yang dihubungkan ke VMS Avigilon Unity hanya dapat menyalurkan video mentah tanpa analitik cerdas native. Sistem secara otomatis memberikan **Blocker Alert** dan menyediakan tombol **`➕ Tambah Avigilon AI Appliance ke BoQ`** (VMA-AIE2-8P) agar fitur *Appearance Search*, deteksi wajah, dan klasifikasi kendaraan tetap berfungsi.
+- **Kebutuhan Lisensi Channel VMS:** Mendeteksi kebutuhan lisensi resmi pihak ketiga (*AVG-COMM-CAM-LIC* pada Avigilon Unity atau *PEL-VX-1C-COMM* pada Pelco VideoXpert) dan menyertakan tombol 1-klik untuk memasukkannya ke BoQ.
+- **Peringatan Stuttering SmartCodec Proprietary:** Memberikan peringatan potensi frame stuttering saat kompresi proprietary non-standar (*Hikvision H.265+, Dahua Smart H.265, VIGI Smart Coding, Milesight H.265+, Axis Zipstream*) direkam ke VMS cross-brand, lengkap dengan tombol 1-klik **`🔄 Ubah Semua Kamera ke H.265 Standar`**.
+- **Blocker Daya PoE Ultra 802.3bt:** Memastikan kamera berdaya tinggi (PTZ/Thermal/ExSite > 30W) dialokasikan ke switch industri PoE++ 802.3bt (hingga 90W/port).
+
+#### 2. Kalkulator Standar DORI & Panjang Fokus Lensa (EN 62676-4)
+Menghitung densitas piksel (*Pixels Per Meter / PPM*) dan memverifikasi jangkauan lensa kamera terhadap standar internasional **EN 62676-4**:
+- **Rumus Sudut Pandang Horizontal (HFoV):**
+  $$\text{HFoV (rad)} = 2 \times \arctan\left(\frac{w_s}{2f}\right), \quad \text{HFoV (derajat)} = \text{HFoV (rad)} \times \frac{180}{\pi}$$
+  *(di mana $w_s$ adalah lebar sensor optik mm dan $f$ adalah panjang fokus lensa mm)*
+- **Rumus Lebar Bidang Pandang (Scene Width) di Jarak $d$ Meter:**
+  $$\text{Lebar Scene } (W_s) = d \times \frac{w_s}{f}$$
+- **Rumus Densitas Piksel (PPM):**
+  $$\text{PPM} = \frac{W_{\text{pixel}}}{W_s} = \frac{W_{\text{pixel}} \times f}{d \times w_s}$$
+- **Klasifikasi Standar DORI (EN 62676-4):**
+  - **D - Detection ($\ge 25\text{ PPM}$):** Mengetahui keberadaan orang atau kendaraan.
+  - **O - Observation ($\ge 62\text{ PPM}$):** Mengamati ciri khas umum (warna baju, arah gerak).
+  - **R - Recognition ($\ge 125\text{ PPM}$):** Menentukan apakah orang tersebut pernah dilihat sebelumnya.
+  - **I - Identification ($\ge 250\text{ PPM}$):** Identifikasi forensik positif wajah dan nomor polisi kendaraan untuk bukti hukum legal.
+
+#### 3. Kalkulator Jarak Kabel Cat6 & PoE Voltage Drop
+Mengevaluasi batas transmisi tembaga Ethernet dan kestabilan catu daya DC:
+- **Resistansi Loop Kabel:** Cat6 Solid Copper 23 AWG $\approx 0.165\,\Omega/\text{meter}$ (Cat5e $\approx 0.188\,\Omega/\text{meter}$).
+- **Penurunan Tegangan (Voltage Drop):**
+  $$I = \frac{P_{\text{device}}}{V_{\text{PSE}}}, \quad V_{\text{drop}} = I \times (d \times R_{\text{meter}}), \quad V_{\text{camera}} = V_{\text{PSE}} - V_{\text{drop}}$$
+- **Disfungsi Rugi Daya Kabel ($P_{\text{loss}}$):**
+  $$P_{\text{loss}} = I^2 \times R_{\text{loop}}$$
+- **Threshold & Rekomendasi Hardware:**
+  - Jarak $\le 100\text{ m}$: Status normal IEEE 802.3.
+  - Jarak $101 - 250\text{ m}$: Peringatan melebihi standar Cat6. Tombol 1-klik memasukkan **`EXT-POE-IND-250M`** (*Industrial Long-Reach PoE Extender*).
+  - Jarak $> 250\text{ m}$: Status kritis (melebihi batas tembaga). Tombol 1-klik memasukkan **`FMC-IND-POE-SFP`** (*Industrial Gigabit PoE+ Fiber Media Converter*) untuk transmisi via Drop Core Single-Mode FO.
+  - **Alarm Undervoltage:** Menyala merah jika tegangan terminal kamera berada di bawah batas operasi aman ($< 37\text{V}$ untuk af, $< 42.5\text{V}$ untuk at, $< 41.1\text{V}$ untuk bt).
+
+#### 4. Estimasi Bandwidth & Storage NVR
+- **Total Throughput Bandwidth (Mbps):** Akumulasi bandwidth streaming seluruh kamera secara real-time.
+- **Peak Bandwidth (+20% Surge Headroom):** Perkiraan throughput puncak untuk perancangan port uplink switch & router.
+- **Laju Data Harian (GB/hari):**
+  $$\text{Data Harian (GB)} = \frac{\text{Throughput (Mbps)} \times 10^6 \times 3600 \times \text{Jam}}{8 \times 10^9} \approx 10.8 \times \text{Throughput (Mbps)}$$
+- **Total Usable Storage Terproteksi (TB):** Memperhitungkan overhead RAID (*RAID 5: +20%, RAID 6: +30%*) ditambah faktor keselamatan *storage overhead* (+20%).
+- **Sizing Chassis NVR & Enterprise HDD:** Rekomendasi otomatis sasis server NVR (*Pelco VideoXpert Enterprise / Avigilon AI NVR / Universal Enterprise 4-Bay, 8-Bay, 16-Bay, 24-Bay Chassis*) dan HDD surveillance (*4TB, 8TB, 12TB, 16TB, 20TB*).
 
 ---
 
 ### Tab 2: Sizing Konsumsi Daya PoE & Industrial Switch
-- **Audit Konsumsi Daya PoE Armada:**
-  - Mengelompokkan kebutuhan daya menurut standar IEEE:
-    - **IEEE 802.3af (PoE):** Beban hingga 15.4W (Kamera dome & bullet indoor reguler).
-    - **IEEE 802.3at (PoE+):** Beban hingga 30.0W (Kamera bullet outdoor IR, varifocal, heater/blower).
-    - **IEEE 802.3bt (Ultra PoE / 4PPoE):** Beban 60W–90W (Kamera heavy-duty PTZ long-range, bispectral thermal, wiper washer).
-  - **Total Beban Daya Bersih (Watt)** dan **Rekomendasi Power Headroom (+20% Safety Margin)** untuk menjamin keandalan sistem saat suhu ekstrem.
+- **Audit Konsumsi Daya PoE Armada:** Mengelompokkan beban daya menurut IEEE 802.3af (15.4W), 802.3at (30W), dan 802.3bt (60W–90W).
 - **Rekomendasi Switch PoE Industri Otomatis:**
-  - Menghitung jumlah port yang diperlukan (termasuk cadangan port +20%).
+  - Menghitung jumlah port yang diperlukan (termasuk cadangan port + uplink).
   - Memilih model switch industri tangguh (*Ruggedized Industrial Switch 8-Port 120W, 16-Port 250W, 24-Port 370W, atau 48-Port 740W*).
-  - **Proteksi Kamera Daya Tinggi (802.3bt Ultra PoE):** Jika sistem mendeteksi adanya kamera PTZ besar atau thermal berdaya tinggi (802.3bt), sistem secara otomatis mengalokasikan unit switch khusus **Industrial 8-Port 802.3bt Ultra PoE Switch (480W Budget)** agar switch distribusi standar tidak mengalami beban berlebih (*over-budget tripping*).
+  - **Proteksi Kamera Daya Tinggi (802.3bt Ultra PoE):** Jika terdapat kamera PTZ besar atau thermal berdaya tinggi (802.3bt), dialokasikan unit switch khusus **Industrial 8-Port 802.3bt Ultra PoE Switch (480W Budget)**.
 
 ---
 
 ### Tab 3: Estimator BoQ Video Security & Two-Way Bridge ke Master BoQ
 - **Daftar Kebutuhan Perangkat Lengkap (Bill of Quantity):**
-  - Tabel BoQ otomatis menyusun seluruh komponen video security:
-    1. Seluruh armada kamera multi-brand.
-    2. Server NVR & Chassis Storage.
-    3. Enterprise Surveillance Hard Disk Drives.
-    4. Industrial Managed PoE / Ultra PoE Switches.
-    5. Lisensi Saluran VMS (*Pelco VideoXpert Enterprise Channel License, Avigilon Unity Camera Channel License, atau Universal Open VMS Channel License*).
+  - Menyusun seluruh kamera multi-brand, Server NVR, Hard Disk Enterprise, Switch PoE Industri, Lisensi VMS, serta Aksesoris Sistem (Avigilon AI Appliance, PoE Extender, Fiber Media Converter, Kabel Cat6 STP Outdoor).
 - **Two-Way Bridge ke Master BoQ (Tombol `🚀 Gabungkan ke Master BoQ CDPK`):**
   - Menyuntikkan seluruh item perangkat CCTV ke dalam tabel **Master BoQ DMR & DAS** dalam 1 klik.
   - Setiap perangkat CCTV diberi label kategori khusus **`CCTV-SURVEILLANCE`**.
-  - Mengonversi mata uang secara otomatis sesuai kurs live FX (USD ↔ IDR) yang aktif.
-  - Menjaga target margin penawaran tetap patuh terhadap standar guardrail perusahaan ($\ge 15\%$).
+  - Mengonversi mata uang secara otomatis sesuai kurs live FX (USD ↔ IDR) yang aktif dan menjaga margin guardrail $\ge 15\%$.
 - **Fitur Ekspor & Dokumentasi Tender:**
   - **`📥 Ekspor CSV CCTV`**: Mengunduh rincian BoQ CCTV format CSV untuk analisis spreadsheet terpisah.
-  - **`📋 Salin Ringkasan Sizing`**: Menyalin ringkasan narasi teknis (Throughput Mbps, Storage TB, HDD Bays, PoE Watt, dan rekomendasi switch) langsung ke clipboard untuk disisipkan ke proposal teknis atau lampiran tender.
+  - **`📋 Salin Ringkasan Sizing`**: Menyalin ringkasan narasi teknis langsung ke clipboard.
 
 ---
 
-### Tab 4: Katalog Kamera & Hardware Bawaan
-- Menampilkan 30 model kamera curated terlengkap dari brand terkemuka (Pelco, Avigilon, Axis, Hanwha, Hikvision, Dahua, Bosch, Uniview, Generic ONVIF) beserta hardware storage & switch PoE.
-- Dilengkapi ringkasan spesifikasi: Resolusi, Kompresi, Frame Rate, Konsumsi PoE, dan Harga Satuan (USD/IDR).
-- Setiap kartu katalog dilengkapi tombol **`➕ Tambah ke Planner`** untuk menambahkan model langsung ke armada proyek aktif Anda.
+### Tab 4: Katalog Kamera Multi-Brand & Filter Lingkungan Lanjutan
+Katalog kamera dilengkapi bilah filter multi-parameter komprehensif:
+- **Pencarian Bebas (Search Bar):** Pencarian teks penuh pada model, SKU, merk, resolusi, fitur (*DarkFighter, ColorVu, Wiper, ATEX*).
+- **Filter Kerjasama (Tier):** *Semua Kategori*, *⭐ Partner Resmi CDPK (Pelco, Avigilon, Ava)*, atau *🌐 Pihak Ketiga & ONVIF Terbuka*.
+- **Filter Merk (Brand):** Pilihan 12 merk terintegrasi (**Pelco, Avigilon, Ava, Milesight, VIGI by TP-Link, Axis, Hanwha Vision, Hikvision, Dahua, Bosch, Uniview, Generic ONVIF**).
+- **Filter Form Factor:** *Bullet, Dome, PTZ Speed Dome, Multi-Sensor Panorama 180°, Thermal Radiometrik, Explosion-Proof ATEX*.
+- **Filter Proteksi Lingkungan:** *Outdoor IP66/IP67/IK10, Indoor / Kantor, Anti-Ledakan ATEX/IECEx (Migas/Tambang), Marine Stainless Steel AISI 316L (Laut/Kimia)*.
+- **Filter Resolusi Sensor:** *1080p Full HD, 4MP QHD, 5MP Super HD, 4K UHD 8MP, 12MP Panorama, Bispectral Thermal*.
+- **Tampilan 2 Section Terpisah:** Membedakan dengan tegas produk *Partner Resmi Flagship PT CDPK* (aksen emas/amber) dan *Brand Pihak Ketiga & Terbuka* (aksen hijau zamrud/teal) untuk memudahkan tim sales memprioritaskan lini produk resmi perusahaan.
 
 ---
 

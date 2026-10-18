@@ -118,16 +118,63 @@
     };
 
     var BRANDS = [
-        { id: "pelco", name: "Pelco (Motorola Solutions)", type: "flagship", flag: "⭐ Flagship" },
-        { id: "avigilon", name: "Avigilon (Motorola Solutions)", type: "flagship", flag: "⭐ Flagship" },
-        { id: "axis", name: "Axis Communications", type: "thirdparty", flag: "🌐 Open Brand" },
-        { id: "hanwha", name: "Hanwha Vision (Wisenet)", type: "thirdparty", flag: "🌐 Open Brand" },
-        { id: "hikvision", name: "Hikvision", type: "thirdparty", flag: "🌐 Open Brand" },
-        { id: "dahua", name: "Dahua Technology", type: "thirdparty", flag: "🌐 Open Brand" },
-        { id: "bosch", name: "Bosch Security", type: "thirdparty", flag: "🌐 Open Brand" },
-        { id: "uniview", name: "Uniview (UNV)", type: "thirdparty", flag: "🌐 Open Brand" },
-        { id: "generic_onvif", name: "Generic ONVIF / Custom", type: "custom", flag: "⚙️ Custom/ONVIF" }
+        // ─── PARTNER RESMI CDPK (PRIORITAS DISTRIBUTOR) ─────────────────────
+        { id: "pelco", name: "Pelco (Motorola Solutions)", partnerTier: "official", type: "flagship", flag: "⭐ Partner Resmi CDPK" },
+        { id: "avigilon", name: "Avigilon Unity (Motorola Solutions)", partnerTier: "official", type: "flagship", flag: "⭐ Partner Resmi CDPK" },
+        { id: "ava", name: "Ava Security (Avigilon Alta Cloud)", partnerTier: "official", type: "flagship", flag: "⭐ Partner Resmi CDPK" },
+
+        // ─── BRAND PIHAK KETIGA / OPEN ONVIF ────────────────────────────────
+        { id: "milesight", name: "Milesight", partnerTier: "thirdparty", type: "thirdparty", flag: "🌐 Open Brand (ONVIF)" },
+        { id: "vigi", name: "VIGI (by TP-Link)", partnerTier: "thirdparty", type: "thirdparty", flag: "🌐 Open Brand (ONVIF)" },
+        { id: "axis", name: "Axis Communications", partnerTier: "thirdparty", type: "thirdparty", flag: "🌐 Open Brand (ONVIF)" },
+        { id: "hanwha", name: "Hanwha Vision (Wisenet)", partnerTier: "thirdparty", type: "thirdparty", flag: "🌐 Open Brand (ONVIF)" },
+        { id: "hikvision", name: "Hikvision", partnerTier: "thirdparty", type: "thirdparty", flag: "🌐 Open Brand (ONVIF)" },
+        { id: "dahua", name: "Dahua Technology", partnerTier: "thirdparty", type: "thirdparty", flag: "🌐 Open Brand (ONVIF)" },
+        { id: "bosch", name: "Bosch Security", partnerTier: "thirdparty", type: "thirdparty", flag: "🌐 Open Brand (ONVIF)" },
+        { id: "uniview", name: "Uniview (UNV)", partnerTier: "thirdparty", type: "thirdparty", flag: "🌐 Open Brand (ONVIF)" },
+        { id: "generic_onvif", name: "Generic ONVIF / Custom", partnerTier: "thirdparty", type: "custom", flag: "⚙️ Custom/ONVIF" }
     ];
+
+    var SENSOR_FORMATS = [
+        { id: "1_4", label: "1/4\" (3.2 x 2.4 mm)", widthMm: 3.2, heightMm: 2.4 },
+        { id: "1_3", label: "1/3\" (4.8 x 3.6 mm)", widthMm: 4.8, heightMm: 3.6 },
+        { id: "1_2_8", label: "1/2.8\" (5.12 x 3.84 mm - Standar Industri)", widthMm: 5.12, heightMm: 3.84 },
+        { id: "1_2_7", label: "1/2.7\" (5.37 x 4.04 mm)", widthMm: 5.37, heightMm: 4.04 },
+        { id: "1_2", label: "1/2\" (6.4 x 4.8 mm)", widthMm: 6.4, heightMm: 4.8 },
+        { id: "1_1_8", label: "1/1.8\" (7.2 x 5.4 mm - Low Light / 4K UHD)", widthMm: 7.2, heightMm: 5.4 },
+        { id: "1_inch", label: "1\" (12.8 x 9.6 mm - Ultra High-End)", widthMm: 12.8, heightMm: 9.6 }
+    ];
+
+    var DORI_STANDARDS = {
+        detection: {
+            ppm: 25,
+            label_id: "Deteksi (Detection >= 25 PPM)",
+            label_en: "Detection (>= 25 PPM)",
+            desc_id: "Mengetahui keberadaan manusia atau kendaraan dalam frame secara andal.",
+            desc_en: "Reliably detect the presence of a person or vehicle in frame."
+        },
+        observation: {
+            ppm: 62,
+            label_id: "Observasi (Observation >= 62 PPM)",
+            label_en: "Observation (>= 62 PPM)",
+            desc_id: "Mengamati rincian umum seperti warna pakaian dan arah pergerakan objek.",
+            desc_en: "Observe characteristic details such as clothing color and direction."
+        },
+        recognition: {
+            ppm: 125,
+            label_id: "Pengenalan (Recognition >= 125 PPM)",
+            label_en: "Recognition (>= 125 PPM)",
+            desc_id: "Menentukan dengan kepastian tinggi apakah individu tersebut pernah dilihat sebelumnya.",
+            desc_en: "Determine with high certainty whether the individual has been seen before."
+        },
+        identification: {
+            ppm: 250,
+            label_id: "Identifikasi Forensik (Identification >= 250 PPM)",
+            label_en: "Identification (>= 250 PPM)",
+            desc_id: "Identifikasi forensik positif wajah dan pelat nomor kendaraan tanpa keraguan legal.",
+            desc_en: "Positive forensic facial and license plate identification beyond legal doubt."
+        }
+    };
 
     var RESOLUTIONS = [
         { id: "1080p", label: "1080p FHD (2.0 MP / 1920x1080)", mp: 2.07 },
@@ -375,12 +422,17 @@
             desc_id: "Kamera termal radiometrik Avigilon H5A dengan deteksi perimeter jarak jauh dan pemantauan suhu aset penting, PoE 802.3af 9W.",
             desc_en: "Avigilon H5A Radiometric Thermal camera for long-range perimeter intrusion and critical asset temperature monitoring, 802.3af 9W."
         },
+        // ─── AVA SECURITY (AVIGILON ALTA CLOUD) ──────────────────────────────
         {
             sku: "AVA-CAM-COMPACT5",
-            brand: "avigilon",
-            brandName: "Avigilon Alta (Ava)",
+            brand: "ava",
+            brandName: "Ava (Avigilon Alta)",
+            partnerTier: "official",
             model: "Ava Compact Dome 5MP Cloud-AI",
             formFactor: "dome",
+            envClass: "indoor",
+            sensorFormat: "1_2_8",
+            focalLengthMm: 3.2,
             resolution: "5MP",
             defaultFps: 20,
             defaultCodec: "SmartCodec",
@@ -395,6 +447,31 @@
             features: ["5MP Sensor", "Onboard Storage 30 Days", "Cloud-Native AI", "Microphone Array", "802.3af PoE"],
             desc_id: "Kamera cloud-native Ava Compact Dome 5MP dengan penyimpanan onboard 30 hari, array mikrofon audio AI, PoE 802.3af 8W.",
             desc_en: "Ava Compact Dome 5MP cloud-native camera with 30-day onboard SSD, AI directional microphone array, 802.3af 8W."
+        },
+        {
+            sku: "AVA-CAM-BULLET-4K",
+            brand: "ava",
+            brandName: "Ava (Avigilon Alta)",
+            partnerTier: "official",
+            model: "Ava Cloud Quad Bullet 4K AI Outdoor",
+            formFactor: "bullet",
+            envClass: "outdoor",
+            sensorFormat: "1_1_8",
+            focalLengthMm: 4.5,
+            resolution: "4K",
+            defaultFps: 25,
+            defaultCodec: "SmartCodec",
+            nominalBitrateMbps: 3.5,
+            poeClass: "at",
+            poeWatts: 14.0,
+            unitPriceUsd: 1480,
+            unitPriceIdr: 23680000,
+            cogsUsd: 1110,
+            cogsIdr: 17760000,
+            marginPct: 25.0,
+            features: ["4K 8MP Cloud AI", "Onboard Storage 60 Days", "Directional Audio", "IK10 / IP67", "802.3at PoE+"],
+            desc_id: "Kamera bullet cloud-native Ava Alta 4K dengan penyimpanan terdistribusi SSD 60 hari, AI analitik terpadu, audio directional, PoE+ 14W.",
+            desc_en: "Ava Alta 4K Cloud-native Bullet camera with 60-day onboard SSD, integrated AI analytics, directional audio, 802.3at PoE+ 14W."
         },
 
         // ─── AXIS COMMUNICATIONS ─────────────────────────────────────────────
@@ -808,6 +885,235 @@
             features: ["4K UHD 8MP", "ONVIF Profile S/T/M", "Smart H.265", "802.3at PoE+"],
             desc_id: "Kamera IP standar Universal ONVIF Profile S/T/M resolusi 4K UHD 8MP, Smart H.265, daya 802.3at PoE+ 14W.",
             desc_en: "Universal ONVIF Profile S/T/M 4K UHD 8MP camera, Smart H.265, 802.3at PoE+ 14W."
+        },
+
+        // ─── MILESIGHT ───────────────────────────────────────────────────────
+        {
+            sku: "MS-CAM-C8165-PB",
+            brand: "milesight",
+            brandName: "Milesight",
+            partnerTier: "thirdparty",
+            model: "Milesight 4K H.265+ AI Motorized Pro Bullet",
+            formFactor: "bullet",
+            envClass: "outdoor",
+            sensorFormat: "1_2_8",
+            focalLengthMm: 4.0,
+            resolution: "4K",
+            defaultFps: 25,
+            defaultCodec: "SmartCodec",
+            nominalBitrateMbps: 3.4,
+            poeClass: "at",
+            poeWatts: 10.0,
+            unitPriceUsd: 450,
+            unitPriceIdr: 7200000,
+            cogsUsd: 335,
+            cogsIdr: 5360000,
+            marginPct: 25.6,
+            features: ["4K 8MP", "AI Video Analytics", "Motorized Zoom 2.8-12mm", "IP67 / IK10", "802.3at PoE+"],
+            desc_id: "Kamera bullet outdoor profesional Milesight 4K 8MP dengan lensa motorized zoom 2.8-12mm, analitik AI cerdas, IP67/IK10, PoE+ 10W.",
+            desc_en: "Milesight 4K 8MP Pro Bullet camera with motorized zoom 2.8-12mm, embedded AI video analytics, IP67/IK10, 802.3at PoE+ 10W."
+        },
+        {
+            sku: "MS-CAM-C5375-PB",
+            brand: "milesight",
+            brandName: "Milesight",
+            partnerTier: "thirdparty",
+            model: "Milesight 5MP Vandal-Proof Mini Dome",
+            formFactor: "dome",
+            envClass: "outdoor",
+            sensorFormat: "1_2_8",
+            focalLengthMm: 2.8,
+            resolution: "5MP",
+            defaultFps: 25,
+            defaultCodec: "SmartCodec",
+            nominalBitrateMbps: 2.3,
+            poeClass: "af",
+            poeWatts: 6.0,
+            unitPriceUsd: 280,
+            unitPriceIdr: 4480000,
+            cogsUsd: 210,
+            cogsIdr: 3360000,
+            marginPct: 25.0,
+            features: ["5MP Super HD", "Smart IR II 30m", "140dB Super WDR", "IK10 Vandal", "802.3af PoE"],
+            desc_id: "Kamera mini dome vandal-proof Milesight 5MP dengan perlindungan benturan IK10, Smart IR II 30m, 140dB Super WDR, PoE 802.3af 6W.",
+            desc_en: "Milesight 5MP Vandal-proof Mini Dome camera, IK10 impact protection, Smart IR II 30m, 140dB Super WDR, 802.3af PoE 6W."
+        },
+        {
+            sku: "MS-CAM-C4461-X30PB",
+            brand: "milesight",
+            brandName: "Milesight",
+            partnerTier: "thirdparty",
+            model: "Milesight 4MP 30x Speed Dome PTZ",
+            formFactor: "ptz",
+            envClass: "outdoor",
+            sensorFormat: "1_2_8",
+            focalLengthMm: 4.7,
+            resolution: "4MP",
+            defaultFps: 30,
+            defaultCodec: "SmartCodec",
+            nominalBitrateMbps: 2.9,
+            poeClass: "at",
+            poeWatts: 24.0,
+            unitPriceUsd: 1150,
+            unitPriceIdr: 18400000,
+            cogsUsd: 860,
+            cogsIdr: 13760000,
+            marginPct: 25.2,
+            features: ["4MP 30x Optical Zoom", "AI Auto Tracking", "Smart IR 180m", "IP66 Weatherproof", "802.3at PoE+"],
+            desc_id: "Kamera PTZ outdoor Milesight 4MP dengan pembesaran optik 30x, pelacakan otomatis AI (Auto Tracking), IR 180 meter, PoE+ 24W.",
+            desc_en: "Milesight 4MP 30x Optical Zoom Speed Dome PTZ with AI Auto Tracking, Smart IR 180m, IP66 weatherproof, 802.3at PoE+ 24W."
+        },
+        {
+            sku: "MS-CAM-C8266-FPC",
+            brand: "milesight",
+            brandName: "Milesight",
+            partnerTier: "thirdparty",
+            model: "Milesight 4K AI Color+ 180° Panoramic Dome",
+            formFactor: "multisensor",
+            envClass: "outdoor",
+            sensorFormat: "1_1_8",
+            focalLengthMm: 2.8,
+            resolution: "4K",
+            defaultFps: 25,
+            defaultCodec: "SmartCodec",
+            nominalBitrateMbps: 3.8,
+            poeClass: "at",
+            poeWatts: 12.0,
+            unitPriceUsd: 560,
+            unitPriceIdr: 8960000,
+            cogsUsd: 420,
+            cogsIdr: 6720000,
+            marginPct: 25.0,
+            features: ["4K 8MP Panoramic 180°", "Color+ 24/7 Color", "Dual Sensor Stitching", "IP67 / IK10", "802.3at"],
+            desc_id: "Kamera panorama 180 derajat Milesight 4K dengan teknologi penggabungan dua sensor tanpa distorsi, gambar berwarna 24/7 Color+, PoE+ 12W.",
+            desc_en: "Milesight 4K 180-degree panoramic camera with dual-sensor seamless stitching, 24/7 full-color monitoring, 802.3at PoE+ 12W."
+        },
+        {
+            sku: "MS-CAM-C2964-FE",
+            brand: "milesight",
+            brandName: "Milesight",
+            partnerTier: "thirdparty",
+            model: "Milesight 2MP AI 12x Mini PTZ Bullet",
+            formFactor: "ptz",
+            envClass: "outdoor",
+            sensorFormat: "1_2_8",
+            focalLengthMm: 5.3,
+            resolution: "1080p",
+            defaultFps: 30,
+            defaultCodec: "SmartCodec",
+            nominalBitrateMbps: 1.9,
+            poeClass: "at",
+            poeWatts: 16.0,
+            unitPriceUsd: 480,
+            unitPriceIdr: 7680000,
+            cogsUsd: 360,
+            cogsIdr: 5760000,
+            marginPct: 25.0,
+            features: ["1080p 2MP", "12x Optical Zoom", "AI Human/Vehicle Detection", "WDR 140dB", "802.3at"],
+            desc_id: "Kamera mini PTZ format bullet Milesight 2MP dengan optical zoom 12x, pan 360 derajat tak terbatas, klasifikasi AI manusia/kendaraan, PoE+ 16W.",
+            desc_en: "Milesight 2MP Mini PTZ Bullet camera with 12x optical zoom, 360 endless pan, AI human/vehicle detection, 802.3at PoE+ 16W."
+        },
+
+        // ─── VIGI (BY TP-LINK) ───────────────────────────────────────────────
+        {
+            sku: "VIGI-CAM-C340-W",
+            brand: "vigi",
+            brandName: "VIGI",
+            partnerTier: "thirdparty",
+            model: "VIGI C340-W 4MP Outdoor Full-Color Bullet",
+            formFactor: "bullet",
+            envClass: "outdoor",
+            sensorFormat: "1_3",
+            focalLengthMm: 4.0,
+            resolution: "4MP",
+            defaultFps: 25,
+            defaultCodec: "SmartCodec",
+            nominalBitrateMbps: 2.4,
+            poeClass: "af",
+            poeWatts: 7.0,
+            unitPriceUsd: 135,
+            unitPriceIdr: 2160000,
+            cogsUsd: 100,
+            cogsIdr: 1600000,
+            marginPct: 25.9,
+            features: ["4MP Super-HD", "24/7 Full-Color F1.6", "Smart Detection", "IP67 Weatherproof", "802.3af PoE 7W"],
+            desc_id: "Kamera bullet outdoor komersial VIGI C340 4MP dengan lensa aperture besar F1.6 untuk gambar berwarna 24/7, deteksi manusia cerdas, PoE 7W.",
+            desc_en: "VIGI C340-W 4MP outdoor commercial bullet camera with large F1.6 aperture for 24/7 full-color, smart human detection, 802.3af PoE 7W."
+        },
+        {
+            sku: "VIGI-CAM-C440-I",
+            brand: "vigi",
+            brandName: "VIGI",
+            partnerTier: "thirdparty",
+            model: "VIGI C440-I 4MP Turret Dome IR",
+            formFactor: "dome",
+            envClass: "indoor",
+            sensorFormat: "1_3",
+            focalLengthMm: 2.8,
+            resolution: "4MP",
+            defaultFps: 25,
+            defaultCodec: "SmartCodec",
+            nominalBitrateMbps: 2.2,
+            poeClass: "af",
+            poeWatts: 6.5,
+            unitPriceUsd: 120,
+            unitPriceIdr: 1920000,
+            cogsUsd: 90,
+            cogsIdr: 1440000,
+            marginPct: 25.0,
+            features: ["4MP HD", "Human & Vehicle Classification", "Smart IR 30m", "IK10 Vandal", "802.3af PoE"],
+            desc_id: "Kamera turret dome VIGI C440 4MP dengan klasifikasi manusia dan kendaraan, Smart IR 30m, perlindungan benturan IK10, PoE 6.5W.",
+            desc_en: "VIGI C440-I 4MP turret dome camera with human & vehicle classification, Smart IR 30m, IK10 vandal resistance, 802.3af PoE 6.5W."
+        },
+        {
+            sku: "VIGI-CAM-C540-PTZ",
+            brand: "vigi",
+            brandName: "VIGI",
+            partnerTier: "thirdparty",
+            model: "VIGI C540 Outdoor Pan/Tilt 4MP Camera",
+            formFactor: "ptz",
+            envClass: "outdoor",
+            sensorFormat: "1_3",
+            focalLengthMm: 4.0,
+            resolution: "4MP",
+            defaultFps: 25,
+            defaultCodec: "SmartCodec",
+            nominalBitrateMbps: 2.6,
+            poeClass: "at",
+            poeWatts: 14.0,
+            unitPriceUsd: 240,
+            unitPriceIdr: 3840000,
+            cogsUsd: 180,
+            cogsIdr: 2880000,
+            marginPct: 25.0,
+            features: ["4MP Pan/Tilt", "Auto-Tracking", "Full-Color 30m", "Two-Way Audio", "802.3at PoE+"],
+            desc_id: "Kamera pan/tilt outdoor VIGI C540 resolusi 4MP dengan auto-tracking objek, night vision berwarna 30m, audio dua arah, PoE+ 14W.",
+            desc_en: "VIGI C540 4MP outdoor pan/tilt camera with AI auto-tracking, full-color night vision 30m, two-way audio, 802.3at PoE+ 14W."
+        },
+        {
+            sku: "VIGI-CAM-C385-4K",
+            brand: "vigi",
+            brandName: "VIGI",
+            partnerTier: "thirdparty",
+            model: "VIGI C385 4K 8MP Ultra HD Outdoor Bullet",
+            formFactor: "bullet",
+            envClass: "outdoor",
+            sensorFormat: "1_2_8",
+            focalLengthMm: 4.0,
+            resolution: "4K",
+            defaultFps: 25,
+            defaultCodec: "SmartCodec",
+            nominalBitrateMbps: 3.6,
+            poeClass: "af",
+            poeWatts: 9.0,
+            unitPriceUsd: 210,
+            unitPriceIdr: 3360000,
+            cogsUsd: 155,
+            cogsIdr: 2480000,
+            marginPct: 26.2,
+            features: ["4K 8MP UHD", "F1.0 Full-Color", "Smart Coding H.265+", "IP67 Weatherproof", "802.3af PoE"],
+            desc_id: "Kamera bullet outdoor VIGI C385 resolusi 4K UHD 8MP, bukaan super F1.0 penuh warna malam hari, kompresi Smart Coding H.265+, PoE 9W.",
+            desc_en: "VIGI C385 4K UHD 8MP outdoor bullet camera, super F1.0 full-color aperture, Smart Coding H.265+, IP67 weatherproof, 802.3af PoE 9W."
         }
     ];
 
@@ -1130,9 +1436,423 @@
         }
     };
 
+    var ACCESSORIES = [
+        {
+            sku: "EXT-POE-IND-250M",
+            model: "Industrial Long-Range PoE Extender (250m)",
+            unitPriceUsd: 110,
+            unitPriceIdr: 1760000,
+            cogsUsd: 80,
+            cogsIdr: 1280000,
+            marginPct: 27.3,
+            desc_id: "Extender PoE Industri jarak jauh hingga 250m (10/100Mbps), mendukung daya 802.3at hingga 25W pada jarak 200m, proteksi petir 6kV.",
+            desc_en: "Industrial Long-Range PoE Extender up to 250m (10/100Mbps), supports 802.3at power up to 25W at 200m, 6kV surge protection."
+        },
+        {
+            sku: "FMC-IND-POE-SFP",
+            model: "Industrial Gigabit PoE+ Fiber Media Converter (30W)",
+            unitPriceUsd: 185,
+            unitPriceIdr: 2960000,
+            cogsUsd: 135,
+            cogsIdr: 2160000,
+            marginPct: 27.0,
+            desc_id: "Media Converter Industri 1x RJ45 Gigabit PoE+ (30W) ke 1x SFP Slot 100/1000Base-X untuk transmisi fiber optik jarak jauh (>250m hingga 20km).",
+            desc_en: "Industrial Gigabit PoE+ Media Converter 1x RJ45 (30W) to 1x SFP 100/1000Base-X for long-distance fiber transmission (>250m up to 20km)."
+        },
+        {
+            sku: "AVG-AI-APPLIANCE-8P",
+            model: "Avigilon AI Appliance 8-Port (VMA-AIE2-8P)",
+            unitPriceUsd: 3600,
+            unitPriceIdr: 57600000,
+            cogsUsd: 2700,
+            cogsIdr: 43200000,
+            marginPct: 25.0,
+            desc_id: "Appliance akselerasi AI Avigilon 8-Channel untuk menambahkan analitik cerdas generasi berikutnya (Appearance Search, deteksi wajah/kendaraan) ke kamera pihak ketiga non-Avigilon.",
+            desc_en: "Avigilon 8-Channel AI Appliance adding Next-Generation Video Analytics (Appearance Search, face/vehicle detection) to non-Avigilon third-party cameras."
+        },
+        {
+            sku: "AVG-COMM-CAM-LIC",
+            model: "Avigilon Unity Third-Party Camera Channel License",
+            unitPriceUsd: 175,
+            unitPriceIdr: 2800000,
+            cogsUsd: 130,
+            cogsIdr: 2080000,
+            marginPct: 25.7,
+            desc_id: "Lisensi integrasi kamera ONVIF pihak ketiga ke VMS Avigilon Unity Video 8.",
+            desc_en: "Third-party ONVIF camera integration channel license for Avigilon Unity Video 8."
+        },
+        {
+            sku: "PEL-VX-1C-COMM",
+            model: "Pelco VideoXpert Third-Party ONVIF Camera License",
+            unitPriceUsd: 140,
+            unitPriceIdr: 2240000,
+            cogsUsd: 105,
+            cogsIdr: 1680000,
+            marginPct: 25.0,
+            desc_id: "Lisensi integrasi kanal kamera pihak ketiga (ONVIF Profile S/T) pada VMS Pelco VideoXpert Enterprise / Pro.",
+            desc_en: "Third-party ONVIF camera integration channel license for Pelco VideoXpert Enterprise / Pro VMS."
+        }
+    ];
+
     /* =========================================================================
      * 4. DETERMINISTIC CALCULATION FUNCTIONS
      * ========================================================================= */
+
+    /**
+     * Kalkulator Standar DORI (EN 62676-4)
+     * Menghitung HFoV, scene width, PPM di jarak target, serta jarak jangkauan maksimum untuk:
+     * D (Detection 25 ppm), O (Observation 62 ppm), R (Recognition 125 ppm), I (Identification 250 ppm)
+     */
+    function calcDori(opts) {
+        opts = opts || {};
+        var distance = Math.max(0.5, parseFloat(opts.distanceMeters) || 15.0);
+        var focal = Math.max(1.0, parseFloat(opts.focalLengthMm) || 4.0);
+
+        // Sensor width (mm)
+        var sensorWidth = 5.12; // default 1/2.8"
+        if (opts.sensorWidthMm && parseFloat(opts.sensorWidthMm) > 0) {
+            sensorWidth = parseFloat(opts.sensorWidthMm);
+        } else if (opts.sensorFormat) {
+            for (var i = 0; i < SENSOR_FORMATS.length; i++) {
+                if (SENSOR_FORMATS[i].id === opts.sensorFormat) {
+                    sensorWidth = SENSOR_FORMATS[i].widthMm;
+                    break;
+                }
+            }
+        }
+
+        // Horizontal resolution in pixels
+        var widthPx = 2560; // default 4MP
+        var res = opts.resolution || "4MP";
+        if (opts.customWidthPx && parseInt(opts.customWidthPx, 10) > 0) {
+            widthPx = parseInt(opts.customWidthPx, 10);
+        } else {
+            switch (res) {
+                case "1080p": widthPx = 1920; break;
+                case "4MP": widthPx = 2560; break;
+                case "5MP": widthPx = 2592; break;
+                case "4K": widthPx = 3840; break;
+                case "12MP": widthPx = 4000; break;
+                case "thermal": widthPx = 640; break;
+                default: widthPx = 2560; break;
+            }
+        }
+
+        // Horizontal Field of View (HFoV) in radians and degrees
+        var hfovRad = 2.0 * Math.atan(sensorWidth / (2.0 * focal));
+        var hfovDeg = Math.round((hfovRad * (180.0 / Math.PI)) * 10) / 10;
+
+        // Scene width at distance d (meters)
+        var sceneWidthM = Math.round((distance * (sensorWidth / focal)) * 100) / 100;
+
+        // Current Pixels Per Meter (PPM) at target distance d
+        var currentPpm = Math.round((widthPx / Math.max(0.01, sceneWidthM)) * 10) / 10;
+
+        // Maximum distances for DORI thresholds
+        var maxDetectM = Math.round(((widthPx * focal) / (25.0 * sensorWidth)) * 10) / 10;
+        var maxObserveM = Math.round(((widthPx * focal) / (62.0 * sensorWidth)) * 10) / 10;
+        var maxRecognizeM = Math.round(((widthPx * focal) / (125.0 * sensorWidth)) * 10) / 10;
+        var maxIdentifyM = Math.round(((widthPx * focal) / (250.0 * sensorWidth)) * 10) / 10;
+
+        var currentTier = "detection";
+        var currentTierLabel_id = "Deteksi (Detection >= 25 PPM)";
+        var currentTierLabel_en = "Detection (>= 25 PPM)";
+        var tierClass = "text-sky-400 bg-sky-900/30 border-sky-500/40";
+
+        if (currentPpm >= 250) {
+            currentTier = "identification";
+            currentTierLabel_id = "Identifikasi Forensik (Identification >= 250 PPM)";
+            currentTierLabel_en = "Forensic Identification (>= 250 PPM)";
+            tierClass = "text-emerald-400 bg-emerald-900/30 border-emerald-500/40";
+        } else if (currentPpm >= 125) {
+            currentTier = "recognition";
+            currentTierLabel_id = "Pengenalan Wajah (Recognition >= 125 PPM)";
+            currentTierLabel_en = "Facial Recognition (>= 125 PPM)";
+            tierClass = "text-teal-400 bg-teal-900/30 border-teal-500/40";
+        } else if (currentPpm >= 62) {
+            currentTier = "observation";
+            currentTierLabel_id = "Observasi (Observation >= 62 PPM)";
+            currentTierLabel_en = "Observation (>= 62 PPM)";
+            tierClass = "text-amber-400 bg-amber-900/30 border-amber-500/40";
+        } else if (currentPpm >= 25) {
+            currentTier = "detection";
+            currentTierLabel_id = "Deteksi Objek (Detection >= 25 PPM)";
+            currentTierLabel_en = "Object Detection (>= 25 PPM)";
+            tierClass = "text-blue-400 bg-blue-900/30 border-blue-500/40";
+        } else {
+            currentTier = "insufficient";
+            currentTierLabel_id = "Di Bawah Standar (< 25 PPM - Gambar Buram)";
+            currentTierLabel_en = "Substandard (< 25 PPM - Blurred Image)";
+            tierClass = "text-rose-400 bg-rose-900/30 border-rose-500/40";
+        }
+
+        return {
+            distanceMeters: distance,
+            focalLengthMm: focal,
+            sensorWidthMm: sensorWidth,
+            widthPx: widthPx,
+            hfovDeg: hfovDeg,
+            sceneWidthM: sceneWidthM,
+            currentPpm: currentPpm,
+            currentTier: currentTier,
+            currentTierLabel_id: currentTierLabel_id,
+            currentTierLabel_en: currentTierLabel_en,
+            tierClass: tierClass,
+            maxDetectM: maxDetectM,
+            maxObserveM: maxObserveM,
+            maxRecognizeM: maxRecognizeM,
+            maxIdentifyM: maxIdentifyM
+        };
+    }
+
+    /**
+     * Kalkulator Jarak Kabel Cat6 & PoE Voltage Drop
+     * Menghitung loop resistance, voltage drop, tegangan bersih di kamera,
+     * serta rekomendasi PoE Extender (>100m) atau Fiber Media Converter (>250m).
+     */
+    function calcCableDrop(opts) {
+        opts = opts || {};
+        var length = Math.max(1, parseFloat(opts.cableLengthMeters) || 60);
+        var watts = Math.max(1.0, parseFloat(opts.deviceWatts) || 15.0);
+        var pseVolts = Math.max(44.0, parseFloat(opts.pseVoltage) || 54.0);
+        var cableCat = opts.cableCategory || "cat6";
+
+        var resPerMeter = (cableCat === "cat5e") ? 0.188 : 0.165;
+        var totalLoopResistance = Math.round((length * resPerMeter) * 100) / 100;
+
+        var currentAmps = watts / pseVolts;
+        var voltageDrop = Math.round((currentAmps * totalLoopResistance) * 100) / 100;
+        var voltageAtCamera = Math.round((pseVolts - voltageDrop) * 100) / 100;
+        var powerLossCableWatts = Math.round((Math.pow(currentAmps, 2) * totalLoopResistance) * 100) / 100;
+        var totalDrawWatts = Math.round((watts + powerLossCableWatts) * 100) / 100;
+
+        var minVoltsRequired = (watts > 30.0) ? 41.1 : ((watts > 15.4) ? 42.5 : 37.0);
+        var isUnderVoltage = voltageAtCamera < minVoltsRequired;
+
+        var status = "normal";
+        var statusLabel_id = "Normal (Standar Cat6 UTP <= 100m)";
+        var statusLabel_en = "Normal (Standard Cat6 UTP <= 100m)";
+        var statusClass = "text-emerald-400 bg-emerald-900/30 border-emerald-500/40";
+        var recommendedAccessory = null;
+        var recommendationText_id = "Jarak transmisi dan stabilitas tegangan berada dalam standar aman IEEE 802.3.";
+        var recommendationText_en = "Transmission distance and voltage stability are within IEEE 802.3 safe limits.";
+
+        if (length > 250) {
+            status = "critical_fiber";
+            statusLabel_id = "Kritis (> 250m: Melampaui Batas Fisik Tembaga UTP)";
+            statusLabel_en = "Critical (> 250m: Exceeds Copper Physical Limit)";
+            statusClass = "text-rose-400 bg-rose-900/40 border-rose-500/50";
+            recommendedAccessory = "fmc_poe";
+            recommendationText_id = "Jarak kabel melampaui kemampuan fisik tembaga Ethernet. Wajib menggunakan Industrial PoE Fiber Media Converter + Drop Core Fiber Optic Single-Mode untuk mencegah hilangnya paket data dan voltage drop ekstrem.";
+            recommendationText_en = "Distance exceeds copper Ethernet physics limit. Industrial PoE Fiber Media Converter + Single-Mode Fiber Optic cable is required for reliable zero-loss transmission.";
+        } else if (length > 100) {
+            status = "warning_extender";
+            statusLabel_id = "Peringatan (> 100m: Di Luar Standar Cat6)";
+            statusLabel_en = "Warning (> 100m: Beyond Cat6 Standard)";
+            statusClass = "text-amber-400 bg-amber-900/30 border-amber-500/40";
+            recommendedAccessory = "poe_extender";
+            recommendationText_id = "Jarak kabel melebihi batas 100 meter. Rekomendasi: Pasang Industrial Long-Reach PoE Extender (hingga 250m) atau aktifkan fitur CCTV ePoE (10-100Mbps) pada switch industri.";
+            recommendationText_en = "Cable distance exceeds 100m limit. Recommendation: Install Industrial Long-Reach PoE Extender (up to 250m) or activate CCTV ePoE mode (10-100Mbps).";
+        }
+
+        if (isUnderVoltage) {
+            status = "critical_voltage";
+            statusLabel_id = "Bahaya: Undervoltage Terdeteksi!";
+            statusLabel_en = "Danger: Undervoltage Detected!";
+            statusClass = "text-rose-400 bg-rose-900/40 border-rose-500/50";
+            recommendationText_id += " PERHATIAN: Tegangan di terminal kamera (" + voltageAtCamera + "V) berada di bawah ambang batas minimum (" + minVoltsRequired + "V). Kamera berisiko reboot berulang atau padam saat beban puncak (IR malam / motor PTZ berputar)!";
+            recommendationText_en += " WARNING: Camera terminal voltage (" + voltageAtCamera + "V) is below minimum threshold (" + minVoltsRequired + "V). Camera risks cyclic reboot or shutdown under peak IR/PTZ motor load!";
+        }
+
+        return {
+            cableLengthMeters: length,
+            deviceWatts: watts,
+            pseVoltage: pseVolts,
+            totalLoopResistance: totalLoopResistance,
+            voltageDrop: voltageDrop,
+            voltageAtCamera: voltageAtCamera,
+            minVoltsRequired: minVoltsRequired,
+            powerLossCableWatts: powerLossCableWatts,
+            totalDrawWatts: totalDrawWatts,
+            isUnderVoltage: isUnderVoltage,
+            status: status,
+            statusLabel_id: statusLabel_id,
+            statusLabel_en: statusLabel_en,
+            statusClass: statusClass,
+            recommendedAccessory: recommendedAccessory,
+            recommendationText_id: recommendationText_id,
+            recommendationText_en: recommendationText_en
+        };
+    }
+
+    /**
+     * Mesin Audit Interoperabilitas & Kompatibilitas Multi-Brand
+     * Memeriksa konfigurasi armada kamera terhadap platform VMS dan switch:
+     * - Kebutuhan lisensi channel third-party pada VMS Avigilon/Pelco
+     * - Kebutuhan Avigilon AI Appliance untuk kamera pihak ketiga
+     * - Ketidakcocokan format SmartCodec proprietary (Hikvision/Dahua/VIGI/Milesight)
+     * - Proteksi kelebihan daya PoE 802.3bt
+     */
+    function auditInteroperability(cameraFleet, selectedVms, poeResult) {
+        cameraFleet = Array.isArray(cameraFleet) ? cameraFleet : [];
+        selectedVms = selectedVms || "pelco_videoxpert";
+        poeResult = poeResult || {};
+
+        var totalCameras = 0;
+        var brandCounts = {};
+        var thirdPartyCount = 0;
+        var thirdPartyBrands = [];
+        var proprietarySmartCodecs = [];
+        var btHighPowerCount = 0;
+
+        for (var i = 0; i < cameraFleet.length; i++) {
+            var g = cameraFleet[i];
+            var q = parseInt(g.qty, 10) || 0;
+            totalCameras += q;
+            var bId = g.brand || "generic_onvif";
+            brandCounts[bId] = (brandCounts[bId] || 0) + q;
+
+            var isOfficial = (bId === "pelco" || bId === "avigilon" || bId === "ava");
+            if (!isOfficial && q > 0) {
+                thirdPartyCount += q;
+                var bName = g.brandName || bId;
+                if (thirdPartyBrands.indexOf(bName) === -1) {
+                    thirdPartyBrands.push(bName);
+                }
+            }
+
+            if (g.codec === "SmartCodec" && (bId === "hikvision" || bId === "dahua" || bId === "vigi" || bId === "milesight" || bId === "axis" || bId === "hanwha")) {
+                var codecBrand = g.brandName || bId;
+                if (proprietarySmartCodecs.indexOf(codecBrand) === -1) {
+                    proprietarySmartCodecs.push(codecBrand);
+                }
+            }
+
+            if (g.poeClass === "bt_type3" || g.poeClass === "bt_type4" || (g.poeWatts && g.poeWatts > 30.0)) {
+                btHighPowerCount += q;
+            }
+        }
+
+        var alerts = [];
+
+        // Rule 1: VMS Third-Party Licensing
+        if (selectedVms === "avigilon_unity" && thirdPartyCount > 0) {
+            alerts.push({
+                id: "avg_third_party_license",
+                level: "warning",
+                badge_id: "Lisensi Diperlukan",
+                badge_en: "License Required",
+                title_id: "Kebutuhan Lisensi Kamera Third-Party Avigilon Unity",
+                title_en: "Avigilon Unity Third-Party Camera License Required",
+                desc_id: "Terdapat " + thirdPartyCount + " kamera non-Avigilon (" + thirdPartyBrands.join(", ") + ") dalam armada. VMS Avigilon Unity mewajibkan lisensi channel third-party (AVG-COMM-CAM-LIC) agar stream ONVIF Profile S/T dapat didaftarkan dan direkam secara legal.",
+                desc_en: "Fleet contains " + thirdPartyCount + " non-Avigilon cameras (" + thirdPartyBrands.join(", ") + "). Avigilon Unity requires third-party channel licenses (AVG-COMM-CAM-LIC) to register and record ONVIF Profile S/T streams.",
+                actionType: "add_avg_license",
+                actionPayload: thirdPartyCount,
+                actionLabel_id: "➕ Tambah " + thirdPartyCount + "x Lisensi Avigilon ke BoQ",
+                actionLabel_en: "➕ Add " + thirdPartyCount + "x Avigilon Licenses to BoQ"
+            });
+        } else if (selectedVms === "pelco_videoxpert" && thirdPartyCount > 0) {
+            alerts.push({
+                id: "pelco_third_party_license",
+                level: "warning",
+                badge_id: "Lisensi Diperlukan",
+                badge_en: "License Required",
+                title_id: "Kebutuhan Lisensi Kanal ONVIF Pelco VideoXpert",
+                title_en: "Pelco VideoXpert ONVIF Channel License Required",
+                desc_id: "Terdapat " + thirdPartyCount + " kamera non-Pelco (" + thirdPartyBrands.join(", ") + "). Pelco VideoXpert mewajibkan lisensi integrasi kamera pihak ketiga (PEL-VX-1C-COMM) per-channel untuk menjamin dukungan driver resmi.",
+                desc_en: "Fleet contains " + thirdPartyCount + " non-Pelco cameras (" + thirdPartyBrands.join(", ") + "). Pelco VideoXpert requires third-party ONVIF integration licenses (PEL-VX-1C-COMM) per channel for official driver support.",
+                actionType: "add_pelco_license",
+                actionPayload: thirdPartyCount,
+                actionLabel_id: "➕ Tambah " + thirdPartyCount + "x Lisensi Pelco ke BoQ",
+                actionLabel_en: "➕ Add " + thirdPartyCount + "x Pelco Licenses to BoQ"
+            });
+        }
+
+        // Rule 2: Avigilon AI Appliance Blocker for Third-Party Cameras
+        if (selectedVms === "avigilon_unity" && thirdPartyCount > 0) {
+            var neededAppliances = Math.max(1, Math.ceil(thirdPartyCount / 8.0));
+            alerts.push({
+                id: "avg_ai_appliance_blocker",
+                level: "blocker",
+                badge_id: "Blocker AI Analitik",
+                badge_en: "AI Analytics Blocker",
+                title_id: "Kamera Pihak Ketiga Membutuhkan Avigilon AI Appliance untuk Next-Gen Analytics",
+                title_en: "Third-Party Cameras Require Avigilon AI Appliance for Next-Gen Analytics",
+                desc_id: "Kamera pihak ketiga (" + thirdPartyBrands.join(", ") + ") hanya dapat mengirimkan video streaming mentah via ONVIF tanpa metadata analitik cerdas. Jika proyek membutuhkan Avigilon Next-Gen Analytics (Appearance Search, klasifikasi orang/kendaraan, deteksi pelat nomor), Anda WAJIB menambahkan Avigilon AI Appliance (VMA-AIE2-8P/16P).",
+                desc_en: "Third-party cameras (" + thirdPartyBrands.join(", ") + ") only provide raw video streams via ONVIF without native metadata. If project requires Avigilon Next-Gen Analytics (Appearance Search, human/vehicle classification, license plate), you MUST add an Avigilon AI Appliance (VMA-AIE2-8P/16P).",
+                actionType: "add_ai_appliance",
+                actionPayload: neededAppliances,
+                actionLabel_id: "➕ Tambah " + neededAppliances + "x Avigilon AI Appliance ke BoQ",
+                actionLabel_en: "➕ Add " + neededAppliances + "x Avigilon AI Appliance to BoQ"
+            });
+        }
+
+        // Rule 3: Proprietary SmartCodec Inconsistency
+        if (proprietarySmartCodecs.length > 0 && (selectedVms === "pelco_videoxpert" || selectedVms === "avigilon_unity")) {
+            var vmsName = selectedVms === "pelco_videoxpert" ? "Pelco VideoXpert" : "Avigilon Unity";
+            alerts.push({
+                id: "smart_codec_mismatch",
+                level: "warning",
+                badge_id: "Peringatan Kompresi",
+                badge_en: "Compression Warning",
+                title_id: "Potensi Stuttering: SmartCodec Proprietary Antar-Merk (" + proprietarySmartCodecs.join(", ") + ")",
+                title_en: "Potential Stuttering: Cross-Brand Proprietary SmartCodec (" + proprietarySmartCodecs.join(", ") + ")",
+                desc_id: "Fitur kompresi dinamis seperti Hikvision H.265+, Dahua Smart H.265, VIGI Smart Coding, Milesight H.265+, atau Axis Zipstream yang diaktifkan pada kamera pihak ketiga berpotensi menyebabkan frame stuttering atau rekaman korup pada VMS " + vmsName + ". REKOMENDASI: Atur kompresi kamera ke standar H.265 murni atau aktifkan ONVIF Profile T.",
+                desc_en: "Proprietary dynamic compression features (such as Hikvision H.265+, Dahua Smart H.265, VIGI Smart Coding, Milesight H.265+, or Axis Zipstream) may cause playback stuttering or dropped frames on " + vmsName + " VMS. RECOMMENDATION: Set cameras to standard H.265 mode or activate ONVIF Profile T.",
+                actionType: "switch_to_standard_h265",
+                actionPayload: null,
+                actionLabel_id: "🔄 Ubah Semua Kamera ke H.265 Standar",
+                actionLabel_en: "🔄 Switch All Cameras to Standard H.265"
+            });
+        }
+
+        // Rule 4: High-Power PoE Ultra (802.3bt) Protection
+        if (btHighPowerCount > 0) {
+            var hasBtSwitch = false;
+            var swList = poeResult.recommendedSwitches || [];
+            for (var s = 0; s < swList.length; s++) {
+                if (swList[s].sku === "SW-IND-8P-BT" || (swList[s].model && swList[s].model.indexOf("802.3bt") !== -1)) {
+                    hasBtSwitch = true;
+                    break;
+                }
+            }
+
+            if (!hasBtSwitch) {
+                alerts.push({
+                    id: "bt_power_blocker",
+                    level: "blocker",
+                    badge_id: "Blocker Daya PoE",
+                    badge_en: "PoE Power Blocker",
+                    title_id: "Kamera Berat 802.3bt (60W-90W) Memerlukan Switch Ultra PoE",
+                    title_en: "High-Power 802.3bt Cameras (60W-90W) Require Ultra PoE Switch",
+                    desc_id: "Terdapat " + btHighPowerCount + " kamera berdaya tinggi (PTZ/Thermal/ExSite) yang membutuhkan standar 802.3bt Type 3/4. Switch distribusi PoE+ standar (maks 30W/port) TIDAK MAMPU menyalakan kamera ini saat heater, wiper, atau motor PTZ aktif!",
+                    desc_en: "There are " + btHighPowerCount + " high-power cameras (PTZ/Thermal/ExSite) requiring 802.3bt Type 3/4 standard. Standard PoE+ switches (max 30W/port) CANNOT power these cameras during heater, wiper, or PTZ movement!",
+                    actionType: "add_bt_switch",
+                    actionPayload: null,
+                    actionLabel_id: "⚡ Alokasikan Switch Industrial 802.3bt",
+                    actionLabel_en: "⚡ Allocate Industrial 802.3bt Switch"
+                });
+            }
+        }
+
+        var blockers = alerts.filter(function (a) { return a.level === "blocker"; }).length;
+        var warnings = alerts.filter(function (a) { return a.level === "warning"; }).length;
+        var info = alerts.filter(function (a) { return a.level === "info"; }).length;
+
+        return {
+            summary: {
+                totalCameras: totalCameras,
+                thirdPartyCount: thirdPartyCount,
+                thirdPartyBrands: thirdPartyBrands,
+                blockers: blockers,
+                warnings: warnings,
+                info: info,
+                isCompatible: blockers === 0,
+                selectedVms: selectedVms
+            },
+            alerts: alerts
+        };
+    }
 
     /**
      * Menghitung bitrate estimasi untuk 1 kamera berdasarkan resolusi, fps, codec, scene motion,
@@ -1684,6 +2404,129 @@
             });
         }
 
+        // 7. System Accessories & Integrations (AI Appliance, PoE Extenders, Fiber Media Converters, 3rd-Party Licenses)
+        var acc = cctvState.accessories || {};
+        var accCatalog = ACCESSORIES || [];
+        function findAcc(sku) {
+            for (var a = 0; a < accCatalog.length; a++) {
+                if (accCatalog[a].sku === sku) return accCatalog[a];
+            }
+            return null;
+        }
+
+        if (acc.aiApplianceQty > 0) {
+            var aia = findAcc("AVG-AI-APPLIANCE-8P");
+            if (aia) {
+                var aiaPUsd = aia.unitPriceUsd || 0;
+                var aiaPIdr = aia.unitPriceIdr || Math.round(aiaPUsd * exchangeRate);
+                var aiaCUsd = aia.cogsUsd || Math.round((aiaPUsd * 0.75) * 100) / 100;
+                var aiaCIdr = Math.round(aiaCUsd * exchangeRate);
+                items.push({
+                    key: "acc_ai_appliance",
+                    sku: aia.sku,
+                    model: aia.model,
+                    name_id: aia.model + " (Akselerasi AI Kamera Third-Party)",
+                    name_en: aia.model + " (AI Acceleration for Third-Party Cameras)",
+                    qty: parseInt(acc.aiApplianceQty, 10),
+                    unit: "Unit",
+                    unitPriceUsd: aiaPUsd,
+                    unitPriceIdr: aiaPIdr,
+                    cogsUsd: aiaCUsd,
+                    cogsIdr: aiaCIdr,
+                    marginPct: Math.max(15.0, aia.marginPct || 25.0),
+                    category: "CCTV-SURVEILLANCE",
+                    subCategory: "AI-Analytics",
+                    notes_id: aia.desc_id,
+                    notes_en: aia.desc_en
+                });
+            }
+        }
+
+        if (acc.extenderQty > 0) {
+            var ext = findAcc("EXT-POE-IND-250M");
+            if (ext) {
+                var extPUsd = ext.unitPriceUsd || 0;
+                var extPIdr = ext.unitPriceIdr || Math.round(extPUsd * exchangeRate);
+                var extCUsd = ext.cogsUsd || Math.round((extPUsd * 0.75) * 100) / 100;
+                var extCIdr = Math.round(extCUsd * exchangeRate);
+                items.push({
+                    key: "acc_poe_extender",
+                    sku: ext.sku,
+                    model: ext.model,
+                    name_id: ext.model,
+                    name_en: ext.model,
+                    qty: parseInt(acc.extenderQty, 10),
+                    unit: "Unit",
+                    unitPriceUsd: extPUsd,
+                    unitPriceIdr: extPIdr,
+                    cogsUsd: extCUsd,
+                    cogsIdr: extCIdr,
+                    marginPct: Math.max(15.0, ext.marginPct || 25.0),
+                    category: "CCTV-SURVEILLANCE",
+                    subCategory: "Accessories",
+                    notes_id: ext.desc_id,
+                    notes_en: ext.desc_en
+                });
+            }
+        }
+
+        if (acc.fmcQty > 0) {
+            var fmc = findAcc("FMC-IND-POE-SFP");
+            if (fmc) {
+                var fmcPUsd = fmc.unitPriceUsd || 0;
+                var fmcPIdr = fmc.unitPriceIdr || Math.round(fmcPUsd * exchangeRate);
+                var fmcCUsd = fmc.cogsUsd || Math.round((fmcPUsd * 0.75) * 100) / 100;
+                var fmcCIdr = Math.round(fmcCUsd * exchangeRate);
+                items.push({
+                    key: "acc_fmc_poe",
+                    sku: fmc.sku,
+                    model: fmc.model,
+                    name_id: fmc.model,
+                    name_en: fmc.model,
+                    qty: parseInt(acc.fmcQty, 10),
+                    unit: "Unit",
+                    unitPriceUsd: fmcPUsd,
+                    unitPriceIdr: fmcPIdr,
+                    cogsUsd: fmcCUsd,
+                    cogsIdr: fmcCIdr,
+                    marginPct: Math.max(15.0, fmc.marginPct || 25.0),
+                    category: "CCTV-SURVEILLANCE",
+                    subCategory: "Accessories",
+                    notes_id: fmc.desc_id,
+                    notes_en: fmc.desc_en
+                });
+            }
+        }
+
+        if (acc.thirdPartyLicenseQty > 0) {
+            var licSku = (cctvState.vmsBrand === "avigilon_unity") ? "AVG-COMM-CAM-LIC" : "PEL-VX-1C-COMM";
+            var lic = findAcc(licSku);
+            if (lic) {
+                var licPUsd = lic.unitPriceUsd || 0;
+                var licPIdr = lic.unitPriceIdr || Math.round(licPUsd * exchangeRate);
+                var licCUsd = lic.cogsUsd || Math.round((licPUsd * 0.75) * 100) / 100;
+                var licCIdr = Math.round(licCUsd * exchangeRate);
+                items.push({
+                    key: "acc_third_party_license",
+                    sku: lic.sku,
+                    model: lic.model,
+                    name_id: lic.model,
+                    name_en: lic.model,
+                    qty: parseInt(acc.thirdPartyLicenseQty, 10),
+                    unit: "Channel",
+                    unitPriceUsd: licPUsd,
+                    unitPriceIdr: licPIdr,
+                    cogsUsd: licCUsd,
+                    cogsIdr: licCIdr,
+                    marginPct: Math.max(15.0, lic.marginPct || 25.0),
+                    category: "CCTV-SURVEILLANCE",
+                    subCategory: "VMS-License",
+                    notes_id: lic.desc_id,
+                    notes_en: lic.desc_en
+                });
+            }
+        }
+
         // Totals Calculation
         var subtotalUsd = 0;
         var subtotalIdr = 0;
@@ -1875,11 +2718,17 @@
         hddModels: HDD_MODELS,
         switchModels: SWITCH_MODELS,
         vmsLicenses: VMS_LICENSES,
+        sensorFormats: SENSOR_FORMATS,
+        doriStandards: DORI_STANDARDS,
+        accessories: ACCESSORIES,
 
         // Calculation API
         calcBitrate: calcBitrate,
         calcBandwidthAndStorage: calcBandwidthAndStorage,
         calcPoeAndSwitches: calcPoeAndSwitches,
+        calcDori: calcDori,
+        calcCableDrop: calcCableDrop,
+        auditInteroperability: auditInteroperability,
         calcCctvBoq: calcCctvBoq,
         exportCctvCsv: exportCctvCsv,
         generateSummaryText: generateSummaryText
@@ -1891,6 +2740,4 @@
     if (typeof module !== "undefined" && module.exports) {
         module.exports = CDPK_CCTV_ENGINE;
     }
-    global.CDPK_CCTV_ENGINE = CDPK_CCTV_ENGINE;
-
 })(typeof window !== "undefined" ? window : this);

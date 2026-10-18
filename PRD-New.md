@@ -380,22 +380,35 @@ Project Calculator - CDPK/
 
 Berdasarkan keselarasan portofolio produk PT Citradata Purnakharisma (Motorola Solutions, FMTCS Fiber DAS, Pelco Video Security, Avigilon Unity/Alta, dan i.safe MOBILE HazLoc), berikut adalah 4 pilar usulan pengembangan terencana:
 
-### 12.1. Fase 1: Modul CCTV Surveillance & NVR Planner (Open Multi-Brand: Pelco, Avigilon & Third-Party)
+### 12.1. Fase 1: Modul CCTV Surveillance & NVR Planner (Open Multi-Brand: Pelco, Avigilon, Milesight, VIGI & Third-Party)
 * **Status:** Selesai Diimplementasikan Penuh (*Completed in v8.6.0*).
 * **Engine Core:** `static/js/cctv_engine.js` (Exposes `window.CDPK_CCTV_ENGINE`).
-* **Objektif:** Mengintegrasikan perencanaan sistem kamera pengawas industri (CCTV Surveillance) ke dalam ekosistem CDPK System Planner dengan arsitektur **Open Multi-Brand & Universal ONVIF**. Selain mendukung katalog bawaan *flagship* CDPK (**Pelco** dan **Avigilon**), sistem juga terbuka untuk mereka pihak ketiga (**Axis, Hanwha Vision, Hikvision, Dahua, Bosch, Uniview**) maupun kamera kustom berbasis standar industri. Hal ini memastikan solusi turnkey CDPK dapat menyatukan Radio Komunikasi DMR, RFoF DAS, dan Video Security dari berbagai merk dalam satu proposal utuh.
+* **Objektif:** Mengintegrasikan perencanaan sistem kamera pengawas industri (CCTV Surveillance) ke dalam ekosistem CDPK System Planner dengan arsitektur **Open Multi-Brand & Universal ONVIF**. Selain mendukung katalog bawaan *flagship* CDPK (**Pelco**, **Avigilon**, dan **Ava Security** dari Motorola Solutions), sistem juga terbuka untuk brand pihak ketiga (**Milesight**, **VIGI by TP-Link**, **Axis**, **Hanwha Vision**, **Hikvision**, **Dahua**, **Bosch**, **Uniview**) maupun kamera kustom berbasis standar industri Profile S/T/M. Hal ini memastikan solusi turnkey CDPK dapat menyatukan Radio Komunikasi DMR, RFoF DAS, dan Video Security dari berbagai merk dalam satu proposal utuh.
 * **Fitur Utama:**
-  1. **Open Multi-Brand Camera Selector & Custom Camera Builder:**
-     * *Brand Presets:* Pilihan cepat merk terkemuka (**Pelco**, **Avigilon**, **Axis**, **Hanwha**, **Hikvision**, **Dahua**, **Bosch**, **Uniview**, serta **Generic ONVIF / Custom Brand**).
-     * *Custom Input:* Pengguna dapat mendefinisikan merk kustom, tipe model (Bullet, Dome, PTZ, Thermal), resolusi kustom, konsumsi watt PoE, serta harga satuan kustom (USD/IDR).
-  2. **Universal Bandwidth & Storage NVR Estimator:**
+  1. **Organisasi Katalog 2 Bagian & Multi-Filter Fleksibel:**
+     * **Section 1 (Partner Resmi Flagship PT CDPK - Prioritas Distribusi):** **Pelco**, **Avigilon Unity**, dan **Ava Alta Cloud** (Motorola Solutions) yang didukung garansi manufaktur resmi, ketersediaan suku cadang lokal, dan integrasi native tanpa celah.
+     * **Section 2 (Brand Pihak Ketiga & Terbuka via Universal ONVIF):** **Milesight**, **VIGI (by TP-Link)**, **Axis**, **Hanwha Vision**, **Hikvision**, **Dahua**, **Bosch**, **Uniview**, serta **Generic ONVIF / Custom Camera**.
+     * **Bilah Multi-Filter:** Filter interaktif berdasarkan Kategori Kerjasama (*Tier: Official vs Third-Party*), Merk (*12 Brand*), Tipe / Form Factor (*Bullet, Dome, PTZ, Multi-Sensor, Thermal, Hazloc Ex*), Proteksi Lingkungan (*Outdoor IP66/67/IK10, Indoor, ATEX Explosion-Proof Zone 1/21, Marine AISI 316L*), dan Resolusi Sensor (*1080p, 4MP, 5MP, 4K, 12MP, Thermal*).
+  2. **Mesin Audit Interoperabilitas & Kompatibilitas Multi-Brand:**
+     * Evaluasi otomatis armada kamera terhadap VMS dan infrastruktur jaringan.
+     * **Blocker Analitik AI Avigilon:** Kamera pihak ketiga (*Milesight, VIGI, Axis, Hikvision, Dahua*) yang dihubungkan ke VMS Avigilon Unity hanya dapat menyalurkan video mentah via ONVIF tanpa metadata analitik. Sistem otomatis memicu *Blocker Alert* dan tombol aksi 1-klik memasukkan **Avigilon AI Appliance (VMA-AIE2-8P)** ke BoQ aksesoris.
+     * **Kebutuhan Lisensi Channel VMS:** Otomatis mendeteksi dan menghitung lisensi resmi pihak ketiga (*AVG-COMM-CAM-LIC* pada Avigilon Unity atau *PEL-VX-1C-COMM* pada Pelco VideoXpert).
+     * **Peringatan Stuttering SmartCodec Proprietary:** Memperingatkan potensi frame stuttering saat fitur dinamis proprietary (*Hikvision H.265+, Dahua Smart H.265, VIGI Smart Coding, Milesight H.265+, Axis Zipstream*) direkam ke VMS cross-brand, dilengkapi tombol 1-klik beralih ke H.265 standar.
+     * **Blocker Alokasi Daya PoE Ultra 802.3bt:** Mencegah tripping switch standar jika terdapat kamera PTZ/Thermal/ExSite berdaya tinggi (60W–90W).
+  3. **Kalkulator Standar DORI & Panjang Fokus Lensa (EN 62676-4):**
+     * Menghitung Horizontal FoV (HFoV), Scene Width ($W_s$), dan densitas piksel ($PPM = \frac{W_{\text{pixel}} \times f}{d \times w_s}$) pada jarak target $d$ meter.
+     * Klasifikasi otomatis 4 tingkatan standar internasional **EN 62676-4**: **Detection** ($\ge 25\text{ PPM}$), **Observation** ($\ge 62\text{ PPM}$), **Recognition** ($\ge 125\text{ PPM}$), dan **Identification** ($\ge 250\text{ PPM}$), beserta jarak jangkauan maksimum per tingkatan.
+  4. **Kalkulator Jarak Kabel Cat6 & PoE Voltage Drop:**
+     * Menghitung resistansi loop kabel ($0.165\,\Omega/\text{m}$ untuk Cat6, $0.188\,\Omega/\text{m}$ untuk Cat5e), penurunan tegangan DC ($V_{\text{drop}} = I \times R_{\text{loop}}$), tegangan bersih di terminal kamera ($V_{\text{camera}} = V_{\text{PSE}} - V_{\text{drop}}$), dan rugi daya kabel ($P_{\text{loss}} = I^2 \times R_{\text{loop}}$).
+     * Rekomendasi otomatis perangkat transmisi: **Industrial Long-Reach PoE Extender** untuk jarak $101 - 250\text{ m}$, atau **Industrial PoE Fiber Media Converter** untuk jarak $> 250\text{ m}$ (melampaui batas fisik tembaga), serta alarm undervoltage jika $V_{\text{camera}} < V_{\text{min}}$.
+  5. **Universal Bandwidth & Storage NVR Estimator:**
      * Menghitung throughput *network bandwidth* (Mbps) dan total *storage* (TB) berdasarkan jumlah kamera gabungan multi-brand, resolusi (1080p 2MP, 4MP, 4K 8MP, 12MP, Bispectral Thermal), frame rate (10/15/25/30 fps), format kompresi (H.264, H.265, SmartCodec / Zipstream / WiseStream / HDSM, atau custom bitrate manual Mbps), dan masa retensi rekaman (30, 60, 90 hari).
      * Rekomendasi kapasitas NVR/VMS Server (kompatibel VMS multi-brand Pelco VideoXpert / Avigilon Unity / Generic NVR), konfigurasi RAID (RAID 5 / RAID 6), dan *storage overhead safety factor* 20%.
-  3. **Kalkulator Daya PoE & Industrial Network Switch Sizing:**
+  6. **Kalkulator Daya PoE & Industrial Network Switch Sizing:**
      * Menghitung total daya konsumsi PoE (IEEE 802.3af 15.4W, 802.3at PoE+ 30W, dan 802.3bt PoE++ 60W/90W untuk kamera PTZ luar ruang dengan wiper & heater).
      * Rekomendasi jumlah port (8/16/24/48 ports) dan tipe Industrial Core/Distribution PoE Switch yang dibutuhkan.
-  4. **Bridge ke Master BoQ CDPK:**
-     * Seluruh item kamera (baik Pelco, Avigilon, maupun brand pihak ketiga), lisensi VMS (Channel Base License / VMS Extension), NVR, dan Industrial Switch langsung di-inject ke BoQ gabungan bersama DMR & DAS dengan perhitungan live FX, COGS, dan margin guardrail.
+  7. **Bridge ke Master BoQ CDPK:**
+     * Seluruh item kamera (baik Pelco, Avigilon, maupun brand pihak ketiga), lisensi VMS (Channel Base License / VMS Extension), NVR, switch PoE, dan aksesoris sistem (AI Appliance, PoE Extender, FMC SFP) langsung di-inject ke BoQ gabungan bersama DMR & DAS dengan perhitungan live FX, COGS, dan margin guardrail $\ge 15\%$.
 
 ### 12.2. Fase 2: Formal Commercial Quotation Engine (Surat Penawaran Resmi PT CDPK)
 * **Objektif:** Menjembatani hasil kalkulasi engineering langsung menjadi dokumen komersial legal siap kirim ke meja direksi atau tim procurement pelanggan.

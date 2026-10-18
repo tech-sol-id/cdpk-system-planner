@@ -427,7 +427,65 @@ window.CDPK_I18N = {
         cctvCopySummary: "Salin Ringkasan Teknis",
         cctvResetDefaults: "Reset CCTV (Standar)",
         cctvResetZero: "Kosongkan (0)",
-        cctvOpenPlannerBtn: "Buka di CCTV Planner →"
+        cctvOpenPlannerBtn: "Buka di CCTV Planner →",
+
+        // DORI Lens & Distance Calculator
+        cctvDoriTitle: "Kalkulator Standar DORI & Panjang Fokus Lensa (EN 62676-4)",
+        cctvDoriSubtitle: "Analisis densitas piksel (PPM) dan verifikasi jarak jangkauan lensa kamera terhadap standar internasional EN 62676-4",
+        cctvDoriTargetDistance: "Jarak Target ke Objek (meter)",
+        cctvDoriFocalLength: "Panjang Fokus Lensa (f mm)",
+        cctvDoriSensorFormat: "Format Ukuran Sensor Optik",
+        cctvDoriResolution: "Resolusi Kamera",
+        cctvDoriHfov: "Sudut Pandang Horizontal (HFoV)",
+        cctvDoriSceneWidth: "Lebar Bidang Pandang (Scene Width)",
+        cctvDoriCurrentPpm: "Densitas Piksel di Target (PPM)",
+        cctvDoriActiveTier: "Klasifikasi Kemampuan Deteksi Aktif",
+        cctvDoriMaxRanges: "Jangkauan Jarak Maksimum per Standar DORI",
+        cctvDoriDetection: "Deteksi (>= 25 PPM)",
+        cctvDoriObservation: "Observasi (>= 62 PPM)",
+        cctvDoriRecognition: "Pengenalan Wajah (>= 125 PPM)",
+        cctvDoriIdentification: "Identifikasi Forensik (>= 250 PPM)",
+
+        // Cable Length & PoE Drop Calculator
+        cctvCableTitle: "Kalkulator Jarak Kabel Cat6 & PoE Voltage Drop",
+        cctvCableSubtitle: "Verifikasi kestabilan transmisi sinyal data tembaga Ethernet dan drop tegangan DC untuk mencegah reboot mendadak",
+        cctvCableLength: "Panjang Tarikan Kabel (meter)",
+        cctvCableWatts: "Daya Kamera Beban Puncak (Watt)",
+        cctvCableCategory: "Kategori Kabel Jaringan",
+        cctvCablePseVoltage: "Tegangan Output Port Switch (PSE Volt)",
+        cctvCableLoopRes: "Total Resistansi Loop Kabel (Ohm)",
+        cctvCableVdrop: "Penurunan Tegangan (Voltage Drop)",
+        cctvCableVcam: "Tegangan Bersih di Terminal Kamera",
+        cctvCableVmin: "Tegangan Minimum IEEE Diperlukan",
+        cctvCableLossWatts: "Disfungsi Daya Kabel / Loss (Watt)",
+        cctvCableTotalDraw: "Total Konsumsi Daya dari Switch (Watt)",
+
+        // Interoperability & System Audit Engine
+        cctvAuditTitle: "Audit Interoperabilitas & Integrasi Multi-Merk",
+        cctvAuditSubtitle: "Evaluasi otomatis kepatuhan protokol ONVIF, kebutuhan lisensi VMS resmi, appliance AI, dan proteksi daya PoE",
+        cctvAuditCompatible: "Armada Kamera & VMS Terintegrasi Sempurna (100% Siap Deploy)",
+        cctvAuditIssuesDetected: "Perhatian Arsitektur: Ditemukan Blocker / Pengingat Integrasi",
+        cctvAuditFixBtn: "Perbaiki Otomatis",
+
+        // Catalog Sections & Advanced Filters
+        cctvCatalogOfficialHeader: "⭐ Partner Resmi Flagship PT CDPK (Prioritas Distribusi)",
+        cctvCatalogOfficialDesc: "Lini produk unggulan resmi Motorola Solutions (Pelco, Avigilon Unity, Ava Cloud) dengan dukungan teknis purna jual penuh, garansi manufaktur resmi, dan integrasi native tanpa celah.",
+        cctvCatalogThirdPartyHeader: "🌐 Brand Pihak Ketiga & Terbuka (Open Multi-Brand via Universal ONVIF)",
+        cctvCatalogThirdPartyDesc: "Katalog kamera multi-merk pihak ketiga terkemuka (Milesight, VIGI by TP-Link, Axis, Hanwha Vision, Hikvision, Dahua, Bosch, Uniview) dan generic ONVIF yang kompatibel melalui profil standar industri.",
+        cctvFilterTier: "Kategori Kerjasama",
+        cctvFilterTierAll: "Semua Kategori Kerjasama",
+        cctvFilterTierOfficial: "⭐ Partner Resmi CDPK (Pelco, Avigilon, Ava)",
+        cctvFilterTierThirdParty: "🌐 Pihak Ketiga & ONVIF Terbuka",
+        cctvFilterType: "Form Factor / Tipe Bodi",
+        cctvFilterTypeAll: "Semua Form Factor",
+        cctvFilterEnv: "Proteksi Lingkungan (Ex / Marine / IP)",
+        cctvFilterEnvAll: "Semua Lingkungan Operasional",
+        cctvFilterEnvOutdoor: "Outdoor IP66 / IP67 / IK10",
+        cctvFilterEnvIndoor: "Indoor / Kantor",
+        cctvFilterEnvEx: "Anti-Ledakan ATEX / IECEx (Migas/Tambang)",
+        cctvFilterEnvMarine: "Bodi Stainless Steel AISI 316L (Laut/Kimia)",
+        cctvFilterRes: "Resolusi Sensor",
+        cctvFilterResAll: "Semua Resolusi Sensor"
     },
     en: {
         appTitle: "CDPK System Planner",
@@ -856,7 +914,65 @@ window.CDPK_I18N = {
         cctvCopySummary: "Copy Engineering Summary",
         cctvResetDefaults: "Reset CCTV (Defaults)",
         cctvResetZero: "Clear to 0",
-        cctvOpenPlannerBtn: "Open in CCTV Planner →"
+        cctvOpenPlannerBtn: "Open in CCTV Planner →",
+
+        // DORI Lens & Distance Calculator
+        cctvDoriTitle: "DORI Standard & Lens Focal Length Calculator (EN 62676-4)",
+        cctvDoriSubtitle: "Pixel density (PPM) analysis and optical lens coverage verification compliant with international standard EN 62676-4",
+        cctvDoriTargetDistance: "Target Distance to Subject (meters)",
+        cctvDoriFocalLength: "Lens Focal Length (f mm)",
+        cctvDoriSensorFormat: "Optical Sensor Format Size",
+        cctvDoriResolution: "Camera Resolution",
+        cctvDoriHfov: "Horizontal Field of View (HFoV)",
+        cctvDoriSceneWidth: "Scene Field Width at Distance",
+        cctvDoriCurrentPpm: "Pixel Density at Target (PPM)",
+        cctvDoriActiveTier: "Active Detection Performance Tier",
+        cctvDoriMaxRanges: "Maximum Range Limits per DORI Standard",
+        cctvDoriDetection: "Detection (>= 25 PPM)",
+        cctvDoriObservation: "Observation (>= 62 PPM)",
+        cctvDoriRecognition: "Facial Recognition (>= 125 PPM)",
+        cctvDoriIdentification: "Forensic Identification (>= 250 PPM)",
+
+        // Cable Length & PoE Drop Calculator
+        cctvCableTitle: "Cat6 Cable Run Length & PoE Voltage Drop Calculator",
+        cctvCableSubtitle: "Verify copper Ethernet transmission physics and DC voltage drop to prevent cyclic camera reboots and packet loss",
+        cctvCableLength: "Cable Run Distance (meters)",
+        cctvCableWatts: "Peak Camera Power Draw (Watts)",
+        cctvCableCategory: "Network Cable Category",
+        cctvCablePseVoltage: "Switch Port Voltage (PSE Volts)",
+        cctvCableLoopRes: "Total Cable Loop Resistance (Ohms)",
+        cctvCableVdrop: "Voltage Drop Along Run",
+        cctvCableVcam: "Clean Voltage at Camera Terminal",
+        cctvCableVmin: "Required IEEE Minimum Voltage",
+        cctvCableLossWatts: "Cable Heat Dissipation / Loss (Watts)",
+        cctvCableTotalDraw: "Total Power Drawn from Switch (Watts)",
+
+        // Interoperability & System Audit Engine
+        cctvAuditTitle: "Multi-Brand Interoperability & Integration Audit",
+        cctvAuditSubtitle: "Automated verification of ONVIF compliance, official VMS licensing, AI appliances, and PoE power budgets",
+        cctvAuditCompatible: "Camera Fleet & VMS Perfectly Compatible (100% Ready for Deployment)",
+        cctvAuditIssuesDetected: "Architectural Alerts: Integration Blockers / Reminders Detected",
+        cctvAuditFixBtn: "Auto-Resolve",
+
+        // Catalog Sections & Advanced Filters
+        cctvCatalogOfficialHeader: "⭐ PT CDPK Official Flagship Partners (Distribution Priority)",
+        cctvCatalogOfficialDesc: "Flagship solutions from Motorola Solutions (Pelco, Avigilon Unity, Ava Cloud) backed by full official warranty, local SLA support, and zero-compromise native integration.",
+        cctvCatalogThirdPartyHeader: "🌐 Third-Party & Open Brands (Universal ONVIF Compliant)",
+        cctvCatalogThirdPartyDesc: "Leading commercial multi-brand cameras (Milesight, VIGI by TP-Link, Axis, Hanwha Vision, Hikvision, Dahua, Bosch, Uniview) and generic ONVIF compatible via open industry profiles.",
+        cctvFilterTier: "Partnership Tier",
+        cctvFilterTierAll: "All Partnership Tiers",
+        cctvFilterTierOfficial: "⭐ CDPK Official Partners (Pelco, Avigilon, Ava)",
+        cctvFilterTierThirdParty: "🌐 Third-Party & Open ONVIF Brands",
+        cctvFilterType: "Form Factor / Housing",
+        cctvFilterTypeAll: "All Form Factors",
+        cctvFilterEnv: "Environmental Rating (Ex / Marine / IP)",
+        cctvFilterEnvAll: "All Environments",
+        cctvFilterEnvOutdoor: "Outdoor IP66 / IP67 / IK10",
+        cctvFilterEnvIndoor: "Indoor / Corporate Office",
+        cctvFilterEnvEx: "Explosion-Proof ATEX / IECEx (HazLoc Zone 1/21)",
+        cctvFilterEnvMarine: "AISI 316L Stainless Steel (Marine/Chemical)",
+        cctvFilterRes: "Sensor Resolution",
+        cctvFilterResAll: "All Resolutions"
     }
 };
 
