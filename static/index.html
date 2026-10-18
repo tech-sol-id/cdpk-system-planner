@@ -444,7 +444,6 @@
                     <button @click="fxModalOpen = true"
                             class="flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-bold transition shadow-xs cursor-pointer"
                             :class="{
-                                'bg-slate-900/60 border-white/25 text-sky-100': fxConfig.mode === 'finance',
                                 'bg-emerald-950/70 border-emerald-400 text-emerald-200': fxConfig.mode === 'live',
                                 'bg-amber-950/70 border-amber-400 text-amber-200': fxConfig.mode === 'manual'
                             }"
@@ -516,21 +515,19 @@
                     <button @click="fxModalOpen = true"
                             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition shadow-xs cursor-pointer"
                             :class="{
-                                'bg-slate-900/60 hover:bg-slate-900/90 border-white/25 text-sky-100': fxConfig.mode === 'finance',
                                 'bg-emerald-950/70 hover:bg-emerald-900 border-emerald-400 text-emerald-200': fxConfig.mode === 'live',
                                 'bg-amber-950/70 hover:bg-amber-900 border-amber-400 text-amber-200': fxConfig.mode === 'manual'
                             }"
-                            :title="lang === 'en' ? 'Click to open Global FX Controller & Finance Advisory' : 'Klik untuk membuka Pengaturan Kurs Valas & Asisten Finansial Global'">
+                            :title="lang === 'en' ? 'Click to open Global FX Controller & Currency Assistant' : 'Klik untuk membuka Pengaturan Kurs Valas Global'">
                         <span class="text-sm">💱</span>
-                        <span class="hidden xl:inline text-[11px] opacity-80" x-text="fxConfig.mode === 'finance' ? 'Finance:' : (fxConfig.mode === 'live' ? 'Live:' : 'Buffer:')"></span>
+                        <span class="hidden xl:inline text-[11px] opacity-80" x-text="fxConfig.mode === 'live' ? 'Live:' : 'Manual:'"></span>
                         <span class="font-extrabold tracking-tight text-xs" x-text="'Rp ' + (fxConfig.effectiveRate || exchangeRate).toLocaleString('id-ID')"></span>
                         <span class="text-[9px] px-1 py-0.2 rounded font-black uppercase"
                               :class="{
-                                  'bg-blue-400 text-slate-950': fxConfig.mode === 'finance',
                                   'bg-emerald-400 text-slate-950': fxConfig.mode === 'live',
                                   'bg-amber-400 text-slate-950': fxConfig.mode === 'manual'
                               }"
-                              x-text="fxConfig.mode === 'finance' ? 'SSOT' : (fxConfig.mode === 'live' ? 'Live' : 'Custom')"></span>
+                              x-text="fxConfig.mode === 'live' ? 'Live' : 'Manual'"></span>
                     </button>
 
                     <!-- Sync Cloud Pricelist Button -->
@@ -2120,6 +2117,135 @@
                             </template>
                         </div>
                         <span class="text-slate-500 italic text-[10px]" x-text="t('legendMapTip') || 'Klik marker R1/R2 pada peta untuk rincian teknis'"></span>
+                    </div>
+
+                    <!-- ═══════════════════════════════════════════════════════════ -->
+                    <!-- FITUR C: PROFIL ELEVASI TANAH DIGITAL (DEM) & FRESNEL ZONE -->
+                    <!-- ═══════════════════════════════════════════════════════════ -->
+                    <div class="mt-4 p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 text-white shadow-lg space-y-4">
+                        <!-- Header & Controls -->
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-lg">🏔️</span>
+                                    <h4 class="font-black text-sm text-sky-400">
+                                        Profil Elevasi Tanah (DEM) &amp; Clearance Zona Fresnel Ke-1
+                                    </h4>
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-sky-950 text-sky-300 border border-sky-800">
+                                        Fase 2 Fitur C
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-0.5">
+                                    Analisis kontur tanah digital antara repeater (Inter-Site Link) atau Repeater ke Probe Mobile dengan kelengkungan bumi (k = 4/3) &amp; zona Fresnel pertama.
+                                </p>
+                            </div>
+
+                            <!-- Link Endpoints Selectors -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <!-- Site A -->
+                                <div class="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700 text-xs">
+                                    <span class="text-[10px] text-slate-400 font-bold">Site A:</span>
+                                    <select x-model.number="fresnelLink.siteAId"
+                                            class="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer">
+                                        <template x-for="s in gisSites" :key="s.id">
+                                            <option :value="s.id" class="bg-slate-900 text-white" x-text="s.name"></option>
+                                        </template>
+                                    </select>
+                                </div>
+
+                                <span class="text-slate-500 font-black">➔</span>
+
+                                <!-- Target Mode: Site B or Probe -->
+                                <div class="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700 text-xs">
+                                    <span class="text-[10px] text-slate-400 font-bold">Target:</span>
+                                    <select x-model="fresnelLink.targetMode"
+                                            class="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer">
+                                        <option value="site" class="bg-slate-900 text-white">Repeater Site</option>
+                                        <option value="probe" class="bg-slate-900 text-white">Probe Mobile</option>
+                                    </select>
+                                </div>
+
+                                <!-- Site B Selector (if targetMode === 'site') -->
+                                <template x-if="fresnelLink.targetMode === 'site'">
+                                    <div class="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700 text-xs">
+                                        <span class="text-[10px] text-slate-400 font-bold">Site B:</span>
+                                        <select x-model.number="fresnelLink.siteBId"
+                                                class="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer">
+                                            <template x-for="s in gisSites" :key="'target-' + s.id">
+                                                <option :value="s.id" class="bg-slate-900 text-white" x-text="s.name"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                </template>
+
+                                <!-- Action Button: Run Analysis -->
+                                <button type="button" @click="runFresnelAnalysis()" :disabled="fresnelLink.loading"
+                                        class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 active:scale-95 text-white font-black text-xs transition flex items-center gap-1.5 shadow-md cursor-pointer disabled:opacity-50">
+                                    <span x-text="fresnelLink.loading ? '⏳ Menghitung...' : '⚡ Hitung LoS &amp; Fresnel'"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- KPI Summary Cards (When Result is Available) -->
+                        <template x-if="fresnelLink.result">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                <!-- Card 1: Jarak Link -->
+                                <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700">
+                                    <span class="text-[10px] text-slate-400 block font-bold">Jarak Lintasan (D)</span>
+                                    <div class="text-sm font-black text-white mt-0.5" x-text="fresnelLink.result.totalDistKm + ' km'"></div>
+                                    <span class="text-[9px] text-slate-400 block mt-0.5" x-text="fresnelLink.result.freqMhz + ' MHz Spektrum'"></span>
+                                </div>
+
+                                <!-- Card 2: Status Clearance -->
+                                <div class="p-2.5 rounded-xl border"
+                                     :class="{
+                                         'bg-emerald-950/60 border-emerald-700 text-emerald-200': fresnelLink.result.status === 'clear',
+                                         'bg-amber-950/60 border-amber-700 text-amber-200': fresnelLink.result.status === 'subpath',
+                                         'bg-rose-950/60 border-rose-700 text-rose-200': fresnelLink.result.status === 'blocked'
+                                     }">
+                                    <span class="text-[10px] block font-bold opacity-80">Status Propagasi</span>
+                                    <div class="text-xs font-black mt-0.5 truncate" x-text="fresnelLink.result.statusLabel"></div>
+                                    <span class="text-[9px] block mt-0.5 opacity-80" x-text="fresnelLink.result.statusDesc"></span>
+                                </div>
+
+                                <!-- Card 3: Min Clearance -->
+                                <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700">
+                                    <span class="text-[10px] text-slate-400 block font-bold">Clearance Terkritis</span>
+                                    <div class="text-sm font-black mt-0.5"
+                                         :class="fresnelLink.result.worstClearancePct >= 60 ? 'text-emerald-400' : (fresnelLink.result.worstClearancePct >= 0 ? 'text-amber-400' : 'text-rose-400')"
+                                         x-text="fresnelLink.result.worstClearanceM + ' m (' + fresnelLink.result.worstClearancePct + '% F1)'">
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 block mt-0.5">Standar ITU-R: &ge; 60% F1</span>
+                                </div>
+
+                                <!-- Card 4: Max Fresnel Radius -->
+                                <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700">
+                                    <span class="text-[10px] text-slate-400 block font-bold">Radius Maksimal F1</span>
+                                    <div class="text-sm font-black text-sky-400 mt-0.5" x-text="fresnelLink.result.maxFresnelRadiusM + ' m'"></div>
+                                    <span class="text-[9px] text-slate-400 block mt-0.5">Di titik tengah lintasan</span>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Canvas 2D Cross Section Chart -->
+                        <div class="relative bg-slate-950 rounded-xl border border-slate-800 overflow-hidden p-2">
+                            <canvas id="cdpkFresnelCanvas" class="w-full h-64 block"></canvas>
+                            <template x-if="!fresnelLink.result && !fresnelLink.loading">
+                                <div class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xs text-center p-4">
+                                    <span class="text-3xl mb-2">📡</span>
+                                    <span class="text-xs font-bold text-slate-300">Siap Menganalisis Profil Elevasi &amp; Fresnel</span>
+                                    <span class="text-[10px] text-slate-500 mt-1 max-w-sm">
+                                        Pilih Site A dan Site Target di atas, lalu klik <b>Hitung LoS &amp; Fresnel</b> untuk menampilkan grafik penampang 2D elevasi tanah digital.
+                                    </span>
+                                </div>
+                            </template>
+                            <template x-if="fresnelLink.loading">
+                                <div class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xs text-center p-4">
+                                    <div class="w-8 h-8 border-3 border-sky-400 border-t-transparent rounded-full animate-spin mb-2"></div>
+                                    <span class="text-xs font-bold text-sky-300">Mengambil Data Elevasi DEM &amp; Menghitung Zona Fresnel...</span>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
@@ -7284,84 +7410,60 @@
                     </div>
                 </div>
 
-                <!-- 2. Three FX Mode Cards -->
+                <!-- 2. Two FX Mode Cards (Live Spot vs Manual Input) -->
                 <div>
                     <label class="block font-extrabold text-slate-900 text-xs mb-2">
                         Pilih Sumber Acuan Nilai Tukar (Active FX Mode):
                     </label>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                        <!-- Mode 1: Kurs Resmi Finance (SSOT) -->
-                        <div @click="setFxMode('finance')"
-                             :class="fxConfig.mode === 'finance' ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'"
-                             class="p-3.5 rounded-xl border transition cursor-pointer flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-xs font-black text-blue-950 flex items-center gap-1">
-                                        <span>🏛️</span>
-                                        <span>Kurs Finance</span>
-                                    </span>
-                                    <span class="text-[9px] font-black px-1.5 py-0.2 rounded uppercase bg-blue-200 text-blue-900">SSOT</span>
-                                </div>
-                                <div class="text-base font-black text-slate-900" x-text="'Rp ' + (fxConfig.financeRate || 16200).toLocaleString('id-ID')"></div>
-                                <p class="text-[10px] text-slate-500 mt-1 leading-snug">
-                                    Kurs patokan resmi Finance PT Citradata Purnakharisma dari Master Google Sheets. Aman &amp; tidak fluktuatif.
-                                </p>
-                            </div>
-                            <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
-                                <span class="font-bold text-blue-700" x-show="fxConfig.mode === 'finance'">● Aktif Digunakan</span>
-                                <span class="text-slate-400" x-show="fxConfig.mode !== 'finance'">Klik untuk pilih</span>
-                            </div>
-                        </div>
-
-                        <!-- Mode 2: Kurs Pasar Spot Realtime -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Mode 1: Kurs Pasar Spot Realtime (Default) -->
                         <div @click="setFxMode('live')"
                              :class="fxConfig.mode === 'live' ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'"
-                             class="p-3.5 rounded-xl border transition cursor-pointer flex flex-col justify-between">
+                             class="p-4 rounded-xl border transition cursor-pointer flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-xs font-black text-emerald-950 flex items-center gap-1">
+                                    <span class="text-xs font-black text-emerald-950 flex items-center gap-1.5">
                                         <span>🌐</span>
                                         <span>Pasar Realtime</span>
                                     </span>
-                                    <span class="text-[9px] font-black px-1.5 py-0.2 rounded uppercase bg-emerald-200 text-emerald-900">Spot</span>
+                                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded uppercase bg-emerald-200 text-emerald-900">Default Spot</span>
                                 </div>
-                                <div class="text-base font-black text-slate-900" x-text="'Rp ' + (fxConfig.liveRate || 16200).toLocaleString('id-ID')"></div>
-                                <div class="text-[10px] font-bold mt-1"
-                                     :class="fxConfig.variancePct >= 0 ? 'text-amber-700' : 'text-emerald-700'"
-                                     x-text="(fxConfig.variancePct >= 0 ? '+' : '') + fxConfig.variancePct + '% vs Finance (' + (fxConfig.varianceIdr >= 0 ? '+' : '') + 'Rp ' + Math.round(fxConfig.varianceIdr).toLocaleString('id-ID') + ')'">
-                                </div>
-                                <p class="text-[9px] text-slate-500 mt-1 leading-snug truncate" :title="fxConfig.sourceName" x-text="fxConfig.sourceName"></p>
+                                <div class="text-xl font-black text-slate-900" x-text="'Rp ' + (fxConfig.liveRate || 18000).toLocaleString('id-ID')"></div>
+                                <p class="text-[10px] text-slate-500 mt-1 leading-snug">
+                                    Mengacu langsung ke kurs pasar spot valas realtime terkini. Diperbarui secara otomatis.
+                                </p>
+                                <p class="text-[9px] text-slate-400 mt-1 truncate" :title="fxConfig.sourceName" x-text="fxConfig.sourceName"></p>
                             </div>
-                            <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                            <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
                                 <span class="font-bold text-emerald-700" x-show="fxConfig.mode === 'live'">● Aktif Digunakan</span>
                                 <span class="text-slate-400" x-show="fxConfig.mode !== 'live'">Klik untuk pilih</span>
                                 <button type="button" @click.stop="refreshLiveFxRate()"
                                         :disabled="fxConfig.isLoading"
-                                        class="px-1.5 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-[9px] transition cursor-pointer"
+                                        class="px-2 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-[10px] transition cursor-pointer"
                                         title="Refresh kurs spot dari API">
-                                    <span x-text="fxConfig.isLoading ? '...' : '🔄 Refresh'"></span>
+                                    <span x-text="fxConfig.isLoading ? '...' : '🔄 Refresh Spot'"></span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Mode 3: Kurs Khusus Proyek (Manual Override) -->
+                        <!-- Mode 2: Manual Input (Min. Rp 16.000) -->
                         <div @click="setFxMode('manual')"
                              :class="fxConfig.mode === 'manual' ? 'border-amber-600 bg-amber-50/70 ring-2 ring-amber-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'"
-                             class="p-3.5 rounded-xl border transition cursor-pointer flex flex-col justify-between">
+                             class="p-4 rounded-xl border transition cursor-pointer flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-xs font-black text-amber-950 flex items-center gap-1">
+                                    <span class="text-xs font-black text-amber-950 flex items-center gap-1.5">
                                         <span>✏️</span>
-                                        <span>Manual Proyek</span>
+                                        <span>Manual Input</span>
                                     </span>
-                                    <span class="text-[9px] font-black px-1.5 py-0.2 rounded uppercase bg-amber-200 text-amber-900">Custom</span>
+                                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded uppercase bg-amber-200 text-amber-900">Custom</span>
                                 </div>
-                                <div class="text-base font-black text-slate-900" x-text="'Rp ' + (fxConfig.manualRate || 16500).toLocaleString('id-ID')"></div>
+                                <div class="text-xl font-black text-slate-900" x-text="'Rp ' + (fxConfig.manualRate || 18000).toLocaleString('id-ID')"></div>
                                 <p class="text-[10px] text-slate-500 mt-1 leading-snug">
-                                    Nilai tukar khusus untuk buffer risiko tender atau audit PO lampau. Hanya berlaku di sesi proyek ini.
+                                    Input nilai tukar manual khusus untuk mitigasi risiko fluktuasi tender. Nilai tidak dapat lebih rendah dari Rp 16.000.
                                 </p>
                             </div>
-                            <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                            <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
                                 <span class="font-bold text-amber-700" x-show="fxConfig.mode === 'manual'">● Aktif Digunakan</span>
                                 <span class="text-slate-400" x-show="fxConfig.mode !== 'manual'">Klik untuk pilih</span>
                             </div>
@@ -7373,36 +7475,36 @@
                 <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                         <div>
-                            <span class="font-bold text-slate-800 text-xs">Input Kurs Kustom / Buffer Tender:</span>
-                            <span class="text-[11px] text-slate-500 block">Ketik angka langsung atau gunakan tombol pengaman fluktuasi valas cepat</span>
+                            <span class="font-bold text-slate-800 text-xs">Nilai Manual Input (Min. Rp 16.000):</span>
+                            <span class="text-[11px] text-slate-500 block">Ketik angka langsung (otomatis divalidasi &ge; Rp 16.000) atau klik Quick Buffer</span>
                         </div>
                         <div class="flex items-center gap-1.5 w-full sm:w-auto">
                             <span class="text-xs font-bold text-slate-600">Rp</span>
-                            <input type="number" step="50" min="1000" x-model.number="fxConfig.manualRate"
+                            <input type="number" step="50" min="16000" x-model.number="fxConfig.manualRate"
                                    @input="setManualFxRate(fxConfig.manualRate)"
-                                   class="w-32 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-black text-right text-slate-900 text-sm focus:border-indigo-600 focus:outline-none" />
+                                   class="w-36 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-black text-right text-slate-900 text-sm focus:border-indigo-600 focus:outline-none" />
                             <span class="text-xs font-bold text-slate-600">/ USD</span>
                         </div>
                     </div>
 
-                    <!-- Quick Risk Buffers -->
+                    <!-- Quick Risk Buffers based on Live Rate -->
                     <div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-200/70">
-                        <span class="text-[10px] font-bold text-slate-500">Quick Buffer:</span>
+                        <span class="text-[10px] font-bold text-slate-500">Quick Buffer (dari Realtime):</span>
                         <button type="button" @click="applyQuickFxBuffer(1)"
                                 class="px-2 py-1 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[10px] transition cursor-pointer">
-                            +1% Buffer (Rp <span x-text="Math.round((fxConfig.liveRate || fxConfig.financeRate) * 1.01).toLocaleString('id-ID')"></span>)
+                            +1% Buffer (Rp <span x-text="Math.max(16000, Math.round((fxConfig.liveRate || 18000) * 1.01)).toLocaleString('id-ID')"></span>)
                         </button>
                         <button type="button" @click="applyQuickFxBuffer(2)"
                                 class="px-2 py-1 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[10px] transition cursor-pointer">
-                            +2% Tender Shield (Rp <span x-text="Math.round((fxConfig.liveRate || fxConfig.financeRate) * 1.02).toLocaleString('id-ID')"></span>)
+                            +2% Tender Shield (Rp <span x-text="Math.max(16000, Math.round((fxConfig.liveRate || 18000) * 1.02)).toLocaleString('id-ID')"></span>)
                         </button>
                         <button type="button" @click="applyQuickFxBuffer(5)"
                                 class="px-2 py-1 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[10px] transition cursor-pointer">
-                            +5% Safe Margin (Rp <span x-text="Math.round((fxConfig.liveRate || fxConfig.financeRate) * 1.05).toLocaleString('id-ID')"></span>)
+                            +5% Safe Margin (Rp <span x-text="Math.max(16000, Math.round((fxConfig.liveRate || 18000) * 1.05)).toLocaleString('id-ID')"></span>)
                         </button>
-                        <button type="button" @click="setManualFxRate(fxConfig.financeRate); setFxMode('finance')"
+                        <button type="button" @click="setManualFxRate(fxConfig.liveRate || 18000); setFxMode('live')"
                                 class="px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-[10px] transition cursor-pointer ml-auto">
-                            Reset ke Kurs Finance
+                            Reset ke Pasar Realtime
                         </button>
                     </div>
                 </div>

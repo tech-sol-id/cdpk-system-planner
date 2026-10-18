@@ -403,26 +403,29 @@ window.cdpkSystemPlannerApp = function () {
         // ─── Module 2: BoQ & System Pricing Configurator State ───────────
         exportMode: 'commercial', // 'commercial' | 'technical'
         currency: 'IDR', // 'IDR' | 'USD'
-        exchangeRate: 16200,
+        exchangeRate: 18000,
         fxModalOpen: false,
         fxConfig: {
             baseCurrency: 'USD',
             targetCurrency: 'IDR',
             displayMode: localStorage.getItem('cdpk_fx_display_mode') || 'dual', // 'dual' ($ + Rp) | 'idr' | 'usd'
-            mode: localStorage.getItem('cdpk_fx_mode') || 'finance', // 'finance' (SSOT) | 'live' (Spot Market) | 'manual' (Project Override)
+            mode: (() => {
+                const s = localStorage.getItem('cdpk_fx_mode');
+                return s === 'manual' ? 'manual' : 'live'; // Default is live (realtime)
+            })(),
             financeRate: 16200,
-            liveRate: 16200,
-            manualRate: 16500,
-            effectiveRate: 16200,
+            liveRate: 18000,
+            manualRate: 18000,
+            effectiveRate: 18000,
             varianceIdr: 0,
             variancePct: 0.0,
             isVarianceSignificant: false,
             lastUpdated: null,
-            sourceName: 'Finance Master (Google Sheets)',
-            cacheStatus: 'finance',
+            sourceName: 'ExchangeRate-API / Global Spot Feed',
+            cacheStatus: 'live',
             isLoading: false,
             customBufferPercent: 0,
-            stressTestRate: 16800,
+            stressTestRate: 18500,
             financeDisclaimer: {
                 id: 'Seluruh estimasi konversi valas (USD/IDR) bersifat indikatif teknis. Nilai tukar resmi, HPP modal, dan penawaran komersial final wajib dikonfirmasi ke Divisi Finance PT Citradata Purnakharisma sebelum rilis penawaran resmi atau penandatanganan Kontrak/PO.',
                 en: 'All foreign exchange conversions (USD/IDR) are indicative technical references. Official exchange rates, baseline COGS, and commercial terms must be confirmed in writing with PT Citradata Purnakharisma Finance Division prior to formal quotation issuance or PO signing.'
@@ -623,7 +626,7 @@ window.cdpkSystemPlannerApp = function () {
         googleDomainMismatch: false,
         gisMobileProbeCollapsed: true,
 
-        // ─── GIS Coverage Advanced Features (Opsi 1 Fase 2: Fitur A & B) ──
+        // ─── GIS Coverage Advanced Features (Opsi 1 Fase 2: Fitur A, B, C) ──
         gisWiupLayer: null,
         gisWiupDarkSpotLayer: null,
         gisWiupData: null,
@@ -633,6 +636,19 @@ window.cdpkSystemPlannerApp = function () {
         showWiupBoundary: true,
         showWiupDarkSpots: true,
         gisExportingKml: false,
+
+        // Fitur C: DEM Elevation Profile & 1st Fresnel Zone State
+        fresnelLink: {
+            siteAId: 1,
+            targetMode: 'site', // 'site' | 'probe'
+            siteBId: 2,
+            towerH1: 45,
+            towerH2: 45,
+            sampleCount: 35,
+            loading: false,
+            result: null,
+            error: ''
+        },
 
         // ─── Team User Management State (Admin Only) ────────────────────
         userMgmtModalOpen: false,
@@ -2607,31 +2623,31 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         applyFxRateByMode() {
-            if (this.fxConfig.mode === 'finance') {
-                this.fxConfig.effectiveRate = this.fxConfig.financeRate;
-            } else if (this.fxConfig.mode === 'live') {
-                this.fxConfig.effectiveRate = this.fxConfig.liveRate;
+            if (this.fxConfig.mode === 'live') {
+                this.fxConfig.effectiveRate = this.fxConfig.liveRate || 18000;
             } else if (this.fxConfig.mode === 'manual') {
-                this.fxConfig.effectiveRate = this.fxConfig.manualRate || this.fxConfig.financeRate;
+                this.fxConfig.effectiveRate = Math.max(16000, Number(this.fxConfig.manualRate) || 16000);
+            } else {
+                this.fxConfig.mode = 'live';
+                this.fxConfig.effectiveRate = this.fxConfig.liveRate || 18000;
             }
             this.exchangeRate = this.fxConfig.effectiveRate;
         },
 
         setFxMode(mode) {
-            this.fxConfig.mode = mode;
+            this.fxConfig.mode = mode === 'manual' ? 'manual' : 'live';
             try {
-                localStorage.setItem('cdpk_fx_mode', mode);
+                localStorage.setItem('cdpk_fx_mode', this.fxConfig.mode);
             } catch (e) {}
             this.applyFxRateByMode();
             const modeLabels = {
-                finance: this.lang === 'en' ? 'Finance SSOT Master Rate' : 'Kurs Resmi Finance (Master SSOT)',
                 live: this.lang === 'en' ? 'Live Market Spot Rate' : 'Kurs Pasar Realtime (Spot Market)',
-                manual: this.lang === 'en' ? 'Project Custom Override Rate' : 'Kurs Khusus Proyek (Manual Override)'
+                manual: this.lang === 'en' ? 'Manual Input (Min. Rp 16.000)' : 'Manual Input (Min. Rp 16.000)'
             };
             this.showToast(
                 this.lang === 'en'
-                    ? `Active FX Mode: ${modeLabels[mode]} (Rp ${this.fxConfig.effectiveRate.toLocaleString('id-ID')})`
-                    : `Mode Kurs Aktif: ${modeLabels[mode]} (Rp ${this.fxConfig.effectiveRate.toLocaleString('id-ID')})`,
+                    ? `Active FX Mode: ${modeLabels[this.fxConfig.mode]} (Rp ${this.fxConfig.effectiveRate.toLocaleString('id-ID')})`
+                    : `Mode Kurs Aktif: ${modeLabels[this.fxConfig.mode]} (Rp ${this.fxConfig.effectiveRate.toLocaleString('id-ID')})`,
                 'info'
             );
         },
@@ -2644,7 +2660,7 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         setManualFxRate(newRate) {
-            const val = Math.max(1000, Number(newRate) || 16200);
+            const val = Math.max(16000, Number(newRate) || 16000);
             this.fxConfig.manualRate = val;
             if (this.fxConfig.mode === 'manual') {
                 this.fxConfig.effectiveRate = val;
@@ -2653,8 +2669,8 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         applyQuickFxBuffer(bufferPct) {
-            const baseRate = this.fxConfig.liveRate || this.fxConfig.financeRate || 16200;
-            const buffered = Math.round(baseRate * (1 + (bufferPct / 100.0)));
+            const baseRate = this.fxConfig.liveRate || 18000;
+            const buffered = Math.max(16000, Math.round(baseRate * (1 + (bufferPct / 100.0))));
             this.fxConfig.manualRate = buffered;
             this.fxConfig.customBufferPercent = bufferPct;
             this.setFxMode('manual');
@@ -3556,6 +3572,123 @@ window.cdpkSystemPlannerApp = function () {
             this.gisWiupStats = null;
             this.gisWiupFileName = '';
             this.showToast(this.lang === 'en' ? 'Concession boundary removed.' : 'Batas konsesi dihapus dari peta.', 'info');
+        },
+
+        // ─── Fitur C: DEM Elevation Profile & 1st Fresnel Zone Methods ───
+        async runFresnelAnalysis() {
+            if (!window.CDPK_GIS_ENGINE || typeof window.CDPK_GIS_ENGINE.calculateFresnelProfile !== 'function') {
+                this.showToast(this.lang === 'en' ? 'GIS Engine not ready.' : 'Engine GIS belum siap.', 'error');
+                return;
+            }
+
+            const sites = this.gisSites || [];
+            if (sites.length < 1) {
+                this.showToast(this.lang === 'en' ? 'No sites available for link analysis.' : 'Tidak ada site repeater untuk analisis link.', 'warning');
+                return;
+            }
+
+            // Site A
+            const siteA = sites.find(s => s.id === Number(this.fresnelLink.siteAId)) || sites[0];
+
+            // Target Point (Site B or Mobile Probe)
+            let targetPoint = null;
+            let targetLabel = '';
+            let targetTowerH = Number(this.fresnelLink.towerH2) || 45;
+
+            if (this.fresnelLink.targetMode === 'probe') {
+                if (!this.gisProbe || !this.gisProbe.lat || !this.gisProbe.lon) {
+                    this.showToast(this.lang === 'en' ? 'Mobile probe marker is not set on map.' : 'Marker Probe Mobile belum diletakkan di peta.', 'warning');
+                    return;
+                }
+                targetPoint = {
+                    lat: this.gisProbe.lat,
+                    lon: this.gisProbe.lon,
+                    name: 'Probe Mobile (Handheld / Rig)'
+                };
+                targetLabel = 'Probe Mobile';
+                targetTowerH = 1.5; // Handheld / Vehicle antenna standard height
+            } else {
+                let siteB = sites.find(s => s.id === Number(this.fresnelLink.siteBId));
+                if (!siteB || siteB.id === siteA.id) {
+                    siteB = sites.find(s => s.id !== siteA.id);
+                }
+                if (!siteB) {
+                    this.showToast(this.lang === 'en' ? 'Select a different site for Site B or switch to Probe mode.' : 'Pilih site lain untuk Site B atau beralih ke mode Probe.', 'warning');
+                    return;
+                }
+                targetPoint = siteB;
+                targetLabel = siteB.name || `Site #${siteB.id}`;
+            }
+
+            this.fresnelLink.loading = true;
+            this.fresnelLink.error = '';
+
+            try {
+                // 1. Sample geodesic path points
+                const sampleCount = Number(this.fresnelLink.sampleCount) || 35;
+                const pathData = window.CDPK_GIS_ENGINE.samplePathPoints(siteA, targetPoint, sampleCount);
+
+                if (pathData.totalDistKm <= 0.01) {
+                    this.showToast('Jarak link terlalu dekat untuk analisis elevasi.', 'warning');
+                    this.fresnelLink.loading = false;
+                    return;
+                }
+
+                // 2. Fetch DEM Elevations
+                const elevationPoints = await window.CDPK_GIS_ENGINE.fetchElevationProfile(pathData.points, this.covTopography || 'open');
+                pathData.points = elevationPoints;
+
+                // 3. Radio Frequency (MHz) from active preset or custom
+                let freqMhz = 150;
+                if (this.covBandPreset === 'vhf') freqMhz = 150;
+                else if (this.covBandPreset === '350') freqMhz = 350;
+                else if (this.covBandPreset === 'uhf') freqMhz = 450;
+                else if (this.covBandPreset === '800') freqMhz = 800;
+                else freqMhz = Number(this.covCustomFreq) || 150;
+
+                const towerH1 = Number(this.fresnelLink.towerH1) || siteA.height || 45;
+                const towerH2 = targetTowerH;
+
+                // 4. Calculate Fresnel and Clearance
+                const profileResult = window.CDPK_GIS_ENGINE.calculateFresnelProfile(pathData, freqMhz, towerH1, towerH2);
+                profileResult.siteAName = siteA.name || `Site #${siteA.id}`;
+                profileResult.siteBName = targetLabel;
+                profileResult.targetMode = this.fresnelLink.targetMode;
+
+                this.fresnelLink.result = profileResult;
+
+                // 5. Render cross-section canvas on next DOM tick
+                this.$nextTick(() => {
+                    this.renderFresnelCanvas();
+                });
+
+                this.recordClientAuditEvent('run_fresnel_analysis', `Analisis Profil Elevasi & Fresnel: ${siteA.name} ➔ ${targetLabel} (${profileResult.totalDistKm} km - ${profileResult.statusLabel})`, {
+                    siteA: siteA.name,
+                    siteB: targetLabel,
+                    distKm: profileResult.totalDistKm,
+                    status: profileResult.status,
+                    worstClearancePct: profileResult.worstClearancePct
+                });
+
+                this.showToast(
+                    `Analisis Selesai: ${profileResult.statusLabel} | Min Clearance: ${profileResult.worstClearanceM}m (${profileResult.worstClearancePct}%)`,
+                    profileResult.status === 'clear' ? 'success' : (profileResult.status === 'subpath' ? 'warning' : 'error')
+                );
+
+            } catch (err) {
+                console.error('Error in Fresnel analysis:', err);
+                this.fresnelLink.error = err.message || 'Gagal menghitung profil elevasi.';
+                this.showToast(this.fresnelLink.error, 'error');
+            } finally {
+                this.fresnelLink.loading = false;
+            }
+        },
+
+        renderFresnelCanvas() {
+            const canvas = document.getElementById('cdpkFresnelCanvas');
+            if (canvas && this.fresnelLink.result && window.CDPK_GIS_ENGINE) {
+                window.CDPK_GIS_ENGINE.renderFresnelCrossSection(canvas, this.fresnelLink.result);
+            }
         },
 
         async geocodeLocation() {
