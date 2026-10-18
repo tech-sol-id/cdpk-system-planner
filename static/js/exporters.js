@@ -337,6 +337,470 @@ window.CDPK_EXPORTERS = {
         link.click();
     },
 
+    exportGisCoveragePNG(app) {
+        if (!app.gisMap) {
+            alert(app.lang === 'en' ? 'GIS Map is not initialized yet.' : 'Peta GIS belum diinisialisasi.');
+            return;
+        }
+        const map = app.gisMap;
+        const mapContainer = document.getElementById('cdpkLeafletMap');
+        if (!mapContainer) return;
+
+        const size = map.getSize();
+        const w = size.x;
+        const h = size.y;
+        const scaleFactor = 2.0; // Retina 2x
+
+        const bannerHeaderH = 75;
+        const bannerFooterH = 80;
+        const totalW = w * scaleFactor;
+        const totalH = (h + bannerHeaderH + bannerFooterH) * scaleFactor;
+
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = totalW;
+        exportCanvas.height = totalH;
+        const ctx = exportCanvas.getContext('2d');
+        ctx.scale(scaleFactor, scaleFactor);
+
+        // 1. Header Banner
+        ctx.fillStyle = '#002b5c'; // PT Citradata Purnakharisma Corporate Blue
+        ctx.fillRect(0, 0, w, bannerHeaderH);
+
+        // Citradata Logo
+        if (window.CDPK_LOGO_B64) {
+            try {
+                const logoImg = new Image();
+                logoImg.src = window.CDPK_LOGO_B64;
+                ctx.drawImage(logoImg, 16, 12, 38, 20);
+            } catch (e) {}
+        }
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 15px Inter, system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('PT CITRADATA PURNAKHARISMA (CDPK) — OUTDOOR GIS COVERAGE MAP', 64, 28);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+        const envLabel = {
+            urbanL: 'Urban Metropolitan (Large City)',
+            urbanS: 'Urban (Medium / Small City)',
+            subS: 'Suburban / Industrial Park',
+            openS: 'Open / Rural / Mining Area'
+        }[app.covEnvProfile || 'urbanS'] || 'Urban Okumura-Hata';
+        ctx.fillText(`Model: Okumura-Hata 450 MHz DMR  |  Profil: ${envLabel}  |  Frekuensi: ${app.covFreqMhz || 450} MHz`, 64, 46);
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '10px Inter, system-ui, sans-serif';
+        const proj = app.projName || 'CDPK DMR Project';
+        const client = app.clientName || 'General Client';
+        const dateStr = new Date().toLocaleDateString('id-ID');
+        ctx.fillText(`Proyek: ${proj}   |   Klien: ${client}   |   Tanggal: ${dateStr}   |   Site Aktif: ${(app.gisSites || []).length}`, 64, 62);
+
+        // 2. Map Snapshot Area
+        ctx.save();
+        ctx.translate(0, bannerHeaderH);
+        ctx.rect(0, 0, w, h);
+        ctx.clip();
+
+        // Fill background
+        ctx.fillStyle = (app.gisBasemap === 'sat' || app.gisBasemap === 'google_sat') ? '#1e293b' : '#f8fafc';
+        ctx.fillRect(0, 0, w, h);
+
+        // Draw visible map tiles
+        const mapRect = mapContainer.getBoundingClientRect();
+        const tileImgs = mapContainer.querySelectorAll('.leaflet-tile-pane img');
+        let tilesRendered = 0;
+        tileImgs.forEach(img => {
+            if (img.complete && img.naturalWidth > 0) {
+                const r = img.getBoundingClientRect();
+                const dx = r.left - mapRect.left;
+                const dy = r.top - mapRect.top;
+                try {
+                    ctx.drawImage(img, dx, dy, r.width, r.height);
+                    tilesRendered++;
+                } catch (e) {}
+            }
+        });
+
+        // Fallback cartographic grid if tiles fail CORS
+        if (tilesRendered === 0) {
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < w; x += 60) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+            }
+            for (let y = 0; y < h; y += 60) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+            }
+        }
+
+        // Draw Coverage Circles for each site
+        const sites = (app.gisSites && app.gisSites.length > 0) ? app.gisSites : [{ lat: app.covLat, lon: app.covLon, name: 'Site 1', color: '#0284c7' }];
+        const hata = (typeof app.getOkumuraHataRadii === 'function') ? app.getOkumuraHataRadii() : { coreMeters: 2100, acceptMeters: 4000, fringeMeters: 7800, deadMeters: 15000 };
+        const rings = [
+            { key: 'dead', rMeters: hata.deadMeters, label: 'Dead-Zone Boundary (< -95 dBm)', alpha: 0.12, strokeWidth: 1.5, dash: [4, 4] },
+            { key: 'fringe', rMeters: hata.fringeMeters, label: 'Fringe / Batas (≥ -95 dBm)', alpha: 0.25, strokeWidth: 2, dash: [6, 4] },
+            { key: 'accept', rMeters: hata.acceptMeters, label: 'Acceptance Standard (≥ -85 dBm)', alpha: 0.45, strokeWidth: 2.2, dash: [] },
+            { key: 'core', rMeters: hata.coreMeters, label: 'Core High-Coverage (≥ -75 dBm)', alpha: 0.70, strokeWidth: 2.5, dash: [] }
+        ];
+
+        sites.forEach((site, sIdx) => {
+            const centerLatLng = L.latLng(site.lat, site.lon);
+            const centerPt = map.latLngToContainerPoint(centerLatLng);
+            const siteColor = site.color || '#0284c7';
+
+            rings.forEach(ring => {
+                const edgeLatLng = L.latLng(site.lat, site.lon + (ring.rMeters / (111320 * Math.cos(site.lat * Math.PI / 180))));
+                const edgePt = map.latLngToContainerPoint(edgeLatLng);
+                const radiusPx = Math.abs(edgePt.x - centerPt.x);
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(centerPt.x, centerPt.y, radiusPx, 0, Math.PI * 2);
+                ctx.fillStyle = siteColor;
+                ctx.globalAlpha = (app.gisHeatmapOpacity || 0.50) * ring.alpha;
+                ctx.fill();
+
+                ctx.globalAlpha = 0.90;
+                ctx.strokeStyle = siteColor;
+                ctx.lineWidth = ring.strokeWidth;
+                if (ring.dash.length > 0) ctx.setLineDash(ring.dash);
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            // Draw Site Marker
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(centerPt.x, centerPt.y, 14, 0, Math.PI * 2);
+            ctx.fillStyle = siteColor;
+            ctx.fill();
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`R${sIdx + 1}`, centerPt.x, centerPt.y);
+
+            // Site Label Pill above marker
+            const siteLabel = `${site.name || 'Site ' + (sIdx + 1)}`;
+            ctx.font = 'bold 10px Inter, sans-serif';
+            const labelW = ctx.measureText(siteLabel).width + 12;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.fillRect(centerPt.x - labelW / 2, centerPt.y - 30, labelW, 18);
+            ctx.strokeStyle = siteColor;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(centerPt.x - labelW / 2, centerPt.y - 30, labelW, 18);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(siteLabel, centerPt.x, centerPt.y - 21);
+            ctx.restore();
+        });
+
+        // Metric Scale Bar
+        const centerLat = map.getCenter().lat;
+        const zoom = map.getZoom();
+        const metersPerPx = 156543.03392 * Math.cos(centerLat * Math.PI / 180) / Math.pow(2, zoom);
+        let scaleDistMeters = 5000;
+        if (metersPerPx * 100 > 20000) scaleDistMeters = 20000;
+        else if (metersPerPx * 100 > 10000) scaleDistMeters = 10000;
+        else if (metersPerPx * 100 < 1500) scaleDistMeters = 1000;
+        else if (metersPerPx * 100 < 500) scaleDistMeters = 500;
+
+        const scaleBarPx = scaleDistMeters / metersPerPx;
+        const sbX = w - scaleBarPx - 24;
+        const sbY = h - 22;
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(sbX - 8, sbY - 18, scaleBarPx + 16, 28);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(sbX, sbY - 2, scaleBarPx, 4);
+        ctx.fillRect(sbX, sbY - 6, 2, 12);
+        ctx.fillRect(sbX + scaleBarPx - 2, sbY - 6, 2, 12);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 9.5px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${scaleDistMeters >= 1000 ? (scaleDistMeters / 1000) + ' km' : scaleDistMeters + ' m'}`, sbX + scaleBarPx / 2, sbY - 7);
+
+        ctx.restore();
+
+        // 3. Footer Legend Banner
+        ctx.save();
+        ctx.translate(0, bannerHeaderH + h);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, w, bannerFooterH);
+
+        // Legend Title
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 10px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('LEGENDA ZONA SINYAL RF (OKUMURA-HATA DMR 450 MHz):', 16, 18);
+
+        // Legend items
+        const legItems = [
+            { color: '#0284c7', label: `Core (≥ -75 dBm): ~${(hata.coreMeters / 1000).toFixed(1)} km`, desc: 'Heavy Indoor / Penetrasi Bangunan' },
+            { color: '#10b981', label: `Acceptance (≥ -85 dBm): ~${(hata.acceptMeters / 1000).toFixed(1)} km`, desc: 'Indoor HT & Target Layanan' },
+            { color: '#f59e0b', label: `Fringe (≥ -95 dBm): ~${(hata.fringeMeters / 1000).toFixed(1)} km`, desc: 'Outdoor Handheld / Mobil' },
+            { color: '#ef4444', label: `Dead-Zone (≥ -105 dBm): ~${(hata.deadMeters / 1000).toFixed(1)} km`, desc: 'Batas Jangkauan Sensitivitas' }
+        ];
+
+        let legX = 16;
+        legItems.forEach(item => {
+            ctx.fillStyle = item.color;
+            ctx.fillRect(legX, 26, 12, 12);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(legX, 26, 12, 12);
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = 'bold 10px Inter, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(item.label, legX + 18, 36);
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '8.5px Inter, sans-serif';
+            ctx.fillText(item.desc, legX + 18, 48);
+
+            legX += Math.max(160, Math.floor((w - 32) / 4));
+        });
+
+        // Multi-site GPS coordinate summary bar at very bottom
+        ctx.fillStyle = '#64748b';
+        ctx.font = '9px Inter, monospace';
+        const siteCoordStr = sites.map((s, i) => `R${i + 1}: ${s.name || 'Site ' + (i + 1)} (${Number(s.lat).toFixed(4)}, ${Number(s.lon).toFixed(4)})`).join('  |  ');
+        ctx.fillText(`KOORDINAT SITE: ${siteCoordStr}`, 16, 68);
+
+        ctx.fillStyle = '#475569';
+        ctx.font = '9px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('PT Citradata Purnakharisma (CDPK) — System Planner Engineering Document', w - 16, 68);
+        ctx.restore();
+
+        // Trigger download
+        try {
+            const safeName = (app.projName || 'CDPK_GIS_Coverage').replace(/[^a-zA-Z0-9_-]/g, '_');
+            const link = document.createElement('a');
+            link.download = `${safeName}_Okumura_Hata_Map_2x.png`;
+            link.href = exportCanvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            app.showToast(app.lang === 'en' ? 'High-Res GIS Coverage Map PNG exported!' : 'Peta GIS Okumura-Hata PNG (Retina 2x) berhasil diunduh!', 'success');
+        } catch (err) {
+            console.warn('Canvas export error:', err);
+            app.showToast('Gagal ekspor gambar peta karena pembatasan tile layer. Gunakan opsi PDF.', 'error');
+        }
+    },
+
+    exportGisCoveragePDF(app) {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            alert(app.lang === 'en' ? 'jsPDF library is loading, please try again.' : 'Pustaka PDF sedang dimuat, silakan coba lagi.');
+            return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const isEn = app.lang === 'en';
+        const sites = (app.gisSites && app.gisSites.length > 0) ? app.gisSites : [{ lat: app.covLat, lon: app.covLon, name: 'Site 1', color: '#0284c7' }];
+        const hata = (typeof app.getOkumuraHataRadii === 'function') ? app.getOkumuraHataRadii() : { coreMeters: 2100, acceptMeters: 4000, fringeMeters: 7800, deadMeters: 15000, txDbm: 47.0, eirpDbm: 51.4 };
+
+        // 1. Header Banner
+        doc.setFillColor(0, 43, 92); // #002b5c
+        doc.rect(0, 0, 297, 26, 'F');
+        if (window.CDPK_LOGO_B64) {
+            try {
+                doc.addImage(window.CDPK_LOGO_B64, 'PNG', 12, 3.5, 32, 17);
+            } catch (e) {}
+        }
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('PT CITRADATA PURNAKHARISMA (CDPK) — ENGINEERING REPORT', 48, 11);
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        const envLabel = {
+            urbanL: 'Urban Metropolitan (Large City)',
+            urbanS: 'Urban (Medium / Small City)',
+            subS: 'Suburban / Industrial Park',
+            openS: 'Open / Rural / Mining Area'
+        }[app.covEnvProfile || 'urbanS'] || 'Urban Okumura-Hata';
+        doc.text(`Outdoor GIS Coverage Simulation (Okumura-Hata 450 MHz DMR) | Profil: ${envLabel}`, 48, 17);
+        doc.text(`Proyek: ${app.projName || 'Radio System'} | Klien: ${app.clientName || '-'} | Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 48, 22);
+
+        // 2. Technical Parameters Card (Left side, Y: 30)
+        doc.setFillColor(241, 245, 249);
+        doc.rect(12, 30, 95, 76, 'F');
+        doc.setDrawColor(203, 213, 225);
+        doc.rect(12, 30, 95, 76, 'S');
+
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Parameter Link Budget & Model Okumura-Hata', 16, 36);
+
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        let py = 43;
+        const addParamRow = (label, val) => {
+            doc.setTextColor(100, 116, 139);
+            doc.text(label, 16, py);
+            doc.setTextColor(15, 23, 42);
+            doc.setFont('helvetica', 'bold');
+            doc.text(String(val), 102, py, { align: 'right' });
+            doc.setFont('helvetica', 'normal');
+            py += 5.5;
+        };
+
+        addParamRow('Frekuensi Pembawa (f)', `${app.covFreqMhz || 450} MHz (DMR UHF)`);
+        addParamRow('Tinggi Tower Base Station (hb)', `${app.covTowerHeight || 35} m`);
+        addParamRow('Tinggi Antena HT Mobile (hm)', `${app.covMobileHeight || 1.5} m`);
+        addParamRow('Daya Pancar Repeater (TX)', `${app.covTxWatts || 50} W (${hata.txDbm} dBm)`);
+        addParamRow('Antenna Gain (Base / HT)', `${app.covAntGainDbi || 6.5} dBi / 2.15 dBi`);
+        addParamRow('Cable / Feeder Loss', `${app.covCableLossDb || 2.1} dB`);
+        addParamRow('Total EIRP Base Station', `${hata.eirpDbm} dBm`);
+        addParamRow('Profil Lingkungan', envLabel);
+
+        // Radii Summary Box (Below Parameters, Y: 110)
+        doc.setFillColor(238, 242, 255);
+        doc.rect(12, 110, 95, 54, 'F');
+        doc.setDrawColor(199, 210, 254);
+        doc.rect(12, 110, 95, 54, 'S');
+
+        doc.setTextColor(30, 58, 138);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Radius Jangkauan Okumura-Hata Terhitung', 16, 116);
+
+        doc.setFontSize(8);
+        let ry = 123;
+        const addRadiusRow = (colorBox, label, val, desc) => {
+            doc.setFillColor(colorBox[0], colorBox[1], colorBox[2]);
+            doc.rect(16, ry - 3, 3, 3, 'F');
+            doc.setTextColor(15, 23, 42);
+            doc.setFont('helvetica', 'bold');
+            doc.text(label, 22, ry);
+            doc.text(val, 102, ry, { align: 'right' });
+            doc.setTextColor(100, 116, 139);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.text(desc, 22, ry + 3.5);
+            doc.setFontSize(8);
+            ry += 8.5;
+        };
+
+        addRadiusRow([2, 132, 199], 'Core (≥ -75 dBm)', `~${(hata.coreMeters / 1000).toFixed(1)} km`, 'Heavy In-Building Penetration');
+        addRadiusRow([16, 185, 129], 'Acceptance (≥ -85 dBm)', `~${(hata.acceptMeters / 1000).toFixed(1)} km`, 'Indoor HT & Target Kinerja Standar');
+        addRadiusRow([245, 158, 11], 'Fringe (≥ -95 dBm)', `~${(hata.fringeMeters / 1000).toFixed(1)} km`, 'Outdoor Handheld & Mobile Radio');
+        addRadiusRow([239, 68, 68], 'Dead-Zone (≥ -105 dBm)', `~${(hata.deadMeters / 1000).toFixed(1)} km`, 'Batas Sensitivitas Penerima DMR');
+
+        // 3. Map Canvas Rendering on Right Side (X: 112, Y: 30, Width: 173, Height: 134)
+        const mapContainer = document.getElementById('cdpkLeafletMap');
+        if (mapContainer && app.gisMap) {
+            try {
+                const size = app.gisMap.getSize();
+                const off = document.createElement('canvas');
+                off.width = size.x;
+                off.height = size.y;
+                const oCtx = off.getContext('2d');
+                
+                oCtx.fillStyle = '#f8fafc';
+                oCtx.fillRect(0, 0, size.x, size.y);
+
+                const mapRect = mapContainer.getBoundingClientRect();
+                const tileImgs = mapContainer.querySelectorAll('.leaflet-tile-pane img');
+                tileImgs.forEach(img => {
+                    if (img.complete && img.naturalWidth > 0) {
+                        const r = img.getBoundingClientRect();
+                        try { oCtx.drawImage(img, r.left - mapRect.left, r.top - mapRect.top, r.width, r.height); } catch(e){}
+                    }
+                });
+
+                const rings = [
+                    { rMeters: hata.deadMeters, color: '#ef4444', alpha: 0.15 },
+                    { rMeters: hata.fringeMeters, color: '#f59e0b', alpha: 0.30 },
+                    { rMeters: hata.acceptMeters, color: '#10b981', alpha: 0.50 },
+                    { rMeters: hata.coreMeters, color: '#0284c7', alpha: 0.70 }
+                ];
+
+                sites.forEach((site, sIdx) => {
+                    const centerPt = app.gisMap.latLngToContainerPoint(L.latLng(site.lat, site.lon));
+                    const sColor = site.color || '#0284c7';
+                    rings.forEach(ring => {
+                        const edgePt = app.gisMap.latLngToContainerPoint(L.latLng(site.lat, site.lon + (ring.rMeters / (111320 * Math.cos(site.lat * Math.PI / 180)))));
+                        const radiusPx = Math.abs(edgePt.x - centerPt.x);
+                        oCtx.save();
+                        oCtx.beginPath();
+                        oCtx.arc(centerPt.x, centerPt.y, radiusPx, 0, Math.PI * 2);
+                        oCtx.fillStyle = sColor;
+                        oCtx.globalAlpha = ring.alpha;
+                        oCtx.fill();
+                        oCtx.strokeStyle = sColor;
+                        oCtx.lineWidth = 2;
+                        oCtx.globalAlpha = 0.9;
+                        oCtx.stroke();
+                        oCtx.restore();
+                    });
+
+                    // Marker
+                    oCtx.save();
+                    oCtx.beginPath();
+                    oCtx.arc(centerPt.x, centerPt.y, 14, 0, Math.PI * 2);
+                    oCtx.fillStyle = sColor;
+                    oCtx.fill();
+                    oCtx.strokeStyle = '#ffffff';
+                    oCtx.lineWidth = 2.5;
+                    oCtx.stroke();
+                    oCtx.fillStyle = '#ffffff';
+                    oCtx.font = 'bold 11px sans-serif';
+                    oCtx.textAlign = 'center';
+                    oCtx.textBaseline = 'middle';
+                    oCtx.fillText(`R${sIdx + 1}`, centerPt.x, centerPt.y);
+                    oCtx.restore();
+                });
+
+                const imgData = off.toDataURL('image/png');
+                doc.addImage(imgData, 'PNG', 112, 30, 173, 134);
+                doc.setDrawColor(203, 213, 225);
+                doc.rect(112, 30, 173, 134, 'S');
+            } catch (e) {
+                console.warn('PDF map image embed error:', e);
+            }
+        }
+
+        // 4. Multi-Site Registry Table (Bottom Y: 168)
+        const siteRows = sites.map((s, idx) => [
+            `R${idx + 1}`,
+            s.name || `Site ${idx + 1}`,
+            `${Number(s.lat).toFixed(4)}, ${Number(s.lon).toFixed(4)}`,
+            `${s.towerHeight || app.covTowerHeight || 35} m`,
+            `${s.txWatts || app.covTxWatts || 50} W`,
+            `~${(hata.acceptMeters / 1000).toFixed(1)} km`,
+            `~${(hata.fringeMeters / 1000).toFixed(1)} km`,
+            'Operational'
+        ]);
+
+        doc.autoTable({
+            startY: 168,
+            head: [['Site', 'Nama Base Station', 'Koordinat GPS (Lat, Lon)', 'Tinggi Tower', 'Daya TX', 'Radius Acceptance', 'Batas Fringe', 'Status']],
+            body: siteRows,
+            styles: { fontSize: 7.5, cellPadding: 1.5, font: 'helvetica' },
+            headStyles: { fillColor: [0, 43, 92], textColor: 255, fontStyle: 'bold' },
+            margin: { left: 12, right: 12 }
+        });
+
+        // Sign-off footer
+        doc.setTextColor(148, 163, 184);
+        doc.setFontSize(7.5);
+        doc.text('PT Citradata Purnakharisma (CDPK) • Standar Perhitungan Propagasi RF Berdasarkan Okumura-Hata Model • Dokumen Rekayasa Tender Resmi', 12, 204);
+
+        const safeName = (app.projName || 'CDPK_GIS_Coverage').replace(/[^a-zA-Z0-9_-]/g, '_');
+        doc.save(`${safeName}_Okumura_Hata_Technical_Report.pdf`);
+        app.showToast(isEn ? 'Official GIS Technical Report PDF exported!' : 'Dokumen Laporan Teknis GIS PDF berhasil diunduh!', 'success');
+    },
+
     exportPackagesPDF(app) {
         if (!window.jspdf || !window.jspdf.jsPDF) {
             alert(app.lang === 'en' ? 'PDF library is loading, please try again.' : 'Pustaka PDF sedang dimuat, silakan coba lagi.');

@@ -199,12 +199,27 @@ window.CDPK_ENGINES = {
             mixed_inout: 3.50
         };
         const nExp = terrainN[cfg.terrain] || 3.10;
-        const freqMHz = cfg.freqBand === 'vhf' ? 155 : (cfg.freqBand === '800' ? 855 : 435);
+        const freqMHz = cfg.freqMHz || (cfg.freqBand === 'vhf' ? 155 : (cfg.freqBand === '800' ? 855 : 450));
         const txWatt = Number(cfg.txWatts || 50);
         const txDbm = 10 * Math.log10(txWatt * 1000);
         const antGainDbi = Number(cfg.antennaGainDbi || 6.5);
         const cableLossDb = Number(cfg.cableLossDb || 2.2);
         const eirpDbm = txDbm + antGainDbi - cableLossDb;
+
+        // Okumura-Hata propagation engine instance
+        let hataModel = null;
+        if (cfg.envProfile || cfg.useOkumuraHata || cfg.topography) {
+            hataModel = this.calculateOkumuraHata({
+                freqMHz: freqMHz,
+                envProfile: cfg.envProfile || 'urban',
+                towerHeight: cfg.towerHeight || 35,
+                mobileHeight: cfg.mobileHeight || 1.5,
+                txWatts: txWatt,
+                antennaGainDbi: antGainDbi,
+                cableLossDb: cableLossDb,
+                topography: cfg.topography || (cfg.terrain === 'mountainous' ? 'mountainous' : (cfg.terrain === 'hilly' ? 'rolling' : (cfg.terrain === 'dense' ? 'foliage' : 'flat')))
+            });
+        }
 
         // Place repeater sites evenly inside coverage box
         const numSites = Math.max(1, Math.min(8, parseInt(cfg.sites || 1, 10)));
@@ -225,7 +240,7 @@ window.CDPK_ENGINES = {
         const sideKm = Math.max(1.5, Math.sqrt(Math.max(1, Number(cfg.areaKm2 || 25))));
         const kmPerPx = sideKm / Math.min(W, H);
 
-        // Reference path loss at 100m (0.1 km)
+        // Reference path loss at 100m (0.1 km) for fallback log-distance
         const pl100m = 32.45 + 20 * Math.log10(freqMHz) + 20 * Math.log10(0.1);
 
         let strongCnt = 0, fairCnt = 0, weakCnt = 0;
@@ -244,8 +259,14 @@ window.CDPK_ENGINES = {
                     const distKm = Math.max(0.08, Math.sqrt(dx * dx + dy * dy));
                     // Deterministic terrain shadow variation
                     const shadow = Math.sin(gx * 0.42 + s) * Math.cos(gy * 0.37 - s) * 4.5;
-                    const pl = pl100m + 10 * nExp * Math.log10(distKm / 0.1) + shadow - (Number(cfg.towerHeight || 30) * 0.18);
-                    const rssi = eirpDbm - pl;
+                    let rssi = -140;
+                    if (hataModel) {
+                        const pl = hataModel.getPathLoss(distKm) + shadow;
+                        rssi = (hataModel.eirpDbm + (hataModel.rxGainDbi || 2.15) - (hataModel.bodyLossDb || 2.0)) - pl;
+                    } else {
+                        const pl = pl100m + 10 * nExp * Math.log10(distKm / 0.1) + shadow - (Number(cfg.towerHeight || 30) * 0.18);
+                        rssi = eirpDbm - pl;
+                    }
                     if (rssi > bestRssi) bestRssi = rssi;
                 }
 
@@ -458,6 +479,127 @@ window.CDPK_ENGINES = {
             requiredBatteryAh: Math.round(requiredBatteryAh),
             solarPvWattsPeak: Math.round(solarPvWattsPeak),
             mpptAmps: Math.round(mpptAmps)
+        };
+    },
+
+    /**
+     * Okumura-Hata RF Propagation Model for DMR Land Mobile Radio (150 - 1500 MHz, standard 450 MHz)
+     * Supporting Environment Profiles: Urban, Suburban, Rural, Open with Topography Correction
+     */
+    calculateOkumuraHata(params) {
+        params = params || {};
+        const freqMHz = Math.max(150, Math.min(1500, parseFloat(params.freqMHz || 450.0)));
+        const envProfile = (params.envProfile || 'urban').toLowerCase(); // 'urban' | 'suburban' | 'rural' | 'open'
+        const towerH = Math.max(10, Math.min(250, parseFloat(params.towerHeight || 35.0))); // hb in meters
+        const mobileH = Math.max(1, Math.min(10, parseFloat(params.mobileHeight || 1.5))); // hm in meters
+        const txWatts = Math.max(1, Math.min(200, parseFloat(params.txWatts || 50.0)));
+        const antGainDbi = parseFloat(params.antennaGainDbi !== undefined ? params.antennaGainDbi : 6.5);
+        const cableLossDb = Math.max(0, parseFloat(params.cableLossDb !== undefined ? params.cableLossDb : 2.1));
+        const rxGainDbi = parseFloat(params.rxGainDbi !== undefined ? params.rxGainDbi : 2.15); // whip antenna on HT
+        const bodyLossDb = parseFloat(params.bodyLossDb !== undefined ? params.bodyLossDb : 2.0); // body/feeder loss
+        const rxSensitivityDbm = parseFloat(params.rxSensitivityDbm !== undefined ? params.rxSensitivityDbm : -118.0); // DMR standard
+        const topography = (params.topography || 'flat').toLowerCase(); // 'flat' | 'rolling' | 'mountainous' | 'foliage'
+
+        // Topography correction in dB
+        const topoLossMap = {
+            flat: 0.0,
+            rolling: 2.5,
+            mountainous: 6.0,
+            foliage: 4.0
+        };
+        const topoCorrectionDb = (params.customTopoDb !== undefined) ? parseFloat(params.customTopoDb) : (topoLossMap[topography] !== undefined ? topoLossMap[topography] : 0.0);
+
+        // TX Power in dBm & EIRP
+        const txDbm = 10 * Math.log10(txWatts * 1000.0);
+        const eirpDbm = txDbm + antGainDbi - cableLossDb;
+
+        // Okumura-Hata Base Urban Formula (Small-to-medium city):
+        // a(hm) = (1.1 * log10(f) - 0.7) * hm - (1.56 * log10(f) - 0.8)
+        const logF = Math.log10(freqMHz);
+        const logHb = Math.log10(towerH);
+        const aHm = (1.1 * logF - 0.7) * mobileH - (1.56 * logF - 0.8);
+
+        // L_urban(d) = A_urban + B * log10(d)
+        const aUrban = 69.55 + 26.16 * logF - 13.82 * logHb - aHm;
+        const bSlope = 44.9 - 6.55 * logHb;
+
+        // Environmental corrections
+        let aEnv = aUrban;
+        if (envProfile === 'suburban') {
+            const subCorr = 2.0 * Math.pow(Math.log10(freqMHz / 28.0), 2) + 5.4;
+            aEnv = aUrban - subCorr;
+        } else if (envProfile === 'rural') {
+            const ruralCorr = 4.78 * Math.pow(logF, 2) - 18.33 * logF + 35.94;
+            aEnv = aUrban - ruralCorr;
+        } else if (envProfile === 'open') {
+            const openCorr = 4.78 * Math.pow(logF, 2) - 18.33 * logF + 40.94;
+            aEnv = aUrban - openCorr;
+        }
+
+        const aTotal = aEnv + topoCorrectionDb;
+
+        // Path loss at distance d (km)
+        const getPathLoss = (dKm) => {
+            const d = Math.max(0.01, dKm);
+            return aTotal + bSlope * Math.log10(d);
+        };
+
+        // RSSI at distance d (km)
+        const getRssi = (dKm) => {
+            const pl = getPathLoss(dKm);
+            return eirpDbm + rxGainDbi - bodyLossDb - pl;
+        };
+
+        // Calculate distance (km) for target RSSI
+        const getRadiusForRssi = (targetRssiDbm) => {
+            const allowableLoss = eirpDbm + rxGainDbi - bodyLossDb - targetRssiDbm;
+            const logD = (allowableLoss - aTotal) / bSlope;
+            const dKm = Math.pow(10, logD);
+            return Math.max(0.05, Math.min(150.0, dKm));
+        };
+
+        // Tiers
+        const rCoreKm = getRadiusForRssi(-65.0);
+        const rStrongKm = getRadiusForRssi(-85.0);
+        const rFairKm = getRadiusForRssi(-95.0);
+        const rFringeKm = getRadiusForRssi(-105.0);
+        const rLimitKm = getRadiusForRssi(rxSensitivityDbm);
+
+        return {
+            freqMHz,
+            envProfile,
+            towerHeight: towerH,
+            mobileHeight: mobileH,
+            txWatts,
+            txDbm: +txDbm.toFixed(2),
+            antGainDbi,
+            cableLossDb,
+            eirpDbm: +eirpDbm.toFixed(2),
+            topography,
+            topoCorrectionDb,
+            rxGainDbi,
+            bodyLossDb,
+            rxSensitivityDbm,
+            aUrban: +aUrban.toFixed(2),
+            bSlope: +bSlope.toFixed(2),
+            aTotal: +aTotal.toFixed(2),
+            radiiKm: {
+                core: +rCoreKm.toFixed(2),
+                strong: +rStrongKm.toFixed(2),
+                fair: +rFairKm.toFixed(2),
+                fringe: +rFringeKm.toFixed(2),
+                limit: +rLimitKm.toFixed(2)
+            },
+            radiiMeters: {
+                core: Math.round(rCoreKm * 1000),
+                strong: Math.round(rStrongKm * 1000),
+                fair: Math.round(rFairKm * 1000),
+                fringe: Math.round(rFringeKm * 1000),
+                limit: Math.round(rLimitKm * 1000)
+            },
+            getPathLoss,
+            getRssi,
+            getRadiusForRssi
         };
     }
 };

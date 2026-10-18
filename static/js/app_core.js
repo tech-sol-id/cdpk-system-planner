@@ -453,13 +453,20 @@ window.cdpkSystemPlannerApp = function () {
         covTxWatts: 50,
         covAntGainDbi: 6.5,
         covCableLossDb: 2.1,
+        covEnvProfile: 'urbanS', // 'urbanL' | 'urbanS' | 'subS' | 'openS'
+        covTopography: 'flat', // 'flat' | 'rolling' | 'mountainous' | 'foliage'
+        covFreqMhz: 450, // DMR standard 450 MHz
+        covTowerHeight: 35,
+        covMobileHeight: 1.5,
         covMetrics: { strongPct: 68, fairPct: 24, weakPct: 8, deadZones: [] },
         coverageViewMode: 'grid', // 'grid' | 'gis'
-        gisBasemap: 'osm', // 'osm' | 'sat'
+        gisBasemap: 'osm', // 'osm' | 'google_sat' | 'google_hybrid'
         gisMap: null,
         gisTileLayer: null,
         gisOverlayLayers: [],
         gisSites: [],
+        gisActiveSiteIndex: 0,
+        gisPlotMode: false,
         isDetectingGps: false,
         gisHeatmapOpacity: 0.50,
         showGisRings: true,
@@ -1921,7 +1928,16 @@ window.cdpkSystemPlannerApp = function () {
 
         t(key) {
             const dict = window.CDPK_I18N[this.lang] || window.CDPK_I18N.id;
-            return dict[key] || key;
+            if (dict[key] !== undefined) return dict[key];
+            if (key && key.includes('.')) {
+                const parts = key.split('.');
+                let val = dict;
+                for (let i = 0; i < parts.length; i++) {
+                    val = val ? val[parts[i]] : undefined;
+                }
+                if (val !== undefined) return val;
+            }
+            return key;
         },
 
         setLang(newLang) {
@@ -2780,26 +2796,129 @@ window.cdpkSystemPlannerApp = function () {
             };
         },
 
-        // ─── Module 5: RF Coverage Simulation (60x60 Path Loss Grid & GIS Map) ──
+        // ─── Module 5: RF Coverage Simulation (Okumura-Hata Model & Multi-Site GIS) ──
+        getOkumuraHataRadii() {
+            const s = this.sizingResult || {};
+            const freq = parseFloat(this.covFreqMhz || 450);
+            const bsHeight = parseFloat(this.covTowerHeight || s.towerHeight || 35);
+            const htHeight = parseFloat(this.covMobileHeight || 1.5);
+            const txWatt = parseFloat(this.covTxWatts || 50);
+            const bsTxDbm = 10 * Math.log10(txWatt * 1000);
+            const bsGainDbi = parseFloat(this.covAntGainDbi || 6.5);
+            const htGainDbi = 2.15;
+            const bsFeederLossDb = parseFloat(this.covCableLossDb || 2.1);
+            const htFeederLossDb = 0.0;
+            const env = this.covEnvProfile || 'urbanS'; // 'urbanL' | 'urbanS' | 'subS' | 'openS'
+            const eirpDbm = bsTxDbm + bsGainDbi - bsFeederLossDb;
+
+            // Link with CDPK_DAS_ENGINE.calcOkumuraHataOutdoor
+            if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.calcOkumuraHataOutdoor === 'function') {
+                try {
+                    this.covHataOutdoorResult = window.CDPK_DAS_ENGINE.calcOkumuraHataOutdoor({
+                        freq: freq,
+                        dist: 5.0,
+                        bsHeight: bsHeight,
+                        htHeight: htHeight,
+                        bsTxDbm: bsTxDbm,
+                        htTxDbm: 36.0,
+                        bsGainDbi: bsGainDbi,
+                        htGainDbi: htGainDbi,
+                        bsRxSensDbm: -118.0,
+                        htRxSensDbm: -116.0,
+                        bsFeederLossDb: bsFeederLossDb,
+                        htFeederLossDb: htFeederLossDb
+                    });
+                } catch (e) {
+                    console.warn('CDPK_DAS_ENGINE.calcOkumuraHataOutdoor call error:', e);
+                }
+            }
+
+            // Standard Okumura-Hata parameters for DMR 450 MHz
+            const log10 = Math.log10;
+            const lf = log10(freq), lht = log10(bsHeight);
+            const aS = (1.11 * lf - 0.7) * htHeight - (1.56 * lf - 0.8);
+            const aL = (freq <= 200) ? (8.29 * Math.pow(log10(1.54 * htHeight), 2) - 1.1) : (3.2 * Math.pow(log10(11.75 * htHeight), 2) - 4.97);
+            const baseS = 69.55 + 26.16 * lf - 13.82 * lht - aS;
+            const baseL = 69.55 + 26.16 * lf - 13.82 * lht - aL;
+            const bSlope = 44.9 - 6.55 * lht;
+            const Qo = 4.78 * lf * lf - 18.33 * lf + 40.94;
+            const Ks = 2.0 * Math.pow(log10(freq / 28.0), 2) + 5.4;
+
+            let aEnv = baseS;
+            if (env === 'urbanL') aEnv = baseL;
+            else if (env === 'urbanS') aEnv = baseS;
+            else if (env === 'subS' || env === 'subL') aEnv = baseS - Ks;
+            else if (env === 'openS' || env === 'openL') aEnv = baseS - Qo;
+
+            // Topography correction factor
+            const topoLossMap = { flat: 0.0, rolling: 2.5, mountainous: 6.0, foliage: 4.0 };
+            const topoCorrectionDb = topoLossMap[this.covTopography || 'flat'] !== undefined ? topoLossMap[this.covTopography || 'flat'] : 0.0;
+            const aTotal = aEnv + topoCorrectionDb;
+
+            // Solve radius for given target RSSI
+            const solveRadius = (targetRssi) => {
+                const allowableLoss = eirpDbm + htGainDbi - htFeederLossDb - targetRssi;
+                const logD = (allowableLoss - aTotal) / bSlope;
+                const dKm = Math.pow(10, logD);
+                return Math.max(0.1, Math.min(100.0, dKm));
+            };
+
+            const coreKm = solveRadius(-75.0);
+            const acceptKm = solveRadius(-85.0);
+            const fringeKm = solveRadius(-95.0);
+            const deadKm = solveRadius(-105.0);
+
+            return {
+                freq,
+                bsHeight,
+                htHeight,
+                txWatt,
+                txDbm: +bsTxDbm.toFixed(1),
+                bsGainDbi,
+                bsFeederLossDb,
+                eirpDbm: +eirpDbm.toFixed(1),
+                env,
+                topography: this.covTopography || 'flat',
+                topoCorrectionDb,
+                aTotal: +aTotal.toFixed(2),
+                bSlope: +bSlope.toFixed(2),
+                coreKm: +coreKm.toFixed(2),
+                acceptKm: +acceptKm.toFixed(2),
+                fringeKm: +fringeKm.toFixed(2),
+                deadKm: +deadKm.toFixed(2),
+                coreMeters: Math.round(coreKm * 1000),
+                acceptMeters: Math.round(acceptKm * 1000),
+                fringeMeters: Math.round(fringeKm * 1000),
+                deadMeters: Math.round(deadKm * 1000),
+                getPathLoss: (dKm) => aTotal + bSlope * Math.log10(Math.max(0.01, dKm)),
+                getRssi: (dKm) => eirpDbm + htGainDbi - htFeederLossDb - (aTotal + bSlope * Math.log10(Math.max(0.01, dKm)))
+            };
+        },
+
         runCoverageSimulation() {
             const canvas = document.getElementById('cdpkCoverageCanvas');
             if (canvas) {
-                const s = this.sizingResult;
+                const s = this.sizingResult || {};
                 this.covMetrics = window.CDPK_ENGINES.renderCoverageSimulationCanvas(canvas, {
                     terrain: this.terrain,
                     freqBand: this.freqBand,
+                    freqMHz: this.covFreqMhz || 450,
+                    envProfile: this.covEnvProfile || 'urbanS',
+                    topography: this.covTopography || 'flat',
                     txWatts: this.covTxWatts,
                     antennaGainDbi: this.covAntGainDbi,
                     cableLossDb: this.covCableLossDb,
-                    sites: Math.max(1, s.outdoorSites),
-                    areaKm2: s.areaKm2,
-                    towerHeight: s.towerHeight
+                    sites: Math.max(1, s.outdoorSites || 1),
+                    areaKm2: s.areaKm2 || 25,
+                    towerHeight: this.covTowerHeight || s.towerHeight || 35
                 });
             }
             if (this.coverageViewMode === 'gis') {
                 this.$nextTick(() => this.initOrUpdateGisMap());
             }
         },
+
+        CDPK_SITE_COLORS: ['#0284c7', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#14b8a6', '#6366f1', '#f97316'],
 
         initOrUpdateGisMap() {
             if (typeof L === 'undefined') return;
@@ -2832,131 +2951,141 @@ window.cdpkSystemPlannerApp = function () {
             }
             this.gisOverlayLayers = [];
 
-            const s = this.sizingResult;
-            const txWatt = Number(this.covTxWatts || 50);
-            const txDbm = 10 * Math.log10(txWatt * 1000);
-            const antGainDbi = Number(this.covAntGainDbi || 6.5);
-            const cableLossDb = Number(this.covCableLossDb || 2.1);
-            const towerHeight = Number(s.towerHeight || 35);
-            const eirpDbm = txDbm + antGainDbi - cableLossDb;
+            // Calculate Okumura-Hata Propagation Radii
+            const hata = this.getOkumuraHataRadii();
+            const s = this.sizingResult || {};
 
-            // Propagation radii calculation (Okumura-Hata approximation for DMR)
-            const terrainFactor = this.terrain === 'mountainous' ? 0.65 : (this.terrain === 'hilly' ? 0.82 : (this.terrain === 'dense' ? 0.75 : 1.15));
-            const baseRadiusKm = (eirpDbm / 38) * (towerHeight / 30) * 8.5 * terrainFactor;
-
-            // Multi-tier RF signal zones
-            const coreRadiusMeters = Math.max(400, Math.round(baseRadiusKm * 0.25 * 1000));
-            const strongRadiusMeters = Math.max(800, Math.round(baseRadiusKm * 0.50 * 1000));
-            const fairRadiusMeters = Math.max(1500, Math.round(baseRadiusKm * 0.85 * 1000));
-            const fringeRadiusMeters = Math.max(2200, Math.round(baseRadiusKm * 1.25 * 1000));
-            const deadRadiusMeters = Math.max(3000, Math.round(baseRadiusKm * 1.60 * 1000));
-
-            const numSites = Math.max(1, Math.min(8, parseInt(s.outdoorSites || 1, 10)));
-            const sites = [];
-
-            if (numSites === 1) {
-                sites.push({ name: 'Site 1 (Main Base Station)', lat: lat, lon: lon });
-            } else {
-                const spreadKm = (Math.sqrt(Math.max(10, s.areaKm2)) * 0.35) / 111.32;
-                for (let i = 0; i < numSites; i++) {
-                    const angle = (2 * Math.PI * i) / numSites - Math.PI / 4;
-                    sites.push({
-                        name: `Site ${i + 1} (${s.primaryRepeaterModel})`,
-                        lat: lat + spreadKm * Math.cos(angle) * 0.8,
-                        lon: lon + spreadKm * Math.sin(angle) * 1.1
+            // Ensure sites array is initialized
+            if (!Array.isArray(this.gisSites) || this.gisSites.length === 0) {
+                const numSites = Math.max(1, Math.min(8, parseInt(s.outdoorSites || 1, 10)));
+                const initSites = [];
+                if (numSites === 1) {
+                    initSites.push({
+                        id: 1,
+                        name: 'Site 1 (Main Base Station)',
+                        lat: lat,
+                        lon: lon,
+                        color: this.CDPK_SITE_COLORS[0],
+                        towerHeight: Number(this.covTowerHeight || 35),
+                        txWatts: Number(this.covTxWatts || 50),
+                        enabled: true
                     });
+                } else {
+                    const spreadKm = (Math.sqrt(Math.max(10, s.areaKm2 || 25)) * 0.35) / 111.32;
+                    for (let i = 0; i < numSites; i++) {
+                        const angle = (2 * Math.PI * i) / numSites - Math.PI / 4;
+                        initSites.push({
+                            id: i + 1,
+                            name: `Site ${i + 1} (${s.primaryRepeaterModel || 'SLR 5300'})`,
+                            lat: parseFloat((lat + spreadKm * Math.cos(angle) * 0.8).toFixed(4)),
+                            lon: parseFloat((lon + spreadKm * Math.sin(angle) * 1.1).toFixed(4)),
+                            color: this.CDPK_SITE_COLORS[i % this.CDPK_SITE_COLORS.length],
+                            towerHeight: Number(this.covTowerHeight || 35),
+                            txWatts: Number(this.covTxWatts || 50),
+                            enabled: true
+                        });
+                    }
                 }
+                this.gisSites = initSites;
             }
-            this.gisSites = sites;
 
             const op = Number(this.gisHeatmapOpacity || 0.50);
             const rings = Boolean(this.showGisRings);
 
-            sites.forEach((site, idx) => {
-                // Zone 5: Dead-Zone Outer Limit Contour (Red)
+            this.gisSites.forEach((site, idx) => {
+                if (site.enabled === false) return;
+                const siteColor = site.color || this.CDPK_SITE_COLORS[idx % this.CDPK_SITE_COLORS.length];
+
+                // Zone 4: Dead-Zone Boundary / Outer Fringe (< -95 dBm up to -105 dBm) (Red)
                 const deadCircle = L.circle([site.lat, site.lon], {
-                    radius: deadRadiusMeters,
+                    radius: hata.deadMeters,
                     color: '#ef4444',
                     fillColor: '#ef4444',
-                    fillOpacity: op * 0.08,
-                    weight: rings ? 1 : 0,
-                    dashArray: '3, 6'
+                    fillOpacity: op * 0.10,
+                    weight: rings ? 1.5 : 0,
+                    dashArray: '4, 6'
                 }).addTo(this.gisMap);
+                deadCircle.bindTooltip(`<b>${site.name}</b><br>🔴 Dead-Zone Limit (< -95 dBm)<br>Radius: ~${(hata.deadMeters/1000).toFixed(1)} km<br>Batas Sensitivitas DMR (-118 dBm)`, { sticky: true });
                 this.gisOverlayLayers.push(deadCircle);
 
-                // Zone 4: Fringe / Marginal Signal (-96..-105 dBm) (Orange)
+                // Zone 3: Fringe / Batas Cakupan (≥ -95 dBm) (Amber / Orange)
                 const fringeCircle = L.circle([site.lat, site.lon], {
-                    radius: fringeRadiusMeters,
-                    color: '#ea580c',
-                    fillColor: '#f97316',
+                    radius: hata.fringeMeters,
+                    color: '#f59e0b',
+                    fillColor: '#f59e0b',
                     fillOpacity: op * 0.25,
-                    weight: rings ? 1.5 : 0,
-                    dashArray: '5, 5'
+                    weight: rings ? 1.8 : 0,
+                    dashArray: '6, 5'
                 }).addTo(this.gisMap);
+                fringeCircle.bindTooltip(`<b>${site.name}</b><br>🟠 Fringe Coverage (≥ -95 dBm)<br>Radius: ~${(hata.fringeMeters/1000).toFixed(1)} km<br>Outdoor Handheld & Kendaraan Reliable`, { sticky: true });
                 this.gisOverlayLayers.push(fringeCircle);
 
-                // Zone 3: Fair Coverage (-86..-95 dBm) (Yellow / Amber)
-                const fairCircle = L.circle([site.lat, site.lon], {
-                    radius: fairRadiusMeters,
-                    color: '#d97706',
-                    fillColor: '#f59e0b',
-                    fillOpacity: op * 0.45,
-                    weight: rings ? 1.5 : 0
-                }).addTo(this.gisMap);
-                this.gisOverlayLayers.push(fairCircle);
-
-                // Zone 2: Strong Coverage (-66..-85 dBm) (Emerald Green)
-                const strongCircle = L.circle([site.lat, site.lon], {
-                    radius: strongRadiusMeters,
-                    color: '#059669',
+                // Zone 2: Acceptance Standard (≥ -85 dBm) (Emerald Green)
+                const acceptCircle = L.circle([site.lat, site.lon], {
+                    radius: hata.acceptMeters,
+                    color: '#10b981',
                     fillColor: '#10b981',
-                    fillOpacity: op * 0.65,
-                    weight: rings ? 2 : 0
+                    fillOpacity: op * 0.45,
+                    weight: rings ? 2.2 : 0
                 }).addTo(this.gisMap);
-                this.gisOverlayLayers.push(strongCircle);
+                acceptCircle.bindTooltip(`<b>${site.name}</b><br>🟢 Acceptance Standard (≥ -85 dBm)<br>Radius: ~${(hata.acceptMeters/1000).toFixed(1)} km<br>Indoor Portable HT Target & Area Layanan`, { sticky: true });
+                this.gisOverlayLayers.push(acceptCircle);
 
-                // Zone 1: Core Coverage (>= -65 dBm) (Deep Sky Blue)
+                // Zone 1: Core High-Coverage (≥ -75 dBm) (Deep Sky Blue)
                 const coreCircle = L.circle([site.lat, site.lon], {
-                    radius: coreRadiusMeters,
-                    color: '#0284c7',
-                    fillColor: '#0ea5e9',
-                    fillOpacity: op * 0.85,
+                    radius: hata.coreMeters,
+                    color: siteColor,
+                    fillColor: siteColor,
+                    fillOpacity: op * 0.70,
                     weight: rings ? 2.5 : 0
                 }).addTo(this.gisMap);
+                coreCircle.bindTooltip(`<b>${site.name}</b><br>🔵 Core High-Coverage (≥ -75 dBm)<br>Radius: ~${(hata.coreMeters/1000).toFixed(1)} km<br>Penetrasi Bangunan & Kualitas Sinyal Maksimal`, { sticky: true });
                 this.gisOverlayLayers.push(coreCircle);
 
-                // Site Marker (Draggable for main site)
+                // Site Marker (All sites Draggable)
                 const siteIcon = L.divIcon({
                     className: 'cdpk-gis-marker',
-                    html: `<div style="background: linear-gradient(135deg, #0284c7, #0369a1); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; border: 2.5px solid #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.45); cursor: grab;">R${idx + 1}</div>`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
+                    html: `<div style="background: ${siteColor}; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; border: 2.5px solid #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.5); cursor: grab; transition: transform 0.15s ease;">R${idx + 1}</div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
                 });
 
                 const marker = L.marker([site.lat, site.lon], { 
                     icon: siteIcon, 
-                    draggable: (idx === 0) 
+                    draggable: true
                 }).addTo(this.gisMap);
 
-                if (idx === 0) {
-                    marker.on('dragend', (e) => {
-                        const pos = e.target.getLatLng();
-                        this.covLat = parseFloat(pos.lat.toFixed(4));
-                        this.covLon = parseFloat(pos.lng.toFixed(4));
-                        this.initOrUpdateGisMap();
-                        this.showToast(this.lang === 'en' ? `Site moved to ${this.covLat}, ${this.covLon}` : `Posisi site dipindahkan ke ${this.covLat}, ${this.covLon}`, 'info');
-                    });
-                }
+                marker.on('dragend', (e) => {
+                    const pos = e.target.getLatLng();
+                    site.lat = parseFloat(pos.lat.toFixed(4));
+                    site.lon = parseFloat(pos.lng.toFixed(4));
+                    if (idx === 0) {
+                        this.covLat = site.lat;
+                        this.covLon = site.lon;
+                    }
+                    this.initOrUpdateGisMap();
+                    const toastMsg = this.lang === 'en'
+                        ? `${site.name} moved to ${site.lat}, ${site.lon}`
+                        : `${site.name} dipindahkan ke ${site.lat}, ${site.lon}`;
+                    this.showToast(toastMsg, 'info');
+                });
 
                 marker.bindPopup(`
-                    <div style="font-family: sans-serif; font-size: 12px; line-height: 1.45; min-width: 200px;">
-                        <strong style="color: #0369a1; font-size: 13px;">📡 ${site.name}</strong><br/>
-                        <span style="color: #64748b;">Repeater:</span> <strong>${s.primaryRepeaterModel}</strong><br/>
-                        <span style="color: #64748b;">TX Power:</span> <strong>${this.covTxWatts} W (EIRP ${eirpDbm.toFixed(1)} dBm)</strong><br/>
-                        <span style="color: #64748b;">Tinggi Tower:</span> <strong>${towerHeight} m</strong><br/>
-                        <span style="color: #64748b;">Inti Core (≥ -65 dBm):</span> <strong style="color: #0284c7;">~${(coreRadiusMeters/1000).toFixed(1)} km</strong><br/>
-                        <span style="color: #64748b;">Radius Kuat (≥ -85 dBm):</span> <strong style="color: #10b981;">~${(strongRadiusMeters/1000).toFixed(1)} km</strong><br/>
-                        <span style="color: #64748b;">Batas Fringe (-105 dBm):</span> <strong style="color: #ea580c;">~${(fringeRadiusMeters/1000).toFixed(1)} km</strong>
+                    <div style="font-family: sans-serif; font-size: 12px; line-height: 1.45; min-width: 220px;">
+                        <div style="border-bottom: 1.5px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">
+                            <strong style="color: ${siteColor}; font-size: 13px;">📡 ${site.name}</strong><br/>
+                            <span style="color: #64748b; font-size: 11px;">Model Okumura-Hata 450 MHz DMR</span>
+                        </div>
+                        <span style="color: #64748b;">Koordinat GPS:</span> <strong>${site.lat}, ${site.lon}</strong><br/>
+                        <span style="color: #64748b;">TX Power:</span> <strong>${this.covTxWatts} W (EIRP ${hata.eirpDbm} dBm)</strong><br/>
+                        <span style="color: #64748b;">Tinggi Tower (hb):</span> <strong>${this.covTowerHeight || 35} m</strong><br/>
+                        <span style="color: #64748b;">Profil Lingkungan:</span> <strong>${hata.env.toUpperCase()} (${hata.topography})</strong><br/>
+                        <div style="margin-top: 6px; padding-top: 5px; border-top: 1px dashed #cbd5e1; font-size: 11.5px;">
+                            <span style="color: #0284c7;">● Core (≥ -75 dBm):</span> <strong>~${(hata.coreMeters/1000).toFixed(1)} km</strong><br/>
+                            <span style="color: #10b981;">● Acceptance (≥ -85 dBm):</span> <strong>~${(hata.acceptMeters/1000).toFixed(1)} km</strong><br/>
+                            <span style="color: #f59e0b;">● Fringe (≥ -95 dBm):</span> <strong>~${(hata.fringeMeters/1000).toFixed(1)} km</strong><br/>
+                            <span style="color: #ef4444;">● Dead-Zone (< -95 dBm):</span> <strong>~${(hata.deadMeters/1000).toFixed(1)} km</strong>
+                        </div>
                     </div>
                 `);
                 this.gisOverlayLayers.push(marker);
@@ -2965,10 +3094,25 @@ window.cdpkSystemPlannerApp = function () {
             // Map Click repositioning listener
             if (!this.gisMapClickHandlerSet) {
                 this.gisMap.on('click', (e) => {
-                    this.covLat = parseFloat(e.latlng.lat.toFixed(4));
-                    this.covLon = parseFloat(e.latlng.lng.toFixed(4));
-                    this.initOrUpdateGisMap();
-                    this.showToast(this.lang === 'en' ? `Site positioned to ${this.covLat}, ${this.covLon}` : `Titik site dipindahkan ke ${this.covLat}, ${this.covLon}`, 'info');
+                    const clickLat = parseFloat(e.latlng.lat.toFixed(4));
+                    const clickLon = parseFloat(e.latlng.lng.toFixed(4));
+
+                    if (this.gisPlotMode) {
+                        this.addGisSite(clickLat, clickLon);
+                        this.gisPlotMode = false;
+                    } else {
+                        const targetIdx = this.gisActiveSiteIndex || 0;
+                        if (this.gisSites && this.gisSites[targetIdx]) {
+                            this.gisSites[targetIdx].lat = clickLat;
+                            this.gisSites[targetIdx].lon = clickLon;
+                            if (targetIdx === 0) {
+                                this.covLat = clickLat;
+                                this.covLon = clickLon;
+                            }
+                            this.initOrUpdateGisMap();
+                            this.showToast(this.lang === 'en' ? `${this.gisSites[targetIdx].name} moved to ${clickLat}, ${clickLon}` : `${this.gisSites[targetIdx].name} dipindahkan ke ${clickLat}, ${clickLon}`, 'info');
+                        }
+                    }
                 });
                 this.gisMapClickHandlerSet = true;
             }
@@ -2990,6 +3134,92 @@ window.cdpkSystemPlannerApp = function () {
             }
         },
 
+        addGisSite(customLat, customLon, customName) {
+            if (!Array.isArray(this.gisSites)) this.gisSites = [];
+            const count = this.gisSites.length;
+            const newId = count + 1;
+            const baseLat = parseFloat(this.covLat) || -1.2379;
+            const baseLon = parseFloat(this.covLon) || 116.8529;
+            const offset = (count * 0.035);
+            const newLat = customLat !== undefined ? parseFloat(customLat) : parseFloat((baseLat + offset * 0.6).toFixed(4));
+            const newLon = customLon !== undefined ? parseFloat(customLon) : parseFloat((baseLon + offset * 0.9).toFixed(4));
+            const color = this.CDPK_SITE_COLORS[count % this.CDPK_SITE_COLORS.length];
+            const name = customName || `Site ${newId} (Repeater SLR 5300)`;
+
+            this.gisSites.push({
+                id: newId,
+                name: name,
+                lat: newLat,
+                lon: newLon,
+                color: color,
+                towerHeight: Number(this.covTowerHeight || 35),
+                txWatts: Number(this.covTxWatts || 50),
+                antGainDbi: Number(this.covAntGainDbi || 6.5),
+                enabled: true
+            });
+            this.gisActiveSiteIndex = this.gisSites.length - 1;
+            this.initOrUpdateGisMap();
+            this.showToast(this.lang === 'en' ? `${name} added to coverage map.` : `${name} berhasil ditambahkan ke peta.`, 'success');
+        },
+
+        removeGisSite(siteId) {
+            if (!this.gisSites || this.gisSites.length <= 1) {
+                this.showToast(this.lang === 'en' ? 'Minimum 1 site must be maintained.' : 'Minimal 1 site harus tetap ada pada peta.', 'error');
+                return;
+            }
+            this.gisSites = this.gisSites.filter(s => s.id !== siteId);
+            if (this.gisActiveSiteIndex >= this.gisSites.length) {
+                this.gisActiveSiteIndex = this.gisSites.length - 1;
+            }
+            this.initOrUpdateGisMap();
+            this.showToast(this.lang === 'en' ? 'Site removed from network.' : 'Site berhasil dihapus dari jaringan.', 'info');
+        },
+
+        syncGisSitesWithSizing() {
+            const s = this.sizingResult || {};
+            const numSites = Math.max(1, Math.min(8, parseInt(s.outdoorSites || 1, 10)));
+            const baseLat = parseFloat(this.covLat) || -1.2379;
+            const baseLon = parseFloat(this.covLon) || 116.8529;
+            const newSites = [];
+
+            if (numSites === 1) {
+                newSites.push({
+                    id: 1,
+                    name: 'Site 1 (Main Base Station)',
+                    lat: baseLat,
+                    lon: baseLon,
+                    color: this.CDPK_SITE_COLORS[0],
+                    towerHeight: Number(s.towerHeight || 35),
+                    txWatts: Number(this.covTxWatts || 50),
+                    enabled: true
+                });
+            } else {
+                const spreadKm = (Math.sqrt(Math.max(10, s.areaKm2 || 25)) * 0.35) / 111.32;
+                for (let i = 0; i < numSites; i++) {
+                    const angle = (2 * Math.PI * i) / numSites - Math.PI / 4;
+                    newSites.push({
+                        id: i + 1,
+                        name: `Site ${i + 1} (${s.primaryRepeaterModel || 'SLR 5300'})`,
+                        lat: parseFloat((baseLat + spreadKm * Math.cos(angle) * 0.8).toFixed(4)),
+                        lon: parseFloat((baseLon + spreadKm * Math.sin(angle) * 1.1).toFixed(4)),
+                        color: this.CDPK_SITE_COLORS[i % this.CDPK_SITE_COLORS.length],
+                        towerHeight: Number(s.towerHeight || 35),
+                        txWatts: Number(this.covTxWatts || 50),
+                        enabled: true
+                    });
+                }
+            }
+            this.gisSites = newSites;
+            this.gisActiveSiteIndex = 0;
+            this.initOrUpdateGisMap();
+            this.showToast(this.lang === 'en' ? `Synchronized ${numSites} sites from DMR Sizing recommendation.` : `Berhasil menyinkronkan ${numSites} site dari rekomendasi Sizing DMR.`, 'success');
+        },
+
+        focusGisSite(site) {
+            if (!this.gisMap || !site) return;
+            this.gisMap.setView([site.lat, site.lon], 13);
+        },
+
         updateGisHeatmapOpacity() {
             this.initOrUpdateGisMap();
         },
@@ -3003,6 +3233,10 @@ window.cdpkSystemPlannerApp = function () {
             }
             this.covLat = parseFloat(lat.toFixed(4));
             this.covLon = parseFloat(lon.toFixed(4));
+            if (this.gisSites && this.gisSites[0]) {
+                this.gisSites[0].lat = this.covLat;
+                this.gisSites[0].lon = this.covLon;
+            }
             this.runCoverageSimulation();
             if (this.coverageViewMode === 'gis') {
                 this.initOrUpdateGisMap();
@@ -3021,6 +3255,10 @@ window.cdpkSystemPlannerApp = function () {
                     this.isDetectingGps = false;
                     this.covLat = parseFloat(pos.coords.latitude.toFixed(4));
                     this.covLon = parseFloat(pos.coords.longitude.toFixed(4));
+                    if (this.gisSites && this.gisSites[0]) {
+                        this.gisSites[0].lat = this.covLat;
+                        this.gisSites[0].lon = this.covLon;
+                    }
                     const accMeters = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null;
                     this.runCoverageSimulation();
                     if (this.coverageViewMode === 'gis') {
@@ -3056,6 +3294,7 @@ window.cdpkSystemPlannerApp = function () {
             // Find nearest site using spherical distance approximation
             let minDistKm = Infinity;
             this.gisSites.forEach(s => {
+                if (s.enabled === false) return;
                 const dLat = (probeLat - s.lat) * 111.32;
                 const dLon = (probeLon - s.lon) * 111.32 * Math.cos(((probeLat + s.lat) / 2) * Math.PI / 180);
                 const dist = Math.sqrt(dLat * dLat + dLon * dLon);
@@ -3065,38 +3304,24 @@ window.cdpkSystemPlannerApp = function () {
             });
 
             const dKm = minDistKm;
-            const s = this.sizingResult;
-            const txWatt = Number(this.covTxWatts || 50);
-            const txDbm = 10 * Math.log10(txWatt * 1000);
-            const antGainDbi = Number(this.covAntGainDbi || 6.5);
-            const cableLossDb = Number(this.covCableLossDb || 2.1);
-            const eirpDbm = txDbm + antGainDbi - cableLossDb;
-            const towerH = Number(s.towerHeight || 35);
-            const freqMhz = this.freqBand === 'vhf' ? 160 : (this.freqBand === '800' ? 850 : 450);
-
-            // Okumura-Hata empirical path loss
-            const terrainN = { flat: 2.35, hilly: 3.10, mountainous: 3.70, dense: 3.45, indoor: 3.90, mixed_inout: 3.50 };
-            const exp = terrainN[this.terrain] || 3.10;
-            const pl0 = 69.55 + 26.16 * Math.log10(freqMhz) - 13.82 * Math.log10(towerH);
-            const slope = (44.9 - 6.55 * Math.log10(towerH)) * (exp / 3.0);
-            const pl = dKm <= 0.05 ? 35 : (pl0 + slope * Math.log10(Math.max(0.08, dKm)));
-            const rssiDbm = Math.round((eirpDbm - pl) * 10) / 10;
-            const rxSensDbm = -118; // DMR receiver sensitivity threshold
+            const hata = this.getOkumuraHataRadii();
+            const rssiDbm = Math.round(hata.getRssi(dKm) * 10) / 10;
+            const rxSensDbm = -118.0; // DMR receiver sensitivity threshold
             const marginDb = Math.round((rssiDbm - rxSensDbm) * 10) / 10;
 
             let quality = '';
             let color = '';
-            if (rssiDbm >= -65) {
-                quality = this.lang === 'en' ? 'Excellent (Core)' : 'Sangat Kuat (Core)';
+            if (rssiDbm >= -75) {
+                quality = this.lang === 'en' ? 'Core (High Coverage)' : 'Core (Sangat Kuat)';
                 color = '#0284c7';
             } else if (rssiDbm >= -85) {
-                quality = this.lang === 'en' ? 'Strong (Indoor HT)' : 'Kuat (Indoor HT)';
+                quality = this.lang === 'en' ? 'Acceptance Standard' : 'Acceptance (Indoor HT)';
                 color = '#10b981';
             } else if (rssiDbm >= -95) {
-                quality = this.lang === 'en' ? 'Fair (Outdoor)' : 'Cukup (Outdoor)';
+                quality = this.lang === 'en' ? 'Fringe (Outdoor/Mobile)' : 'Fringe (Cukup Outdoor)';
                 color = '#f59e0b';
             } else if (rssiDbm >= -105) {
-                quality = this.lang === 'en' ? 'Edge / Fringe' : 'Sinyal Lemah / Edge';
+                quality = this.lang === 'en' ? 'Marginal / Outer Edge' : 'Batas Sinyal / Marginal';
                 color = '#ea580c';
             } else {
                 quality = this.lang === 'en' ? 'Dead Zone' : 'Di Luar Jangkauan';
@@ -3120,14 +3345,30 @@ window.cdpkSystemPlannerApp = function () {
             if (this.gisTileLayer) {
                 try { this.gisMap.removeLayer(this.gisTileLayer); } catch (e) {}
             }
-            if (this.gisBasemap === 'sat') {
+            if (this.gisBasemap === 'google_sat') {
+                this.gisTileLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                    subdomains: ['0', '1', '2', '3'],
+                    maxZoom: 20,
+                    crossOrigin: 'anonymous',
+                    attribution: 'Google Satellite'
+                }).addTo(this.gisMap);
+            } else if (this.gisBasemap === 'google_hybrid') {
+                this.gisTileLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+                    subdomains: ['0', '1', '2', '3'],
+                    maxZoom: 20,
+                    crossOrigin: 'anonymous',
+                    attribution: 'Google Hybrid'
+                }).addTo(this.gisMap);
+            } else if (this.gisBasemap === 'sat') {
                 this.gisTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                     maxZoom: 18,
+                    crossOrigin: 'anonymous',
                     attribution: 'Esri World Imagery'
                 }).addTo(this.gisMap);
             } else {
                 this.gisTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
+                    crossOrigin: 'anonymous',
                     attribution: 'OpenStreetMap'
                 }).addTo(this.gisMap);
             }
@@ -3136,6 +3377,24 @@ window.cdpkSystemPlannerApp = function () {
         setGisBasemap(type) {
             this.gisBasemap = type;
             this.updateGisTileLayer();
+        },
+
+        exportGisCoveragePng() {
+            this.recordClientAuditEvent('export_gis_coverage_png', `Ekspor Peta GIS Okumura-Hata (PNG Retina 2x): "${this.projName}"`, {
+                project: this.projName,
+                envProfile: this.covEnvProfile,
+                sites: (this.gisSites || []).length
+            });
+            window.CDPK_EXPORTERS.exportGisCoveragePNG(this);
+        },
+
+        exportGisCoveragePdf() {
+            this.recordClientAuditEvent('export_gis_coverage_pdf', `Ekspor Laporan Teknis Peta GIS (PDF): "${this.projName}"`, {
+                project: this.projName,
+                envProfile: this.covEnvProfile,
+                sites: (this.gisSites || []).length
+            });
+            window.CDPK_EXPORTERS.exportGisCoveragePDF(this);
         },
 
         async geocodeLocation() {
@@ -4521,11 +4780,15 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         exportCoveragePng() {
-            this.recordClientAuditEvent('export_coverage', `Ekspor Peta Simulasi Jangkauan RF (PNG): "${this.projName}"`, {
-                project: this.projName,
-                location: this.covSearchLocation
-            });
-            window.CDPK_EXPORTERS.exportCoveragePNG('cdpkCoverageCanvas', this.projName);
+            if (this.coverageViewMode === 'gis') {
+                this.exportGisCoveragePng();
+            } else {
+                this.recordClientAuditEvent('export_coverage', `Ekspor Peta Simulasi Jangkauan RF (PNG): "${this.projName}"`, {
+                    project: this.projName,
+                    location: this.covSearchLocation
+                });
+                window.CDPK_EXPORTERS.exportCoveragePNG('cdpkCoverageCanvas', this.projName);
+            }
         },
 
         // ─── Module: RFoF DAS by FMTCS Methods & Two-Way Bridges ───────────────
