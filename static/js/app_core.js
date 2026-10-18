@@ -617,6 +617,8 @@ window.cdpkSystemPlannerApp = function () {
         deferredInstallPrompt: null,
         iosInstallGuideOpen: false,
         mobileMenuOpen: false,
+        desktopSettingsOpen: false,
+        mobileSettingsOpen: false,
         googleDomainMismatch: false,
         gisMobileProbeCollapsed: true,
 

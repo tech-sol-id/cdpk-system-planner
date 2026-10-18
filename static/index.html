@@ -236,98 +236,45 @@
     <div x-show="currentUser" x-cloak style="display: none;" class="min-h-screen flex flex-col bg-slate-100 text-slate-900 w-full max-w-full overflow-x-hidden">
 
         <!-- ═══════════════════ TOP HEADER & CLOUD SYNC BAR ═══════════════════ -->
-        <header class="cdpk-gradient text-white shadow-lg sticky top-0 z-30">
-            <!-- Top Row: Logo & Title (Left) | Language Switcher & User Profile/Logout (Upper Right Corner) -->
-            <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-3 border-b border-white/10">
+        <header class="cdpk-gradient text-white shadow-lg sticky top-0 z-30 safe-area-top">
+            <!-- Row 1: Top Bar (Logo & Title | Kelola Tim, Notifications, Language, User Settings) -->
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-3 border-b border-white/10">
                 <!-- Brand & Logo -->
                 <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-                    <div class="bg-white rounded-lg p-1 sm:p-1.5 shadow flex items-center justify-center h-8 sm:h-10 w-16 sm:w-20 overflow-hidden shrink-0">
+                    <div class="bg-white rounded-lg p-1 sm:p-1.5 shadow flex items-center justify-center h-8 sm:h-10 w-14 sm:w-20 overflow-hidden shrink-0">
                         <img :src="window.CDPK_LOGO_B64" alt="CDPK Logo" class="max-h-6 sm:max-h-8 object-contain" />
                     </div>
                     <div>
                         <div class="flex items-center gap-1.5 sm:gap-2">
-                            <h1 class="text-sm sm:text-lg font-extrabold tracking-tight text-white whitespace-nowrap" x-text="t('appTitle')"></h1>
+                            <h1 class="text-xs sm:text-lg font-extrabold tracking-tight text-white whitespace-nowrap" x-text="t('appTitle')"></h1>
                             <span class="hidden sm:inline-block text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-400/20 border border-sky-300/40 text-sky-100">v8.6.0</span>
                         </div>
                         <p class="text-[11px] text-sky-100/90 font-medium hidden sm:block" x-text="t('appSubtitle')"></p>
                     </div>
                 </div>
 
-                <!-- Prominent Workspace Switcher (Top Header) -->
-                <div class="hidden md:flex items-center bg-slate-900/65 p-1 rounded-xl border border-white/20 shadow-inner gap-1 shrink-0">
-                    <button @click="activeWorkspace = 'dmr'"
-                            :class="activeWorkspace === 'dmr' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
-                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
-                        <span>📡</span>
-                        <span>DMR System</span>
-                    </button>
-                    <button @click="activeWorkspace = 'das'"
-                            :class="activeWorkspace === 'das' ? 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
-                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
-                        <span>🏢</span>
-                        <span>RFoF System</span>
-                    </button>
-                    <button @click="activeWorkspace = 'cctv'"
-                            :class="activeWorkspace === 'cctv' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
-                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
-                        <span>📹</span>
-                        <span x-text="t('cctvWorkspaceTitle') || 'Video Security & CCTV'"></span>
-                    </button>
-                </div>
-
-                <!-- Pojok Kanan Atas: (1) Global FX Pill (2) Pilihan Bahasa (3) Info Login User & Logout -->
-                <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-                    <!-- 💱 Global FX Rate & Multi-Currency Assistant Pill -->
-                    <button @click="fxModalOpen = true"
-                            class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg border text-xs font-bold transition shadow-xs cursor-pointer"
-                            :class="{
-                                'bg-slate-900/60 hover:bg-slate-900/90 border-white/25 text-sky-100': fxConfig.mode === 'finance',
-                                'bg-emerald-950/70 hover:bg-emerald-900 border-emerald-400 text-emerald-200': fxConfig.mode === 'live',
-                                'bg-amber-950/70 hover:bg-amber-900 border-amber-400 text-amber-200': fxConfig.mode === 'manual'
-                            }"
-                            :title="lang === 'en' ? 'Click to open Global FX Controller & Finance Advisory' : 'Klik untuk membuka Pengaturan Kurs Valas & Asisten Finansial Global'">
-                        <span class="text-sm">💱</span>
-                        <span class="hidden xl:inline text-[11px] opacity-80" x-text="fxConfig.mode === 'finance' ? 'Finance:' : (fxConfig.mode === 'live' ? 'Live:' : 'Buffer:')"></span>
-                        <span class="font-extrabold tracking-tight text-[11px] sm:text-xs" x-text="'Rp ' + (fxConfig.effectiveRate || exchangeRate).toLocaleString('id-ID')"></span>
-                        <span class="text-[9px] px-1 py-0.2 rounded font-black uppercase"
-                              :class="{
-                                  'bg-blue-400 text-slate-950': fxConfig.mode === 'finance',
-                                  'bg-emerald-400 text-slate-950': fxConfig.mode === 'live',
-                                  'bg-amber-400 text-slate-950': fxConfig.mode === 'manual'
-                              }"
-                              x-text="fxConfig.mode === 'finance' ? 'SSOT' : (fxConfig.mode === 'live' ? 'Live' : 'Custom')"></span>
-                    </button>
-
-                    <!-- 2. Pilihan Bahasa (ID / EN) -->
-                    <div class="flex items-center bg-slate-900/60 p-0.5 rounded-lg border border-white/20 text-xs font-bold shadow-inner">
-                        <button @click="setLang('id')"
-                                :class="lang === 'id' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'"
-                                class="px-1.5 sm:px-2 py-1 rounded-md transition text-xs font-bold">
-                            <span class="sm:hidden">ID</span><span class="hidden sm:inline">ID 🇮🇩</span>
+                <!-- Desktop / Tablet Controls (Hidden on Mobile) -->
+                <div class="hidden md:flex items-center gap-2 sm:gap-2.5 shrink-0">
+                    <!-- Team Users Management (Admin) / Directory (Overseer) - Moved to Row 1 Left of Bell -->
+                    <template x-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'overseer')">
+                        <button @click="openUserManagementModal()"
+                                class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition border border-indigo-400/40 cursor-pointer"
+                                :title="currentUser.role === 'admin' ? t('navUserManagement') : t('teamDirectoryBtn')">
+                            <span>👥</span>
+                            <span class="hidden lg:inline" x-text="currentUser.role === 'admin' ? t('navUserManagement') : t('teamDirectoryBtn')"></span>
                         </button>
-                        <button @click="setLang('en')"
-                                :class="lang === 'en' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'"
-                                class="px-1.5 sm:px-2 py-1 rounded-md transition text-xs font-bold">
-                            <span class="sm:hidden">EN</span><span class="hidden sm:inline">EN 🇬🇧</span>
-                        </button>
-                    </div>
+                    </template>
 
-                    <!-- Notifikasi Lonceng Kuning (Yellow Notification Bell matching image) -->
+                    <!-- Notifikasi Lonceng Kuning -->
                     <div class="relative" @click.away="notificationsOpen = false">
                         <button @click="toggleNotifications()"
                                 class="relative p-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-900/90 border border-white/20 transition cursor-pointer flex items-center justify-center focus:outline-none"
                                 :title="unreadNotificationsCount > 0 ? unreadNotificationsCount + ' Notifikasi Belum Dibaca' : 'Notifikasi'">
-                            <!-- Yellow Bell SVG matching media_1792207904064_1759d227.jpg -->
                             <svg class="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <!-- Top handle/finial -->
                                 <circle cx="50" cy="18" r="7" fill="#FBBF24" />
-                                <!-- Bell body -->
                                 <path d="M50 18 C36 18 29 28 29 44 C29 55 25 64 18 69 C16 71 17.5 74 21 74 L79 74 C82.5 74 84 71 82 69 C75 64 71 55 71 44 C71 28 64 18 50 18 Z" fill="#FBBF24"/>
-                                <!-- Bottom clapper -->
                                 <path d="M39 77 C39 83 44 88 50 88 C56 88 61 83 61 77 Z" fill="#FBBF24"/>
                             </svg>
-
-                            <!-- Red notification badge (like image) -->
                             <template x-if="unreadNotificationsCount > 0">
                                 <span class="absolute -top-1 -right-1 flex items-center justify-center min-w-[16px] h-[16px] sm:min-w-[18px] sm:h-[18px] px-1 bg-[#EF4444] text-white text-[9px] sm:text-[10px] font-black rounded-full border-2 border-white shadow-md animate-pulse"
                                       x-text="unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount">
@@ -385,9 +332,9 @@
                                                 <template x-if="!n.is_read">
                                                     <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
                                                 </template>
-                                            </div>
-                                            <div class="text-[11px] text-slate-600 mt-0.5 leading-snug" x-text="n.message"></div>
-                                            <div class="flex items-center justify-between mt-2 pt-1 border-t border-slate-100 text-[10px]">
+                                             </div>
+                                             <div class="text-[11px] text-slate-600 mt-0.5 leading-snug" x-text="n.message"></div>
+                                             <div class="flex items-center justify-between mt-2 pt-1 border-t border-slate-100 text-[10px]">
                                                 <span class="text-slate-400" x-text="n.created_at"></span>
                                                 <div class="flex items-center gap-1.5">
                                                     <template x-if="n.action === 'load_project'">
@@ -408,7 +355,7 @@
                                                         ✓
                                                     </button>
                                                 </div>
-                                            </div>
+                                             </div>
                                         </div>
                                     </div>
                                 </template>
@@ -416,9 +363,23 @@
                         </div>
                     </div>
 
-                    <!-- 1. Info Login User, Role beserta Button Logout (Hidden on mobile < md, visible on tablet/desktop) -->
+                    <!-- Language Selector (ID / EN) -->
+                    <div class="flex items-center bg-slate-900/60 p-0.5 rounded-lg border border-white/20 text-xs font-bold shadow-inner">
+                        <button @click="setLang('id')"
+                                :class="lang === 'id' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'"
+                                class="px-1.5 sm:px-2 py-1 rounded-md transition text-xs font-bold cursor-pointer">
+                            <span class="sm:hidden">ID</span><span class="hidden sm:inline">ID 🇮🇩</span>
+                        </button>
+                        <button @click="setLang('en')"
+                                :class="lang === 'en' ? 'bg-white text-blue-900 shadow-sm' : 'text-sky-100 hover:text-white'"
+                                class="px-1.5 sm:px-2 py-1 rounded-md transition text-xs font-bold cursor-pointer">
+                            <span class="sm:hidden">EN</span><span class="hidden sm:inline">EN 🇬🇧</span>
+                        </button>
+                    </div>
+
+                    <!-- User Profile & Dropdown Settings (Desktop) -->
                     <template x-if="currentUser">
-                        <div class="hidden md:flex items-center gap-2 bg-slate-900/65 border border-white/25 px-2.5 sm:px-3 py-1 rounded-lg text-xs shadow-md">
+                        <div class="flex items-center gap-2 bg-slate-900/65 border border-white/25 px-2.5 sm:px-3 py-1 rounded-lg text-xs shadow-md">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:gap-1.5">
@@ -428,21 +389,95 @@
                                           x-text="currentUser.role === 'admin' ? '👑 Admin' : (currentUser.role === 'overseer' ? '👁️ Overseer' : (currentUser.role === 'engineer' ? '🛠️ Engineer' : '💼 Product Expert'))"></span>
                                 </div>
                             </div>
-                            <div class="h-4 w-px bg-white/20 hidden sm:block"></div>
-                            <button @click="startChangeMyPassword()" class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-amber-600 text-white font-bold text-xs transition cursor-pointer" :title="t('changePwdBtn')">
-                                <span>🔑</span>
-                                <span class="hidden sm:inline" x-text="t('changePwdBtn')"></span>
-                            </button>
-                            <button @click="logout()" class="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-rose-600 text-white font-bold text-xs transition cursor-pointer" :title="t('logoutBtn')">
-                                <span>🚪</span>
-                                <span class="hidden sm:inline" x-text="t('logoutBtn')"></span>
-                            </button>
+                            <div class="h-4 w-px bg-white/20"></div>
+
+                            <!-- Gear Icon Settings Dropdown -->
+                            <div class="relative" @click.away="desktopSettingsOpen = false">
+                                <button @click="desktopSettingsOpen = !desktopSettingsOpen"
+                                        class="p-1 rounded hover:bg-white/15 text-sky-100 hover:text-white transition cursor-pointer flex items-center justify-center focus:outline-none"
+                                        title="Pengaturan Akun & Logout">
+                                    <span class="text-sm">⚙️</span>
+                                </button>
+
+                                <div x-show="desktopSettingsOpen"
+                                     x-transition:enter="transition ease-out duration-150"
+                                     x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                     x-transition:leave="transition ease-in duration-100"
+                                     x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                     x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                                     class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-200 z-[80] py-1 text-slate-800"
+                                     style="display: none; z-index: 80;">
+                                    <div class="px-3 py-1.5 border-b border-slate-100 text-[11px] font-bold text-slate-500 truncate" x-text="currentUser.email"></div>
+                                    <button @click="desktopSettingsOpen = false; startChangeMyPassword()"
+                                            class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-amber-700 flex items-center gap-2 transition cursor-pointer">
+                                        <span>🔑</span>
+                                        <span x-text="t('changePwdBtn')"></span>
+                                    </button>
+                                    <div class="border-t border-slate-100 my-0.5"></div>
+                                    <button @click="desktopSettingsOpen = false; logout()"
+                                            class="w-full text-left px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition cursor-pointer">
+                                        <span>🚪</span>
+                                        <span x-text="t('logoutBtn')"></span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </template>
+                </div>
 
-                    <!-- Mobile Drawer Menu Button (Smartphone only) -->
+                <!-- Mobile Only Controls (Smartphone: Compact FX, Gear Settings, Hamburger) -->
+                <div class="flex md:hidden items-center gap-1.5 shrink-0">
+                    <!-- Compact FX Pill (Angka Saja) -->
+                    <button @click="fxModalOpen = true"
+                            class="flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-bold transition shadow-xs cursor-pointer"
+                            :class="{
+                                'bg-slate-900/60 border-white/25 text-sky-100': fxConfig.mode === 'finance',
+                                'bg-emerald-950/70 border-emerald-400 text-emerald-200': fxConfig.mode === 'live',
+                                'bg-amber-950/70 border-amber-400 text-amber-200': fxConfig.mode === 'manual'
+                            }"
+                            :title="lang === 'en' ? 'Click to open Global FX Controller' : 'Klik untuk membuka Pengaturan Kurs Valas'">
+                        <span class="text-xs">💱</span>
+                        <span class="font-extrabold tracking-tight text-[11px]" x-text="(fxConfig.effectiveRate || exchangeRate).toLocaleString('id-ID')"></span>
+                    </button>
+
+                    <!-- Mobile Settings Gear Popover -->
+                    <div class="relative" @click.away="mobileSettingsOpen = false">
+                        <button @click="mobileSettingsOpen = !mobileSettingsOpen"
+                                class="flex items-center justify-center p-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-900 border border-white/20 text-white transition cursor-pointer"
+                                title="Pengaturan Akun & Logout">
+                            <span class="text-sm">⚙️</span>
+                        </button>
+
+                        <div x-show="mobileSettingsOpen"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-200 z-[80] py-1 text-slate-800"
+                             style="display: none; z-index: 80;">
+                            <template x-if="currentUser">
+                                <div class="px-3 py-1.5 border-b border-slate-100 text-[11px] font-bold text-slate-500 truncate" x-text="currentUser.name"></div>
+                            </template>
+                            <button @click="mobileSettingsOpen = false; startChangeMyPassword()"
+                                    class="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-amber-700 flex items-center gap-2 transition cursor-pointer">
+                                <span>🔑</span>
+                                <span x-text="t('changePwdBtn')"></span>
+                            </button>
+                            <div class="border-t border-slate-100 my-0.5"></div>
+                            <button @click="mobileSettingsOpen = false; logout()"
+                                    class="w-full text-left px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition cursor-pointer">
+                                <span>🚪</span>
+                                <span x-text="t('logoutBtn')"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Drawer Menu Button (Hamburger) -->
                     <button @click="mobileMenuOpen = true"
-                            class="md:hidden flex items-center justify-center p-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-900 border border-white/20 text-white transition cursor-pointer"
+                            class="flex items-center justify-center p-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-900 border border-white/20 text-white transition cursor-pointer"
                             title="Menu Sistem">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16m-7 6h7"/>
@@ -451,8 +486,54 @@
                 </div>
             </div>
 
-            <!-- Secondary Toolbar Row: Work Actions (Left) | Admin Privileged Controls (Right) -->
-            <div class="hidden md:flex max-w-7xl mx-auto px-4 sm:px-6 py-2 items-center justify-between gap-2 text-xs">
+            <!-- Row 2 (Workspace Switcher & Global FX): Hidden on mobile, visible on desktop/tablet -->
+            <div class="hidden md:flex max-w-7xl mx-auto px-4 sm:px-6 py-2 items-center justify-between gap-3 border-b border-white/10">
+                <!-- Prominent Workspace Switcher -->
+                <div class="flex items-center bg-slate-900/65 p-1 rounded-xl border border-white/20 shadow-inner gap-1 shrink-0">
+                    <button @click="activeWorkspace = 'dmr'"
+                            :class="activeWorkspace === 'dmr' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
+                        <span>📡</span>
+                        <span>DMR System</span>
+                    </button>
+                    <button @click="activeWorkspace = 'das'"
+                            :class="activeWorkspace === 'das' ? 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
+                        <span>🏢</span>
+                        <span>RFoF System</span>
+                    </button>
+                    <button @click="activeWorkspace = 'cctv'"
+                            :class="activeWorkspace === 'cctv' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
+                        <span>📹</span>
+                        <span x-text="t('cctvWorkspaceTitle') || 'Video Security & CCTV'"></span>
+                    </button>
+                </div>
+
+                <!-- 💱 Global FX Rate & Multi-Currency Assistant Pill -->
+                <button @click="fxModalOpen = true"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition shadow-xs cursor-pointer"
+                        :class="{
+                            'bg-slate-900/60 hover:bg-slate-900/90 border-white/25 text-sky-100': fxConfig.mode === 'finance',
+                            'bg-emerald-950/70 hover:bg-emerald-900 border-emerald-400 text-emerald-200': fxConfig.mode === 'live',
+                            'bg-amber-950/70 hover:bg-amber-900 border-amber-400 text-amber-200': fxConfig.mode === 'manual'
+                        }"
+                        :title="lang === 'en' ? 'Click to open Global FX Controller & Finance Advisory' : 'Klik untuk membuka Pengaturan Kurs Valas & Asisten Finansial Global'">
+                    <span class="text-sm">💱</span>
+                    <span class="hidden xl:inline text-[11px] opacity-80" x-text="fxConfig.mode === 'finance' ? 'Finance:' : (fxConfig.mode === 'live' ? 'Live:' : 'Buffer:')"></span>
+                    <span class="font-extrabold tracking-tight text-xs" x-text="'Rp ' + (fxConfig.effectiveRate || exchangeRate).toLocaleString('id-ID')"></span>
+                    <span class="text-[9px] px-1 py-0.2 rounded font-black uppercase"
+                          :class="{
+                              'bg-blue-400 text-slate-950': fxConfig.mode === 'finance',
+                              'bg-emerald-400 text-slate-950': fxConfig.mode === 'live',
+                              'bg-amber-400 text-slate-950': fxConfig.mode === 'manual'
+                          }"
+                          x-text="fxConfig.mode === 'finance' ? 'SSOT' : (fxConfig.mode === 'live' ? 'Live' : 'Custom')"></span>
+                </button>
+            </div>
+
+            <!-- Row 3 Toolbar: Work Actions (Left) | Admin Privileged Controls (Right) -->
+            <div class="hidden md:flex max-w-7xl mx-auto px-4 sm:px-6 py-2 items-center justify-between gap-2 text-xs border-b border-white/10">
                 <!-- Left Work Actions -->
                 <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
                     <!-- AI Copilot Button -->
@@ -486,18 +567,8 @@
                     </button>
                 </div>
 
-                <!-- Right Side: Admin & Overseer Controls (Folder/Pricelist STRICTLY Admin only) -->
+                <!-- Right Side: Admin Privileged Controls (Folder/Pricelist STRICTLY Admin only) -->
                 <div class="flex items-center gap-2">
-                    <!-- Team Users Management (Admin) / Directory (Overseer) -->
-                    <template x-if="currentUser && (currentUser.role === 'admin' || currentUser.role === 'overseer')">
-                        <button @click="openUserManagementModal()"
-                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition border border-indigo-400/40">
-                            <span>👥</span>
-                            <span x-text="currentUser.role === 'admin' ? t('navUserManagement') : t('teamDirectoryBtn')"></span>
-                        </button>
-                    </template>
-
-                    <!-- 3. Buka Folder Drive & Master Pricelist: Strictly Hidden Except for Admin/Owner -->
                     <template x-if="currentUser && currentUser.role === 'admin'">
                         <div class="hidden lg:flex items-center gap-1.5 bg-slate-900/40 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-sky-100">
                             <span class="w-2 h-2 rounded-full" :class="syncStatus === 'ok' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'"></span>
