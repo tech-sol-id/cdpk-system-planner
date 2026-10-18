@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String APP_URL = "https://cdpk-system-planner.onrender.com";
     private static final int PERMISSION_REQUEST_LOCATION = 1001;
     private static final int FILE_CHOOSER_REQUEST = 1002;
+    private static final int PERMISSION_REQUEST_AUDIO = 1003;
 
     private WebView webView;
     private WebView popupWebView;
@@ -46,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private GeolocationPermissions.Callback geoCallback;
     private String geoOrigin;
     private ValueCallback<Uri[]> uploadMessage;
+    private PermissionRequest pendingAudioRequest;
     private String cleanUserAgent;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -85,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 .replace("; wv)", ")")
                 .replace("; wv", "")
                 .replace("Version/4.0 ", "")
-                + " CDPKAndroidApp/8.6.0";
+                + " CDPKAndroidApp/8.7.0";
 
         configureWebViewSettings(webView);
 
@@ -201,6 +204,41 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            // v8.7.0 Field Voice Note: grant ONLY microphone capture, ONLY to the app's own HTTPS origin.
+            // Camera, protected media (DRM), MIDI and any other origin are always denied.
+            @Override
+            public void onPermissionRequest(PermissionRequest request) {
+                boolean wantsAudio = false;
+                for (String resource : request.getResources()) {
+                    if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource)) {
+                        wantsAudio = true;
+                        break;
+                    }
+                }
+                if (!wantsAudio || !isTrustedAppOrigin(request.getOrigin())) {
+                    request.deny();
+                    return;
+                }
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    request.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+                } else {
+                    if (pendingAudioRequest != null) {
+                        pendingAudioRequest.deny();
+                    }
+                    pendingAudioRequest = request;
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.RECORD_AUDIO},
+                            PERMISSION_REQUEST_AUDIO);
+                }
+            }
+
+            @Override
+            public void onPermissionRequestCanceled(PermissionRequest request) {
+                if (pendingAudioRequest == request) {
+                    pendingAudioRequest = null;
+                }
+            }
+
             @Override
             public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
                 if (uploadMessage != null) {
@@ -288,6 +326,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Exact scheme + host + port match against APP_URL (no suffix/contains matching, so
+    // look-alike hosts such as cdpk-system-planner.onrender.com.evil.tld are rejected).
+    private boolean isTrustedAppOrigin(Uri origin) {
+        if (origin == null) return false;
+        Uri app = Uri.parse(APP_URL);
+        String host = origin.getHost();
+        int port = origin.getPort();
+        return "https".equalsIgnoreCase(origin.getScheme())
+                && host != null
+                && host.equalsIgnoreCase(app.getHost())
+                && (port == -1 || port == 443);
+    }
+
     private boolean handleInternalOrExternalNavigation(WebView view, Uri uri) {
         if (uri == null) return false;
         String scheme = uri.getScheme();
@@ -337,6 +388,16 @@ public class MainActivity extends AppCompatActivity {
                 geoCallback.invoke(geoOrigin, granted, false);
                 geoCallback = null;
                 geoOrigin = null;
+            }
+        } else if (requestCode == PERMISSION_REQUEST_AUDIO) {
+            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            if (pendingAudioRequest != null) {
+                if (granted) {
+                    pendingAudioRequest.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+                } else {
+                    pendingAudioRequest.deny();
+                }
+                pendingAudioRequest = null;
             }
         }
     }
