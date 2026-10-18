@@ -29,6 +29,12 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from server.fx_service import FINANCE_DISCLAIMER_EN, FINANCE_DISCLAIMER_ID
 from server.knowledge_search import build_rag_context_for_prompt, search_knowledge_base
+from server.ai_tools import (
+    GEMINI_TOOL_DECLARATIONS,
+    validate_and_sanitize_action,
+    build_fallback_actions,
+    is_actionable,
+)
 
 logger = logging.getLogger("cdpk.ai_copilot")
 
@@ -1459,7 +1465,8 @@ def query_ai_copilot(
     if model_id not in ALLOWED_MODELS:
         model_id = "gemini-3.8-flash"
 
-    current_state = current_state or {}
+    if not isinstance(current_state, dict):
+        current_state = {}  # Client-supplied, untrusted: only a plain dict is accepted.
     knowledge = knowledge or {}
     extracted = extract_params_from_prompt(prompt, current_state)
 
@@ -1485,6 +1492,7 @@ def query_ai_copilot(
     # Security Policy (AGENTS.md): Only use server-side environment credentials; ignore client-supplied API keys
     api_key = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or os.environ.get("CITRADATA_GEMINI_KEY") or "").strip()
     if not api_key:
+        expert_res["proposed_actions"] = build_fallback_actions(extracted, current_state)
         return expert_res
 
     # Prepare Gemini Live Call with High-Level Senior Solutions Architect Persona
@@ -1508,6 +1516,13 @@ def query_ai_copilot(
         f"{rag_context}"
     )
 
+    # ── Phase 1: Multi-Tool Actionable Agent (Gemini Function Calling) ──────────
+    # The model may PROPOSE engineering input parameters via function calls. These
+    # are NEVER auto-applied here — they are returned as Human-in-the-Loop Action
+    # Cards and only mutate the app after the user clicks "Terapkan" in the UI.
+    fallback_actions = build_fallback_actions(extracted, current_state)
+    tool_config = [{"functionDeclarations": GEMINI_TOOL_DECLARATIONS}]
+
     raw_candidates = [
         model_id,
         "gemini-3.8-flash",
@@ -1519,32 +1534,98 @@ def query_ai_copilot(
     for cand in candidate_models:
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand}:generateContent"
-            payload = {
-                "systemInstruction": {"parts": [{"text": sys_instruction}]},
-                "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "temperature": 0.2 if "flash" in model_id else 0.35,
-                    "maxOutputTokens": 2048
+            contents = [{"role": "user", "parts": [{"text": prompt}]}]
+            proposed_actions: List[Dict[str, Any]] = []
+            final_text = ""
+
+            # Bounded multi-turn loop: lets Gemini 3 call tools, receive a
+            # "queued for user confirmation" result, then narrate its reasoning.
+            for _turn in range(3):
+                payload = {
+                    "systemInstruction": {"parts": [{"text": sys_instruction}]},
+                    "contents": contents,
+                    "tools": tool_config,
+                    "generationConfig": {
+                        "temperature": 0.2 if "flash" in model_id else 0.35,
+                        "maxOutputTokens": 2048
+                    }
                 }
-            }
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                method="POST",
-                headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
-            )
-            with urllib.request.urlopen(req, timeout=25) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-            candidates = data.get("candidates", [])
-            if candidates:
-                parts = candidates[0].get("content", {}).get("parts", [])
-                text = "".join(p.get("text", "") for p in parts).strip()
-                if text:
-                    expert_res["reply"] = text
-                    expert_res["engine_mode"] = f"google_genai_live ({cand})"
-                    expert_res["citations"] = citations
-                    return expert_res
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    method="POST",
+                    headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
+                )
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+
+                candidates = data.get("candidates", [])
+                if not candidates:
+                    break
+                content = candidates[0].get("content", {}) or {}
+                parts = content.get("parts", []) or []
+
+                # Collect any natural-language text from this turn.
+                turn_text = "".join(
+                    p.get("text", "") for p in parts
+                    if isinstance(p, dict) and p.get("text")
+                ).strip()
+                if turn_text:
+                    final_text = turn_text
+
+                # Collect function calls (tool proposals) from this turn.
+                fc_parts = [p for p in parts if isinstance(p, dict) and p.get("functionCall")]
+                if not fc_parts:
+                    break  # No (more) tool calls -> conversation finished.
+
+                # IMPORTANT (Gemini 3): echo the model turn back VERBATIM so the
+                # thoughtSignature carried on each part is preserved; otherwise the
+                # next request fails with HTTP 400 Bad Request.
+                contents.append({"role": "model", "parts": parts})
+
+                function_response_parts = []
+                for p in fc_parts:
+                    fc = p.get("functionCall", {}) or {}
+                    tname = fc.get("name", "")
+                    targs = fc.get("args", {}) or {}
+                    call_id = fc.get("id")
+                    action = validate_and_sanitize_action(tname, targs, current_state)
+                    accepted = is_actionable(action)
+                    if accepted:
+                        proposed_actions.append(action)
+                    fresp = {
+                        "name": tname,
+                        "response": {
+                            "status": ("proposed_pending_user_confirmation" if accepted
+                                       else "rejected_by_server_validation"),
+                            "note": (
+                                "Parameter telah DIUSULKAN dan menunggu konfirmasi klik "
+                                "pengguna (Human-in-the-Loop). JANGAN anggap sudah diterapkan."
+                                if accepted else
+                                "Usulan DITOLAK validasi server (tool tidak dikenal atau "
+                                "tanpa parameter valid). Jangan ulangi panggilan ini."
+                            ),
+                            "sanitized_args": action.get("args", {}),
+                            "validation": action.get("validation", {})
+                        }
+                    }
+                    # Gemini 3: the functionResponse must echo the functionCall id,
+                    # otherwise the follow-up turn is rejected with HTTP 400.
+                    if call_id:
+                        fresp["id"] = call_id
+                    function_response_parts.append({"functionResponse": fresp})
+                contents.append({"role": "user", "parts": function_response_parts})
+
+            # Success: we obtained a usable text reply and/or tool proposals.
+            if final_text or proposed_actions:
+                expert_res["reply"] = final_text or expert_res.get("reply", "")
+                expert_res["engine_mode"] = f"google_genai_live ({cand})"
+                expert_res["citations"] = citations
+                expert_res["proposed_actions"] = proposed_actions
+                return expert_res
         except Exception as e:
             logger.info(f"Gemini API call for {cand} skipped/fallback: {e}")
 
+    # All candidates failed/unreachable -> deterministic local fallback actions.
+    expert_res["proposed_actions"] = fallback_actions
     return expert_res

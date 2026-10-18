@@ -485,6 +485,8 @@ window.cdpkSystemPlannerApp = function () {
         aiLoading: false,
         aiHistory: [],
         lastExtractedParams: null,
+        aiPendingActions: [],
+        aiUndoStack: [],
         aiScenarioCategory: 'all', // 'all' | 'dmr' | 'das' | 'cctv' | 'turnkey'
         aiScenarioTemplates: [
             // ─── DMR RADIO SCENARIOS ───
@@ -3913,7 +3915,9 @@ window.cdpkSystemPlannerApp = function () {
                             buildingFloors: this.buildingFloors,
                             needAtex: this.needAtex,
                             powerSource: this.powerSource,
-                            backhaul: this.backhaul
+                            backhaul: this.backhaul,
+                            // Summary only (numbers/enums) so Action Card diffs show the real "from" value.
+                            ...this._aiStateSummary()
                         }
                     })
                 });
@@ -3930,6 +3934,7 @@ window.cdpkSystemPlannerApp = function () {
                     return;
                 }
                 this.lastExtractedParams = data.extracted_params || null;
+                const aiActions = (data.proposed_actions || []).map(a => ({ ...a, applied: false, rejected: false }));
                 this.aiHistory.push({
                     role: 'assistant',
                     modelId: data.model || requestedModel,
@@ -3938,8 +3943,11 @@ window.cdpkSystemPlannerApp = function () {
                     extracted: data.extracted_params || null,
                     citations: data.citations || null,
                     metrics: data.summary_metrics || null,
+                    proposed_actions: aiActions,
                     time: new Date().toLocaleTimeString()
                 });
+                // Human-in-the-Loop: expose proposals as pending Action Cards (shared object refs).
+                this.aiPendingActions = aiActions.filter(a => !a.applied && !a.rejected);
             } catch (e) {
                 this.aiHistory.push({
                     role: 'assistant',
@@ -4211,6 +4219,259 @@ window.cdpkSystemPlannerApp = function () {
 
         applyAiExtractedParams(extracted) {
             return this.applyAiParamsToApp(extracted);
+        },
+
+        // ══════════════ PHASE 1: ACTIONABLE AGENT — HUMAN-IN-THE-LOOP ══════════════
+        // AI only PROPOSES parameters. Nothing mutates state until the user clicks
+        // "Terapkan". Every apply takes an undo snapshot first.
+
+        _aiStateSummary() {
+            const das = this.das || {};
+            const cctv = this.cctv || {};
+            const floors = Array.isArray(das.floors) ? das.floors : [];
+            const groups = Array.isArray(cctv.cameraGroups) ? cctv.cameraGroups : [];
+            return {
+                dasFloors: floors.length,
+                dasAntennasPerFloor: floors.length ? (parseInt(floors[0].q, 10) || 0) : null,
+                dasArchMode: das.archMode || null,
+                dasFiberTopo: das.fiberTopo || null,
+                dasRepeaters: das.rep != null ? das.rep : null,
+                dasRadios: das.radio != null ? das.radio : null,
+                cctvCameraCount: groups.reduce((t, g) => t + (parseInt(g.qty, 10) || 0), 0),
+                cctvRetentionDays: cctv.retentionDays != null ? cctv.retentionDays : null,
+                cctvVmsBrand: cctv.vmsBrand || null,
+                cctvCableDistM: (cctv.cableDrop && cctv.cableDrop.cableLengthMeters != null) ? cctv.cableDrop.cableLengthMeters : null,
+                gisSiteCount: Array.isArray(this.gisSites) ? this.gisSites.length : 0
+            };
+        },
+
+        _snapshotAiState() {
+            return JSON.parse(JSON.stringify({
+                industry: this.industry,
+                areaInput: this.areaInput,
+                areaUnit: this.areaUnit,
+                userCount: this.userCount,
+                terrain: this.terrain,
+                freqBand: this.freqBand,
+                powerSource: this.powerSource,
+                backhaul: this.backhaul,
+                needAtex: this.needAtex,
+                buildingFloors: this.buildingFloors,
+                das: this.das,
+                cctv: this.cctv,
+                gisSites: this.gisSites
+            }));
+        },
+
+        _pushAiUndoSnapshot(tool, actionIds) {
+            this.aiUndoStack.push({
+                time: new Date().toLocaleTimeString(),
+                tool: tool,
+                actionIds: actionIds || [],
+                snapshot: this._snapshotAiState()
+            });
+            if (this.aiUndoStack.length > 10) this.aiUndoStack.shift();
+        },
+
+        _findAiActionById(actionId) {
+            for (const msg of this.aiHistory) {
+                if (Array.isArray(msg.proposed_actions)) {
+                    const f = msg.proposed_actions.find(a => a.id === actionId);
+                    if (f) return f;
+                }
+            }
+            return (this.aiPendingActions || []).find(a => a.id === actionId) || null;
+        },
+
+        _dispatchAiAction(act) {
+            const a = act.args || {};
+            if (act.tool === 'set_dmr_sizing_params') {
+                this.applyAiParamsToApp(a, 'sizing');
+            } else if (act.tool === 'configure_fiber_das') {
+                // Touch ONLY the fields shown on the Action Card; keep every other DAS
+                // value (per-floor antennas, radios, repeaters, global floors) as-is.
+                const cur = Array.isArray(this.das.floors) ? this.das.floors : [];
+                if (a.buildingFloors !== undefined || a.dasAntennasPerFloor !== undefined) {
+                    const flCount = Math.max(1, parseInt(a.buildingFloors !== undefined ? a.buildingFloors : cur.length, 10) || 1);
+                    const defQ = a.dasAntennasPerFloor !== undefined ? a.dasAntennasPerFloor
+                        : ((cur.length && parseInt(cur[cur.length - 1].q, 10)) || 8);
+                    this.das.floors = Array.from({ length: flCount }, (_, i) => cur[i]
+                        ? { ...cur[i], q: a.dasAntennasPerFloor !== undefined ? a.dasAntennasPerFloor : cur[i].q }
+                        : { f: (this.lang === 'en' ? 'Floor ' : 'Lantai ') + (i + 1), q: defQ });
+                }
+                if (a.dasArchMode) this.das.archMode = a.dasArchMode;
+                if (a.dasFiberTopo) this.das.fiberTopo = a.dasFiberTopo;
+                if (a.dasRepeaters !== undefined) this.das.rep = a.dasRepeaters;
+                if (a.dasRadios !== undefined) this.das.radio = a.dasRadios;
+                this._finishAiApply('das');
+            } else if (act.tool === 'configure_cctv_fleet') {
+                if (a.cameraCount !== undefined || a.vmsBrand) {
+                    // Camera count / brand change rebuilds the camera groups (expected).
+                    const groups = Array.isArray(this.cctv.cameraGroups) ? this.cctv.cameraGroups : [];
+                    const curCount = groups.reduce((t, g) => t + (parseInt(g.qty, 10) || 0), 0);
+                    const ext = { needCctv: true, cctvCameraCount: a.cameraCount !== undefined ? a.cameraCount : (curCount || 16) };
+                    if (a.retentionDays !== undefined) ext.cctvRetentionDays = a.retentionDays;
+                    if (a.vmsBrand) ext.cctvVmsBrand = a.vmsBrand;
+                    if (a.cableDistanceM !== undefined) ext.cctvCableDistM = a.cableDistanceM;
+                    this.applyAiParamsToApp(ext, 'cctv');
+                } else {
+                    // Retention / cable only: never touch the existing camera groups.
+                    if (a.retentionDays !== undefined) this.cctv.retentionDays = parseInt(a.retentionDays, 10);
+                    if (a.cableDistanceM !== undefined) this.cctv.cableDrop.cableLengthMeters = parseInt(a.cableDistanceM, 10);
+                    this._finishAiApply('cctv');
+                }
+            } else if (act.tool === 'place_gis_sites') {
+                this._applyGisSitesAction(a);
+            }
+        },
+
+        // Same recalculation + navigation as applyAiParamsToApp, without its default-filling.
+        _finishAiApply(target) {
+            this.syncBoqFromSizing();
+            this.runCoverageSimulation();
+            this.aiModalOpen = false;
+            if (target === 'cctv') {
+                this.activeWorkspace = 'cctv';
+                this.cctvActiveTab = 'planner';
+            } else if (target === 'das') {
+                this.activeWorkspace = 'das';
+                this.dasActiveTab = 'boq';
+            }
+            this.showToast(this.lang === 'en'
+                ? 'AI configuration applied.'
+                : 'Konfigurasi AI berhasil diterapkan.', 'success');
+        },
+
+        _applyGisSitesAction(a) {
+            const mode = a.mode === 'replace' ? 'replace' : 'append';
+            const incoming = Array.isArray(a.sites) ? a.sites : [];
+            if (!Array.isArray(this.gisSites)) this.gisSites = [];
+            const baseLat = parseFloat(this.covLat) || -1.2379;
+            const baseLon = parseFloat(this.covLon) || 116.8529;
+            const startIdx = mode === 'replace' ? 0 : this.gisSites.length;
+            const built = incoming.map((s, i) => {
+                const idx = startIdx + i;
+                const hasLat = (s.lat !== undefined && s.lat !== null && !isNaN(parseFloat(s.lat)));
+                const hasLon = (s.lon !== undefined && s.lon !== null && !isNaN(parseFloat(s.lon)));
+                return {
+                    id: idx + 1,
+                    name: s.name || ('Site ' + (idx + 1)),
+                    lat: hasLat ? parseFloat(s.lat) : parseFloat((baseLat + idx * 0.02).toFixed(4)),
+                    lon: hasLon ? parseFloat(s.lon) : parseFloat((baseLon + idx * 0.02).toFixed(4)),
+                    color: this.CDPK_SITE_COLORS[idx % this.CDPK_SITE_COLORS.length],
+                    towerHeight: Number(s.towerHeight != null ? s.towerHeight : 35),
+                    txWatts: Number(s.txWatts != null ? s.txWatts : 50),
+                    antGainDbi: Number(s.antGainDbi != null ? s.antGainDbi : 6.5),
+                    antennaType: s.antennaType === 'directional' ? 'directional' : 'omni',
+                    azimuthDeg: Number(s.azimuthDeg != null ? s.azimuthDeg : 0),
+                    beamwidthDeg: Number(s.beamwidthDeg != null ? s.beamwidthDeg : 65),
+                    frontToBackDb: 18,
+                    enabled: true
+                };
+            });
+            this.gisSites = (mode === 'replace') ? built : this.gisSites.concat(built);
+            this.gisSites.forEach((s, i) => { s.id = i + 1; });
+            this.gisActiveSiteIndex = this.gisSites.length - 1;
+            this.activeWorkspace = 'dmr';
+            this.activeTab = 'coverage';
+            this.coverageViewMode = 'gis';
+            this.$nextTick(() => { if (typeof this.initOrUpdateGisMap === 'function') this.initOrUpdateGisMap(); });
+            if (typeof this.evaluateHandoverOverlap === 'function') this.evaluateHandoverOverlap();
+            this.showToast(this.lang === 'en'
+                ? built.length + ' GIS site(s) applied (' + mode + ').'
+                : built.length + ' site GIS diterapkan (' + mode + ').', 'success');
+        },
+
+        applyAiAction(actionId) {
+            const act = this._findAiActionById(actionId);
+            if (!act || act.applied || act.rejected) return;
+            this._pushAiUndoSnapshot(act.tool, [act.id]);
+            this._dispatchAiAction(act);
+            act.applied = true;
+            this.aiPendingActions = this.aiPendingActions.filter(a => a.id !== actionId);
+        },
+
+        applyAllAiActions() {
+            const pend = (this.aiPendingActions || []).filter(a => !a.applied && !a.rejected);
+            if (pend.length === 0) return;
+            this._pushAiUndoSnapshot('batch (' + pend.length + ')', pend.map(a => a.id));
+            pend.forEach(a => { this._dispatchAiAction(a); a.applied = true; });
+            this.aiPendingActions = [];
+            this.showToast(this.lang === 'en'
+                ? 'Applied ' + pend.length + ' AI configuration(s).'
+                : pend.length + ' konfigurasi AI berhasil diterapkan.', 'success');
+        },
+
+        rejectAiAction(actionId) {
+            const act = this._findAiActionById(actionId);
+            if (act) act.rejected = true;
+            this.aiPendingActions = this.aiPendingActions.filter(a => a.id !== actionId);
+        },
+
+        undoLastAiApply() {
+            if (!this.aiUndoStack || this.aiUndoStack.length === 0) return;
+            const entry = this.aiUndoStack.pop();
+            const s = entry.snapshot || {};
+            this.industry = s.industry;
+            this.areaInput = s.areaInput;
+            this.areaUnit = s.areaUnit;
+            this.userCount = s.userCount;
+            this.terrain = s.terrain;
+            this.freqBand = s.freqBand;
+            this.powerSource = s.powerSource;
+            this.backhaul = s.backhaul;
+            this.needAtex = s.needAtex;
+            this.buildingFloors = s.buildingFloors;
+            if (s.das) this.das = JSON.parse(JSON.stringify(s.das));
+            if (s.cctv) this.cctv = JSON.parse(JSON.stringify(s.cctv));
+            if (s.gisSites) this.gisSites = JSON.parse(JSON.stringify(s.gisSites));
+            this.syncBoqFromSizing();
+            this.runCoverageSimulation();
+            if (this.coverageViewMode === 'gis' && typeof this.initOrUpdateGisMap === 'function') {
+                this.$nextTick(() => this.initOrUpdateGisMap());
+            }
+            if (typeof this.evaluateHandoverOverlap === 'function') this.evaluateHandoverOverlap();
+            // Re-arm the reverted Action Cards so the user can apply them again.
+            (entry.actionIds || []).forEach(id => {
+                const act = this._findAiActionById(id);
+                if (act) {
+                    act.applied = false;
+                    if (!this.aiPendingActions.some(p => p.id === id)) this.aiPendingActions.push(act);
+                }
+            });
+            this.showToast(this.lang === 'en'
+                ? 'Reverted last AI change (' + entry.tool + ').'
+                : 'Perubahan AI terakhir diurungkan (' + entry.tool + ').', 'info');
+        },
+
+        // Friendly labels for the Action Card UI.
+        aiActionTitle(tool) {
+            const id = {
+                set_dmr_sizing_params: 'Rekomendasi Parameter Sizing DMR',
+                configure_fiber_das: 'Konfigurasi RFoF Fiber DAS',
+                configure_cctv_fleet: 'Konfigurasi CCTV & NVR',
+                place_gis_sites: 'Penempatan Site Repeater (GIS)'
+            };
+            const en = {
+                set_dmr_sizing_params: 'DMR Sizing Parameter Recommendation',
+                configure_fiber_das: 'RFoF Fiber DAS Configuration',
+                configure_cctv_fleet: 'CCTV & NVR Configuration',
+                place_gis_sites: 'GIS Repeater Site Placement'
+            };
+            return (this.lang === 'en' ? en : id)[tool] || tool;
+        },
+
+        aiDiffLabel(path) {
+            const id = { userCount:'Jumlah Pengguna', industry:'Industri', areaInput:'Luas Area', areaUnit:'Satuan', terrain:'Medan', freqBand:'Frekuensi', powerSource:'Sumber Daya', backhaul:'Backhaul', needAtex:'ATEX', buildingFloors:'Jumlah Lantai', dasAntennasPerFloor:'Antena/Lantai', dasArchMode:'Arsitektur DAS', dasFiberTopo:'Topologi Serat', dasRepeaters:'Repeater', dasRadios:'Radio', cameraCount:'Jumlah Kamera', retentionDays:'Retensi (hari)', vmsBrand:'Merek VMS', cableDistanceM:'Jarak Kabel (m)', gisSites:'Jumlah Site' };
+            const en = { userCount:'Users', industry:'Industry', areaInput:'Area', areaUnit:'Unit', terrain:'Terrain', freqBand:'Frequency', powerSource:'Power', backhaul:'Backhaul', needAtex:'ATEX', buildingFloors:'Floors', dasAntennasPerFloor:'Antennas/Floor', dasArchMode:'DAS Arch', dasFiberTopo:'Fiber Topo', dasRepeaters:'Repeaters', dasRadios:'Radios', cameraCount:'Cameras', retentionDays:'Retention (d)', vmsBrand:'VMS Brand', cableDistanceM:'Cable (m)', gisSites:'Sites' };
+            return (this.lang === 'en' ? en : id)[path] || path;
+        },
+
+        aiDiffVal(v) {
+            if (v === null || v === undefined || v === '') return '—';
+            if (v === true) return (this.lang === 'en' ? 'Yes' : 'Ya');
+            if (v === false) return (this.lang === 'en' ? 'No' : 'Tidak');
+            return String(v);
         },
 
         // ─── Module 7: Product & System Configurator Methods ─────────────
