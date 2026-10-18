@@ -619,8 +619,20 @@ window.cdpkSystemPlannerApp = function () {
         mobileMenuOpen: false,
         desktopSettingsOpen: false,
         mobileSettingsOpen: false,
+        driveDropdownOpen: false,
         googleDomainMismatch: false,
         gisMobileProbeCollapsed: true,
+
+        // ─── GIS Coverage Advanced Features (Opsi 1 Fase 2: Fitur A & B) ──
+        gisWiupLayer: null,
+        gisWiupDarkSpotLayer: null,
+        gisWiupData: null,
+        gisWiupStats: null,
+        gisWiupLoading: false,
+        gisWiupFileName: '',
+        showWiupBoundary: true,
+        showWiupDarkSpots: true,
+        gisExportingKml: false,
 
         // ─── Team User Management State (Admin Only) ────────────────────
         userMgmtModalOpen: false,
@@ -3164,6 +3176,11 @@ window.cdpkSystemPlannerApp = function () {
                 const group = new L.featureGroup(this.gisOverlayLayers);
                 this.gisMap.fitBounds(group.getBounds().pad(0.15));
             }
+
+            // Re-render WIUP concession boundary & dark spots if loaded
+            if (this.gisWiupData) {
+                this.$nextTick(() => this.renderWiupOnMap());
+            }
         },
 
         addGisSite(customLat, customLon, customName) {
@@ -3427,6 +3444,118 @@ window.cdpkSystemPlannerApp = function () {
                 sites: (this.gisSites || []).length
             });
             window.CDPK_EXPORTERS.exportGisCoveragePDF(this);
+        },
+
+        async exportGisCoverageKml(format = 'kml') {
+            if (!window.CDPK_EXPORTERS || typeof window.CDPK_EXPORTERS.exportGisCoverageKML !== 'function') {
+                this.showToast(this.lang === 'en' ? 'KML exporter not loaded.' : 'Modul ekspor KML belum siap.', 'error');
+                return;
+            }
+            this.recordClientAuditEvent('export_gis_coverage_kml', `Ekspor Kontur Poligon GIS (${format.toUpperCase()}): "${this.projName}"`, {
+                project: this.projName,
+                format: format,
+                sites: (this.gisSites || []).length
+            });
+            await window.CDPK_EXPORTERS.exportGisCoverageKML(this, { format });
+        },
+
+        async handleWiupFileUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (!window.CDPK_GIS_ENGINE || typeof window.CDPK_GIS_ENGINE.processWiupFile !== 'function') {
+                this.showToast(this.lang === 'en' ? 'GIS Engine not ready.' : 'Engine GIS belum siap.', 'error');
+                return;
+            }
+            this.gisWiupLoading = true;
+            try {
+                const res = await window.CDPK_GIS_ENGINE.processWiupFile(file, this);
+                if (res && res.success) {
+                    this.gisWiupFileName = file.name;
+                    this.gisWiupData = res.geoJson;
+                    this.gisWiupStats = res.stats;
+                    this.renderWiupOnMap();
+                    const toastMsg = this.lang === 'en'
+                        ? `Concession "${file.name}" loaded. Coverage: ${res.stats.coveragePct}% (${res.stats.coveredAreaKm2} km²)`
+                        : `Batas konsesi "${file.name}" berhasil dimuat. Cakupan: ${res.stats.coveragePct}% (${res.stats.coveredAreaKm2} km²)`;
+                    this.showToast(toastMsg, 'success');
+                    this.recordClientAuditEvent('import_wiup_boundary', `Impor Batas Konsesi WIUP: "${file.name}" (${res.stats.coveragePct}% Covered)`, {
+                        fileName: file.name,
+                        coveragePct: res.stats.coveragePct,
+                        totalAreaKm2: res.stats.totalAreaKm2
+                    });
+                } else {
+                    this.showToast(res && res.error ? res.error : (this.lang === 'en' ? 'Failed to process file.' : 'Gagal memproses berkas.'), 'error');
+                }
+            } catch (err) {
+                console.error('Error uploading WIUP:', err);
+                this.showToast((err && err.message) || (this.lang === 'en' ? 'Error processing concession file.' : 'Terjadi kesalahan saat memproses berkas batas konsesi.'), 'error');
+            } finally {
+                this.gisWiupLoading = false;
+                event.target.value = '';
+            }
+        },
+
+        renderWiupOnMap() {
+            if (!this.gisMap || !this.gisWiupData) return;
+            // Remove existing WIUP layers
+            if (this.gisWiupLayer) {
+                try { this.gisMap.removeLayer(this.gisWiupLayer); } catch (e) {}
+                this.gisWiupLayer = null;
+            }
+            if (this.gisWiupDarkSpotLayer) {
+                try { this.gisMap.removeLayer(this.gisWiupDarkSpotLayer); } catch (e) {}
+                this.gisWiupDarkSpotLayer = null;
+            }
+
+            if (window.CDPK_GIS_ENGINE) {
+                // Re-evaluate coverage KPI against current site positions
+                this.gisWiupStats = window.CDPK_GIS_ENGINE.calculateSpatialCoverage(this.gisWiupData, this);
+
+                if (typeof window.CDPK_GIS_ENGINE.renderWiupLayers === 'function') {
+                    const layers = window.CDPK_GIS_ENGINE.renderWiupLayers(this);
+                    if (layers) {
+                        this.gisWiupLayer = layers.wiupLayer;
+                        this.gisWiupDarkSpotLayer = layers.darkSpotLayer;
+                    }
+                }
+            }
+        },
+
+        toggleWiupBoundary() {
+            this.showWiupBoundary = !this.showWiupBoundary;
+            if (this.gisWiupLayer) {
+                if (this.showWiupBoundary) {
+                    this.gisMap.addLayer(this.gisWiupLayer);
+                } else {
+                    this.gisMap.removeLayer(this.gisWiupLayer);
+                }
+            }
+        },
+
+        toggleWiupDarkSpots() {
+            this.showWiupDarkSpots = !this.showWiupDarkSpots;
+            if (this.gisWiupDarkSpotLayer) {
+                if (this.showWiupDarkSpots) {
+                    this.gisMap.addLayer(this.gisWiupDarkSpotLayer);
+                } else {
+                    this.gisMap.removeLayer(this.gisWiupDarkSpotLayer);
+                }
+            }
+        },
+
+        removeWiupBoundary() {
+            if (this.gisWiupLayer) {
+                try { this.gisMap.removeLayer(this.gisWiupLayer); } catch (e) {}
+                this.gisWiupLayer = null;
+            }
+            if (this.gisWiupDarkSpotLayer) {
+                try { this.gisMap.removeLayer(this.gisWiupDarkSpotLayer); } catch (e) {}
+                this.gisWiupDarkSpotLayer = null;
+            }
+            this.gisWiupData = null;
+            this.gisWiupStats = null;
+            this.gisWiupFileName = '';
+            this.showToast(this.lang === 'en' ? 'Concession boundary removed.' : 'Batas konsesi dihapus dari peta.', 'info');
         },
 
         async geocodeLocation() {

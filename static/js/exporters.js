@@ -801,6 +801,27 @@ window.CDPK_EXPORTERS = {
         app.showToast(isEn ? 'Official GIS Technical Report PDF exported!' : 'Dokumen Laporan Teknis GIS PDF berhasil diunduh!', 'success');
     },
 
+    async exportGisCoverageKML(app, options = {}) {
+        if (!window.CDPK_GIS_ENGINE || typeof window.CDPK_GIS_ENGINE.exportKmlOrKmz !== 'function') {
+            app.showToast(app.lang === 'en' ? 'GIS Engine is not available.' : 'Engine GIS belum siap.', 'error');
+            return;
+        }
+        const format = options.format || 'kml';
+        try {
+            app.gisExportingKml = true;
+            const res = await window.CDPK_GIS_ENGINE.exportKmlOrKmz(app, { format });
+            const msg = app.lang === 'en'
+                ? `Outdoor GIS Coverage (${res.format.toUpperCase()}) exported successfully!`
+                : `Kontur Poligon GIS (${res.format.toUpperCase()}) untuk Google Earth & ArcGIS berhasil diekspor!`;
+            app.showToast(msg, 'success');
+        } catch (e) {
+            console.error('KML Export failed:', e);
+            app.showToast(app.lang === 'en' ? 'Export failed: ' + e.message : 'Gagal mengekspor berkas: ' + e.message, 'error');
+        } finally {
+            app.gisExportingKml = false;
+        }
+    },
+
     exportPackagesPDF(app) {
         if (!window.jspdf || !window.jspdf.jsPDF) {
             alert(app.lang === 'en' ? 'PDF library is loading, please try again.' : 'Pustaka PDF sedang dimuat, silakan coba lagi.');

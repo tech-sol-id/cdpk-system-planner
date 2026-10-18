@@ -209,7 +209,7 @@ window.CDPK_I18N = {
         noUsersFound: "Belum ada pengguna terdaftar.",
 
         // Navigation & Top Toolbar
-        userGuideBtn: "Panduan Pengguna",
+        userGuideBtn: "Panduan",
         teamArchiveBtn: "Dashboard Arsip Tim",
         myArchiveBtn: "Arsip Proyek Saya",
         teamDirectoryBtn: "Direktori Tim",
@@ -326,6 +326,9 @@ window.CDPK_I18N = {
             siteNameLabel: "Nama Site",
             exportPngBtn: "Ekspor Peta PNG (Retina 2x)",
             exportPdfBtn: "Ekspor Dokumen PDF Resmi",
+            exportKmlBtn: "Ekspor Poligon KML",
+            exportKmzBtn: "Ekspor Poligon KMZ",
+            wiupTitle: "Batas Konsesi WIUP",
             basemapOsm: "OpenStreetMap",
             basemapGoogleSat: "Google Satellite",
             basemapGoogleHybrid: "Google Hybrid",
@@ -865,6 +868,9 @@ window.CDPK_I18N = {
             siteNameLabel: "Site Name",
             exportPngBtn: "Export Map PNG (Retina 2x)",
             exportPdfBtn: "Export Official PDF Report",
+            exportKmlBtn: "Export KML Polygons",
+            exportKmzBtn: "Export KMZ Archive",
+            wiupTitle: "WIUP Concession Boundary",
             basemapOsm: "OpenStreetMap",
             basemapGoogleSat: "Google Satellite",
             basemapGoogleHybrid: "Google Hybrid",
