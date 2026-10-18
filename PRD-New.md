@@ -474,3 +474,30 @@ Berdasarkan keselarasan portofolio produk PT Citradata Purnakharisma (Motorola S
      * Menghasilkan berkas PNG denah teknik beresolusi tinggi (2x Retina) lengkap dengan kop teknis PT Citradata Purnakharisma, legenda warna DORI & DAS, skala grafis metrik, dan metadata proyek untuk lampiran dokumen tender resmi.
 
 
+
+## 5. Opsi 1: Outdoor GIS Coverage Map (Okumura‑Hata)
+- **Workspace:** Modul 1 (DMR System Planner) – Tab GIS Coverage (existing).
+- **Engine:** Perluasan `runCoverageSimulation()` dengan formula **Okumura‑Hata** untuk perhitungan radius cakupan outdoor pada frekuensi DMR (450 MHz) serta profil lingkungan (Urban, Suburban, Rural, Open).
+- **Map Integration:** Memanfaatkan **Leaflet.js** (yang sudah ada) dengan lapisan base **OpenStreetMap** atau **Google Satellite**.
+- **Fitur Utama:**
+  1. Plot koordinat GPS situs base‑station & repeater.
+  2. Visualisasi lingkaran cakupan efektif (dengan faktor koreksi topografi).
+  3. Multi‑site / jaringan repeater dengan warna terpisah.
+  4. Ekspor peta teknis sebagai **PNG** (retina) atau **PDF** dengan legend, skala, dan header PT Citradata Purnakharisma.
+  5. Pengaturan profil lingkungan dan faktor sistem (gain antena, tinggi tower) secara interaktif.
+- **Estimasi Kompleksitas:** Medium (1‑2 sprint), integrasi front‑end & back‑end ringan.
+
+## 6. Opsi 3: Advanced Interoperability & ATEX‑HazLoc Compliance Checker
+- **Scope:** Dampak lintas‑workspace (DMR, DAS, CCTV).
+- **Komponen Utama:**
+  1. **HazLoc Zone Matrix Validator** – Validasi perangkat terhadap zona berbahaya: Zone 0/1/2 (gas) atau Zone 20/21/22 (dust), Gas Group IIC/IIB/IIA, serta Kelas Suhu T1‑T6.
+  2. **IS Accessory Safety Guard** – Peringatan otomatis bila aksesoris non‑IS (baterai standar, mikrofon, dll.) dipasangkan pada perangkat ATEX certified.
+  3. **Compliance Sheet Export** – Generate lembar verifikasi ATEX/IECEx dalam **PDF** & **Excel**, termasuk tanda tangan digital dan catatan auditor.
+  4. **Auto‑Blocking Logic** – Mencegah penambahan kombinasi peralatan yang tidak memiliki sertifikasi ATEX yang sesuai.
+- **UI/UX:** Penambahan tab “ATEX Compliance” di semua workspace dengan tabel matrix, filter zona, dan tombol export.
+- **Estimasi Kompleksitas:** Medium‑High (2‑3 sprint) karena melibatkan aturan regulasi, validasi lintas‑modul, dan export dokumen.
+
+---
+
+### Catatan Pengembangan
+- **Apakah harus dibuat di chat baru?** Disarankan untuk memulai **dua chat terpisah**, satu untuk *Opsi 1* dan satu lagi untuk *Opsi 3*, agar konteks tetap bersih dan token usage optimal. PRD telah diperbarui di sini, sehingga Anda dapat menyalin bagian yang relevan ke chat baru ketika memulai implementasi masing‑masing.
