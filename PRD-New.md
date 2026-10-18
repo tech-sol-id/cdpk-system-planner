@@ -381,7 +381,8 @@ Project Calculator - CDPK/
 Berdasarkan keselarasan portofolio produk PT Citradata Purnakharisma (Motorola Solutions, FMTCS Fiber DAS, Pelco Video Security, Avigilon Unity/Alta, dan i.safe MOBILE HazLoc), berikut adalah 4 pilar usulan pengembangan terencana:
 
 ### 12.1. Fase 1: Modul CCTV Surveillance & NVR Planner (Open Multi-Brand: Pelco, Avigilon & Third-Party)
-* **Status:** Disetujui untuk Pengerjaan Tahap Berikutnya (*Approved for Next Implementation*).
+* **Status:** Selesai Diimplementasikan Penuh (*Completed in v8.6.0*).
+* **Engine Core:** `static/js/cctv_engine.js` (Exposes `window.CDPK_CCTV_ENGINE`).
 * **Objektif:** Mengintegrasikan perencanaan sistem kamera pengawas industri (CCTV Surveillance) ke dalam ekosistem CDPK System Planner dengan arsitektur **Open Multi-Brand & Universal ONVIF**. Selain mendukung katalog bawaan *flagship* CDPK (**Pelco** dan **Avigilon**), sistem juga terbuka untuk mereka pihak ketiga (**Axis, Hanwha Vision, Hikvision, Dahua, Bosch, Uniview**) maupun kamera kustom berbasis standar industri. Hal ini memastikan solusi turnkey CDPK dapat menyatukan Radio Komunikasi DMR, RFoF DAS, dan Video Security dari berbagai merk dalam satu proposal utuh.
 * **Fitur Utama:**
   1. **Open Multi-Brand Camera Selector & Custom Camera Builder:**

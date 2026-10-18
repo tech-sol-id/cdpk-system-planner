@@ -121,7 +121,7 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             return self._send_json({
                 "status": "healthy",
                 "app": "CDPK System Planner",
-                "version": "8.5.0",
+                "version": "8.6.0",
                 "google_client_id": os.environ.get("GOOGLE_CLIENT_ID", "423480156983-n52244lq61g7u3qub5p2khlfvtd3hs0f.apps.googleusercontent.com"),
                 "gdrive_folder_id": DEFAULT_FOLDER_ID,
                 "gdrive_output_subfolder_id": OUTPUT_SUBFOLDER_ID,

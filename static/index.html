@@ -35,8 +35,9 @@
     <script src="/js/i18n.js?v=8.5.2"></script>
     <script src="/js/engines.js?v=8.5.2"></script>
     <script src="/js/exporters.js?v=8.5.2"></script>
-    <script src="/js/das_engine.js?v=8.5.2"></script>
-    <script src="/js/app_core.js?v=8.5.2"></script>
+    <script src="/js/das_engine.js?v=8.6.0"></script>
+    <script src="/js/cctv_engine.js?v=8.6.0"></script>
+    <script src="/js/app_core.js?v=8.6.0"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
     <style>
@@ -245,7 +246,7 @@
                     <div>
                         <div class="flex items-center gap-1.5 sm:gap-2">
                             <h1 class="text-sm sm:text-lg font-extrabold tracking-tight text-white whitespace-nowrap" x-text="t('appTitle')"></h1>
-                            <span class="hidden sm:inline-block text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-400/20 border border-sky-300/40 text-sky-100">v8.5.0</span>
+                            <span class="hidden sm:inline-block text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-400/20 border border-sky-300/40 text-sky-100">v8.6.0</span>
                         </div>
                         <p class="text-[11px] text-sky-100/90 font-medium hidden sm:block" x-text="t('appSubtitle')"></p>
                     </div>
@@ -263,7 +264,13 @@
                             :class="activeWorkspace === 'das' ? 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
                             class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
                         <span>🏢</span>
-                        <span>RFoF Distributed Antenna System</span>
+                        <span>RFoF DAS by FMTCS</span>
+                    </button>
+                    <button @click="activeWorkspace = 'cctv'"
+                            :class="activeWorkspace === 'cctv' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
+                        <span>📹</span>
+                        <span x-text="t('cctvWorkspaceTitle') || 'Video Security & CCTV'"></span>
                     </button>
                 </div>
 
@@ -558,6 +565,38 @@
                 </div>
             </div>
         </div>
+
+        <!-- Navigation Tabs: Video Security & CCTV Planner (When activeWorkspace === 'cctv') -->
+        <div x-show="activeWorkspace === 'cctv'" class="hidden md:block bg-slate-900/40 border-t border-white/10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto no-scrollbar gap-1 py-1.5 items-center justify-between">
+                <div class="flex overflow-x-auto no-scrollbar gap-1">
+                    <button @click="cctvActiveTab = 'planner'"
+                            :class="cctvActiveTab === 'planner' ? 'bg-white text-emerald-950 font-extrabold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
+                        <span>📹</span>
+                        <span x-text="t('cctvNavPlanner') || '1. Sizing Kamera & Storage NVR'"></span>
+                    </button>
+                    <button @click="cctvActiveTab = 'poe'"
+                            :class="cctvActiveTab === 'poe' ? 'bg-white text-emerald-950 font-extrabold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
+                        <span>⚡</span>
+                        <span x-text="t('cctvNavPoe') || '2. Daya PoE & Sizing Switch'"></span>
+                    </button>
+                    <button @click="cctvActiveTab = 'boq'"
+                            :class="cctvActiveTab === 'boq' ? 'bg-white text-emerald-950 font-extrabold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
+                        <span>📑</span>
+                        <span x-text="t('cctvNavBoq') || '3. BoQ CCTV & Bridge Utama'"></span>
+                    </button>
+                    <button @click="cctvActiveTab = 'catalog'"
+                            :class="cctvActiveTab === 'catalog' ? 'bg-white text-emerald-950 font-extrabold shadow-sm' : 'text-sky-100 hover:bg-white/10 font-medium'"
+                            class="px-3.5 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
+                        <span>📦</span>
+                        <span x-text="t('cctvNavCatalog') || '4. Katalog Kamera Multi-Brand'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </header>
 
     <!-- ═══════════════════ MAIN WORKSPACE CONTENT ═══════════════════ -->
@@ -734,10 +773,15 @@
                         <input type="checkbox" x-model="needCctv" @change="syncBoqFromSizing()" class="rounded text-blue-600" />
                         <span x-text="t('reqCctv')"></span>
                     </label>
-                    <div x-show="needCctv" class="pl-6 pt-1 flex items-center gap-2">
+                    <div x-show="needCctv" class="pl-6 pt-1 flex flex-wrap items-center gap-2">
                         <span class="text-xs text-slate-600 font-medium" x-text="t('cctvCountLabel')"></span>
                         <input type="number" min="1" max="500" x-model.number="cctvCount" @change="syncBoqFromSizing()"
                                class="w-20 px-2 py-1 text-xs rounded border border-slate-300 font-bold" />
+                        <button type="button" @click="syncDmrToCctv()"
+                                class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer">
+                            <span>📹</span>
+                            <span x-text="t('cctvOpenPlannerBtn') || 'Buka di CCTV Planner →'"></span>
+                        </button>
                     </div>
                 </div>
 
@@ -1146,7 +1190,7 @@
                                     <td class="py-3 px-3 text-center font-bold text-slate-600" x-text="idx + 1"></td>
                                     <td class="py-3 px-3">
                                         <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold"
-                                              :class="item.isBundle ? 'bg-blue-100 text-blue-900 border border-blue-300' : 'bg-slate-100 text-slate-700'"
+                                              :class="item.category === 'CCTV-SURVEILLANCE' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold' : (item.category === 'FMTCS-DAS' ? 'bg-indigo-100 text-indigo-900 border border-indigo-300' : (item.isBundle ? 'bg-blue-100 text-blue-900 border border-blue-300' : 'bg-slate-100 text-slate-700'))"
                                               x-text="item.category"></span>
                                         <div class="text-[10px] font-mono text-slate-400 mt-1" x-text="item.sku"></div>
                                     </td>
@@ -3895,6 +3939,794 @@
         </div>
         <!-- ══════════════════ END WORKSPACE 2: RFoF DAS ═════════════════ -->
 
+        <!-- ══════════════════════════════════════════════════════════════ -->
+        <!-- WORKSPACE 3: VIDEO SECURITY & CCTV SURVEILLANCE PLANNER       -->
+        <!-- (Open Multi-Brand: Pelco, Avigilon, Axis, Hanwha, Hikvision,   -->
+        <!--  Dahua, Bosch, Uniview, Generic ONVIF & Custom Camera)         -->
+        <!-- ══════════════════════════════════════════════════════════════ -->
+        <div x-show="activeWorkspace === 'cctv'" class="space-y-6">
+
+            <!-- 1. Top Header Banner -->
+            <div class="bg-gradient-to-r from-slate-900 via-emerald-950 to-teal-950 rounded-2xl p-5 sm:p-6 text-white shadow-xl border border-emerald-500/30">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div class="space-y-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-emerald-400 text-slate-950 shadow-sm">
+                                Open Multi-Brand Suite
+                            </span>
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-teal-500/30 text-teal-200 border border-teal-400/30">
+                                Universal ONVIF Profile S/T/M
+                            </span>
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                                Pelco & Avigilon Flagship
+                            </span>
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                            <span>📹</span>
+                            <span>Video Security & CCTV Planner</span>
+                        </h2>
+                        <p class="text-xs sm:text-sm text-emerald-200 font-semibold tracking-wide">
+                            Open Multi-Brand Bandwidth, Storage NVR & Industrial PoE Switch Sizing
+                        </p>
+                        <p class="text-[11px] sm:text-xs text-slate-300 max-w-3xl leading-relaxed">
+                            <span x-text="lang === 'en'
+                                ? 'Enterprise Video Surveillance Sizing Suite. Configures multi-brand IP cameras (Pelco, Avigilon, Axis, Hanwha, Hikvision, Dahua, Bosch, Uniview & Generic ONVIF), calculates combined throughput, retention storage with RAID 5/6 & safety overhead, sizes industrial PoE switches, and provides 1-click injection to CDPK Master BoQ.'
+                                : 'Suite Sizing Pengawasan Video IP Universal. Mendukung kamera multi-brand (Pelco, Avigilon, Axis, Hanwha, Hikvision, Dahua, Bosch, Uniview & Generic ONVIF), menghitung throughput gabungan, kapasitas storage retensi dengan overhead RAID 5/6 & faktor keamanan, dimensi switch PoE industri, serta injeksi 1-klik ke BoQ Utama CDPK.'"></span>
+                        </p>
+                    </div>
+
+                    <!-- Right Quick Actions -->
+                    <div class="flex flex-wrap items-center gap-2 lg:flex-col lg:items-end">
+                        <div class="flex items-center gap-2">
+                            <button @click="syncDmrToCctv()"
+                                    class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                                <span>🔄</span>
+                                <span x-text="t('cctvSyncFromDmr') || 'Sinkronkan dari Sizing DMR'"></span>
+                            </button>
+                            <button @click="injectCctvBoqToMasterBoq()"
+                                    class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-white shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                                <span>📥</span>
+                                <span x-text="t('cctvInjectToMasterBoq') || 'Kirim ke BoQ Utama'"></span>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button @click="exportCctvCsv()"
+                                    class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-sky-100 transition flex items-center gap-1.5 cursor-pointer">
+                                <span>📄</span>
+                                <span x-text="t('cctvExportCsv') || 'Ekspor CSV'"></span>
+                            </button>
+                            <button @click="copyCctvSummary()"
+                                    class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-sky-100 transition flex items-center gap-1.5 cursor-pointer">
+                                <span>📋</span>
+                                <span x-text="t('cctvCopySummary') || 'Salin Ringkasan'"></span>
+                            </button>
+                            <button @click="resetCctvToDefaults(false)"
+                                    class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 text-sky-100 transition flex items-center gap-1 cursor-pointer"
+                                    :title="lang === 'en' ? 'Reset to default flagship cameras' : 'Kembalikan ke konfigurasi standar'">
+                                <span>🔄</span>
+                                <span x-text="t('cctvResetDefaults') || 'Reset'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-nav pills (Mobile & Tablet view) -->
+                <div class="mt-4 pt-3 border-t border-white/10 flex md:hidden overflow-x-auto no-scrollbar gap-1.5">
+                    <button @click="cctvActiveTab = 'planner'"
+                            :class="cctvActiveTab === 'planner' ? 'bg-emerald-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">1. Sizing Kamera & NVR</button>
+                    <button @click="cctvActiveTab = 'poe'"
+                            :class="cctvActiveTab === 'poe' ? 'bg-emerald-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">2. Daya PoE & Switch</button>
+                    <button @click="cctvActiveTab = 'boq'"
+                            :class="cctvActiveTab === 'boq' ? 'bg-emerald-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">3. BoQ CCTV & Bridge</button>
+                    <button @click="cctvActiveTab = 'catalog'"
+                            :class="cctvActiveTab === 'catalog' ? 'bg-emerald-400 text-slate-950 font-black' : 'bg-white/10 text-sky-100 hover:bg-white/20'"
+                            class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold transition">4. Katalog</button>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 1: CAMERA SIZING & NVR STORAGE (cctvActiveTab === 'planner')-->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="cctvActiveTab === 'planner'" class="space-y-6">
+
+                <!-- 1. Quick KPI Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <!-- Total Cameras -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 card-shadow border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 mb-1">
+                            <span class="text-xs font-bold uppercase tracking-wider" x-text="lang === 'en' ? 'Camera Nodes' : 'Total Kamera'"></span>
+                            <span class="text-lg">📹</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-black text-slate-900" x-text="(getCctvBwResult() ? getCctvBwResult().totalCameras : 0) + ' Titik'"></div>
+                        <div class="text-[11px] text-emerald-600 font-semibold mt-1" x-text="(cctv.cameraGroups ? cctv.cameraGroups.length : 0) + ' grup kamera aktif'"></div>
+                    </div>
+
+                    <!-- Network Throughput -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 card-shadow border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 mb-1">
+                            <span class="text-xs font-bold uppercase tracking-wider" x-text="lang === 'en' ? 'Throughput (Mbps)' : 'Throughput Jaringan'"></span>
+                            <span class="text-lg">📶</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-black text-emerald-700" x-text="(getCctvBwResult() ? getCctvBwResult().totalThroughputMbps : 0) + ' Mbps'"></div>
+                        <div class="text-[11px] text-slate-500 font-medium mt-1">
+                            <span x-text="lang === 'en' ? 'Peak: ' : 'Puncak: '"></span>
+                            <span class="font-bold text-slate-800" x-text="(getCctvBwResult() ? getCctvBwResult().peakThroughputMbps : 0) + ' Mbps'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Storage Required -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 card-shadow border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 mb-1">
+                            <span class="text-xs font-bold uppercase tracking-wider" x-text="lang === 'en' ? 'Storage Required' : 'Kebutuhan Storage'"></span>
+                            <span class="text-lg">💾</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-black text-indigo-700" x-text="(getCctvBwResult() ? getCctvBwResult().requiredStorageTb : 0) + ' TB'"></div>
+                        <div class="text-[11px] text-slate-500 font-medium mt-1">
+                            <span x-text="cctv.retentionDays + ' hari • ' + (cctv.raidType || 'raid5').toUpperCase()"></span>
+                        </div>
+                    </div>
+
+                    <!-- Recommended Sizing -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 card-shadow border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 mb-1">
+                            <span class="text-xs font-bold uppercase tracking-wider" x-text="lang === 'en' ? 'Hard Drive Sizing' : 'Sizing Hard Disk'"></span>
+                            <span class="text-lg">💽</span>
+                        </div>
+                        <div class="text-xl sm:text-2xl font-black text-slate-900"
+                             x-text="getCctvBwResult() && getCctvBwResult().recommendedHdd ? (getCctvBwResult().recommendedHdd.totalDrives + 'x ' + getCctvBwResult().recommendedHdd.sizeTb + 'TB') : '-'"></div>
+                        <div class="text-[11px] text-emerald-700 font-bold mt-1"
+                             x-text="getCctvBwResult() && getCctvBwResult().recommendedHdd ? ('Gross ' + getCctvBwResult().recommendedHdd.grossDriveCapacityTb + ' TB') : ''"></div>
+                    </div>
+                </div>
+
+                <!-- 2. Sizing Parameters & Storage Policy Card -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="lang === 'en' ? 'NVR & Recording Policy Sizing' : 'Parameter Sizing Storage NVR & Retensi Rekaman'"></span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Retention, RAID Redundancy & VMS Engine' : 'Masa Retensi, Redundansi RAID & Mesin VMS'"></h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                  x-text="'Retensi ' + cctv.retentionDays + ' Hari'"></span>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-300 uppercase"
+                                  x-text="cctv.raidType"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Retention Days -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700" x-text="lang === 'en' ? 'Retention Period (Days):' : 'Masa Retensi (Hari):'"></label>
+                            <div class="grid grid-cols-4 gap-1 mb-1">
+                                <button type="button" @click="cctv.retentionDays = 30"
+                                        :class="cctv.retentionDays === 30 ? 'bg-emerald-600 text-white font-black' : 'bg-slate-100 text-slate-700 font-semibold'"
+                                        class="py-1 rounded text-xs transition">30 H</button>
+                                <button type="button" @click="cctv.retentionDays = 45"
+                                        :class="cctv.retentionDays === 45 ? 'bg-emerald-600 text-white font-black' : 'bg-slate-100 text-slate-700 font-semibold'"
+                                        class="py-1 rounded text-xs transition">45 H</button>
+                                <button type="button" @click="cctv.retentionDays = 60"
+                                        :class="cctv.retentionDays === 60 ? 'bg-emerald-600 text-white font-black' : 'bg-slate-100 text-slate-700 font-semibold'"
+                                        class="py-1 rounded text-xs transition">60 H</button>
+                                <button type="button" @click="cctv.retentionDays = 90"
+                                        :class="cctv.retentionDays === 90 ? 'bg-emerald-600 text-white font-black' : 'bg-slate-100 text-slate-700 font-semibold'"
+                                        class="py-1 rounded text-xs transition">90 H</button>
+                            </div>
+                            <input type="number" min="1" max="365" x-model.number="cctv.retentionDays"
+                                   class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:border-emerald-600 focus:outline-none font-bold" />
+                        </div>
+
+                        <!-- Recording Hours & Mode -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700" x-text="lang === 'en' ? 'Recording Mode & Hours:' : 'Mode & Jam Perekaman:'"></label>
+                            <select x-model="cctv.recordingMode"
+                                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:border-emerald-600 focus:outline-none font-semibold">
+                                <option value="continuous">Kontinu 24/7 (Continuous 100%)</option>
+                                <option value="motion">Deteksi Gerakan (Motion Duty Cycle 70%)</option>
+                            </select>
+                            <div class="flex items-center gap-2 pt-1 text-[11px] text-slate-500">
+                                <span>Jam/hari:</span>
+                                <input type="number" min="1" max="24" x-model.number="cctv.recordingHoursPerDay"
+                                       class="w-16 px-2 py-0.5 text-xs rounded border border-slate-300 font-bold text-center" />
+                                <span>jam</span>
+                            </div>
+                        </div>
+
+                        <!-- RAID Configuration & Safety Factor -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700" x-text="lang === 'en' ? 'RAID Architecture & Parity:' : 'Konfigurasi RAID NVR:'"></label>
+                            <select x-model="cctv.raidType"
+                                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:border-emerald-600 focus:outline-none font-bold">
+                                <option value="raid5">RAID 5 (1 Paritas • Single Failure Tol • Standar)</option>
+                                <option value="raid6">RAID 6 (2 Paritas • Dual Failure Tol • Mission Critical)</option>
+                                <option value="raid1">RAID 1 (Mirroring 1:1 • High Redundancy)</option>
+                                <option value="raid0">RAID 0 (Stripe No Parity • Non-Redundant)</option>
+                            </select>
+                            <div class="flex items-center gap-2 pt-1 text-[11px] text-slate-500">
+                                <span>Overhead Safety:</span>
+                                <input type="number" min="0" max="50" x-model.number="cctv.storageOverheadPct"
+                                       class="w-14 px-2 py-0.5 text-xs rounded border border-slate-300 font-bold text-center" />
+                                <span>% (PRD 20%)</span>
+                            </div>
+                        </div>
+
+                        <!-- Hard Disk Drive Size & VMS Platform -->
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-700" x-text="lang === 'en' ? 'Enterprise HDD & VMS Brand:' : 'Kapasitas HDD & Software VMS:'"></label>
+                            <select x-model.number="cctv.diskSizeTb"
+                                    class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:border-emerald-600 focus:outline-none font-bold">
+                                <option :value="4">4 TB Enterprise SATA (SkyHawk/WD)</option>
+                                <option :value="8">8 TB Enterprise SATA (Rekomendasi CDPK)</option>
+                                <option :value="12">12 TB Enterprise SATA 7200 RPM</option>
+                                <option :value="16">16 TB Enterprise SATA 7200 RPM</option>
+                                <option :value="20">20 TB Enterprise SATA 7200 RPM</option>
+                            </select>
+                            <select x-model="cctv.vmsBrand"
+                                    class="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:border-emerald-600 focus:outline-none font-semibold mt-1">
+                                <option value="pelco_videoxpert">⭐ Pelco VideoXpert Enterprise</option>
+                                <option value="avigilon_unity">⭐ Avigilon Unity Video 8</option>
+                                <option value="axis_acs">Axis Camera Station (ACS)</option>
+                                <option value="hanwha_wave">Hanwha Wisenet WAVE</option>
+                                <option value="generic_onvif">Universal ONVIF VMS Channel</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Multi-Brand Camera Selector & Custom Builder Card -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="lang === 'en' ? 'Camera Selector & Fleet Builder' : 'Pilihan Kamera Multi-Brand & Konfigurator Kustom'"></span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Add Multi-Brand Presets or Custom ONVIF Cameras' : 'Tambahkan Preset Kamera atau Kamera Kustom ONVIF'"></h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" @click="resetCctvToDefaults(true)"
+                                    class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center gap-1 cursor-pointer">
+                                <span>✕</span>
+                                <span x-text="t('cctvResetZero') || 'Kosongkan (0)'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Preset Quick Add Bar -->
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
+                        <div class="flex-1 min-w-[240px]">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1" x-text="lang === 'en' ? 'Select Preset Camera (Multi-Brand):' : 'Pilih Preset Kamera Multi-Brand:'"></label>
+                            <select x-model="cctv.selectedPresetSku"
+                                    class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-semibold focus:border-emerald-600 focus:outline-none">
+                                <template x-for="p in (window.CDPK_CCTV_ENGINE ? window.CDPK_CCTV_ENGINE.presets : [])" :key="p.sku">
+                                    <option :value="p.sku" x-text="'[' + p.brandName + '] ' + p.model + ' (' + p.resolution + ' • ' + (currency === 'USD' ? '$' + p.unitPriceUsd : 'Rp ' + p.unitPriceIdr.toLocaleString()) + ')'"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <div class="w-28 shrink-0">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1" x-text="lang === 'en' ? 'Quantity:' : 'Jumlah Titik:'"></label>
+                            <input type="number" min="1" max="256" x-model.number="cctv.presetQtyToAdd"
+                                   class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-bold text-center focus:border-emerald-600 focus:outline-none" />
+                        </div>
+
+                        <div class="flex items-end gap-2 shrink-0 pt-2 md:pt-4">
+                            <button type="button" @click="addCameraGroupFromPreset(cctv.selectedPresetSku, cctv.presetQtyToAdd)"
+                                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <span>➕</span>
+                                <span x-text="lang === 'en' ? 'Add Preset' : 'Tambah Preset'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Expandable Custom Camera Builder Form -->
+                    <div x-data="{ customOpen: false }" class="border border-slate-200 rounded-xl overflow-hidden">
+                        <button type="button" @click="customOpen = !customOpen"
+                                class="w-full p-3 bg-slate-100/70 hover:bg-slate-100 text-left font-bold text-xs text-slate-800 flex items-center justify-between transition cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <span>⚙️</span>
+                                <span x-text="lang === 'en' ? 'Define Custom Camera / Universal ONVIF Specification (Click to Expand)' : 'Definisikan Kamera Kustom / Standar Universal ONVIF (Klik untuk Membuka)'"></span>
+                            </div>
+                            <span class="text-xs text-slate-500" x-text="customOpen ? '▲ Tutup' : '▼ Buka Konfigurator'"></span>
+                        </button>
+
+                        <div x-show="customOpen" class="p-4 bg-white space-y-4 border-t border-slate-200">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Merk / Brand:</label>
+                                    <input type="text" x-model="cctv.customForm.brand"
+                                           class="w-full p-2 rounded-lg border border-slate-300 font-semibold focus:border-emerald-600" />
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Model / Tipe Kamera:</label>
+                                    <input type="text" x-model="cctv.customForm.model"
+                                           class="w-full p-2 rounded-lg border border-slate-300 font-semibold focus:border-emerald-600" />
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Bentuk Fisik (Form Factor):</label>
+                                    <select x-model="cctv.customForm.formFactor"
+                                            class="w-full p-2 rounded-lg border border-slate-300 font-semibold focus:border-emerald-600">
+                                        <option value="bullet">Bullet (Outdoor)</option>
+                                        <option value="dome">Dome (Indoor/Vandal)</option>
+                                        <option value="ptz">PTZ Speed Dome (Zoom)</option>
+                                        <option value="multisensor">Multi-Sensor 180°/360°</option>
+                                        <option value="thermal">Thermal / Bispectral</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Resolusi Sensor:</label>
+                                    <select x-model="cctv.customForm.resolution"
+                                            class="w-full p-2 rounded-lg border border-slate-300 font-semibold focus:border-emerald-600">
+                                        <option value="1080p">1080p Full HD (2MP)</option>
+                                        <option value="4MP">4MP QHD (2560x1440)</option>
+                                        <option value="5MP">5MP Super HD</option>
+                                        <option value="4K">4K UHD 8MP (3840x2160)</option>
+                                        <option value="12MP">12MP Panorama / Multi</option>
+                                        <option value="thermal">Thermal VGA Radiometrik</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Frame Rate (FPS):</label>
+                                    <select x-model.number="cctv.customForm.fps"
+                                            class="w-full p-2 rounded-lg border border-slate-300 font-semibold focus:border-emerald-600">
+                                        <option :value="10">10 fps</option>
+                                        <option :value="15">15 fps</option>
+                                        <option :value="20">20 fps</option>
+                                        <option :value="25">25 fps (PAL Standar)</option>
+                                        <option :value="30">30 fps (Realtime)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Kompresi Codec:</label>
+                                    <select x-model="cctv.customForm.codec"
+                                            class="w-full p-2 rounded-lg border border-slate-300 font-semibold focus:border-emerald-600">
+                                        <option value="SmartCodec">SmartCodec (Smart H.265 / Zipstream / WiseStream)</option>
+                                        <option value="H.265">H.265 (HEVC Standard)</option>
+                                        <option value="H.264">H.264 (AVC Legacy)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Kelas Daya PoE:</label>
+                                    <select x-model="cctv.customForm.poeClass"
+                                            class="w-full p-2 rounded-lg border border-slate-300 font-semibold focus:border-emerald-600">
+                                        <option value="af">802.3af (PoE 15.4W)</option>
+                                        <option value="at">802.3at (PoE+ 30W)</option>
+                                        <option value="bt_type3">802.3bt Type 3 (PoE++ 60W)</option>
+                                        <option value="bt_type4">802.3bt Type 4 (PoE++ 90W)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Konsumsi Watt:</label>
+                                    <input type="number" step="0.5" x-model.number="cctv.customForm.poeWatts"
+                                           class="w-full p-2 rounded-lg border border-slate-300 font-semibold focus:border-emerald-600" />
+                                </div>
+
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Harga Satuan (USD):</label>
+                                    <input type="number" step="10" x-model.number="cctv.customForm.unitPriceUsd"
+                                           @input="cctv.customForm.unitPriceIdr = Math.round(cctv.customForm.unitPriceUsd * exchangeRate); cctv.customForm.cogsUsd = Math.round(cctv.customForm.unitPriceUsd * 0.75)"
+                                           class="w-full p-2 rounded-lg border border-slate-300 font-bold focus:border-emerald-600" />
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Harga Satuan (IDR):</label>
+                                    <input type="number" step="100000" x-model.number="cctv.customForm.unitPriceIdr"
+                                           @input="cctv.customForm.unitPriceUsd = Math.round((cctv.customForm.unitPriceIdr / exchangeRate) * 100) / 100; cctv.customForm.cogsUsd = Math.round(cctv.customForm.unitPriceUsd * 0.75)"
+                                           class="w-full p-2 rounded-lg border border-slate-300 font-bold focus:border-emerald-600" />
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Jumlah Unit (Qty):</label>
+                                    <input type="number" min="1" max="500" x-model.number="cctv.customForm.qty"
+                                           class="w-full p-2 rounded-lg border border-slate-300 font-black text-center focus:border-emerald-600" />
+                                </div>
+                                <div class="flex items-end">
+                                    <button type="button" @click="addCustomCameraGroup(); customOpen = false"
+                                            class="w-full py-2.5 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                        <span>➕</span>
+                                        <span x-text="lang === 'en' ? 'Add Custom Camera' : 'Tambahkan Kamera Kustom'"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Configured Camera Fleet Table -->
+                    <div class="space-y-2 pt-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-extrabold text-slate-700 uppercase tracking-wider" x-text="lang === 'en' ? 'Active Camera Fleet List' : 'Daftar Grup Kamera Terkonfigurasi'"></span>
+                            <span class="text-slate-500 font-medium" x-text="(cctv.cameraGroups ? cctv.cameraGroups.length : 0) + ' grup camera aktif'"></span>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-700 font-extrabold border-b border-slate-200">
+                                        <th class="p-2.5 w-10 text-center">#</th>
+                                        <th class="p-2.5">Merk & Model Kamera</th>
+                                        <th class="p-2.5 w-24 text-center">Resolusi</th>
+                                        <th class="p-2.5 w-28 text-center">FPS & Codec</th>
+                                        <th class="p-2.5 w-28 text-right">Bitrate (Titik)</th>
+                                        <th class="p-2.5 w-28 text-right">Throughput</th>
+                                        <th class="p-2.5 w-24 text-center">PoE Class</th>
+                                        <th class="p-2.5 w-32 text-center">Jumlah (Qty)</th>
+                                        <th class="p-2.5 w-28 text-right">Harga Satuan</th>
+                                        <th class="p-2.5 w-12 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <template x-for="(grp, gIdx) in (cctv.cameraGroups || [])" :key="grp.id || gIdx">
+                                        <tr class="hover:bg-slate-50/80 transition">
+                                            <td class="p-2.5 text-center font-bold text-slate-400" x-text="gIdx + 1"></td>
+                                            <td class="p-2.5">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase"
+                                                          :class="grp.brand === 'pelco' || grp.brand === 'avigilon' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-700'"
+                                                          x-text="grp.brandName || grp.brand"></span>
+                                                    <span class="font-extrabold text-slate-900" x-text="grp.model"></span>
+                                                </div>
+                                                <div class="text-[10px] text-slate-500 mt-0.5 flex items-center gap-2">
+                                                    <span class="capitalize" x-text="'Form: ' + grp.formFactor"></span>
+                                                    <span>•</span>
+                                                    <span x-text="'Scene: ' + grp.sceneMotion"></span>
+                                                </div>
+                                            </td>
+                                            <td class="p-2.5 text-center">
+                                                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200"
+                                                      x-text="grp.resolution"></span>
+                                            </td>
+                                            <td class="p-2.5 text-center">
+                                                <div class="font-bold text-slate-800" x-text="grp.fps + ' fps'"></div>
+                                                <div class="text-[10px] text-slate-500 font-mono" x-text="grp.codec"></div>
+                                            </td>
+                                            <td class="p-2.5 text-right font-mono font-bold text-slate-800">
+                                                <span x-text="window.CDPK_CCTV_ENGINE ? window.CDPK_CCTV_ENGINE.calcBitrate({ resolution: grp.resolution, fps: grp.fps, codec: grp.codec, sceneMotion: grp.sceneMotion, customBitrate: grp.customBitrate }) + ' Mbps' : '-'"></span>
+                                            </td>
+                                            <td class="p-2.5 text-right font-mono font-black text-emerald-700">
+                                                <span x-text="window.CDPK_CCTV_ENGINE ? (Math.round(grp.qty * window.CDPK_CCTV_ENGINE.calcBitrate({ resolution: grp.resolution, fps: grp.fps, codec: grp.codec, sceneMotion: grp.sceneMotion, customBitrate: grp.customBitrate }) * 100) / 100) + ' Mbps' : '-'"></span>
+                                            </td>
+                                            <td class="p-2.5 text-center">
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold"
+                                                      :class="grp.poeClass === 'bt_type4' || grp.poeClass === 'bt_type3' ? 'bg-purple-100 text-purple-800 border border-purple-300' : 'bg-slate-100 text-slate-700'"
+                                                      x-text="grp.poeClass.toUpperCase() + ' (' + grp.poeWatts + 'W)'"></span>
+                                            </td>
+                                            <td class="p-2.5 text-center">
+                                                <div class="flex items-center justify-center gap-1">
+                                                    <button type="button" @click="if (grp.qty > 1) grp.qty--"
+                                                            class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center cursor-pointer">-</button>
+                                                    <input type="number" min="1" max="500" x-model.number="grp.qty"
+                                                           class="w-12 py-0.5 text-xs rounded border border-slate-300 font-black text-center" />
+                                                    <button type="button" @click="grp.qty++"
+                                                            class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center cursor-pointer">+</button>
+                                                </div>
+                                            </td>
+                                            <td class="p-2.5 text-right font-bold text-slate-800">
+                                                <span x-text="currency === 'USD' ? '$' + grp.unitPriceUsd : 'Rp ' + (grp.unitPriceIdr || Math.round(grp.unitPriceUsd * exchangeRate)).toLocaleString()"></span>
+                                            </td>
+                                            <td class="p-2.5 text-center">
+                                                <button type="button" @click="removeCameraGroup(gIdx)"
+                                                        class="w-6 h-6 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold flex items-center justify-center cursor-pointer"
+                                                        title="Hapus grup kamera ini">✕</button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="!cctv.cameraGroups || cctv.cameraGroups.length === 0">
+                                        <tr>
+                                            <td colspan="10" class="p-6 text-center text-slate-400 font-medium">
+                                                Belum ada grup kamera. Tambahkan dari preset di atas atau definisikan kamera kustom.
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 2: POE POWER & SWITCH SIZING (cctvActiveTab === 'poe')    -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="cctvActiveTab === 'poe'" class="space-y-6">
+
+                <!-- 1. Quick PoE KPI Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 card-shadow border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 mb-1">
+                            <span class="text-xs font-bold uppercase tracking-wider" x-text="lang === 'en' ? 'Actual PoE Demand' : 'Daya Beban Kamera'"></span>
+                            <span class="text-lg">⚡</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-black text-slate-900" x-text="(getCctvPoeResult() ? getCctvPoeResult().totalActualWatts : 0) + ' W'"></div>
+                        <div class="text-[11px] text-slate-500 font-medium mt-1">
+                            <span x-text="'PSE Allocated: ' + (getCctvPoeResult() ? getCctvPoeResult().totalAllocatedPseWatts : 0) + ' W'"></span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 card-shadow border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 mb-1">
+                            <span class="text-xs font-bold uppercase tracking-wider" x-text="lang === 'en' ? 'Recommended Budget' : 'Power Budget (+20%)'"></span>
+                            <span class="text-lg">🔌</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-black text-amber-600" x-text="(getCctvPoeResult() ? getCctvPoeResult().recommendedBudgetWatts : 0) + ' W'"></div>
+                        <div class="text-[11px] text-emerald-600 font-bold mt-1" x-text="cctv.switchReservePct + '% cadangan headroom'"></div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 card-shadow border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 mb-1">
+                            <span class="text-xs font-bold uppercase tracking-wider" x-text="lang === 'en' ? 'Ports Required' : 'Port Dibutuhkan'"></span>
+                            <span class="text-lg">🌐</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-black text-slate-900" x-text="(getCctvPoeResult() ? getCctvPoeResult().totalPortsNeeded : 0) + ' Port'"></div>
+                        <div class="text-[11px] text-slate-500 font-medium mt-1">Kamera + 2 Uplink + 2 Spare</div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 card-shadow border border-slate-200">
+                        <div class="flex items-center justify-between text-slate-500 mb-1">
+                            <span class="text-xs font-bold uppercase tracking-wider" x-text="lang === 'en' ? 'Switch Port Reserve' : 'Port Disediakan'"></span>
+                            <span class="text-lg">🛡️</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-black text-indigo-700" x-text="(getCctvPoeResult() ? getCctvPoeResult().totalSwitchPortsProvided : 0) + ' Port'"></div>
+                        <div class="text-[11px] text-emerald-700 font-bold mt-1" x-text="(getCctvPoeResult() ? getCctvPoeResult().sparePorts : 0) + ' port ekspansi bebas'"></div>
+                    </div>
+                </div>
+
+                <!-- 2. PoE Standard Breakdown & Power Reserve Settings -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="lang === 'en' ? 'PoE Power Class Distribution' : 'Distribusi & Pembagian Standar Kelas Daya PoE'"></span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'IEEE 802.3af, 802.3at (PoE+) & 802.3bt (PoE++) Breakdown' : 'Rincian Daya IEEE 802.3af, 802.3at (PoE+) & 802.3bt (PoE++)'"></h3>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-1">
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">802.3af (PoE 15.4W)</div>
+                            <div class="text-xl font-black text-slate-900" x-text="(getCctvPoeResult() && getCctvPoeResult().poeBreakdown ? getCctvPoeResult().poeBreakdown.af : 0) + ' Titik'"></div>
+                            <div class="text-[10px] text-slate-500">Kamera Dome/Bullet Standar</div>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-1">
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">802.3at (PoE+ 30W)</div>
+                            <div class="text-xl font-black text-slate-900" x-text="(getCctvPoeResult() && getCctvPoeResult().poeBreakdown ? getCctvPoeResult().poeBreakdown.at : 0) + ' Titik'"></div>
+                            <div class="text-[10px] text-slate-500">4K / IR Jauh / Explosion-Proof</div>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-purple-50 border border-purple-200 text-center space-y-1">
+                            <div class="text-[10px] font-bold text-purple-700 uppercase">802.3bt Type 3 (60W)</div>
+                            <div class="text-xl font-black text-purple-900" x-text="(getCctvPoeResult() && getCctvPoeResult().poeBreakdown ? getCctvPoeResult().poeBreakdown.bt_type3 : 0) + ' Titik'"></div>
+                            <div class="text-[10px] text-purple-700">PTZ Outdoor / Multi-Sensor</div>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-purple-50 border border-purple-200 text-center space-y-1">
+                            <div class="text-[10px] font-bold text-purple-700 uppercase">802.3bt Type 4 (90W)</div>
+                            <div class="text-xl font-black text-purple-900" x-text="(getCctvPoeResult() && getCctvPoeResult().poeBreakdown ? getCctvPoeResult().poeBreakdown.bt_type4 : 0) + ' Titik'"></div>
+                            <div class="text-[10px] text-purple-700">Spectra 8 / Heavy Wiper-Heater</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Recommended Industrial Switch Allocation Cards -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="lang === 'en' ? 'Industrial Switch Sizing Recommendation' : 'Rekomendasi Alokasi Switch Jaringan Industrial'"></span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Hardened Switches with 10G SFP+ Uplinks & Surge Protection' : 'Switch Industri Tangguh dengan Uplink 10G SFP+ & Proteksi Petir 6kV'"></h3>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <template x-for="sw in (getCctvPoeResult() ? getCctvPoeResult().recommendedSwitches : [])" :key="sw.sku">
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-50 transition space-y-3">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-200 text-slate-800" x-text="sw.sku"></span>
+                                        <h4 class="font-extrabold text-slate-900 text-sm mt-1" x-text="sw.model"></h4>
+                                    </div>
+                                    <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-emerald-600 text-white shadow-xs" x-text="sw.qty + ' Unit'"></span>
+                                </div>
+                                <p class="text-xs text-slate-600 leading-relaxed" x-text="lang === 'en' ? sw.reason_en : sw.reason_id"></p>
+                                <div class="flex flex-wrap items-center justify-between pt-2 border-t border-slate-200 text-xs font-bold text-slate-800">
+                                    <span>PoE Budget: <strong class="text-emerald-700" x-text="sw.poeBudgetWatts + 'W'"></strong></span>
+                                    <span>Uplink: <strong class="text-indigo-700">10G SFP+</strong></span>
+                                    <span>Harga: <strong class="text-slate-900" x-text="currency === 'USD' ? '$' + sw.unitPriceUsd : 'Rp ' + (sw.unitPriceIdr || Math.round(sw.unitPriceUsd * exchangeRate)).toLocaleString()"></strong></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 3: CCTV BOQ & MASTER BRIDGE (cctvActiveTab === 'boq')     -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="cctvActiveTab === 'boq'" class="space-y-6">
+
+                <!-- 1. Master BoQ Two-Way Bridge CTA Card -->
+                <div class="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-xl border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1.5">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-400 text-slate-950">
+                                Two-Way Master BoQ Bridge
+                            </span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-emerald-200 border border-white/20">
+                                Margin Guardrail &gt;= 15%
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-black tracking-tight text-white flex items-center gap-2">
+                            <span>📥</span>
+                            <span x-text="lang === 'en' ? 'Synchronize CCTV Items into CDPK Master BoQ' : 'Kirim Perangkat CCTV ke BoQ Utama CDPK'"></span>
+                        </h3>
+                        <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                            <span x-text="lang === 'en'
+                                ? 'Injects all multi-brand cameras, NVR/Server, Enterprise hard disks, PoE switches, and VMS licenses into Master BoQ alongside DMR and DAS systems with automated margin compliance and live FX rate.'
+                                : 'Memasukkan seluruh kamera multi-brand, server NVR, hard disk enterprise, switch PoE industri, dan lisensi VMS langsung ke BoQ Utama bersama sistem DMR dan DAS dengan kepatuhan margin guardrail.'"></span>
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+                        <button @click="injectCctvBoqToMasterBoq()"
+                                class="px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+                            <span>📥</span>
+                            <span x-text="t('cctvInjectToMasterBoq') || 'Kirim ke BoQ Utama (DMR)'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. CCTV Bill of Quantities Table Card -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="lang === 'en' ? 'Commercial & Technical BoQ' : 'Rincian Bill of Quantities (BoQ) CCTV'"></span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Itemized Video Security Hardware, Licenses & Cabling' : 'Rincian Perangkat Keras, Lisensi VMS & Kabel Pengawasan'"></h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button @click="exportCctvCsv()"
+                                    class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition flex items-center gap-1 cursor-pointer">
+                                <span>📄</span>
+                                <span x-text="t('cctvExportCsv') || 'Ekspor CSV'"></span>
+                            </button>
+                            <button @click="copyCctvSummary()"
+                                    class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition flex items-center gap-1 cursor-pointer">
+                                <span>📋</span>
+                                <span x-text="t('cctvCopySummary') || 'Salin Ringkasan'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 font-extrabold border-b border-slate-200">
+                                    <th class="p-2.5 w-10 text-center">#</th>
+                                    <th class="p-2.5 w-32">SKU</th>
+                                    <th class="p-2.5">Deskripsi Perangkat</th>
+                                    <th class="p-2.5 w-16 text-center">Kuantitas</th>
+                                    <th class="p-2.5 w-16 text-center">Satuan</th>
+                                    <th class="p-2.5 w-28 text-right">Harga Satuan</th>
+                                    <th class="p-2.5 w-32 text-right">Total Harga</th>
+                                    <th class="p-2.5 w-24 text-right">Margin Target</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <template x-for="(it, idx) in (getCctvBoqResult() ? getCctvBoqResult().items : [])" :key="it.key || idx">
+                                    <tr class="hover:bg-slate-50/80 transition">
+                                        <td class="p-2.5 text-center font-bold text-slate-400" x-text="idx + 1"></td>
+                                        <td class="p-2.5 font-mono text-[11px] font-bold text-slate-700" x-text="it.sku"></td>
+                                        <td class="p-2.5">
+                                            <div class="font-extrabold text-slate-900" x-text="lang === 'en' ? (it.name_en || it.name_id) : (it.name_id || it.name_en)"></div>
+                                            <div class="text-[10px] text-slate-500 mt-0.5" x-text="lang === 'en' ? it.notes_en : it.notes_id"></div>
+                                        </td>
+                                        <td class="p-2.5 text-center font-black text-slate-900" x-text="it.qty"></td>
+                                        <td class="p-2.5 text-center font-semibold text-slate-600" x-text="it.unit"></td>
+                                        <td class="p-2.5 text-right font-bold text-slate-800">
+                                            <span x-text="currency === 'USD' ? ('$' + it.unitPriceUsd.toLocaleString()) : ('Rp ' + it.unitPriceIdr.toLocaleString())"></span>
+                                        </td>
+                                        <td class="p-2.5 text-right font-black text-emerald-800">
+                                            <span x-text="currency === 'USD' ? ('$' + (it.unitPriceUsd * it.qty).toLocaleString()) : ('Rp ' + (it.unitPriceIdr * it.qty).toLocaleString())"></span>
+                                        </td>
+                                        <td class="p-2.5 text-right font-bold text-emerald-700" x-text="it.marginPct + '%'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <tfoot class="bg-slate-50 border-t-2 border-slate-200 text-xs font-black text-slate-900">
+                                <tr>
+                                    <td colspan="6" class="p-3 text-right uppercase tracking-wider" x-text="lang === 'en' ? 'Estimated Total CCTV Subtotal:' : 'Estimasi Subtotal CCTV:'"></td>
+                                    <td class="p-3 text-right text-sm text-emerald-900">
+                                        <span x-text="getCctvBoqResult() && getCctvBoqResult().totals ? (currency === 'USD' ? '$' + getCctvBoqResult().totals.subtotalUsd.toLocaleString() : 'Rp ' + getCctvBoqResult().totals.subtotalIdr.toLocaleString()) : '-'"></span>
+                                    </td>
+                                    <td class="p-3 text-right text-emerald-800"
+                                        x-text="getCctvBoqResult() && getCctvBoqResult().totals ? ('Avg ' + getCctvBoqResult().totals.marginPct + '%') : ''"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- VIEW 4: MULTI-BRAND CAMERA CATALOG (cctvActiveTab === 'catalog')-->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div x-show="cctvActiveTab === 'catalog'" class="space-y-6">
+
+                <!-- 1. Catalog Filter & Search Card -->
+                <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="lang === 'en' ? 'Hardware Catalog & Specifications' : 'Katalog Kamera Pengawas & Spesifikasi Pabrikan'"></span>
+                            <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Multi-Brand Portfolio (Pelco, Avigilon, Axis, Hanwha, Hikvision, Dahua, Bosch, Uniview)' : 'Portofolio Multi-Brand (Pelco, Avigilon, Axis, Hanwha, Hikvision, Dahua, Bosch, Uniview)'"></h3>
+                        </div>
+                    </div>
+
+                    <!-- Brand Filter Pills -->
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button type="button" @click="cctv.catalogBrandFilter = 'all'"
+                                :class="cctv.catalogBrandFilter === 'all' ? 'bg-emerald-600 text-white font-extrabold' : 'bg-slate-100 text-slate-700 font-semibold'"
+                                class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">Semua Brand</button>
+                        <template x-for="b in (window.CDPK_CCTV_ENGINE ? window.CDPK_CCTV_ENGINE.brands : [])" :key="b.id">
+                            <button type="button" @click="cctv.catalogBrandFilter = b.id"
+                                    :class="cctv.catalogBrandFilter === b.id ? 'bg-emerald-600 text-white font-extrabold' : 'bg-slate-100 text-slate-700 font-semibold'"
+                                    class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer"
+                                    x-text="b.name"></button>
+                        </template>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div>
+                        <input type="text" x-model="cctv.catalogSearch"
+                               placeholder="Cari model, seri, resolusi (4K/PTZ/Thermal/Explosion-Proof)..."
+                               class="w-full p-2.5 text-xs rounded-xl border border-slate-300 focus:border-emerald-600 focus:outline-none" />
+                    </div>
+                </div>
+
+                <!-- 2. Catalog Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <template x-for="cam in ((window.CDPK_CCTV_ENGINE ? window.CDPK_CCTV_ENGINE.presets : []).filter(c => {
+                        const matchBrand = cctv.catalogBrandFilter === 'all' || c.brand === cctv.catalogBrandFilter;
+                        const matchSearch = !cctv.catalogSearch || (c.model + ' ' + c.sku + ' ' + c.brandName + ' ' + c.resolution).toLowerCase().includes(cctv.catalogSearch.toLowerCase());
+                        return matchBrand && matchSearch;
+                    }))" :key="cam.sku">
+                        <div class="bg-white rounded-2xl p-5 card-shadow border border-slate-200 flex flex-col justify-between space-y-4 hover:border-emerald-400 transition">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase"
+                                          :class="cam.brand === 'pelco' || cam.brand === 'avigilon' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-800 border border-slate-200'"
+                                          x-text="cam.brandName"></span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200"
+                                          x-text="cam.resolution"></span>
+                                </div>
+                                <h4 class="font-extrabold text-slate-900 text-sm leading-snug" x-text="cam.model"></h4>
+                                <div class="text-[11px] font-mono text-slate-400" x-text="cam.sku"></div>
+                                <p class="text-xs text-slate-600 leading-relaxed" x-text="lang === 'en' ? cam.desc_en : cam.desc_id"></p>
+
+                                <div class="flex flex-wrap gap-1 pt-1">
+                                    <template x-for="f in cam.features" :key="f">
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700" x-text="f"></span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                                <div>
+                                    <div class="text-[10px] text-slate-400 font-semibold" x-text="cam.poeClass.toUpperCase() + ' (' + cam.poeWatts + 'W)'"></div>
+                                    <div class="font-black text-slate-900 text-sm"
+                                         x-text="currency === 'USD' ? ('$' + cam.unitPriceUsd.toLocaleString()) : ('Rp ' + (cam.unitPriceIdr || Math.round(cam.unitPriceUsd * exchangeRate)).toLocaleString())"></div>
+                                </div>
+                                <button type="button" @click="addCameraGroupFromPreset(cam.sku, 1); showToast(lang === 'en' ? 'Added to camera sizing planner' : 'Ditambahkan ke planner kamera', 'success')"
+                                        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition flex items-center gap-1 cursor-pointer">
+                                    <span>➕</span>
+                                    <span>Tambah</span>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+            </div>
+
+        </div>
+        <!-- ═══════════════ END WORKSPACE 3: CCTV SURVEILLANCE ══════════ -->
+
+
         <!-- ══════════════════ DAS HANDOFF QR CODE MODAL ═════════════════ -->
         <div x-show="dasHandoffModalOpen" x-cloak
              class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4"
@@ -3992,6 +4824,57 @@
                     <span class="text-base text-slate-950">✨</span>
                 </div>
                 <span class="text-[10px] font-bold text-amber-300 tracking-tight" x-text="t('bottomNavAi') || 'AI Copilot'"></span>
+            </button>
+
+            <!-- 5. Menu / More -->
+            <button @click="mobileMenuOpen = true"
+                    class="flex flex-col items-center justify-center py-1 transition relative"
+                    :class="mobileMenuOpen ? 'text-white font-extrabold' : 'text-slate-400 hover:text-white'">
+                <span class="text-xl">📂</span>
+                <span class="text-[10px] tracking-tight" x-text="t('bottomNavMenu') || 'Menu'"></span>
+            </button>
+        </div>
+
+        <!-- CCTV Video Security Mobile Nav -->
+        <div x-show="activeWorkspace === 'cctv'" class="grid grid-cols-5 h-16 items-center px-1">
+            <!-- 1. Planner -->
+            <button @click="cctvActiveTab = 'planner'"
+                    class="flex flex-col items-center justify-center py-1 transition relative"
+                    :class="cctvActiveTab === 'planner' ? 'text-emerald-400 font-extrabold' : 'text-slate-400 hover:text-white'">
+                <div class="relative">
+                    <span class="text-xl">📹</span>
+                    <span class="absolute -top-1 -right-2 px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-500 text-white font-black"
+                          x-text="cctv.cameraGroups ? cctv.cameraGroups.length : 0"></span>
+                </div>
+                <span class="text-[10px] tracking-tight">Kamera</span>
+                <span x-show="cctvActiveTab === 'planner'" class="absolute -top-1 w-6 h-1 bg-emerald-400 rounded-full"></span>
+            </button>
+
+            <!-- 2. PoE Switch -->
+            <button @click="cctvActiveTab = 'poe'"
+                    class="flex flex-col items-center justify-center py-1 transition relative"
+                    :class="cctvActiveTab === 'poe' ? 'text-amber-400 font-extrabold' : 'text-slate-400 hover:text-white'">
+                <span class="text-xl">⚡</span>
+                <span class="text-[10px] tracking-tight">PoE Switch</span>
+                <span x-show="cctvActiveTab === 'poe'" class="absolute -top-1 w-6 h-1 bg-amber-400 rounded-full"></span>
+            </button>
+
+            <!-- 3. BoQ CCTV -->
+            <button @click="cctvActiveTab = 'boq'"
+                    class="flex flex-col items-center justify-center py-1 transition relative"
+                    :class="cctvActiveTab === 'boq' ? 'text-teal-400 font-extrabold' : 'text-slate-400 hover:text-white'">
+                <span class="text-xl">📑</span>
+                <span class="text-[10px] tracking-tight">BoQ CCTV</span>
+                <span x-show="cctvActiveTab === 'boq'" class="absolute -top-1 w-6 h-1 bg-teal-400 rounded-full"></span>
+            </button>
+
+            <!-- 4. Katalog -->
+            <button @click="cctvActiveTab = 'catalog'"
+                    class="flex flex-col items-center justify-center py-1 transition relative"
+                    :class="cctvActiveTab === 'catalog' ? 'text-sky-400 font-extrabold' : 'text-slate-400 hover:text-white'">
+                <span class="text-xl">📦</span>
+                <span class="text-[10px] tracking-tight">Katalog</span>
+                <span x-show="cctvActiveTab === 'catalog'" class="absolute -top-1 w-6 h-1 bg-sky-400 rounded-full"></span>
             </button>
 
             <!-- 5. Menu / More -->
@@ -4141,13 +5024,22 @@
                         </div>
                         <span class="text-[9px] px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black w-fit uppercase">RFoF DAS by FMTCS</span>
                     </button>
+                    <button @click="activeWorkspace = 'cctv'; mobileMenuOpen = false"
+                            :class="activeWorkspace === 'cctv' ? 'bg-emerald-600 text-white font-black shadow-md border-2 border-emerald-300' : 'bg-white/10 text-sky-100 hover:bg-white/20 border border-white/10'"
+                            class="p-2.5 rounded-xl text-left flex flex-col gap-1 transition cursor-pointer col-span-2 sm:col-span-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-base">📹</span>
+                            <span class="text-xs font-bold">Video Security & CCTV</span>
+                        </div>
+                        <span class="text-[9px] px-1 py-0.2 rounded bg-emerald-400 text-slate-950 font-black w-fit uppercase">Multi-Brand & ONVIF</span>
+                    </button>
                 </div>
             </div>
 
             <!-- Navigation Shortcuts -->
             <div class="space-y-1">
                 <div class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-1.5"
-                     x-text="activeWorkspace === 'das' ? 'Navigasi RFoF DAS FMTCS' : 'Navigasi Halaman Kerja DMR'"></div>
+                     x-text="activeWorkspace === 'cctv' ? 'Navigasi Video Security CCTV' : (activeWorkspace === 'das' ? 'Navigasi RFoF DAS FMTCS' : 'Navigasi Halaman Kerja DMR')"></div>
                 
                 <!-- DMR Shortcuts -->
                 <div x-show="activeWorkspace === 'dmr'" class="grid grid-cols-2 gap-2">
@@ -4186,6 +5078,26 @@
                     <button @click="exportDasCommPdf(); mobileMenuOpen = false"
                             class="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-left flex items-center gap-2 text-xs font-bold text-emerald-900">
                         <span>📄</span> <span>Export SAT PDF</span>
+                    </button>
+                </div>
+
+                <!-- CCTV Shortcuts -->
+                <div x-show="activeWorkspace === 'cctv'" class="grid grid-cols-2 gap-2">
+                    <button @click="cctvActiveTab = 'planner'; mobileMenuOpen = false"
+                            class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left flex items-center gap-2 text-xs font-bold text-slate-800">
+                        <span>📹</span> <span>Sizing Kamera</span>
+                    </button>
+                    <button @click="cctvActiveTab = 'poe'; mobileMenuOpen = false"
+                            class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left flex items-center gap-2 text-xs font-bold text-slate-800">
+                        <span>⚡</span> <span>Daya PoE Switch</span>
+                    </button>
+                    <button @click="cctvActiveTab = 'boq'; mobileMenuOpen = false"
+                            class="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-left flex items-center gap-2 text-xs font-bold text-emerald-900">
+                        <span>📑</span> <span>BoQ CCTV</span>
+                    </button>
+                    <button @click="cctvActiveTab = 'catalog'; mobileMenuOpen = false"
+                            class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left flex items-center gap-2 text-xs font-bold text-slate-800">
+                        <span>📦</span> <span>Katalog Multi-Brand</span>
                     </button>
                 </div>
             </div>

@@ -413,7 +413,21 @@ window.CDPK_I18N = {
         emailSummaryTitle: "Ringkasan Isi Penawaran",
         emailDownloadTitle: "Unduh Lampiran Resmi:",
         emailDownloadSubtitle: "Lampirkan file PDF / Excel ke email klien Anda",
-        emailBtnOpenClient: "Buka di Email Client"
+        emailBtnOpenClient: "Buka di Email Client",
+
+        // Video Security & CCTV Surveillance Workspace
+        cctvWorkspaceTitle: "Video Security & CCTV",
+        cctvNavPlanner: "1. Sizing Kamera & Storage NVR",
+        cctvNavPoe: "2. Daya PoE & Sizing Switch",
+        cctvNavBoq: "3. BoQ CCTV & Bridge Utama",
+        cctvNavCatalog: "4. Katalog Kamera Multi-Brand",
+        cctvSyncFromDmr: "Sinkronkan dari Sizing DMR",
+        cctvInjectToMasterBoq: "Kirim ke BoQ Utama (DMR)",
+        cctvExportCsv: "Ekspor CSV",
+        cctvCopySummary: "Salin Ringkasan Teknis",
+        cctvResetDefaults: "Reset CCTV (Standar)",
+        cctvResetZero: "Kosongkan (0)",
+        cctvOpenPlannerBtn: "Buka di CCTV Planner →"
     },
     en: {
         appTitle: "CDPK System Planner",
@@ -828,7 +842,21 @@ window.CDPK_I18N = {
         emailSummaryTitle: "Quotation Summary",
         emailDownloadTitle: "Download Official Attachments:",
         emailDownloadSubtitle: "Attach PDF / Excel files to your client email",
-        emailBtnOpenClient: "Open in Email Client"
+        emailBtnOpenClient: "Open in Email Client",
+
+        // Video Security & CCTV Surveillance Workspace
+        cctvWorkspaceTitle: "Video Security & CCTV",
+        cctvNavPlanner: "1. Camera Sizing & NVR Storage",
+        cctvNavPoe: "2. PoE Power & Switch Sizing",
+        cctvNavBoq: "3. CCTV BoQ & Master Bridge",
+        cctvNavCatalog: "4. Multi-Brand Camera Catalog",
+        cctvSyncFromDmr: "Sync from DMR Sizing",
+        cctvInjectToMasterBoq: "Inject to Master BoQ (DMR)",
+        cctvExportCsv: "Export CSV",
+        cctvCopySummary: "Copy Engineering Summary",
+        cctvResetDefaults: "Reset CCTV (Defaults)",
+        cctvResetZero: "Clear to 0",
+        cctvOpenPlannerBtn: "Open in CCTV Planner →"
     }
 };
 

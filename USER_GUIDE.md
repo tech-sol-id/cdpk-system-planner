@@ -1,8 +1,8 @@
 # Panduan Pengguna Resmi (User Guide)
-## CDPK System Planner — Versi 8.5.0
+## CDPK System Planner — Versi 8.6.0
 
-> **Sistem:** CDPK System Planner *(DMR System & RFoF Distributed Antenna System — Solution Sizing, RF Simulation, Commercial Suite & Enterprise Team Collaboration)*  
-> **Distributor Resmi:** PT Citradata Purnakharisma (CDPK) — Authorized Distributor Motorola Solutions, Avigilon & FMTCS Fiber DAS  
+> **Sistem:** CDPK System Planner *(DMR System, RFoF Distributed Antenna System & Open Multi-Brand Video Security / CCTV Surveillance — Solution Sizing, RF Simulation, Commercial Suite & Enterprise Team Collaboration)*  
+> **Distributor Resmi:** PT Citradata Purnakharisma (CDPK) — Authorized Distributor Motorola Solutions, Pelco, Avigilon & FMTCS Fiber DAS  
 > **Akses Web Produksi:** [https://cdpk-system-planner.onrender.com/](https://cdpk-system-planner.onrender.com/)  
 > **Bahasa:** Dwi-Bahasa (**🇮🇩 Bahasa Indonesia** & **🇬🇧 English**)  
 
@@ -11,7 +11,7 @@
 ## Daftar Isi
 1. [Akses Sistem & Panduan Masuk (Login)](#1-akses-sistem--panduan-masuk-login)
 2. [Tingkatan Peran Pengguna & Hak Akses Estimator (RBAC)](#2-tingkatan-peran-pengguna--hak-akses-estimator-rbac)
-3. [Alur Kerja Rekayasa & Workspace Switcher (DMR ↔ RFoF DAS)](#3-alur-kerja-rekayasa--workspace-switcher-dmr--rfof-das)
+3. [Alur Kerja Rekayasa & Workspace Switcher (DMR ↔ RFoF DAS ↔ Video Security)](#3-alur-kerja-rekayasa--workspace-switcher-dmr--rfof-das--video-security)
 4. [Panduan Modul 1: Sizing RF & Penentuan Topologi (DMR System)](#4-panduan-modul-1-sizing-rf--penentuan-topologi)
 5. [Panduan Modul 2: BoQ & Konfigurasi Finansial](#5-panduan-modul-2-boq--konfigurasi-finansial)
 6. [Panduan Modul 3: Katalog Produk & Spesifikasi](#6-panduan-modul-3-katalog-produk--spesifikasi)
@@ -22,14 +22,25 @@
 11. [Panduan Workspace 2: RFoF Distributed Antenna System (`RFoF DAS by FMTCS`)](#11-panduan-workspace-2-rfof-distributed-antenna-system-rfof-das-by-fmtcs)
     - [Cara Me-Reset BoQ & Input RFoF DAS (`🔄 Reset DAS (0)`)](#cara-me-reset-boq--input-rfof-das--reset-das-0)
     - [Akses Estimator & BoQ Komersial (`Admin`, `Overseer`, `Product Expert`)](#akses-estimator--boq-komersial-admin-overseer-product-expert)
-12. [Kolaborasi Tim & Fitur Handover Proyek](#12-kolaborasi-tim--fitur-handover-proyek)
-13. [Pusat Notifikasi & Serah Terima Tugas](#13-pusat-notifikasi--serah-terima-tugas)
-14. [Penyimpanan Cloud & Dashboard Arsip Google Drive](#14-penyimpanan-cloud--dashboard-arsip-google-drive)
-15. [Panduan Khusus Eksekutif (Administrator & Overseer)](#15-panduan-khusus-eksekutif-administrator--overseer)
+12. [Panduan Workspace 3: Video Security & CCTV Surveillance Planner (Open Multi-Brand)](#12-panduan-workspace-3-video-security--cctv-surveillance-planner-open-multi-brand)
+    - [Arsitektur Multi-Brand & Custom Camera Builder](#arsitektur-multi-brand--custom-camera-builder)
+    - [Tab 1: Estimator Bandwidth Throughput & Kapasitas Storage NVR](#tab-1-estimator-bandwidth-throughput--kapasitas-storage-nvr)
+    - [Tab 2: Sizing Konsumsi Daya PoE & Industrial Switch](#tab-2-sizing-konsumsi-daya-poe--industrial-switch)
+    - [Tab 3: Estimator BoQ Video Security & Two-Way Bridge ke Master BoQ](#tab-3-estimator-boq-video-security--two-way-bridge-ke-master-boq)
+    - [Tab 4: Katalog Kamera & Hardware Bawaan](#tab-4-katalog-kamera--hardware-bawaan)
+13. [Kolaborasi Tim & Fitur Handover Proyek](#13-kolaborasi-tim--fitur-handover-proyek)
+14. [Pusat Notifikasi & Serah Terima Tugas](#14-pusat-notifikasi--serah-terima-tugas)
+15. [Penyimpanan Cloud & Dashboard Arsip Google Drive](#15-penyimpanan-cloud--dashboard-arsip-google-drive)
+16. [Panduan Khusus Eksekutif (Administrator & Overseer)](#16-panduan-khusus-eksekutif-administrator--overseer)
     - [Ringkasan Portofolio Eksekutif](#ringkasan-portofolio-eksekutif)
     - [Kebijakan Guardrail Margin (< 15%)](#kebijakan-guardrail-margin--15)
     - [Jejak Audit Aktivitas (Audit Trail)](#jejak-audit-aktivitas-audit-trail)
-16. [Penggunaan pada Smartphone & Tablet (PWA & Versi Mobile)](#16-penggunaan-pada-smartphone--tablet-pwa--versi-mobile)
+17. [Penggunaan pada Smartphone & Tablet (PWA & Versi Mobile)](#17-penggunaan-pada-smartphone--tablet-pwa--versi-mobile)
+18. [Panduan Fitur Rekayasa Lanjutan: Optical Link Budget, IM3, Erlang-B & Daya Cadangan (v8.5.2)](#18-panduan-fitur-rekayasa-lanjutan-optical-link-budget-im3-erlang-b--daya-cadangan-v852)
+    - [18.1. Kalkulator Optical Link Budget (OMU ↔ ORU)](#181-kalkulator-optical-link-budget-omu--oru)
+    - [18.2. Validator Intermodulasi (IM3) & Frequency Combiner](#182-validator-intermodulasi-im3--frequency-combiner)
+    - [18.3. Kalkulator Kapasitas Trafik Erlang-B & Trunking Advisor](#183-kalkulator-kapasitas-trafik-erlang-b--trunking-advisor)
+    - [18.4. Kalkulator Sizing Daya Cadangan & Solar Panel Off-Grid](#184-kalkulator-sizing-daya-cadangan--solar-panel-off-grid)
 
 ---
 
@@ -90,18 +101,19 @@ Sistem membedakan hak akses berdasarkan 4 peran resmi:
 
 ---
 
-## 3. Alur Kerja Rekayasa & Workspace Switcher (DMR ↔ RFoF DAS)
+## 3. Alur Kerja Rekayasa & Workspace Switcher (DMR ↔ RFoF DAS ↔ Video Security)
 
-Di bagian atas layar (serta di dalam menu laci *mobile*), tersedia **Workspace Switcher** untuk berpindah antar modul utama secara instan:
+Di bagian atas layar (serta di dalam menu laci *mobile*), tersedia **Workspace Switcher** untuk berpindah antar tiga modul utama secara instan:
 - **`📡 DMR System`** — Workspace perencanaan sistem radio MOTOTRBO (Conventional, IP Site Connect, Capacity Plus), simulasi peta propagasi RF, estimasi mandays WES, dan Master BoQ.
 - **`🏢 RFoF Distributed Antenna System`** — Workspace rekayasa sistem distribusi antena serat optik (**RFoF DAS by FMTCS**) untuk gedung bertingkat, basement, terowongan, dan kompleks industri.
+- **`📹 Video Security & CCTV`** — Workspace perencanaan sistem pengawasan video & NVR multi-brand (Pelco, Avigilon, Axis, Hanwha, Hikvision, Dahua, Bosch, Uniview, Generic ONVIF), estimasi throughput bandwidth/storage, sizing daya PoE switch, dan integrasi Master BoQ.
 
 ```mermaid
 flowchart LR
-    Step1["1. Sizing RF & Topologi (📡 DMR System)"] --> Step2["2. Perluas ke 🏢 RFoF Distributed Antenna System (Jika Gedung/Basement)"]
-    Step2 --> Step3["3. Desain Zona Lantai, Link Budget & BoQ FMTCS"]
-    Step3 --> Step4["4. Gabungkan BoQ DAS ke Master BoQ DMR"]
-    Step4 --> Step5["5. Estimasi Mandays & Simulasi Coverage Canvas"]
+    Step1["1. Sizing RF & Topologi (📡 DMR System)"] --> Step2["2. Perluas ke 🏢 RFoF DAS (Gedung/Basement)"]
+    Step2 --> Step3["3. Tambah 📹 Video Security & CCTV Planner (Kamera, NVR, PoE)"]
+    Step3 --> Step4["4. Gabungkan Seluruh BoQ ke Master BoQ CDPK"]
+    Step4 --> Step5["5. Estimasi Mandays & Simulasi Propagasi Canvas"]
     Step5 --> Step6["6. Simpan ke Google Drive & Ekspor PDF/Excel"]
     Step6 --> Step7["7. Serah Terima (Handover) ke Rekan Tim"]
 ```
@@ -240,7 +252,82 @@ Pengguna dengan peran **👑 Administrator**, **👁️ Overseer**, dan **💼 P
 
 ---
 
-## 12. Kolaborasi Tim & Fitur Handover Proyek
+## 12. Panduan Workspace 3: Video Security & CCTV Surveillance Planner (Open Multi-Brand)
+
+Workspace **`📹 Video Security & CCTV`** merupakan modul rekayasa surveillance modern berbasis filosofi **Open Multi-Brand & Universal ONVIF**. Modul ini dirancang untuk menangani perencanaan sistem CCTV skala enterprise (mining site, oil & gas facility, pabrik, gedung bertingkat, dan pelabuhan) secara akurat, mulai dari kalkulasi throughput bandwidth jaringan, kapasitas hard disk NVR dengan overhead RAID, alokasi daya switch industri PoE (802.3af/at/bt), hingga estimasi BoQ terpadu.
+
+### Arsitektur Multi-Brand & Custom Camera Builder
+Sistem mendukung dua metode pemilihan kamera:
+1. **Pilihan Brand & Model Flagship / Pihak Ketiga:**
+   - **Flagship CDPK:** **Pelco** (*Spectra Enhanced PTZ, Sarix Multi 360°, ExSite Pro Explosion-Proof ATEX, Sarix Pro, Sarix Value, Esprit Compact Bispectral Thermal*) dan **Avigilon** (*Unity H6A Dome/Bullet AI, H5A PTZ, H5A Thermal, Ava Compact Cloud*).
+   - **Brand Pihak Ketiga:** **Axis Communications** (*Q63 PTZ, P32 Dome, M30 Mini*), **Hanwha Vision** (*XNV Dome, QNO Bullet, PNM Multi-sensor*), **Hikvision** (*DarkFighterX PTZ, ColorVu 4K, DeepinView*), **Dahua Technology** (*WizMind 4K, WizSense PTZ, TiOC 2.0*), **Bosch Security** (*FLEXIDOME panoramic, AUTODOME inteox*), dan **Uniview** (*Prime-I Bullet, LightHunter*).
+2. **Generic ONVIF / Custom Camera Builder:**
+   - Tambahkan kamera custom dengan memilih resolusi sensor (*1080p / 2MP, 3MP, 4MP, 5MP, 4K / 8MP, 12MP, Multi-Sensor, atau Thermal/VGA*).
+   - Tentukan standar kompresi video (*H.264, H.265, SmartCodec / Zipstream / WiseStream / HDSM*).
+   - Tentukan frame rate (*10, 15, 20, 25, 30 fps*) dan rasio deteksi gerakan (*Low Activity 10%, Medium Activity 25%, High Continuous 50%*).
+   - Tentukan standar daya PoE (*802.3af 15.4W, 802.3at PoE+ 30W, 802.3bt Type 3 60W, 802.3bt Type 4 90W*).
+   - Tentukan harga satuan kamera dalam **USD** atau **IDR**.
+
+---
+
+### Tab 1: Estimator Bandwidth Throughput & Kapasitas Storage NVR
+- **Manajemen Armada Kamera (Camera Fleet):**
+  - Buat beberapa grup kamera (misal: *Area Pintu Masuk / Gate*, *Perimeter Pagar*, *Ruang Kontrol*, *Tower Tambang*).
+  - Setiap grup dapat disesuaikan kuantitas kamera, resolusi, frame rate, kompresi, motion activity, masa retensi (*30, 60, 90, 120, 180 hari*), dan jam operasional (*24 jam/hari*).
+- **Hasil Kalkulasi Deterministik:**
+  - **Total Throughput Bandwidth (Mbps):** Akumulasi bandwidth streaming seluruh kamera secara real-time.
+  - **Peak Bandwidth (+20% Surge Headroom):** Perkiraan throughput puncak saat aktivitas gerakan tinggi untuk perancangan port uplink switch & router.
+  - **Laju Data Harian (GB/hari):** Dihitung dengan rumus murni:
+    $$\text{Data Harian (GB)} = \frac{\text{Throughput (Mbps)} \times 10^6 \times 3600 \times \text{Jam}}{8 \times 10^9} \approx 10.8 \times \text{Throughput (Mbps)}$$
+  - **Total Raw Storage (TB):** Total kapasitas penyimpanan murni sebelum proteksi redundansi.
+  - **Total Usable Storage Terproteksi (TB):** Memperhitungkan overhead konfigurasi RAID (*RAID 5: +20%, RAID 6: +30%, RAID 10: +100%*) ditambah faktor keselamatan *storage format & bookmark headroom* (+20%).
+- **Rekomendasi Hardware NVR & Enterprise HDD:**
+  - **Sizing Chassis NVR:** Rekomendasi otomatis tipe server NVR (*Pelco VideoXpert Enterprise / Avigilon AI NVR / Universal Enterprise Industrial 4-Bay, 8-Bay, 16-Bay, 24-Bay Chassis*).
+  - **Sizing Enterprise Hard Disk:** Pemilihan otomatis ukuran disk surveillance kelas enterprise (*4TB, 8TB, 12TB, 16TB, 20TB*) beserta jumlah drive yang dibutuhkan dan sisa slot kosong untuk ekspansi di masa mendatang.
+
+---
+
+### Tab 2: Sizing Konsumsi Daya PoE & Industrial Switch
+- **Audit Konsumsi Daya PoE Armada:**
+  - Mengelompokkan kebutuhan daya menurut standar IEEE:
+    - **IEEE 802.3af (PoE):** Beban hingga 15.4W (Kamera dome & bullet indoor reguler).
+    - **IEEE 802.3at (PoE+):** Beban hingga 30.0W (Kamera bullet outdoor IR, varifocal, heater/blower).
+    - **IEEE 802.3bt (Ultra PoE / 4PPoE):** Beban 60W–90W (Kamera heavy-duty PTZ long-range, bispectral thermal, wiper washer).
+  - **Total Beban Daya Bersih (Watt)** dan **Rekomendasi Power Headroom (+20% Safety Margin)** untuk menjamin keandalan sistem saat suhu ekstrem.
+- **Rekomendasi Switch PoE Industri Otomatis:**
+  - Menghitung jumlah port yang diperlukan (termasuk cadangan port +20%).
+  - Memilih model switch industri tangguh (*Ruggedized Industrial Switch 8-Port 120W, 16-Port 250W, 24-Port 370W, atau 48-Port 740W*).
+  - **Proteksi Kamera Daya Tinggi (802.3bt Ultra PoE):** Jika sistem mendeteksi adanya kamera PTZ besar atau thermal berdaya tinggi (802.3bt), sistem secara otomatis mengalokasikan unit switch khusus **Industrial 8-Port 802.3bt Ultra PoE Switch (480W Budget)** agar switch distribusi standar tidak mengalami beban berlebih (*over-budget tripping*).
+
+---
+
+### Tab 3: Estimator BoQ Video Security & Two-Way Bridge ke Master BoQ
+- **Daftar Kebutuhan Perangkat Lengkap (Bill of Quantity):**
+  - Tabel BoQ otomatis menyusun seluruh komponen video security:
+    1. Seluruh armada kamera multi-brand.
+    2. Server NVR & Chassis Storage.
+    3. Enterprise Surveillance Hard Disk Drives.
+    4. Industrial Managed PoE / Ultra PoE Switches.
+    5. Lisensi Saluran VMS (*Pelco VideoXpert Enterprise Channel License, Avigilon Unity Camera Channel License, atau Universal Open VMS Channel License*).
+- **Two-Way Bridge ke Master BoQ (Tombol `🚀 Gabungkan ke Master BoQ CDPK`):**
+  - Menyuntikkan seluruh item perangkat CCTV ke dalam tabel **Master BoQ DMR & DAS** dalam 1 klik.
+  - Setiap perangkat CCTV diberi label kategori khusus **`CCTV-SURVEILLANCE`**.
+  - Mengonversi mata uang secara otomatis sesuai kurs live FX (USD ↔ IDR) yang aktif.
+  - Menjaga target margin penawaran tetap patuh terhadap standar guardrail perusahaan ($\ge 15\%$).
+- **Fitur Ekspor & Dokumentasi Tender:**
+  - **`📥 Ekspor CSV CCTV`**: Mengunduh rincian BoQ CCTV format CSV untuk analisis spreadsheet terpisah.
+  - **`📋 Salin Ringkasan Sizing`**: Menyalin ringkasan narasi teknis (Throughput Mbps, Storage TB, HDD Bays, PoE Watt, dan rekomendasi switch) langsung ke clipboard untuk disisipkan ke proposal teknis atau lampiran tender.
+
+---
+
+### Tab 4: Katalog Kamera & Hardware Bawaan
+- Menampilkan 30 model kamera curated terlengkap dari brand terkemuka (Pelco, Avigilon, Axis, Hanwha, Hikvision, Dahua, Bosch, Uniview, Generic ONVIF) beserta hardware storage & switch PoE.
+- Dilengkapi ringkasan spesifikasi: Resolusi, Kompresi, Frame Rate, Konsumsi PoE, dan Harga Satuan (USD/IDR).
+- Setiap kartu katalog dilengkapi tombol **`➕ Tambah ke Planner`** untuk menambahkan model langsung ke armada proyek aktif Anda.
+
+---
+
+## 13. Kolaborasi Tim & Fitur Handover Proyek
 
 Fitur serah terima proyek resmi memudahkan kerja sama antardivisi (misal: Product Expert menyerahkan rancangan awal ke Engineer untuk divalidasi):
 
@@ -271,7 +358,7 @@ sequenceDiagram
 
 ---
 
-## 13. Pusat Notifikasi & Serah Terima Tugas
+## 14. Pusat Notifikasi & Serah Terima Tugas
 
 - Terletak di bilah atas aplikasi dengan simbol **Lonceng Kuning** (🔔).
 - Badge angka merah menunjukkan jumlah pemberitahuan belum dibaca (*unread*).
@@ -280,23 +367,23 @@ sequenceDiagram
 
 ---
 
-## 14. Penyimpanan Cloud & Dashboard Arsip Google Drive
+## 15. Penyimpanan Cloud & Dashboard Arsip Google Drive
 
-### 14.1. Menyimpan Proyek ke Cloud
+### 15.1. Menyimpan Proyek ke Cloud
 - Klik tombol **"💾 Simpan ke Drive"** di bilah atas aplikasi.
 - Sistem mengunggah dua berkas secara otomatis ke subfolder Google Drive tim:
-  1. **Berkas Data JSON (`.cdpk.json`):** Berisi data kalkulasi menyeluruh (baik workspace **DMR System** maupun **RFoF Distributed Antenna System**) agar proyek dapat dimuat dan disunting kembali kapan saja.
+  1. **Berkas Data JSON (`.cdpk.json`):** Berisi data kalkulasi menyeluruh (baik workspace **DMR System**, **RFoF Distributed Antenna System**, maupun **Video Security & CCTV**) agar proyek dapat dimuat dan disunting kembali kapan saja.
   2. **Lembar Kerja Excel (`.xlsx`):** Berisi ringkasan proyek dan tabel penawaran komersial BoQ multi-sheet resmi berformat profesional.
 
-### 14.2. Memuat Kembali Proyek yang Disimpan
+### 15.2. Memuat Kembali Proyek yang Disimpan
 - Buka menu **"📂 Arsip Proyek Tim"**.
 - Cari nama proyek atau nama klien.
 - Klik tombol **"⚡ Buka Proyek"** pada berkas yang diinginkan.
-- Seluruh input sizing DMR, zona lantai & BoQ RFoF DAS, serta parameter kalkulasi akan dipulihkan secara instan.
+- Seluruh input sizing DMR, zona lantai & BoQ RFoF DAS, armada kamera & hardware CCTV, serta parameter kalkulasi akan dipulihkan secara instan.
 
 ---
 
-## 15. Panduan Khusus Eksekutif (Administrator & Overseer)
+## 16. Panduan Khusus Eksekutif (Administrator & Overseer)
 
 Bagi pengguna dengan peran **Administrator (👑)** dan **Overseer (👁️)**, dashboard arsip dilengkapi dengan modul pengawasan tingkat lanjut:
 
@@ -324,7 +411,7 @@ Terletak di bagian atas modal Arsip Proyek, menampilkan 4 metrik finansial real-
 
 ---
 
-## 16. Penggunaan pada Smartphone & Tablet (PWA & Versi Mobile)
+## 17. Penggunaan pada Smartphone & Tablet (PWA & Versi Mobile)
 
 CDPK System Planner dioptimalkan secara penuh untuk survei lapangan menggunakan perangkat bergerak:
 - **Progressive Web App (PWA):** Dapat dipasang langsung ke layar utama HP tanpa melalui App Store / Play Store dan berjalan dalam mode *standalone* layar penuh tanpa bilah URL browser.
@@ -339,15 +426,15 @@ CDPK System Planner dioptimalkan secara penuh untuk survei lapangan menggunakan 
 - **Dukungan Multi-Akun Google:**
   - Jika browser HP terhubung ke beberapa akun Google (pribadi dan kerja), gunakan tombol **"🔄 Pilih / Ganti Akun Google Lain"** di halaman login untuk memilih akun resmi perusahaan (`@citradata.id` atau `@techsolutions.id`).
 - **Navigasi Bawah Ramah Jempol (Bottom Navigation Bar):**
-  - Pada layar smartphone, navigasi utama dipindahkan ke bilah bawah: 📐 **Sizing**, 📋 **BoQ**, 🗺️ **Peta GIS**, ✨ **AI Copilot**, dan 📂 **Menu** (termasuk pengalih workspace **DMR System** & **RFoF Distributed Antenna System**).
+  - Pada layar smartphone, navigasi utama dipindahkan ke bilah bawah: 📐 **Sizing**, 📋 **BoQ**, 📹 **CCTV**, 🗺️ **Peta GIS**, dan 📂 **Menu** (termasuk pengalih ketiga workspace: **DMR System**, **RFoF Distributed Antenna System**, dan **Video Security & CCTV**).
 - **Deteksi GPS Satelit Lapangan:**
   - Modul deteksi GPS memanfaatkan antena satelit perangkat dengan opsi presisi tinggi (*high accuracy*) dan pelaporan toleransi akurasi seketika.
 
 ---
 
-## 17. Panduan Fitur Rekayasa Lanjutan: Optical Link Budget, IM3, Erlang-B & Daya Cadangan (v8.5.2)
+## 18. Panduan Fitur Rekayasa Lanjutan: Optical Link Budget, IM3, Erlang-B & Daya Cadangan (v8.5.2)
 
-### 17.1. Kalkulator Optical Link Budget (OMU ↔ ORU)
+### 18.1. Kalkulator Optical Link Budget (OMU ↔ ORU)
 - **Lokasi:** Tab **2. Link Budget & Planner Antena** pada Workspace **`🏢 RFoF Distributed Antenna System`**.
 - **Cara Penggunaan:**
   1. Pilih panjang gelombang laser (`1310 nm` standar redaman $0.35\text{ dB/km}$ atau `1550 nm` redaman $0.22\text{ dB/km}$).
@@ -356,7 +443,7 @@ CDPK System Planner dioptimalkan secara penuh untuk survei lapangan menggunakan 
   4. Pilih rasio *Optical Splitter* (1:1 direct, 1:2, 1:4, atau 1:8).
   5. Sistem seketika menyajikan **Total Optical Loss (dBo)**, **Daya Diterima di Photodiode ORU (dBm)**, **Net Optical Margin (dBo)**, serta lencana evaluasi `Pass` / `Warning` / `Fail`.
 
-### 17.2. Validator Intermodulasi (IM3) & Frequency Combiner
+### 18.2. Validator Intermodulasi (IM3) & Frequency Combiner
 - **Lokasi:** Tab **2. Link Budget & Planner Antena** pada Workspace **`🏢 RFoF Distributed Antenna System`**.
 - **Cara Penggunaan:**
   1. Masukkan seluruh frekuensi pancar (Tx) repeater yang akan dimasukkan ke Combiner `BCFH400-8` (contoh: `420.125, 420.375, 420.625, 420.875`), dipisahkan tanda koma atau spasi.
@@ -364,14 +451,14 @@ CDPK System Planner dioptimalkan secara penuh untuk survei lapangan menggunakan 
   3. Sistem otomatis menghitung selisih frekuensi antar-kanal serta menghitung seluruh produk intermodulasi orde ke-3 ($2f_a - f_b$).
   4. Jika terdapat produk IM3 yang menabrak frekuensi operasional aktif lainnya dalam rentang $\pm 12.5\text{ kHz}$, sistem memunculkan peringatan darurat `🚨 Tabrakan Produk IM3 Terdeteksi!` agar frekuensi dapat ditata ulang sebelum instalasi fisik.
 
-### 17.3. Kalkulator Kapasitas Trafik Erlang-B & Trunking Advisor
+### 18.3. Kalkulator Kapasitas Trafik Erlang-B & Trunking Advisor
 - **Lokasi:** Tab **1. Rekomendasi Solusi & Sizing** pada Workspace **`📡 DMR System`**.
 - **Cara Penggunaan:**
   1. Masukkan estimasi panggilan sibuk per radio (*Busy Hour Call Attempts / BHCA*, default `2.0`), rata-rata durasi panggilan (*Call Duration*, default `20 detik`), dan ambang toleransi antrean (*Grade of Service / GoS*, default `2%`).
   2. Sistem menghitung total beban trafik (*Offered Traffic* dalam Erlang) dan probabilitas *Call Blocking* saat ini pada jumlah kanal TDMA repeater aktif.
   3. Sistem memberikan rekomendasi resmi: apakah topologi konvensional **IP Site Connect (IPSC)** masih mencukupi atau sudah saatnya pelanggan di-*upgrade* ke sistem trunking dinamis **MOTOTRBO Capacity Plus (Single-Site)** atau **Capacity Plus Multi-Site / Capacity Max**.
 
-### 17.4. Kalkulator Sizing Daya Cadangan & Solar Panel Off-Grid
+### 18.4. Kalkulator Sizing Daya Cadangan & Solar Panel Off-Grid
 - **Lokasi:** Tab **1. Rekomendasi Solusi & Sizing** pada Workspace **`📡 DMR System`**.
 - **Cara Penggunaan:**
   1. Pilih siklus beban transmit (*Tx Duty Cycle*, misal `20% Tx / 80% Rx`).
@@ -384,4 +471,5 @@ CDPK System Planner dioptimalkan secara penuh untuk survei lapangan menggunakan 
 
 ---
 
-*CDPK System Planner v8.5.2 — Solusi Rekayasa Komunikasi Radio Motorola Solutions, Keamanan Avigilon & RFoF Distributed Antenna System (FMTCS).*
+*CDPK System Planner v8.6.0 — Solusi Rekayasa Komunikasi Radio Motorola Solutions, Keamanan Pelco & Avigilon, serta RFoF Distributed Antenna System (FMTCS).*
+

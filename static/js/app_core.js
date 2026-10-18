@@ -3,9 +3,10 @@ window.cdpkSystemPlannerApp = function () {
     return {
         // ─── Global UI & Bilingual State ─────────────────────────────────
         lang: localStorage.getItem('cdpk_lang') || 'id',
-        activeWorkspace: 'dmr', // 'dmr' | 'das'
+        activeWorkspace: 'dmr', // 'dmr' | 'das' | 'cctv'
         dasActiveTab: 'boq', // 'conv' | 'link' | 'cov' | 'boq' | 'comm' | 'prod'
         dasHandoffModalOpen: false,
+        cctvActiveTab: 'planner', // 'planner' | 'poe' | 'boq' | 'catalog'
         activeTab: 'sizing', // 'sizing' | 'boq' | 'catalog' | 'mandays' | 'coverage'
         aiModalOpen: false,
 
@@ -98,6 +99,124 @@ window.cdpkSystemPlannerApp = function () {
             optRxSensDbm: -15.0,
             imFrequencies: '420.125, 420.375, 420.625, 420.875',
             imMinSpacingKhz: 150
+        },
+
+        // ─── Module: CCTV Surveillance & NVR Planner Reactive State ───────
+        cctv: {
+            retentionDays: 30,
+            recordingHoursPerDay: 24,
+            recordingMode: 'continuous',
+            motionDutyCyclePct: 70,
+            raidType: 'raid5',
+            storageOverheadPct: 20,
+            diskSizeTb: 8,
+            vmsBrand: 'pelco_videoxpert',
+            switchReservePct: 20,
+            catalogBrandFilter: 'all',
+            catalogSearch: '',
+            selectedPresetSku: 'PEL-CAM-SARIX-PRO4-DOME',
+            presetQtyToAdd: 4,
+
+            customForm: {
+                brand: 'Generic ONVIF',
+                model: 'Custom IP Camera 4MP',
+                formFactor: 'bullet',
+                resolution: '4MP',
+                fps: 25,
+                codec: 'SmartCodec',
+                sceneMotion: 'medium',
+                customBitrate: 0,
+                poeClass: 'af',
+                poeWatts: 9.0,
+                unitPriceUsd: 260,
+                unitPriceIdr: 4160000,
+                cogsUsd: 195,
+                marginPct: 25.0,
+                qty: 4
+            },
+
+            cameraGroups: [
+                {
+                    id: 'cg-1',
+                    sku: 'PEL-CAM-SARIX-PRO4-DOME',
+                    brand: 'pelco',
+                    brandName: 'Pelco',
+                    model: 'Sarix Professional 4 Dome 4MP IR',
+                    formFactor: 'dome',
+                    resolution: '4MP',
+                    qty: 16,
+                    fps: 25,
+                    codec: 'SmartCodec',
+                    sceneMotion: 'medium',
+                    customBitrate: 0,
+                    poeClass: 'af',
+                    poeWatts: 12.0,
+                    unitPriceUsd: 680,
+                    unitPriceIdr: 10880000,
+                    cogsUsd: 510,
+                    marginPct: 25.0
+                },
+                {
+                    id: 'cg-2',
+                    sku: 'AVG-CAM-H6X-BUL8',
+                    brand: 'avigilon',
+                    brandName: 'Avigilon',
+                    model: 'Avigilon Unity H6X Bullet 8MP 4K',
+                    formFactor: 'bullet',
+                    resolution: '4K',
+                    qty: 8,
+                    fps: 25,
+                    codec: 'SmartCodec',
+                    sceneMotion: 'medium',
+                    customBitrate: 0,
+                    poeClass: 'at',
+                    poeWatts: 15.0,
+                    unitPriceUsd: 1655,
+                    unitPriceIdr: 26800000,
+                    cogsUsd: 1240,
+                    marginPct: 26.0
+                },
+                {
+                    id: 'cg-3',
+                    sku: 'PEL-CAM-SPEC8-4MP',
+                    brand: 'pelco',
+                    brandName: 'Pelco',
+                    model: 'Spectra Enhanced 8 PTZ 4MP 30x',
+                    formFactor: 'ptz',
+                    resolution: '4MP',
+                    qty: 2,
+                    fps: 30,
+                    codec: 'SmartCodec',
+                    sceneMotion: 'medium',
+                    customBitrate: 0,
+                    poeClass: 'bt_type4',
+                    poeWatts: 70.0,
+                    unitPriceUsd: 3450,
+                    unitPriceIdr: 55200000,
+                    cogsUsd: 2580,
+                    marginPct: 25.2
+                },
+                {
+                    id: 'cg-4',
+                    sku: 'PEL-CAM-ESPRIT-COMP-THERM',
+                    brand: 'pelco',
+                    brandName: 'Pelco',
+                    model: 'Esprit Compact Bispectral Thermal & Visible PTZ',
+                    formFactor: 'thermal',
+                    resolution: 'thermal',
+                    qty: 1,
+                    fps: 25,
+                    codec: 'SmartCodec',
+                    sceneMotion: 'medium',
+                    customBitrate: 0,
+                    poeClass: 'bt_type3',
+                    poeWatts: 60.0,
+                    unitPriceUsd: 8200,
+                    unitPriceIdr: 131200000,
+                    cogsUsd: 6150,
+                    marginPct: 25.0
+                }
+            ]
         },
 
         // ─── Module 1B: DMR Trunking (Erlang-B) & Backup Power Sizing ───
@@ -1230,7 +1349,8 @@ window.cdpkSystemPlannerApp = function () {
                     tasks: this.mandaysResult.tasks
                 },
                 systemPackages: this.systemPackages,
-                dasState: JSON.parse(JSON.stringify(this.das))
+                dasState: JSON.parse(JSON.stringify(this.das)),
+                cctvState: JSON.parse(JSON.stringify(this.cctv))
             };
         },
 
@@ -1447,6 +1567,9 @@ window.cdpkSystemPlannerApp = function () {
                     }
                     if (p.dasState) {
                         this.das = Object.assign(this.das, p.dasState);
+                    }
+                    if (p.cctvState) {
+                        this.cctv = Object.assign(this.cctv, p.cctvState);
                     }
                     if (p.activeWorkspace) {
                         this.activeWorkspace = p.activeWorkspace;
@@ -4363,6 +4486,361 @@ window.cdpkSystemPlannerApp = function () {
                     : `Berhasil menambahkan ${injectedCount} komponen DAS FMTCS ke BoQ Utama DMR.`,
                 'success'
             );
+        },
+
+        // ─── Module: CCTV Surveillance & NVR Planner Methods ─────────────
+        getCctvBwResult() {
+            if (!window.CDPK_CCTV_ENGINE || typeof window.CDPK_CCTV_ENGINE.calcBandwidthAndStorage !== 'function') {
+                return null;
+            }
+            return window.CDPK_CCTV_ENGINE.calcBandwidthAndStorage(this.cctv.cameraGroups, {
+                retentionDays: this.cctv.retentionDays,
+                recordingHoursPerDay: this.cctv.recordingHoursPerDay,
+                recordingMode: this.cctv.recordingMode,
+                motionDutyCyclePct: this.cctv.motionDutyCyclePct,
+                raidType: this.cctv.raidType,
+                storageOverheadPct: this.cctv.storageOverheadPct,
+                diskSizeTb: this.cctv.diskSizeTb,
+                vmsBrand: this.cctv.vmsBrand
+            });
+        },
+
+        getCctvPoeResult() {
+            if (!window.CDPK_CCTV_ENGINE || typeof window.CDPK_CCTV_ENGINE.calcPoeAndSwitches !== 'function') {
+                return null;
+            }
+            return window.CDPK_CCTV_ENGINE.calcPoeAndSwitches(this.cctv.cameraGroups, {
+                switchReservePct: this.cctv.switchReservePct
+            });
+        },
+
+        getCctvBoqResult() {
+            if (!window.CDPK_CCTV_ENGINE || typeof window.CDPK_CCTV_ENGINE.calcCctvBoq !== 'function') {
+                return null;
+            }
+            return window.CDPK_CCTV_ENGINE.calcCctvBoq(this.cctv, this.exchangeRate);
+        },
+
+        addCameraGroupFromPreset(presetSku, qty) {
+            if (!window.CDPK_CCTV_ENGINE || !Array.isArray(window.CDPK_CCTV_ENGINE.presets)) return;
+            const targetSku = presetSku || this.cctv.selectedPresetSku;
+            const targetQty = parseInt(qty || this.cctv.presetQtyToAdd, 10) || 1;
+            const preset = window.CDPK_CCTV_ENGINE.presets.find(p => p.sku === targetSku);
+            if (!preset) return;
+
+            const existing = this.cctv.cameraGroups.find(g => g.sku === preset.sku);
+            if (existing) {
+                existing.qty += targetQty;
+                this.showToast(
+                    this.lang === 'en'
+                        ? `Increased quantity of ${preset.model} by +${targetQty}.`
+                        : `Kuantitas ${preset.model} ditambah +${targetQty}.`,
+                    'success'
+                );
+            } else {
+                const pUsd = preset.unitPriceUsd;
+                const pIdr = preset.unitPriceIdr || Math.round(pUsd * this.exchangeRate);
+                const cUsd = preset.cogsUsd || Math.round(pUsd * 0.75);
+                this.cctv.cameraGroups.push({
+                    id: 'cg-' + Date.now().toString(36),
+                    sku: preset.sku,
+                    brand: preset.brand,
+                    brandName: preset.brandName,
+                    model: preset.model,
+                    formFactor: preset.formFactor,
+                    resolution: preset.resolution,
+                    qty: targetQty,
+                    fps: preset.defaultFps || 25,
+                    codec: preset.defaultCodec || 'SmartCodec',
+                    sceneMotion: 'medium',
+                    customBitrate: 0,
+                    poeClass: preset.poeClass,
+                    poeWatts: preset.poeWatts,
+                    unitPriceUsd: pUsd,
+                    unitPriceIdr: pIdr,
+                    cogsUsd: cUsd,
+                    marginPct: preset.marginPct || 25.0
+                });
+                this.showToast(
+                    this.lang === 'en'
+                        ? `Added ${targetQty}x ${preset.model} to camera planner.`
+                        : `Menambahkan ${targetQty}x ${preset.model} ke planner kamera.`,
+                    'success'
+                );
+            }
+        },
+
+        addCustomCameraGroup() {
+            const form = this.cctv.customForm;
+            if (!form.model) {
+                alert(this.lang === 'en' ? 'Please specify camera model name.' : 'Harap masukkan nama model kamera.');
+                return;
+            }
+            const targetQty = parseInt(form.qty, 10) || 1;
+            const pUsd = parseFloat(form.unitPriceUsd) || 0;
+            const pIdr = parseFloat(form.unitPriceIdr) || Math.round(pUsd * this.exchangeRate);
+            const cUsd = parseFloat(form.cogsUsd) || Math.round(pUsd * 0.75);
+            const margin = Math.max(15.0, parseFloat(form.marginPct) || 25.0);
+
+            this.cctv.cameraGroups.push({
+                id: 'cg-custom-' + Date.now().toString(36),
+                sku: 'ONV-CAM-CUSTOM-' + Date.now().toString(36).toUpperCase(),
+                brand: form.brand || 'Generic ONVIF',
+                brandName: form.brand || 'Generic ONVIF',
+                model: form.model,
+                formFactor: form.formFactor || 'bullet',
+                resolution: form.resolution || '4MP',
+                qty: targetQty,
+                fps: parseInt(form.fps, 10) || 25,
+                codec: form.codec || 'SmartCodec',
+                sceneMotion: form.sceneMotion || 'medium',
+                customBitrate: parseFloat(form.customBitrate) || 0,
+                poeClass: form.poeClass || 'af',
+                poeWatts: parseFloat(form.poeWatts) || 9.0,
+                unitPriceUsd: pUsd,
+                unitPriceIdr: pIdr,
+                cogsUsd: cUsd,
+                marginPct: margin
+            });
+
+            this.showToast(
+                this.lang === 'en'
+                    ? `Added custom camera ${form.model} (${targetQty} units).`
+                    : `Berhasil menambahkan kamera kustom ${form.model} (${targetQty} unit).`,
+                'success'
+            );
+        },
+
+        removeCameraGroup(idx) {
+            if (idx >= 0 && idx < this.cctv.cameraGroups.length) {
+                const removed = this.cctv.cameraGroups.splice(idx, 1);
+                this.showToast(
+                    this.lang === 'en'
+                        ? `Removed camera group (${removed[0] ? removed[0].model : ''}).`
+                        : `Grup kamera (${removed[0] ? removed[0].model : ''}) dihapus.`,
+                    'info'
+                );
+            }
+        },
+
+        resetCctvToDefaults(empty) {
+            if (empty) {
+                this.cctv.cameraGroups = [];
+                this.showToast(this.lang === 'en' ? 'CCTV camera groups cleared to 0.' : 'Daftar grup kamera CCTV dikosongkan.', 'info');
+                return;
+            }
+            this.cctv.retentionDays = 30;
+            this.cctv.recordingHoursPerDay = 24;
+            this.cctv.recordingMode = 'continuous';
+            this.cctv.raidType = 'raid5';
+            this.cctv.storageOverheadPct = 20;
+            this.cctv.diskSizeTb = 8;
+            this.cctv.vmsBrand = 'pelco_videoxpert';
+            this.cctv.cameraGroups = [
+                {
+                    id: 'cg-1',
+                    sku: 'PEL-CAM-SARIX-PRO4-DOME',
+                    brand: 'pelco',
+                    brandName: 'Pelco',
+                    model: 'Sarix Professional 4 Dome 4MP IR',
+                    formFactor: 'dome',
+                    resolution: '4MP',
+                    qty: 16,
+                    fps: 25,
+                    codec: 'SmartCodec',
+                    sceneMotion: 'medium',
+                    customBitrate: 0,
+                    poeClass: 'af',
+                    poeWatts: 12.0,
+                    unitPriceUsd: 680,
+                    unitPriceIdr: 10880000,
+                    cogsUsd: 510,
+                    marginPct: 25.0
+                },
+                {
+                    id: 'cg-2',
+                    sku: 'AVG-CAM-H6X-BUL8',
+                    brand: 'avigilon',
+                    brandName: 'Avigilon',
+                    model: 'Avigilon Unity H6X Bullet 8MP 4K',
+                    formFactor: 'bullet',
+                    resolution: '4K',
+                    qty: 8,
+                    fps: 25,
+                    codec: 'SmartCodec',
+                    sceneMotion: 'medium',
+                    customBitrate: 0,
+                    poeClass: 'at',
+                    poeWatts: 15.0,
+                    unitPriceUsd: 1655,
+                    unitPriceIdr: 26800000,
+                    cogsUsd: 1240,
+                    marginPct: 26.0
+                },
+                {
+                    id: 'cg-3',
+                    sku: 'PEL-CAM-SPEC8-4MP',
+                    brand: 'pelco',
+                    brandName: 'Pelco',
+                    model: 'Spectra Enhanced 8 PTZ 4MP 30x',
+                    formFactor: 'ptz',
+                    resolution: '4MP',
+                    qty: 2,
+                    fps: 30,
+                    codec: 'SmartCodec',
+                    sceneMotion: 'medium',
+                    customBitrate: 0,
+                    poeClass: 'bt_type4',
+                    poeWatts: 70.0,
+                    unitPriceUsd: 3450,
+                    unitPriceIdr: 55200000,
+                    cogsUsd: 2580,
+                    marginPct: 25.2
+                },
+                {
+                    id: 'cg-4',
+                    sku: 'PEL-CAM-ESPRIT-COMP-THERM',
+                    brand: 'pelco',
+                    brandName: 'Pelco',
+                    model: 'Esprit Compact Bispectral Thermal & Visible PTZ',
+                    formFactor: 'thermal',
+                    resolution: 'thermal',
+                    qty: 1,
+                    fps: 25,
+                    codec: 'SmartCodec',
+                    sceneMotion: 'medium',
+                    customBitrate: 0,
+                    poeClass: 'bt_type3',
+                    poeWatts: 60.0,
+                    unitPriceUsd: 8200,
+                    unitPriceIdr: 131200000,
+                    cogsUsd: 6150,
+                    marginPct: 25.0
+                }
+            ];
+            this.showToast(this.lang === 'en' ? 'Reset CCTV configuration to flagship standards.' : 'Konfigurasi CCTV direset ke standar flagship.', 'success');
+        },
+
+        // ─── Two-Way Bridge 1: DMR Sizing -> CCTV Planner ────────────────────
+        syncDmrToCctv() {
+            const count = parseInt(this.cctvCount, 10) || 8;
+            this.needCctv = true;
+            this.cctv.cameraGroups = [
+                {
+                    id: 'cg-synced-1',
+                    sku: 'PEL-CAM-SARIX-PRO4-DOME',
+                    brand: 'pelco',
+                    brandName: 'Pelco',
+                    model: 'Sarix Professional 4 Dome 4MP IR',
+                    formFactor: 'dome',
+                    resolution: '4MP',
+                    qty: count,
+                    fps: 25,
+                    codec: 'SmartCodec',
+                    sceneMotion: 'medium',
+                    customBitrate: 0,
+                    poeClass: 'af',
+                    poeWatts: 12.0,
+                    unitPriceUsd: 680,
+                    unitPriceIdr: 10880000,
+                    cogsUsd: 510,
+                    marginPct: 25.0
+                }
+            ];
+            this.activeWorkspace = 'cctv';
+            this.cctvActiveTab = 'planner';
+            this.showToast(
+                this.lang === 'en'
+                    ? `Synchronized ${count} camera node(s) from DMR Sizing into Video Security Planner.`
+                    : `Berhasil menyinkronkan ${count} titik kamera dari Sizing DMR ke Video Security Planner.`,
+                'success'
+            );
+        },
+
+        // ─── Two-Way Bridge 2: CCTV BoQ -> Master BoQ ────────────────────────
+        injectCctvBoqToMasterBoq() {
+            const cctvBoq = this.getCctvBoqResult();
+            const items = (cctvBoq && cctvBoq.items) || [];
+            if (items.length === 0) {
+                alert(this.lang === 'en' ? 'No CCTV items to inject.' : 'Tidak ada item CCTV untuk dimasukkan.');
+                return;
+            }
+
+            let injectedCount = 0;
+            items.forEach(it => {
+                if (!it.qty || it.qty <= 0) return;
+
+                const existingIdx = this.boqItems.findIndex(b => b.sku === it.sku);
+                const nameId = it.name_id || it.model;
+                const nameEn = it.name_en || it.model;
+                const unitPriceIdr = Math.round(it.unitPriceIdr || (it.unitPriceUsd * this.exchangeRate));
+                const unitPriceUsd = Math.round((it.unitPriceUsd || (unitPriceIdr / this.exchangeRate)) * 100) / 100;
+                const cogsIdr = Math.round(it.cogsIdr || (it.cogsUsd * this.exchangeRate));
+                const cogsUsd = Math.round((it.cogsUsd || 0) * 100) / 100;
+
+                const boqRow = {
+                    id: 'boq-cctv-' + it.sku + '-' + Date.now().toString(36),
+                    isBundle: false,
+                    expanded: false,
+                    category: 'CCTV-SURVEILLANCE',
+                    sku: it.sku,
+                    model: it.model,
+                    name_id: nameId,
+                    name_en: nameEn,
+                    name: this.lang === 'en' ? nameEn : nameId,
+                    qty: it.qty,
+                    unit: it.unit || 'Unit',
+                    price_idr: unitPriceIdr,
+                    price_usd: unitPriceUsd,
+                    cogs_idr: cogsIdr,
+                    cogs_usd: cogsUsd,
+                    marginPct: Math.max(15.0, it.marginPct || 25),
+                    notes_id: it.notes_id || `Perangkat Video Security (${it.model})`,
+                    notes_en: it.notes_en || `Video Security Equipment (${it.model})`,
+                    notes: this.lang === 'en' ? (it.notes_en || `Video Security Equipment (${it.model})`) : (it.notes_id || `Perangkat Video Security (${it.model})`),
+                    children: []
+                };
+
+                if (existingIdx >= 0) {
+                    this.boqItems[existingIdx] = boqRow;
+                } else {
+                    this.boqItems.push(boqRow);
+                }
+                injectedCount++;
+            });
+
+            this.activeWorkspace = 'dmr';
+            this.activeTab = 'boq';
+            this.showToast(
+                this.lang === 'en'
+                    ? `Successfully injected ${injectedCount} Video Security items into Master BoQ.`
+                    : `Berhasil menambahkan ${injectedCount} perangkat Video Security CCTV ke BoQ Utama.`,
+                'success'
+            );
+        },
+
+        exportCctvCsv() {
+            const boq = this.getCctvBoqResult();
+            if (!boq || !window.CDPK_CCTV_ENGINE) return;
+            window.CDPK_CCTV_ENGINE.exportCctvCsv(this.cctv, boq, this.lang);
+        },
+
+        copyCctvSummary() {
+            const boq = this.getCctvBoqResult();
+            if (!boq || !window.CDPK_CCTV_ENGINE) return;
+            const text = window.CDPK_CCTV_ENGINE.generateSummaryText(this.cctv, boq, this.lang);
+            if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    this.showToast(
+                        this.lang === 'en' ? 'CCTV engineering summary copied to clipboard!' : 'Ringkasan teknis CCTV berhasil disalin ke clipboard!',
+                        'success'
+                    );
+                }).catch(() => {
+                    this.showToast('Gagal menyalin ringkasan.', 'error');
+                });
+            } else {
+                alert(text);
+            }
         }
     };
 };
