@@ -1222,6 +1222,224 @@
                 padLeft,
                 padTop - 12
             );
+        },
+
+        // =========================================================================
+        // FITUR D: POLA RADIASI ANTENA TERARAH / SEKTORAL (BEAMWIDTH & AZIMUTH)
+        // =========================================================================
+
+        /**
+         * Generate polygon coordinates for Directional / Sector Antenna with realistic radiation lobe
+         * - Main lobe: span within horizontal beamwidth around azimuth (front gain)
+         * - Back lobe: attenuated by Front-to-Back (F/B) ratio (default 20 dB ~ 10-15% of radius)
+         * Returns [[lat, lon], ...] coordinates for Leaflet L.polygon or [[lon, lat], ...] for GeoJSON
+         */
+        createDirectionalSectorCoords(lat, lon, maxRadiusMeters, azimuthDeg = 0, beamwidthDeg = 65, frontToBackRatioDb = 18, numPoints = 72, asGeoJson = false) {
+            const coords = [];
+            // Back lobe attenuation factor based on F/B dB ratio: r_back = r_front * 10^(-F_B / (2 * gamma))
+            // For RF distance scale: approx 15% to 22% of forward distance
+            const backFactor = Math.max(0.10, Math.min(0.35, Math.pow(10, -frontToBackRatioDb / 35.0)));
+            const halfBw = beamwidthDeg / 2.0;
+
+            for (let i = 0; i <= numPoints; i++) {
+                const bearing = (i * 360) / numPoints;
+                // Calculate angular distance from bore sight azimuth [-180, 180]
+                let angleDiff = Math.abs(((bearing - azimuthDeg + 540) % 360) - 180);
+
+                let radiusAtAngle = maxRadiusMeters;
+
+                if (angleDiff <= halfBw) {
+                    // Main forward lobe (cosine profile roll-off to -3dB edge)
+                    const normalized = angleDiff / halfBw;
+                    const rollOff = 1.0 - 0.293 * Math.pow(normalized, 2); // -3 dB at boundary
+                    radiusAtAngle = maxRadiusMeters * rollOff;
+                } else {
+                    // Transition to side and back lobe with front-to-back ratio
+                    const sideSpan = 180 - halfBw;
+                    const sideProgress = (angleDiff - halfBw) / sideSpan; // 0 to 1
+                    const transition = (1 - 0.293) - sideProgress * ((1 - 0.293) - backFactor);
+                    radiusAtAngle = maxRadiusMeters * Math.max(backFactor, transition);
+                }
+
+                const pt = this.destinationPoint(lat, lon, radiusAtAngle, bearing);
+                if (asGeoJson) {
+                    coords.push([pt.lon, pt.lat]);
+                } else {
+                    coords.push([pt.lat, pt.lon]);
+                }
+            }
+
+            return coords;
+        },
+
+        // =========================================================================
+        // FITUR E: ANALISIS OVERLAP MULTI-SITE & VERIFIKASI HANDOVER SEAMLESS
+        // =========================================================================
+
+        /**
+         * Calculate overlap area and seamless handover metric between adjacent sites
+         * Standards:
+         * - Overlap < 10%: Warning: Drop Call & Audio Clipping Risk
+         * - Overlap 15% - 25%: Optimal Seamless Handover (Motorola Solutions Gold Standard)
+         * - Overlap > 35%: Warning: Co-Channel Interference without GPS Simulcast
+         */
+        calculateMultiSiteOverlap(sites, hataRadii) {
+            const activeSites = (sites || []).filter(s => s.enabled !== false);
+            if (activeSites.length < 2) {
+                return {
+                    hasMultiSite: false,
+                    pairs: [],
+                    overallScore: 'single',
+                    overallLabel: 'Single Site (Tidak ada handover inter-site)',
+                    overallColor: '#94a3b8'
+                };
+            }
+
+            const turf = window.turf;
+            const acceptRadiusKm = (hataRadii && hataRadii.acceptMeters ? hataRadii.acceptMeters : 4000) / 1000;
+            const fringeRadiusKm = (hataRadii && hataRadii.fringeMeters ? hataRadii.fringeMeters : 6700) / 1000;
+
+            const pairs = [];
+            let totalPairs = 0;
+            let optimalPairs = 0;
+            let criticalPairs = 0;
+
+            for (let i = 0; i < activeSites.length; i++) {
+                for (let j = i + 1; j < activeSites.length; j++) {
+                    const siteA = activeSites[i];
+                    const siteB = activeSites[j];
+
+                    // Great-circle distance between siteA and siteB
+                    const ptA = [siteA.lon, siteA.lat];
+                    const ptB = [siteB.lon, siteB.lat];
+                    let distKm = 0;
+                    if (turf && typeof turf.distance === 'function') {
+                        distKm = turf.distance(ptA, ptB, { units: 'kilometers' });
+                    } else {
+                        const R = 6371;
+                        const dLat = (siteB.lat - siteA.lat) * Math.PI / 180;
+                        const dLon = (siteB.lon - siteA.lon) * Math.PI / 180;
+                        const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(siteA.lat*Math.PI/180)*Math.cos(siteB.lat*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+                        distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    }
+
+                    // Circle geometries for Acceptance zone
+                    let overlapKm2 = 0;
+                    let overlapPct = 0;
+                    let overlapPoly = null;
+
+                    // Effective radii (considering directional vs omni)
+                    const rA = siteA.antennaType === 'directional' ? acceptRadiusKm * 1.15 : acceptRadiusKm;
+                    const rB = siteB.antennaType === 'directional' ? acceptRadiusKm * 1.15 : acceptRadiusKm;
+                    const sumR = rA + rB;
+
+                    if (distKm < sumR) {
+                        if (turf && typeof turf.circle === 'function' && typeof turf.intersect === 'function' && typeof turf.area === 'function') {
+                            try {
+                                const polyA = turf.circle(ptA, rA, { steps: 48, units: 'kilometers' });
+                                const polyB = turf.circle(ptB, rB, { steps: 48, units: 'kilometers' });
+                                const isect = turf.intersect(polyA, polyB);
+                                if (isect) {
+                                    overlapPoly = isect;
+                                    const areaSqM = turf.area(isect);
+                                    overlapKm2 = areaSqM / 1000000;
+                                    const areaA = turf.area(polyA) / 1000000;
+                                    const areaB = turf.area(polyB) / 1000000;
+                                    const minSiteArea = Math.min(areaA, areaB);
+                                    overlapPct = minSiteArea > 0 ? (overlapKm2 / minSiteArea) * 100 : 0;
+                                }
+                            } catch (e) {}
+                        }
+
+                        // Analytic circle-circle intersection fallback if turf was not present or threw
+                        if (overlapPct === 0 && distKm < sumR) {
+                            const d = distKm;
+                            const r1 = rA;
+                            const r2 = rB;
+                            if (d <= Math.abs(r1 - r2)) {
+                                overlapPct = 100;
+                            } else {
+                                const alpha = 2 * Math.acos((d*d + r1*r1 - r2*r2) / (2 * d * r1));
+                                const beta = 2 * Math.acos((d*d + r2*r2 - r1*r1) / (2 * d * r2));
+                                const a1 = 0.5 * r1 * r1 * (alpha - Math.sin(alpha));
+                                const a2 = 0.5 * r2 * r2 * (beta - Math.sin(beta));
+                                overlapKm2 = a1 + a2;
+                                const minArea = Math.PI * Math.min(r1, r2) * Math.min(r1, r2);
+                                overlapPct = (overlapKm2 / minArea) * 100;
+                            }
+                        }
+                    }
+
+                    // Classification according to DMR Handover Engineering Rules
+                    let status = 'disconnected';
+                    let statusLabel = 'Terpisah / No Handover';
+                    let statusColor = '#ef4444'; // red
+                    let recText = 'Jarak antar site terlalu jauh. Terjadi blank spot komunikasi di tengah lintasan.';
+
+                    if (overlapPct >= 15 && overlapPct <= 30) {
+                        status = 'optimal';
+                        statusLabel = 'Optimal Seamless Handover';
+                        statusColor = '#10b981'; // emerald
+                        recText = 'Sesuai standar emas Motorola Solutions (15–25% overlap). Handover HT berjalan halus tanpa drop call.';
+                        optimalPairs++;
+                    } else if (overlapPct > 0 && overlapPct < 15) {
+                        status = 'marginal';
+                        statusLabel = 'Marginal Overlap (< 15%)';
+                        statusColor = '#f59e0b'; // amber
+                        recText = 'Overlap tipis. Potensi audio clipping saat kendaraan melaju kencang melewati batas coverage.';
+                    } else if (overlapPct > 30) {
+                        status = 'excessive';
+                        statusLabel = 'Overlap Berlebih (> 30%)';
+                        statusColor = '#8b5cf6'; // purple
+                        recText = 'Overlap tinggi. Wajib menggunakan frekuensi berbeda atau aktifkan GPS Simulcast Sync untuk cegah interferensi co-channel.';
+                        criticalPairs++;
+                    } else {
+                        criticalPairs++;
+                    }
+
+                    totalPairs++;
+                    pairs.push({
+                        siteAId: siteA.id,
+                        siteAName: siteA.name,
+                        siteBId: siteB.id,
+                        siteBName: siteB.name,
+                        distKm: Number(distKm.toFixed(2)),
+                        overlapKm2: Number(overlapKm2.toFixed(2)),
+                        overlapPct: Number(overlapPct.toFixed(1)),
+                        overlapPoly,
+                        status,
+                        statusLabel,
+                        statusColor,
+                        recText
+                    });
+                }
+            }
+
+            // Overall Fleet Handover Score
+            let overallScore = 'optimal';
+            let overallLabel = 'Jaringan Siap Seamless Handover';
+            let overallColor = '#10b981';
+
+            if (optimalPairs === totalPairs && totalPairs > 0) {
+                overallScore = 'optimal';
+                overallLabel = 'Optimal: Seluruh lintasan repeater memenuhi standar roaming DMR';
+                overallColor = '#10b981';
+            } else if (criticalPairs > 0) {
+                overallScore = 'warning';
+                overallLabel = `${criticalPairs} lintasan memerlukan penyesuaian jarak / daya pancar repeater`;
+                overallColor = '#f59e0b';
+            }
+
+            return {
+                hasMultiSite: true,
+                totalPairs,
+                optimalPairs,
+                criticalPairs,
+                pairs,
+                overallScore,
+                overallLabel,
+                overallColor
+            };
         }
     };
 

@@ -650,6 +650,15 @@ window.cdpkSystemPlannerApp = function () {
             error: ''
         },
 
+        // Fitur E: Analisis Overlap Multi-Site & Verifikasi Handover Seamless
+        handoverAnalysis: {
+            hasMultiSite: false,
+            pairs: [],
+            overallScore: 'single',
+            overallLabel: 'Single Site (Tidak ada inter-site handover)',
+            overallColor: '#94a3b8'
+        },
+
         // ─── Team User Management State (Admin Only) ────────────────────
         userMgmtModalOpen: false,
         teamUsers: [],
@@ -3028,6 +3037,10 @@ window.cdpkSystemPlannerApp = function () {
                         color: this.CDPK_SITE_COLORS[0],
                         towerHeight: Number(this.covTowerHeight || 35),
                         txWatts: Number(this.covTxWatts || 50),
+                        antennaType: 'omni',
+                        azimuthDeg: 0,
+                        beamwidthDeg: 65,
+                        frontToBackDb: 18,
                         enabled: true
                     });
                 } else {
@@ -3042,6 +3055,10 @@ window.cdpkSystemPlannerApp = function () {
                             color: this.CDPK_SITE_COLORS[i % this.CDPK_SITE_COLORS.length],
                             towerHeight: Number(this.covTowerHeight || 35),
                             txWatts: Number(this.covTxWatts || 50),
+                            antennaType: 'omni',
+                            azimuthDeg: Math.round((angle * 180 / Math.PI + 360) % 360),
+                            beamwidthDeg: 65,
+                            frontToBackDb: 18,
                             enabled: true
                         });
                     }
@@ -3055,52 +3072,107 @@ window.cdpkSystemPlannerApp = function () {
             this.gisSites.forEach((site, idx) => {
                 if (site.enabled === false) return;
                 const siteColor = site.color || this.CDPK_SITE_COLORS[idx % this.CDPK_SITE_COLORS.length];
+                const isDirectional = site.antennaType === 'directional';
+                const azimuth = Number(site.azimuthDeg || 0);
+                const beamwidth = Number(site.beamwidthDeg || 65);
+                const frontToBack = Number(site.frontToBackDb || 18);
 
-                // Zone 4: Dead-Zone Boundary / Outer Fringe (< -95 dBm up to -105 dBm) (Red)
-                const deadCircle = L.circle([site.lat, site.lon], {
-                    radius: hata.deadMeters,
-                    color: '#ef4444',
-                    fillColor: '#ef4444',
-                    fillOpacity: op * 0.10,
-                    weight: rings ? 1.5 : 0,
-                    dashArray: '4, 6'
-                }).addTo(this.gisMap);
-                deadCircle.bindTooltip(`<b>${site.name}</b><br>🔴 Dead-Zone Limit (< -95 dBm)<br>Radius: ~${(hata.deadMeters/1000).toFixed(1)} km<br>Batas Sensitivitas DMR (-118 dBm)`, { sticky: true });
-                this.gisOverlayLayers.push(deadCircle);
+                if (isDirectional && window.CDPK_GIS_ENGINE && typeof window.CDPK_GIS_ENGINE.createDirectionalSectorCoords === 'function') {
+                    // ─── FITUR D: SECTOR / DIRECTIONAL ANTENNA POLAR LOBE RENDERING ───
+                    // Zone 4: Dead-Zone Boundary
+                    const deadCoords = window.CDPK_GIS_ENGINE.createDirectionalSectorCoords(site.lat, site.lon, hata.deadMeters, azimuth, beamwidth, frontToBack);
+                    const deadPoly = L.polygon(deadCoords, {
+                        color: '#ef4444',
+                        fillColor: '#ef4444',
+                        fillOpacity: op * 0.10,
+                        weight: rings ? 1.5 : 0,
+                        dashArray: '4, 6'
+                    }).addTo(this.gisMap);
+                    deadPoly.bindTooltip(`<b>${site.name}</b> (Sektoral Az ${azimuth}° / BW ${beamwidth}°)<br>🔴 Dead-Zone Limit (< -95 dBm)`, { sticky: true });
+                    this.gisOverlayLayers.push(deadPoly);
 
-                // Zone 3: Fringe / Batas Cakupan (≥ -95 dBm) (Amber / Orange)
-                const fringeCircle = L.circle([site.lat, site.lon], {
-                    radius: hata.fringeMeters,
-                    color: '#f59e0b',
-                    fillColor: '#f59e0b',
-                    fillOpacity: op * 0.25,
-                    weight: rings ? 1.8 : 0,
-                    dashArray: '6, 5'
-                }).addTo(this.gisMap);
-                fringeCircle.bindTooltip(`<b>${site.name}</b><br>🟠 Fringe Coverage (≥ -95 dBm)<br>Radius: ~${(hata.fringeMeters/1000).toFixed(1)} km<br>Outdoor Handheld & Kendaraan Reliable`, { sticky: true });
-                this.gisOverlayLayers.push(fringeCircle);
+                    // Zone 3: Fringe Coverage
+                    const fringeCoords = window.CDPK_GIS_ENGINE.createDirectionalSectorCoords(site.lat, site.lon, hata.fringeMeters, azimuth, beamwidth, frontToBack);
+                    const fringePoly = L.polygon(fringeCoords, {
+                        color: '#f59e0b',
+                        fillColor: '#f59e0b',
+                        fillOpacity: op * 0.25,
+                        weight: rings ? 1.8 : 0,
+                        dashArray: '6, 5'
+                    }).addTo(this.gisMap);
+                    fringePoly.bindTooltip(`<b>${site.name}</b> (Sektoral Az ${azimuth}° / BW ${beamwidth}°)<br>🟠 Fringe Coverage (≥ -95 dBm)`, { sticky: true });
+                    this.gisOverlayLayers.push(fringePoly);
 
-                // Zone 2: Acceptance Standard (≥ -85 dBm) (Emerald Green)
-                const acceptCircle = L.circle([site.lat, site.lon], {
-                    radius: hata.acceptMeters,
-                    color: '#10b981',
-                    fillColor: '#10b981',
-                    fillOpacity: op * 0.45,
-                    weight: rings ? 2.2 : 0
-                }).addTo(this.gisMap);
-                acceptCircle.bindTooltip(`<b>${site.name}</b><br>🟢 Acceptance Standard (≥ -85 dBm)<br>Radius: ~${(hata.acceptMeters/1000).toFixed(1)} km<br>Indoor Portable HT Target & Area Layanan`, { sticky: true });
-                this.gisOverlayLayers.push(acceptCircle);
+                    // Zone 2: Acceptance Standard
+                    const acceptCoords = window.CDPK_GIS_ENGINE.createDirectionalSectorCoords(site.lat, site.lon, hata.acceptMeters, azimuth, beamwidth, frontToBack);
+                    const acceptPoly = L.polygon(acceptCoords, {
+                        color: '#10b981',
+                        fillColor: '#10b981',
+                        fillOpacity: op * 0.45,
+                        weight: rings ? 2.2 : 0
+                    }).addTo(this.gisMap);
+                    acceptPoly.bindTooltip(`<b>${site.name}</b> (Sektoral Az ${azimuth}° / BW ${beamwidth}°)<br>🟢 Acceptance Standard (≥ -85 dBm)`, { sticky: true });
+                    this.gisOverlayLayers.push(acceptPoly);
 
-                // Zone 1: Core High-Coverage (≥ -75 dBm) (Deep Sky Blue)
-                const coreCircle = L.circle([site.lat, site.lon], {
-                    radius: hata.coreMeters,
-                    color: siteColor,
-                    fillColor: siteColor,
-                    fillOpacity: op * 0.70,
-                    weight: rings ? 2.5 : 0
-                }).addTo(this.gisMap);
-                coreCircle.bindTooltip(`<b>${site.name}</b><br>🔵 Core High-Coverage (≥ -75 dBm)<br>Radius: ~${(hata.coreMeters/1000).toFixed(1)} km<br>Penetrasi Bangunan & Kualitas Sinyal Maksimal`, { sticky: true });
-                this.gisOverlayLayers.push(coreCircle);
+                    // Zone 1: Core High-Coverage
+                    const coreCoords = window.CDPK_GIS_ENGINE.createDirectionalSectorCoords(site.lat, site.lon, hata.coreMeters, azimuth, beamwidth, frontToBack);
+                    const corePoly = L.polygon(coreCoords, {
+                        color: siteColor,
+                        fillColor: siteColor,
+                        fillOpacity: op * 0.70,
+                        weight: rings ? 2.5 : 0
+                    }).addTo(this.gisMap);
+                    corePoly.bindTooltip(`<b>${site.name}</b> (Sektoral Az ${azimuth}° / BW ${beamwidth}°)<br>🔵 Core High-Coverage (≥ -75 dBm)`, { sticky: true });
+                    this.gisOverlayLayers.push(corePoly);
+
+                } else {
+                    // ─── STANDARD OMNIDIRECTIONAL (360°) CIRCLE RENDERING ───
+                    // Zone 4: Dead-Zone Boundary / Outer Fringe (< -95 dBm up to -105 dBm) (Red)
+                    const deadCircle = L.circle([site.lat, site.lon], {
+                        radius: hata.deadMeters,
+                        color: '#ef4444',
+                        fillColor: '#ef4444',
+                        fillOpacity: op * 0.10,
+                        weight: rings ? 1.5 : 0,
+                        dashArray: '4, 6'
+                    }).addTo(this.gisMap);
+                    deadCircle.bindTooltip(`<b>${site.name}</b><br>🔴 Dead-Zone Limit (< -95 dBm)<br>Radius: ~${(hata.deadMeters/1000).toFixed(1)} km<br>Batas Sensitivitas DMR (-118 dBm)`, { sticky: true });
+                    this.gisOverlayLayers.push(deadCircle);
+
+                    // Zone 3: Fringe / Batas Cakupan (≥ -95 dBm) (Amber / Orange)
+                    const fringeCircle = L.circle([site.lat, site.lon], {
+                        radius: hata.fringeMeters,
+                        color: '#f59e0b',
+                        fillColor: '#f59e0b',
+                        fillOpacity: op * 0.25,
+                        weight: rings ? 1.8 : 0,
+                        dashArray: '6, 5'
+                    }).addTo(this.gisMap);
+                    fringeCircle.bindTooltip(`<b>${site.name}</b><br>🟠 Fringe Coverage (≥ -95 dBm)<br>Radius: ~${(hata.fringeMeters/1000).toFixed(1)} km<br>Outdoor Handheld & Kendaraan Reliable`, { sticky: true });
+                    this.gisOverlayLayers.push(fringeCircle);
+
+                    // Zone 2: Acceptance Standard (≥ -85 dBm) (Emerald Green)
+                    const acceptCircle = L.circle([site.lat, site.lon], {
+                        radius: hata.acceptMeters,
+                        color: '#10b981',
+                        fillColor: '#10b981',
+                        fillOpacity: op * 0.45,
+                        weight: rings ? 2.2 : 0
+                    }).addTo(this.gisMap);
+                    acceptCircle.bindTooltip(`<b>${site.name}</b><br>🟢 Acceptance Standard (≥ -85 dBm)<br>Radius: ~${(hata.acceptMeters/1000).toFixed(1)} km<br>Indoor Portable HT Target & Area Layanan`, { sticky: true });
+                    this.gisOverlayLayers.push(acceptCircle);
+
+                    // Zone 1: Core High-Coverage (≥ -75 dBm) (Deep Sky Blue)
+                    const coreCircle = L.circle([site.lat, site.lon], {
+                        radius: hata.coreMeters,
+                        color: siteColor,
+                        fillColor: siteColor,
+                        fillOpacity: op * 0.70,
+                        weight: rings ? 2.5 : 0
+                    }).addTo(this.gisMap);
+                    coreCircle.bindTooltip(`<b>${site.name}</b><br>🔵 Core High-Coverage (≥ -75 dBm)<br>Radius: ~${(hata.coreMeters/1000).toFixed(1)} km<br>Penetrasi Bangunan & Kualitas Sinyal Maksimal`, { sticky: true });
+                    this.gisOverlayLayers.push(coreCircle);
+                }
 
                 // Site Marker (All sites Draggable)
                 const siteIcon = L.divIcon({
@@ -3220,10 +3292,15 @@ window.cdpkSystemPlannerApp = function () {
                 towerHeight: Number(this.covTowerHeight || 35),
                 txWatts: Number(this.covTxWatts || 50),
                 antGainDbi: Number(this.covAntGainDbi || 6.5),
+                antennaType: 'omni', // 'omni' | 'directional'
+                azimuthDeg: 0,
+                beamwidthDeg: 65,
+                frontToBackDb: 18,
                 enabled: true
             });
             this.gisActiveSiteIndex = this.gisSites.length - 1;
             this.initOrUpdateGisMap();
+            this.evaluateHandoverOverlap();
             this.showToast(this.lang === 'en' ? `${name} added to coverage map.` : `${name} berhasil ditambahkan ke peta.`, 'success');
         },
 
@@ -3256,6 +3333,10 @@ window.cdpkSystemPlannerApp = function () {
                     color: this.CDPK_SITE_COLORS[0],
                     towerHeight: Number(s.towerHeight || 35),
                     txWatts: Number(this.covTxWatts || 50),
+                    antennaType: 'omni',
+                    azimuthDeg: 0,
+                    beamwidthDeg: 65,
+                    frontToBackDb: 18,
                     enabled: true
                 });
             } else {
@@ -3270,6 +3351,10 @@ window.cdpkSystemPlannerApp = function () {
                         color: this.CDPK_SITE_COLORS[i % this.CDPK_SITE_COLORS.length],
                         towerHeight: Number(s.towerHeight || 35),
                         txWatts: Number(this.covTxWatts || 50),
+                        antennaType: 'omni',
+                        azimuthDeg: Math.round((angle * 180 / Math.PI + 360) % 360),
+                        beamwidthDeg: 65,
+                        frontToBackDb: 18,
                         enabled: true
                     });
                 }
@@ -3277,7 +3362,15 @@ window.cdpkSystemPlannerApp = function () {
             this.gisSites = newSites;
             this.gisActiveSiteIndex = 0;
             this.initOrUpdateGisMap();
+            this.evaluateHandoverOverlap();
             this.showToast(this.lang === 'en' ? `Synchronized ${numSites} sites from DMR Sizing recommendation.` : `Berhasil menyinkronkan ${numSites} site dari rekomendasi Sizing DMR.`, 'success');
+        },
+
+        evaluateHandoverOverlap() {
+            if (window.CDPK_GIS_ENGINE && typeof window.CDPK_GIS_ENGINE.calculateMultiSiteOverlap === 'function') {
+                const hataRadii = typeof this.getOkumuraHataRadii === 'function' ? this.getOkumuraHataRadii() : { acceptMeters: 4000, fringeMeters: 6700 };
+                this.handoverAnalysis = window.CDPK_GIS_ENGINE.calculateMultiSiteOverlap(this.gisSites, hataRadii);
+            }
         },
 
         focusGisSite(site) {
