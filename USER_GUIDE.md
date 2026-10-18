@@ -182,12 +182,59 @@ flowchart LR
 
 ---
 
-## 8. Panduan Modul 5: Simulasi Propagasi Canvas RF
+## 8. Panduan Modul 5: Peta Cakupan Outdoor GIS & Propagasi Gelombang RF (v8.6.1)
 
-- Menggambarkan visualisasi jangkauan radio pada peta interaktif.
-- Atur parameter: Daya pancar Tx (Watt), gain antena (dBi), redaman kabel (dB), dan koordinat lokasi.
-- Hasil simulasi memetakan area sinyal prima (*Strong Coverage*), area sinyal cukup (*Fair*), dan area potensi blind spot (*Dead Zones*).
-- Tombol **"Ekspor Peta PNG"** mencetak gambar simulasi beresolusi tinggi untuk dokumen proposal.
+Modul ini menyediakan visualisasi jangkauan radio tingkat lanjut menggunakan mesin **Okumura-Hata 4-Pita Spektrum Indonesia** (VHF 136–174 MHz, 350 MHz, UHF 400–470 MHz, dan 800/850 MHz) pada peta interaktif Leaflet GIS resolusi tinggi (*Retina Display*), lengkap dengan fitur rekayasa spasial Roadmap Fase 2 (Fitur A s/d E):
+
+### 8.1. Parameter Pemancar & Profil Lingkungan
+- **Parameter Sinyal:** Daya pancar Tx (Watt), gain antena (dBi), redaman kabel (dB), tinggi tower antena base station ($h_b$), dan tinggi antena radio mobile/handheld ($h_m = 1.5\text{ m}$).
+- **Profil Lingkungan (Okumura-Hata):** *Urban Small/Medium, Urban Large City, Suburban, Open / Rural Area*.
+- **Koreksi Topografi:** *Flat Terrain, Rolling Hilly, Mountainous Topography* (dengan redaman difraksi elevasi).
+- **Zonasi Kualitas Sinyal (dBm):**
+  - 🔵 **Core High-Coverage ($\ge -75\text{ dBm}$):** Sinyal prima untuk penetrasi gedung bertingkat dan kabin kendaraan berat.
+  - 🟢 **Acceptance Standard ($\ge -85\text{ dBm}$):** Standar penerimaan layanan (*Grade of Service*) handphone portabel HT di area terbuka dan tambang.
+  - 🟠 **Fringe Coverage ($\ge -95\text{ dBm}$):** Batas luar jangkauan operasional radio bergerak/kendaraan rig.
+  - 🔴 **Dead-Zone Limit ($< -95\text{ dBm}$ hingga $-118\text{ dBm}$):** Batas sensitivitas penerima digital DMR; sinyal rentan putus.
+
+---
+
+### 8.2. Fitur Spasial Tingkat Lanjut (Roadmap Fase 2: Fitur A s/d E)
+
+#### **A. Ekspor Kontur Poligon KML / KMZ (Google Earth Pro & ArcGIS)**
+- **Tombol:** `🗺️ Ekspor KML (Google Earth)` dan dropdown `.kmz` (terkompresi ZIP).
+- Menghasilkan berkas KML 2.2 berstandar OGC yang memuat poligon koordinat WGS84 tertutup (72 segmen busur) untuk 4 zona sinyal Okumura-Hata dengan styling transparansi warna resmi CDPK, serta *Placemark* titik repeater lengkap dengan metadata teknis.
+- Siap dibuka langsung di **Google Earth Pro, ArcGIS, QGIS, dan AutoCAD Civil 3D**.
+
+#### **B. Impor Batas Konsesi Klien (WIUP GeoJSON / KML) & KPI % Cakupan Area**
+- **Tombol:** `⛏️ Impor Batas Konsesi (WIUP)` (Mendukung format `.geojson`, `.kml`, `.kmz`).
+- **Kalkulasi Spasial Otomatis:** Menggunakan mesin geometri Turf.js untuk menghitung luas area konsesi tambang ($km^2$ / Ha), luas area yang terjangkau sinyal Acceptance ($\ge -85\text{ dBm}$), serta **Coverage KPI (%)**:
+  $$\% \text{ Cakupan} = \frac{\text{Luas Sinyal } \cap \text{ WIUP}}{\text{Total Luas WIUP}} \times 100\%$$
+- **Deteksi Celah Gelap (Dark Spots):** Secara visual mengarsir merah area tambang yang belum terjangkau sinyal untuk memandu penempatan *fill-in repeater*.
+
+#### **C. Profil Elevasi Tanah Digital (DEM) & Clearance Zona Fresnel Ke-1**
+- **Panel Interaktif:** Di bawah peta GIS, pilih **Site A** dan **Target (Repeater Site lain atau Probe Mobile)**, lalu klik **"⚡ Hitung LoS & Fresnel"**.
+- **Mesin Elevasi & Kelengkungan Bumi:** Mengambil kontur ketinggian tanah digital (DEM) dan memperhitungkan kelengkungan bumi efektif ($k = 4/3$).
+- **Radius Zona Fresnel Ke-1 (ITU-R P.530):**
+  $$F_1 = 17.32 \sqrt{\frac{d_1 \cdot d_2}{f_{\text{GHz}} \cdot D}} \quad (\text{meter})$$
+- **Grafik Penampang 2D Canvas:** Menampilkan kontur tanah, tiang tower kedua site, berkas optik Line-of-Sight (LoS) merah, elipsoid Fresnel $F_1$, batas clearance kritis $60\% F_1$, dan titik rintangan tanah paling kritis.
+- **Status Otomatis:**
+  - 🟢 **Clear LoS ($\ge 60\% F_1$):** Lintasan radio jernih tanpa difraksi.
+  - 🟡 **Sub-Path Obstruction ($0\% - 59.9\% F_1$):** Potensi redaman difraksi pisau (*knife-edge*).
+  - 🔴 **Terhalang Total / Blocked LoS ($< 0\%$):** Kontur tanah memotong garis pandang.
+
+#### **D. Pola Radiasi Antena Terarah / Sektoral (Directional Sector Antenna)**
+- Pada daftar site repeater di panel kiri, pengguna dapat mengubah tipe antena dari **Omni 360°** menjadi **Sektoral / Yagi**.
+- **Parameter Antena:** Masukkan derajat **Azimuth** ($0^\circ - 360^\circ$) dan lebar berkas **Horizontal Beamwidth** ($30^\circ, 65^\circ, 90^\circ, 120^\circ$).
+- Peta Leaflet secara dinamis merender poligon sektor kipas (*polar lobe*) dengan redaman *Front-to-Back (F/B) Ratio* $18\text{ dB}$ pada cuping belakang (*back lobe*).
+
+#### **E. Analisis Overlap Multi-Site & Verifikasi Handover Seamless**
+- **Prinsip Roaming DMR:** Pada sistem *IP Site Connect* atau *Capacity Plus*, HT yang bergerak memerlukan daerah tumpang tindih sinyal yang tepat agar handover berjalan tanpa putus (*seamless roaming*).
+- **Standar Emas Motorola Solutions:**
+  - **$15\% - 30\%$ Overlap (Optimal Seamless):** Handover berjalan mulus tanpa *drop call* atau *audio clipping*.
+  - **$< 15\%$ Overlap (Marginal):** Risiko panggilan terputus saat armada melaju kencang melewati batas coverage.
+  - **$> 30\%$ Overlap (Excessive):** Tumpang tindih terlalu padat; membutuhkan frekuensi berbeda atau *GPS Simulcast Synchronization* untuk mencegah interferensi *co-channel*.
+  - **$0\%$ Overlap (Terpisah):** Terjadi celah *blank spot* antar repeater.
+- **Tabel Matriks Handover:** Menyajikan jarak km antar-site, luas km² tumpang tindih, persentase overlap, status kelayakan roaming, dan rekomendasi rekayasa CDPK.
 
 ---
 
@@ -536,18 +583,16 @@ Fitur ini bertindak sebagai **Asisten Penasihat Kurs Valuta Asing (FX Advisory A
 2. **Konversi Hanya untuk Item Valas:** Engine FX hanya mengonversi perangkat yang bersumber dari modal Dollar (USD), item impor luar negeri (seperti Pelco, Avigilon, Ava, FMTCS), atau sebagai panduan estimasi dual currency (Rupiah & Dollar) bagi tim tender.
 3. **Mandatory Finance Disclaimer:** Setiap angka hasil konversi valas dilindungi oleh klausul resmi bahwa penawaran final wajib dikonfirmasi secara tertulis ke Divisi Finance PT Citradata Purnakharisma sebelum PO diterbitkan.
 
-### 19.2. Tiga Mode Acuan Kurs (Multi-Tiered Rate Sources)
-Pengguna dapat memilih salah satu dari 3 mode kurs melalui **Global FX Pill** di bar navigasi atas atau kartu Commercial Parameters:
-1. **Mode 1 — Finance SSOT (Default):**
-   - Mengambil kurs resmi yang ditetapkan Divisi Finance dari Google Sheets tab `Commercial_Config` (`usd_to_idr`).
-   - Merupakan Single Source of Truth resmi untuk pengajuan proposal tender standar.
-2. **Mode 2 — Live Spot FX (Advisory):**
-   - Mengambil kurs pasar global terkini secara otomatis via public API dengan failover dan local cache 4 jam.
-   - Menyajikan informasi varians (`variance_idr` dan `variance_pct`) terhadap kurs Finance untuk mengidentifikasi apakah selisih kurs melebihi batas toleransi ($\ge 2\%$).
-3. **Mode 3 — Project Manual Override:**
-   - Pengguna dapat mengetikkan nilai kurs khusus yang disepakati untuk proyek tertentu.
-   - Tersedia tombol pintas buffer cepat: **`+1% Buffer`**, **`+2% Buffer`**, dan **`+5% Buffer`** guna memitigasi risiko volatilitas valas selama periode penawaran.
-   - Nilai ini hanya tersimpan pada proyek aktif dan tidak mengubah database Google Sheets Finance.
+### 19.2. Dua Mode Acuan Kurs (Active FX Modes - v8.6.1)
+Pengguna dapat memilih salah satu dari 2 mode kurs melalui **Global FX Pill** di baris ke-2 navigasi header atau kartu Commercial Parameters:
+1. **Mode 1 — Pasar Realtime / Live Spot FX (Default):**
+   - Mengambil kurs pasar valas spot global terkini secara otomatis via live API.
+   - Merupakan acuan default sistem untuk menjaga nilai penawaran komersial tetap selaras dengan kondisi pergerakan valuta asing saat ini.
+2. **Mode 2 — Manual Input (Custom Buffer):**
+   - Pengguna dapat mengetikkan nilai kurs khusus yang disepakati untuk keperluan buffer tender atau audit proyek.
+   - **Batas Bawah Aman (Strict Constraint):** Nilai input manual **tidak dapat lebih rendah dari Rp 16.000**.
+   - Tersedia tombol pintas buffer cepat berbasis kurs realtime: **`+1% Buffer`**, **`+2% Tender Shield`**, dan **`+5% Safe Margin`** serta tombol **Reset ke Pasar Realtime**.
+   - Nilai ini hanya tersimpan pada sesi proyek aktif tanpa memengaruhi database master.
 
 ### 19.3. Mode Tampilan Mata Uang (Display Mode Switcher)
 Pengguna dapat mengatur preferensi format harga di seluruh modul:
@@ -563,5 +608,5 @@ Di dalam modal pengatur kurs (`Global FX & Finance Advisory Controller`), penggu
 
 ---
 
-*CDPK System Planner v8.6.0 — Solusi Rekayasa Komunikasi Radio Motorola Solutions, Keamanan Pelco & Avigilon, serta RFoF Distributed Antenna System (FMTCS).*
+*CDPK System Planner v8.6.1 — Solusi Rekayasa Komunikasi Radio Motorola Solutions, Keamanan Pelco & Avigilon, serta RFoF Distributed Antenna System (FMTCS).*
 

@@ -497,51 +497,44 @@ Berdasarkan keselarasan portofolio produk PT Citradata Purnakharisma (Motorola S
 
 ---
 
-### 5.2 Roadmap Pengembangan Lanjutan Opsi 1 (Fase 2: Sprint A s/d E)
-Bagian ini dirancang sebagai cetak biru teknis dan pengingat (reminder) sistematis untuk iterasi pengembangan tingkat lanjut berikutnya:
+### 5.2 Roadmap Pengembangan Lanjutan Opsi 1 (Fase 2: Sprint A s/d E) — Selesai Penuh (Completed in v8.6.1)
+Seluruh 5 pilar rekayasa spasial outdoor tingkat lanjut telah selesai diimplementasikan pada branch `main` (`v8.6.1`):
 
-#### **A. Ekspor Kontur Poligon KML / KMZ (Integrasi Google Earth Pro & ArcGIS)**
-- **Kebutuhan & Urgensi:** Dokumen tender dan tim geologi/survei tambang selalu meminta berkas spasial yang dapat langsung dibuka di Google Earth Pro, AutoCAD Civil 3D, atau ESRI ArcGIS.
-- **Rancangan Teknis:**
-  - Tambahkan utilitas generator format KML/KMZ standar OGC di frontend JS (`exportGisCoverageKML`).
-  - Representasikan tiap zona sinyal (Core $\ge -75\text{ dBm}$, Acceptance $\ge -85\text{ dBm}$, Fringe $\ge -95\text{ dBm}$) sebagai `<Polygon>` geografis tertutup dengan `outerBoundaryIs`/`LinearRing` yang dihitung berdasarkan koordinat lintang/bujur dan radius kalkulasi.
-  - Sertakan styling transparan `<Style>` dengan `<color>` hex (contoh: `#7F0284C7` biru semi-transparan untuk Core, `#7F10B981` hijau untuk Acceptance).
-  - Sertakan `<Placemark>` untuk titik repeater yang berisi metadata nama site, tower height, transmit power, frekuensi kerja, dan koordinat WGS84.
+#### **A. Ekspor Kontur Poligon KML / KMZ (Integrasi Google Earth Pro & ArcGIS) [COMPLETED]**
+- **Status:** Selesai diimplementasikan penuh di `static/js/gis_engine.js` & `static/js/exporters.js`.
+- **Realisasi Teknis:**
+  - Utilitas generator KML 2.2 berstandar OGC (`exportGisCoverageKML`) menghasilkan poligon 72 segmen busur geografis tertutup untuk 4 zona sinyal Okumura-Hata (Core, Acceptance, Fringe, Dead-zone) dengan palet styling transparansi warna resmi CDPK.
+  - Kompresi ZIP instan menghasilkan berkas `.kmz` via `jszip.min.js` dengan Placemark repeater, elevasi tiang, dan koordinat WGS84 presisi tinggi.
 
-#### **B. Impor Batas Konsesi Klien (GeoJSON / KML WIUP) & Kalkulasi % Cakupan Konsesi**
-- **Kebutuhan & Urgensi:** Klien tambang memiliki batas konsesi resmi (Wilayah Izin Usaha Pertambangan / WIUP). Engineer CDPK perlu membuktikan bahwa penempatan repeater menjangkau seluruh area kerja operasional.
-- **Rancangan Teknis:**
-  - Sediakan tombol upload berkas batas konsesi: `.geojson`, `.kml`, atau `.kmz`.
-  - Gunakan pustaka komputasi geometri spasial (misal `turf.js` atau modul internal) untuk menghitung poligon irisan (*polygon intersection/clipping*).
-  - Tampilkan metrik otomatis: **Persentase Cakupan Konsesi (Coverage KPI)**:
-    $$\% \text{ Covered} = \frac{\text{Luas Irisan (Signal Zone } \cap \text{ WIUP)}}{\text{Total Luas Area WIUP}} \times 100\%$$
-  - Tandai secara visual area konsesi yang belum tercover (*uncovered dark spots*) untuk memandu penempatan repeater pengisi celah (*fill-in repeater*).
+#### **B. Impor Batas Konsesi Klien (GeoJSON / KML WIUP) & Kalkulasi % Cakupan Konsesi [COMPLETED]**
+- **Status:** Selesai diimplementasikan penuh.
+- **Realisasi Teknis:**
+  - File uploader multi-format (`.geojson`, `.kml`, `.kmz`) dengan KML XML parser otomatis.
+  - Komputasi spasial Turf.js mengevaluasi perpotongan poligon sinyal Acceptance ($\ge -85\text{ dBm}$) terhadap poligon konsesi tambang, menghasilkan total luas konsesi ($km^2$ / Ha), luas area tercover, dan Coverage KPI (%).
+  - Visualisasi dinamis garis batas konsesi warna emas dan penandaan celah blank spot (*uncovered dark spots*) berwarna merah berarsir.
 
-#### **C. Profil Ketinggian Tanah Digital (DEM) & Clearance Zona Fresnel Ke-1 (1st Fresnel Zone)**
-- **Kebutuhan & Urgensi:** Pada proyek tambang pegunungan atau perbukitan terjal, link komunikasi radio jarak jauh (Point-to-Point antar-site repeater atau Base-to-Mobile) rentan mengalami pemblokiran fisik (*terrain diffraction & shadowing*).
-- **Rancangan Teknis:**
-  - Integrasi API Digital Elevation Model (DEM) publik (misal Open-Elevation API / USGS SRTM) untuk mengekstrak profil elevasi kontur tanah sepanjang garis lurus antara Site A dan Site B / titik probe.
-  - Hitung radius Zona Fresnel Ke-1 pada tiap titik interval jarak $d$:
-    $$F_1 = 17.32 \sqrt{\frac{d_1 \cdot d_2}{f \cdot d}} \quad (\text{meter})$$
-  - Render grafik 2D profil penampang melintang (*terrain profile cross-section*) yang memperlihatkan elevasi bumi, garis Line-of-Sight (LoS), dan elipsoid Zona Fresnel Ke-1.
-  - Tampilkan status otomatis: **Clear LoS**, **Sub-path Obstruction (< 60% Fresnel clearance)**, atau **Complete Shadowed Block**.
+#### **C. Profil Ketinggian Tanah Digital (DEM) & Clearance Zona Fresnel Ke-1 (1st Fresnel Zone) [COMPLETED]**
+- **Status:** Selesai diimplementasikan penuh.
+- **Realisasi Teknis:**
+  - Integrasi API Open-Elevation dengan failover tangguh ke model topografi sintetis CDPK (*flat, hilly, mountainous*).
+  - Mengkalkulasikan kelengkungan bumi efektif ($k = 4/3$) dan radius Zona Fresnel ke-1 ($F_1 = 17.32 \sqrt{\frac{d_1 \cdot d_2}{f_{\text{GHz}} \cdot D}}$ meter) sesuai standar ITU-R P.530.
+  - Visualisasi grafik penampang melintang 2D Canvas resolusi tinggi (*Retina*) dengan kurva tanah, tiang tower, berkas optik LoS merah, kurva Fresnel biru/kuning, serta deteksi otomatis status: *Clear LoS ($\ge 60\% F_1$)*, *Sub-path Obstruction*, atau *Blocked*.
 
-#### **D. Pola Radiasi Antena Terarah / Sektoral (Directional / Sector Antenna Beamwidth & Azimuth)**
-- **Kebutuhan & Urgensi:** Di area dinding tebing tambang (highwall), jalur hauling road, atau pelabuhan, pemancar tidak selalu menggunakan antena omnidirectional. Antena Yagi pengarah atau panel sektoral (60°, 90°, 120°) digunakan untuk memfokuskan energi RF.
-- **Rancangan Teknis:**
-  - Tambahkan konfigurasi tipe antena pada masing-masing site repeater: *Omnidirectional (360°)* vs *Directional / Sektoral*.
-  - Parameter antena terarah: **Azimuth Utama** (0° s/d 360°, slider atau kompas visual) dan **Horizontal Beamwidth (-3 dB)** (misal 30°, 60°, 90°, 120°).
-  - Modifikasi render poligon Leaflet dari lingkaran penuh ($360^\circ$) menjadi bentuk sektor kipas (*pie wedge / circular sector*) dengan attenuasi *front-to-back ratio* (F/B) pada bagian belakang antena.
+#### **D. Pola Radiasi Antena Terarah / Sektoral (Directional / Sector Antenna Beamwidth & Azimuth) [COMPLETED]**
+- **Status:** Selesai diimplementasikan penuh.
+- **Realisasi Teknis:**
+  - Pilihan tipe antena per site (*Omnidirectional 360°* vs *Sektoral / Yagi*) dengan parameter sudut Azimuth ($0^\circ - 360^\circ$) dan Horizontal Beamwidth ($30^\circ, 65^\circ, 90^\circ, 120^\circ$).
+  - Modifikasi render poligon Leaflet dari lingkaran penuh menjadi bentuk sektor cuping terarah (*polar radiation lobe*) dengan attenuasi *Front-to-Back (F/B) Ratio* $18\text{ dB}$ pada bagian belakang antena.
 
-#### **E. Analisis Overlap Multi-Site & Verifikasi Handover (IP Site Connect / Capacity Plus)**
-- **Kebutuhan & Urgensi:** Pada sistem DMR Multi-Site (IP Site Connect atau Capacity Plus), HT yang bergerak antar-site membutuhkan daerah tumpang tindih (*overlap zone*) yang pas agar handover berjalan mulus tanpa putus panggilan (*seamless roaming*).
-- **Rancangan Teknis:**
-  - Deteksi perpotongan lingkaran Acceptance/Fringe antar repeater yang berdekatan.
-  - Evaluasi persentase overlap ideal: kisaran **15% s/d 25% overlap** merupakan standar *gold standard* Motorola Solutions untuk handover handphone/HT bergerak.
-  - Berikan indikator visual dan peringatan rekayasa:
-    - Overlap < 10%: Peringatan risiko *Drop Call / Audio Clipping* saat kendaraan bergerak antar site.
-    - Overlap 15–25%: Status *Optimal Seamless Handover*.
-    - Overlap > 35% pada frekuensi sama: Peringatan risiko *Co-Channel Interference (C/I)* tanpa GPS simulcast synchronization.
+#### **E. Analisis Overlap Multi-Site & Verifikasi Handover Seamless (IP Site Connect / Capacity Plus) [COMPLETED]**
+- **Status:** Selesai diimplementasikan penuh.
+- **Realisasi Teknis:**
+  - Evaluasi daerah tumpang tindih spasial antar repeater bertetangga berdasarkan standar emas roaming Motorola Solutions:
+    - $15\% - 30\%$: *Optimal Seamless Handover* (Hijau).
+    - $< 15\%$: *Marginal Overlap* (Kuning) - peringatan risiko drop call / audio clipping.
+    - $> 30\%$: *Overlap Berlebih* (Ungu) - rekomendasi alokasi frekuensi berbeda atau GPS Simulcast Sync.
+    - $0\%$: *Terpisah / No Handover* (Merah) - terdapat blind spot komunikasi di tengah lintasan.
+  - Tabel matriks lintasan multi-site di Modul 5 menyajikan jarak km, luas $km^2$ overlap, persentase %, status, dan rekomendasi rekayasa CDPK.
 
 ## 6. Opsi 3: Advanced Interoperability & ATEX‑HazLoc Compliance Checker
 - **Scope:** Dampak lintas‑workspace (DMR, DAS, CCTV).
