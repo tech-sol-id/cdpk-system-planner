@@ -7,7 +7,7 @@ mime_type: "application/pdf"
 folder_path: "AI Bank Knowledge/Technicians/TECHNICAL CERTIFICATE/Sertifikat Irwan Setiawan/"
 last_modified: "2024-11-26T04:08:50.000Z"
 image_reference_note: "Gambar skematik, diagram blok, kurva grafis, dan foto fisik perangkat dapat dilihat langsung pada file asli di link di atas."
-extracted_at: "2026-10-18T01:49:03.220117+00:00"
+extracted_at: "2026-10-18T02:22:45.957985+00:00"
 ---
 
 # MOTOTRBO Capacity Max System Advisor Tutorial.pdf

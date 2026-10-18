@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
                 .replace("; wv)", ")")
                 .replace("; wv", "")
                 .replace("Version/4.0 ", "")
-                + " CDPKAndroidApp/8.5.0";
+                + " CDPKAndroidApp/8.6.0";
 
         configureWebViewSettings(webView);
 

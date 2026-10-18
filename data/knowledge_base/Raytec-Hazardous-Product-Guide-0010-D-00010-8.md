@@ -7,7 +7,7 @@ mime_type: "application/pdf"
 folder_path: "AI Bank Knowledge/Optex Group/"
 last_modified: "2026-10-18T02:19:33.902Z"
 image_reference_note: "Gambar skematik, diagram blok, kurva grafis, dan foto fisik perangkat dapat dilihat langsung pada file asli di link di atas."
-extracted_at: "2026-10-18T02:40:24.389265+00:00"
+extracted_at: "2026-10-18T03:10:03.791775+00:00"
 ---
 
 # Raytec-Hazardous-Product-Guide-0010-D-00010-8.pdf

@@ -41,6 +41,7 @@
     - [18.2. Validator Intermodulasi (IM3) & Frequency Combiner](#182-validator-intermodulasi-im3--frequency-combiner)
     - [18.3. Kalkulator Kapasitas Trafik Erlang-B & Trunking Advisor](#183-kalkulator-kapasitas-trafik-erlang-b--trunking-advisor)
     - [18.4. Kalkulator Sizing Daya Cadangan & Solar Panel Off-Grid](#184-kalkulator-sizing-daya-cadangan--solar-panel-off-grid)
+19. [Panduan Global Multi-Currency ($ USD & Rp IDR) and Exchange Rate (FX) Advisory Assistant (v8.6.0)](#19-panduan-global-multi-currency--usd--rp-idr-and-exchange-rate-fx-advisory-assistant-v860)
 
 ---
 
@@ -499,6 +500,42 @@ CDPK System Planner dioptimalkan secara penuh untuk survei lapangan menggunakan 
      - **Beban Daya Rata-Rata Kontinu (Watt)**
      - **Kapasitas Bank Baterai yang Dibutuhkan (Ampere-Hour / Ah)**
      - **Dimensi Array Panel Surya Off-Grid (Watt-peak / Wp)** dan kapasitas Solar Charge Controller MPPT (Ampere).
+
+---
+
+## 19. Panduan Global Multi-Currency ($ USD & Rp IDR) and Exchange Rate (FX) Advisory Assistant (v8.6.0)
+
+Fitur ini bertindak sebagai **Asisten Penasihat Kurs Valuta Asing (FX Advisory Assistant)** cerdas yang membantu tim Presales dan Sales Engineer dalam menyusun estimasi proyek berbasis Dollar AS ($ USD) secara akurat tanpa mengganggu stabilitas harga master Rupiah.
+
+### 19.1. Prinsip Utama: Non-Destruktif & Perlindungan Master Pricelist
+1. **Harga Resmi Finance Terlindungi:** Seluruh harga barang yang telah ditetapkan dalam Rupiah (IDR) oleh Divisi Finance pada Master Pricelist (seperti MOTOTRBO R2, repeater SLR 5300, baterai, kabel) **tidak pernah diubah atau dikalikan** oleh fluktuasi kurs harian.
+2. **Konversi Hanya untuk Item Valas:** Engine FX hanya mengonversi perangkat yang bersumber dari modal Dollar (USD), item impor luar negeri (seperti Pelco, Avigilon, Ava, FMTCS), atau sebagai panduan estimasi dual currency (Rupiah & Dollar) bagi tim tender.
+3. **Mandatory Finance Disclaimer:** Setiap angka hasil konversi valas dilindungi oleh klausul resmi bahwa penawaran final wajib dikonfirmasi secara tertulis ke Divisi Finance PT Citradata Purnakharisma sebelum PO diterbitkan.
+
+### 19.2. Tiga Mode Acuan Kurs (Multi-Tiered Rate Sources)
+Pengguna dapat memilih salah satu dari 3 mode kurs melalui **Global FX Pill** di bar navigasi atas atau kartu Commercial Parameters:
+1. **Mode 1 — Finance SSOT (Default):**
+   - Mengambil kurs resmi yang ditetapkan Divisi Finance dari Google Sheets tab `Commercial_Config` (`usd_to_idr`).
+   - Merupakan Single Source of Truth resmi untuk pengajuan proposal tender standar.
+2. **Mode 2 — Live Spot FX (Advisory):**
+   - Mengambil kurs pasar global terkini secara otomatis via public API dengan failover dan local cache 4 jam.
+   - Menyajikan informasi varians (`variance_idr` dan `variance_pct`) terhadap kurs Finance untuk mengidentifikasi apakah selisih kurs melebihi batas toleransi ($\ge 2\%$).
+3. **Mode 3 — Project Manual Override:**
+   - Pengguna dapat mengetikkan nilai kurs khusus yang disepakati untuk proyek tertentu.
+   - Tersedia tombol pintas buffer cepat: **`+1% Buffer`**, **`+2% Buffer`**, dan **`+5% Buffer`** guna memitigasi risiko volatilitas valas selama periode penawaran.
+   - Nilai ini hanya tersimpan pada proyek aktif dan tidak mengubah database Google Sheets Finance.
+
+### 19.3. Mode Tampilan Mata Uang (Display Mode Switcher)
+Pengguna dapat mengatur preferensi format harga di seluruh modul:
+- **Dual Currency (IDR + USD) [Default]:** Menampilkan format gabungan `Rp ... (US$ ...)` yang ideal untuk presentasi internal dan penawaran tender komprehensif.
+- **Hanya Rupiah (IDR):** Menampilkan nominal dalam Rupiah saja `Rp ...` untuk tender lokal / pemerintah.
+- **Hanya Dollar (USD):** Menampilkan nominal dalam Dollar saja `US$ ...` untuk klien multinasional atau perusahaan kontraktor asing.
+
+### 19.4. Simulasi Sensitivitas & Stress Testing Kurs FX
+Di dalam modal pengatur kurs (`Global FX & Finance Advisory Controller`), pengguna dapat melihat tabel simulasi sensitivitas otomatis terhadap fluktuasi kurs:
+- Skenario Depresiasi Rupiah: $+2\%$, $+5\%$, $+10\%$
+- Skenario Apresiasi Rupiah: $-2\%$, $-5\%$
+- Tabel menyajikan proyeksi total nilai proyek dalam Rupiah dan potensi pergeseran beban biaya modal (*Cost of Goods Sold / COGS*).
 
 ---
 

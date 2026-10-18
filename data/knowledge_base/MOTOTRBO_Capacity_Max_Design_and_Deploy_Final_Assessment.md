@@ -7,7 +7,7 @@ mime_type: "application/pdf"
 folder_path: "AI Bank Knowledge/Technicians/TECHNICAL CERTIFICATE/Sertifikat Irwan Setiawan/"
 last_modified: "2024-11-26T04:09:36.000Z"
 image_reference_note: "Gambar skematik, diagram blok, kurva grafis, dan foto fisik perangkat dapat dilihat langsung pada file asli di link di atas."
-extracted_at: "2026-10-18T01:48:59.539704+00:00"
+extracted_at: "2026-10-18T02:22:40.152576+00:00"
 ---
 
 # MOTOTRBO Capacity Max Design and Deploy Final Assessment .pdf

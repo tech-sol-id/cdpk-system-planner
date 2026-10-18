@@ -1,8 +1,8 @@
-# PRD — CDPK System Planner (PRD-New v8.5.0)
+# PRD — CDPK System Planner (PRD-New v8.6.0)
 
-> **Nama Aplikasi Resmi:** **CDPK System Planner** *(DMR System & RFoF Distributed Antenna System — Solution Sizing, RF Simulation, Commercial Suite & Enterprise Team Collaboration)*  
-> **Pemilik / Entitas:** PT Citradata Purnakharisma (CDPK) — Authorized Distributor Motorola Solutions, Avigilon & FMTCS Fiber DAS  
-> **Versi Saat Ini:** `8.5.0 (Enterprise Production Build)`  
+> **Nama Aplikasi Resmi:** **CDPK System Planner** *(DMR System, RFoF Distributed Antenna System & Open Multi-Brand Video Security / CCTV Surveillance — Solution Sizing, RF Simulation, Commercial Suite & Enterprise Team Collaboration)*  
+> **Pemilik / Entitas:** PT Citradata Purnakharisma (CDPK) — Authorized Distributor Motorola Solutions, Pelco, Avigilon & FMTCS Fiber DAS  
+> **Versi Saat Ini:** `8.6.0 (Enterprise Production Build)`  
 > **Target Bahasa:** Dwi-Bahasa Penuh / Bilingual (**Bahasa Indonesia `ID`** & **English `EN`**)  
 > **AI Copilot Engine:** Multi-Model AI Selector (**Google Gemini 3.8 Flash** & **Google Gemini 3.8 Pro**)  
 > **Arsitektur & Cloud Hosting:** GitHub (`tech-sol-id`) + Render Cloud Container (Singapore Region) + Google Drive Live API (`drive citradata`)  
@@ -13,31 +13,37 @@
 
 ## 1. Visi Produk & Ringkasan Eksekutif
 
-**CDPK System Planner** adalah platform rekayasa sistem komunikasi radio **DMR System** dan **RFoF Distributed Antenna System (`RFoF DAS by FMTCS`)** terintegrasi (*end-to-end*) dalam satu pintu login (*Single Sign-On*), yang memadukan perhitungan teknis propagasi RF, perencanaan kapasitas talkgroup & timeslot, desain topologi Fiber DAS multi-lantai (Digital DOMU/DORU & Analog AOMU/AORU), perakitan paket solusi komposit (*Parent-Child BOM*), kalkulasi komersial presisi, kolaborasi tim lintas-divisi (*Product Expert* & *Engineer / Technician*), serta tata kelola pengawasan eksekutif (*Overseer* & *Administrator*) berbasis Google Drive Cloud.
+**CDPK System Planner** adalah platform rekayasa sistem komunikasi radio **DMR System**, **RFoF Distributed Antenna System (`RFoF DAS by FMTCS`)**, dan **Video Security / CCTV Surveillance (Open Multi-Brand)** terintegrasi (*end-to-end*) dalam satu pintu login (*Single Sign-On*), yang memadukan perhitungan teknis propagasi RF, perencanaan kapasitas talkgroup & timeslot, desain topologi Fiber DAS multi-lantai (Digital DOMU/DORU & Analog AOMU/AORU), sizing throughput & storage NVR CCTV, audit interoperabilitas cross-brand, perakitan paket solusi komposit (*Parent-Child BOM*), kalkulasi komersial presisi dengan asisten kurs valas multi-tiered, kolaborasi tim lintas-divisi (*Product Expert* & *Engineer / Technician*), serta tata kelola pengawasan eksekutif (*Overseer* & *Administrator*) berbasis Google Drive Cloud.
 
-### Pilar Utama Platform (Versi 8.5.0):
-1. **Dual-Workspace Engineering (`📡 DMR System` & `🏢 RFoF Distributed Antenna System`):**
+### Pilar Utama Platform (Versi 8.6.0):
+1. **Triple-Workspace Engineering (`📡 DMR System`, `🏢 RFoF Distributed Antenna System`, & `📹 Video Security & CCTV Surveillance`):**
    - **Workspace 1 (`📡 DMR System`):** Sizing RF geometrik, rekomendasi topologi bertingkat (Conventional, IP Site Connect, Capacity Plus Trunking), kalkulasi node DAS kompak (SLR 1000), estimasi mandays (WES Method), dan simulasi canvas propagasi CloudRF-style.
    - **Workspace 2 (`🏢 RFoF Distributed Antenna System` — `RFoF DAS by FMTCS`):** 6 modul lengkap rekayasa Fiber DAS multi-zona untuk gedung bertingkat, basement, terowongan, dan data center (BoQ & Topologi Multi-Lantai SVG, Link Budget & Planner Antena, Konversi RF & VSWR, Cakupan Outdoor Okumura-Hata, Commissioning & Laporan SAT PDF, serta Katalog 17 Perangkat FMTCS).
-   - **Two-Way Bridge DMR ↔ RFoF DAS:** Ekspansi 1-klik dari hasil sizing DMR ke perencanaan zona lantai RFoF DAS (`🏢 Perluas ke RFoF DAS by FMTCS`) serta injeksi 1-klik seluruh perangkat aktif/pasif FMTCS ke Master BoQ DMR (`📥 Gabungkan ke Master BoQ DMR`).
-2. **Modular Product & System Configurator:** Menghitung paket repeater base station (SLR 5300, SLR 8000), radio terminal portabel (R7, P6620i, P8668i), paket turnkey Fiber DAS FMTCS (`SYS-DAS-FMTCS-DIGITAL` & `SYS-DAS-FMTCS-ANALOG`), serta konfigurator kustom dinamis dengan pemilihan lisensi (*Licenses*) dan aksesoris (*Accessories*) per produk.
+   - **Workspace 3 (`📹 Video Security & CCTV Surveillance`):** Sizing sistem kamera pengawas industri multi-brand (Pelco, Avigilon, Ava, Milesight, VIGI by TP-Link, Axis, Hanwha, Hikvision, Dahua, Bosch, Uniview), kalkulator standar forensik DORI (EN 62676-4), kalkulator drop tegangan kabel Cat6 loop resistance, universal NVR bandwidth & storage retention sizing, PoE power budget, serta mesin audit blocker/reminder interoperabilitas VMS.
+   - **Two-Way Cross-Workspace Bridges:** Injeksi 1-klik dari hasil sizing DMR ke RFoF DAS (`🏢 Perluas ke RFoF DAS by FMTCS`) serta penggabungan 1-klik seluruh komponen CCTV dan FMTCS ke Master BoQ DMR (`📥 Kirim ke BoQ Utama (DMR)`).
+2. **Modular Product & System Configurator:** Menghitung paket repeater base station (SLR 5300, SLR 8000), radio terminal portabel (R7, P6620i, P8668i), paket turnkey Fiber DAS FMTCS (`SYS-DAS-FMTCS-DIGITAL` & `SYS-DAS-FMTCS-ANALOG`), armada kamera pengawas IP/AI, serta konfigurator kustom dinamis dengan pemilihan lisensi (*Licenses*) dan aksesoris (*Accessories*) per produk.
 3. **Enterprise Zero-Trust Security & Gatekeeping:**
    - Halaman depan terisolasi 100% (*Zero DOM Leakage*) dengan perlindungan CSS `x-cloak` dan otentikasi wajib sebelum akses workspace.
    - Pembatasan domain korporat ketat: hanya `@citradata.id` dan `@techsolutions.id`.
    - Mekanisme persetujuan wajib (*Admin Pending Approval*) untuk setiap pengguna baru.
-4. **Empat Tingkat Peran Pengguna (Four-Tier RBAC) & Akses Terbuka Estimator DAS:**
-   - **👑 Administrator:** Kontrol penuh pengguna, persetujuan akun, akses link folder master Drive & master pricelist (termasuk tab `RFoF_DAS_FMTCS`), akses penuh **Estimator & Komersial BoQ RFoF DAS** (edit harga satuan, rasio desain OMU/ORU/splitter/coupler/kabel, COGS, dan margin), jejak audit, dan ringkasan portofolio.
-   - **👁️ Overseer:** Mode pantau & evaluasi eksekutif. Dapat melihat seluruh akun tim (view-only), membuka seluruh dokumen arsip tim, meninjau jejak audit (*audit trail*), memantau kepatuhan margin eksekutif, serta memiliki **akses terbuka penuh ke Estimator & Komersial BoQ RFoF DAS** (termasuk edit harga satuan, rasio desain, COGS, dan margin).
-   - **💼 Product Expert:** Fokus pada penawaran komersial, konfigurasi paket produk, akses penuh **Estimator & Komersial BoQ RFoF DAS**, margin & diskon, ekspor quotation, serta handover proyek ke tim engineering.
-   - **🛠️ Engineer / Technician:** Fokus pada rekayasa teknis, sizing RF, kalkulasi Link Budget & Commissioning SAT RFoF DAS, estimasi mandays, kuantitas teknis BoQ (tanpa kolom harga/margin finansial), penyimpanan berkas, dan penerimaan handover.
+4. **Empat Tingkat Peran Pengguna (Four-Tier RBAC) & Akses Terbuka Estimator:**
+   - **👑 Administrator:** Kontrol penuh pengguna, persetujuan akun, akses link folder master Drive & master pricelist, akses penuh **Estimator & Komersial BoQ** (edit harga satuan, rasio desain, COGS, dan margin), jejak audit, dan ringkasan portofolio.
+   - **👁️ Overseer:** Mode pantau & evaluasi eksekutif. Dapat melihat seluruh akun tim (view-only), membuka seluruh dokumen arsip tim, meninjau jejak audit (*audit trail*), memantau kepatuhan margin eksekutif, serta memiliki akses terbuka penuh ke Estimator & Komersial BoQ.
+   - **💼 Product Expert:** Fokus pada penawaran komersial, konfigurasi paket produk, akses penuh Estimator Komersial BoQ, margin & diskon, ekspor quotation, serta handover proyek ke tim engineering.
+   - **🛠️ Engineer / Technician:** Fokus pada rekayasa teknis, sizing RF, kalkulasi Link Budget, DORI, PoE drop voltage, SAT RFoF DAS, estimasi mandays, kuantitas teknis BoQ (tanpa kolom harga/margin finansial), penyimpanan berkas, dan penerimaan handover.
 5. **Kolaborasi Handover & Notifikasi Terpusat:**
-   - Serah terima proyek resmi antardivisi dengan riwayat handover (*handover history*) yang tersimpan pada metadata berkas Google Drive, ditambah fitur **Token & QR Code Handoff Offline (`FMTCSDAS1-...`)** pada modul RFoF DAS.
+   - Serah terima proyek resmi antardivisi dengan riwayat handover (*handover history*) yang tersimpan pada metadata berkas Google Drive, ditambah fitur Token & QR Code Handoff Offline (`FMTCSDAS1-...`).
    - Pusat notifikasi in-app (ikon lonceng kuning dengan penghitung belum dibaca) untuk alert penugasan dan jalan pintas pembukaan proyek.
 6. **Executive Portfolio & Margin Guardrails:**
    - Bar ringkasan eksekutif: total pipeline nilai proyek (IDR), rata-rata margin tim, kepatuhan guardrail, dan jumlah proyek berisiko.
-   - Kebijakan Guardrail Margin: Peringatan visual otomatis `⚠️ <15%` pada tabel BoQ DMR, BoQ RFoF DAS, konfigurator paket, dan dashboard arsip jika margin berada di bawah standar perusahaan.
+   - Kebijakan Guardrail Margin: Peringatan visual otomatis `⚠️ <15%` pada seluruh tabel BoQ jika margin berada di bawah standar perusahaan.
 7. **Jejak Audit Terdesentralisasi (Tamper-Evident Audit Trail):**
    - Pencatatan otomatis aktivitas login, mutasi pengguna, penyimpanan proyek, pembukaan berkas, serah terima, serta ekspor dokumen PDF/Excel.
+8. **Global Multi-Currency ($ USD & Rp IDR) and Exchange Rate (FX) Advisory Assistant:**
+   - **Prinsip Non-Destruktif:** Harga resmi IDR pada Master Pricelist (seperti MOTOTRBO R2, SLR 5300, baterai, kabel) bersifat permanen dan tidak terpengaruh oleh fluktuasi kurs harian.
+   - **Arsitektur Tiga Tingkat (Multi-Tiered Rate Sources):** Mode Finance SSOT (`Commercial_Config`), Mode Live Spot FX (`open.er-api.com` dengan caching lokal 4 jam), dan Mode Project Manual Override (+1%, +2%, +5% buffer).
+   - **Mode Tampilan Global:** Fleksibilitas memilih Dual Currency (IDR + USD), Hanya IDR, atau Hanya USD.
+   - **Klausul Disclaimer Resmi Finance:** Wajib tercantum pada banner antarmuka, proposal AI Copilot, footer ekspor PDF penawaran komersial, dan lembar Excel BoQ.
 
 ---
 
@@ -406,25 +412,44 @@ Berdasarkan keselarasan portofolio produk PT Citradata Purnakharisma (Motorola S
      * Rekomendasi kapasitas NVR/VMS Server (kompatibel VMS multi-brand Pelco VideoXpert / Avigilon Unity / Generic NVR), konfigurasi RAID (RAID 5 / RAID 6), dan *storage overhead safety factor* 20%.
   6. **Kalkulator Daya PoE & Industrial Network Switch Sizing:**
      * Menghitung total daya konsumsi PoE (IEEE 802.3af 15.4W, 802.3at PoE+ 30W, dan 802.3bt PoE++ 60W/90W untuk kamera PTZ luar ruang dengan wiper & heater).
-     * Rekomendasi jumlah port (8/16/24/48 ports) dan tipe Industrial Core/Distribution PoE Switch yang dibutuhkan.
-  7. **Bridge ke Master BoQ CDPK:**
-     * Seluruh item kamera (baik Pelco, Avigilon, maupun brand pihak ketiga), lisensi VMS (Channel Base License / VMS Extension), NVR, switch PoE, dan aksesoris sistem (AI Appliance, PoE Extender, FMC SFP) langsung di-inject ke BoQ gabungan bersama DMR & DAS dengan perhitungan live FX, COGS, dan margin guardrail $\ge 15\%$.
+      * Rekomendasi jumlah port (8/16/24/48 ports) dan tipe Industrial Core/Distribution PoE Switch yang dibutuhkan.
+   7. **Bridge ke Master BoQ CDPK:**
+      * Seluruh item kamera (baik Pelco, Avigilon, maupun brand pihak ketiga), lisensi VMS (Channel Base License / VMS Extension), NVR, switch PoE, dan aksesoris sistem (AI Appliance, PoE Extender, FMC SFP) langsung di-inject ke BoQ gabungan bersama DMR & DAS dengan perhitungan live FX, COGS, dan margin guardrail $\ge 15\%$.
 
-### 12.2. Fase 2: Formal Commercial Quotation Engine (Surat Penawaran Resmi PT CDPK)
+### 12.2. Modul Global Multi-Currency ($ USD & Rp IDR) and Exchange Rate (FX) Advisory Assistant
+* **Status:** Selesai Diimplementasikan Penuh (*Completed in v8.6.0*).
+* **Engine Core:** `server/fx_service.py` & `static/js/app_core.js`.
+* **Objektif:** Menyediakan asisten penasihat nilai tukar valuta asing (FX) yang aman, akurat, dan non-destruktif untuk tender dan proyek yang melibatkan komponen berdenominasi Dollar AS ($ USD), tanpa mengganggu harga resmi Rupiah (IDR) yang telah ditetapkan oleh Finance pada Master Pricelist.
+* **Fitur Utama:**
+  1. **Prinsip Non-Destruktif (Zero Master Pricelist Disruption):**
+     * Seluruh harga tetap dalam Rupiah (IDR) pada Master Pricelist (seperti MOTOTRBO R2, repeater SLR 5300, baterai, kabel) bersifat permanen dan tidak terpengaruh oleh fluktuasi kurs pasar.
+     * Mesin FX hanya mengonversi perangkat yang bersumber dari modal Dollar (USD), item impor luar negeri, atau sebagai panduan estimasi dual currency (Rupiah & Dollar) bagi tim tender.
+  2. **Arsitektur Tiga Tingkat (Multi-Tiered Rate Sources):**
+     * **Mode 1 — Finance SSOT (Default):** Mengambil kurs resmi yang ditetapkan Divisi Finance dari Google Sheets tab `Commercial_Config` (`usd_to_idr`).
+     * **Mode 2 — Live Spot FX (Advisory):** Mengambil kurs pasar riil secara otomatis via public feed (`open.er-api.com` / `exchangerate-api.com`) dengan sistem failover dan local cache 4 jam (`data/fx_cache.json`). Dilengkapi deteksi varians nominal dan persentase terhadap kurs Finance.
+     * **Mode 3 — Project Manual Override:** Pengguna dapat memasukkan angka kurs khusus untuk tender tertentu (misal: Rp 16.500) dilengkapi tombol pintas buffer cepat (**`+1% Buffer`**, **`+2% Buffer`**, **`+5% Buffer`**). Perubahan ini terisolasi pada sesi proyek aktif dan tidak mengubah spreadsheet master Finance.
+  3. **Modal Kontrol FX & Simulasi Stress Testing:**
+     * Pilihan tampilan global: **Dual Currency (IDR + USD)**, **Hanya Rupiah (IDR)**, atau **Hanya Dollar (USD)**.
+     * Tabel Sensitivitas & Stress Testing: Menampilkan proyeksi dampak finansial otomatis jika kurs bergerak naik atau turun (-5% s/d +10%) terhadap nilai total proyek.
+  4. **Klausul Disclaimer Resmi Finance (Bilingual):**
+     * Wajib tercantum pada banner antarmuka, proposal AI Copilot, footer ekspor PDF penawaran komersial, dan lembar Excel BoQ.
+     * Bahasa Indonesia: *"Seluruh estimasi nilai konversi valas (USD/IDR) bersifat indikatif teknis. Nilai tukar resmi, harga modal (COGS), dan klausul penawaran komersial wajib dikonfirmasi secara tertulis ke Divisi Finance PT Citradata Purnakharisma sebelum penerbitan quotation resmi atau penandatanganan Kontrak/PO."*
+
+### 12.3. Fase 2: Formal Commercial Quotation Engine (Surat Penawaran Resmi PT CDPK)
 * **Objektif:** Menjembatani hasil kalkulasi engineering langsung menjadi dokumen komersial legal siap kirim ke meja direksi atau tim procurement pelanggan.
 * **Fitur Utama:**
   1. **Template Kop Surat Resmi CDPK:** Penomoran otomatis (`CDPK/QUO/{YYYY}/{MM}/{NO}`), identitas pelanggan/proyek, dan syarat ketentuan komersial (Terms of Payment, Franco Jakarta, Waktu Pengiriman, Masa Garansi, dan Masa Berlaku Penawaran 14/30 hari).
   2. **Tanda Tangan Digital & Stempel:** Otorisasi tanda tangan digital Sales Manager / Direktur yang diproteksi PIN keamanan.
   3. **Ekspor PDF Penawaran Resmi:** Menghasilkan dokumen penawaran harga formal siap kirim (lengkap dengan lampiran BoQ dan Term of Reference).
 
-### 12.3. Fase 3: Modul Kepatuhan ATEX & HazLoc Intrinsically Safe (IS Compliance Checker)
+### 12.4. Fase 3: Modul Kepatuhan ATEX & HazLoc Intrinsically Safe (IS Compliance Checker)
 * **Objektif:** Memastikan seluruh perangkat komunikasi di area berbahaya (Hazardous Locations) memenuhi regulasi keselamatan ledakan untuk tender sektor Oil & Gas (Pertamina, Medco), Petrokimia, dan Pertambangan.
 * **Fitur Utama:**
   1. **HazLoc Zone Matrix Validator:** Validasi kecocokan perangkat terhadap zona bahaya: Zone 0, 1, 2 (Gas) atau Zone 20, 21, 22 (Debu), Gas Group (IIC/IIB/IIA), dan Kelas Suhu (T1–T6) atau Class I/II/III Div 1/2.
   2. **IS Accessory Safety Guard:** Peringatan otomatis jika aksesoris non-IS (baterai standar atau mic non-ATEX) dipasangkan pada radio bersertifikasi ATEX (MOTOTRBO ATEX / i.safe MOBILE IS541.1/IS941.1).
   3. **Cetak HazLoc Compliance Sheet:** Lembar verifikasi kepatuhan sertifikasi ATEX/IECEx untuk lampiran dokumen tender resmi.
 
-### 12.4. Fase 4: Visual 2D Indoor Floor Plan Heatmap & Outdoor GIS Coverage Map
+### 12.5. Fase 4: Visual 2D Indoor Floor Plan Heatmap & Outdoor GIS Coverage Map
 * **Objektif:** Menyajikan simulasi visual interaktif sebaran propagasi sinyal RF dan sudut pandang kamera untuk meyakinkan pemilik gedung dan konsultan proyek.
 * **Fitur Utama:**
   1. **Indoor Floor Plan Heatmap Canvas (RFoF DAS & CCTV):**

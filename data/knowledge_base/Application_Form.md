@@ -7,7 +7,7 @@ mime_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 folder_path: "AI Bank Knowledge/Technicians/"
 last_modified: "2025-01-06T02:45:06.000Z"
 image_reference_note: "Gambar skematik, diagram blok, kurva grafis, dan foto fisik perangkat dapat dilihat langsung pada file asli di link di atas."
-extracted_at: "2026-10-18T01:49:34.019714+00:00"
+extracted_at: "2026-10-18T02:12:47.726480+00:00"
 ---
 
 # Application_Form.xlsx

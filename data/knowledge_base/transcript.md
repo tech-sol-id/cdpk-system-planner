@@ -7,7 +7,7 @@ mime_type: "application/pdf"
 folder_path: "AI Bank Knowledge/Technicians/TECHNICAL CERTIFICATE/Sertifikat Irwan Setiawan/"
 last_modified: "2024-11-26T04:13:45.000Z"
 image_reference_note: "Gambar skematik, diagram blok, kurva grafis, dan foto fisik perangkat dapat dilihat langsung pada file asli di link di atas."
-extracted_at: "2026-10-18T01:48:48.638874+00:00"
+extracted_at: "2026-10-18T02:22:22.751467+00:00"
 ---
 
 # transcript.pdf
