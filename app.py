@@ -79,6 +79,9 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 PORT = int(os.environ.get("PORT", 7860))
 
 
+MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10 MB hard cap on POST request bodies
+
+
 class CDPKRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         logger.info("%s - %s", self.address_string(), fmt % args)
@@ -385,7 +388,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
-        content_len = int(self.headers.get("Content-Length", 0))
+        try:
+            content_len = int(self.headers.get("Content-Length", 0))
+        except (TypeError, ValueError):
+            content_len = 0
+        if content_len > MAX_CONTENT_LENGTH:
+            return self._send_json(
+                {"status": "error", "message": "Ukuran data terlalu besar (maksimum 10 MB)."},
+                status=413,
+            )
         raw_body = self.rfile.read(content_len) if content_len > 0 else b"{}"
         try:
             body = json.loads(raw_body.decode("utf-8"))
@@ -857,19 +868,37 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
 
         # ─── AI Copilot ───────────────────────────────────────────────────
         if path == "/api/ai/copilot":
+            # Zero-Trust auth gate with APK-transition grace (CDPK Security Policy).
+            cur_user = self._get_auth_user()
+            restricted = cur_user is None
+            if restricted:
+                ua = self.headers.get("User-Agent", "")
+                is_apk_client = ("CDPK" in ua) or ("okhttp" in ua.lower()) or (" wv" in ua.lower())
+                had_token = bool(
+                    self.headers.get("Authorization", "").startswith("Bearer ")
+                    or self.headers.get("X-Session-Token", "")
+                )
+                if not is_apk_client:
+                    msg = (
+                        "Sesi Anda telah berakhir. Silakan masuk kembali untuk menggunakan AI Copilot."
+                        if had_token else
+                        "Silakan masuk terlebih dahulu untuk menggunakan AI Copilot."
+                    )
+                    return self._send_json({"status": "unauthorized", "message": msg}, status=401)
+                # APK client without a valid session: limited, non-confidential help only.
+
             model_id = body.get("model", "gemini-3.8-flash")
             prompt = body.get("prompt", "")
             lang = body.get("lang", "id")
             current_state = body.get("state", {})
-            api_key_override = body.get("api_key", "")
-            sync_res = sync_from_gdrive(force=False)
+            sync_res = {} if restricted else sync_from_gdrive(force=False)
             ai_res = query_ai_copilot(
                 model_id=model_id,
                 prompt=prompt,
                 lang=lang,
                 current_state=current_state,
                 knowledge=sync_res.get("knowledge", {}),
-                api_key_override=api_key_override
+                restricted=restricted,
             )
             return self._send_json(ai_res)
 

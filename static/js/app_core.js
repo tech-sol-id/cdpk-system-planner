@@ -3895,7 +3895,10 @@ window.cdpkSystemPlannerApp = function () {
             try {
                 const resp = await fetch('/api/ai/copilot', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + (this.sessionToken || '')
+                    },
                     body: JSON.stringify({
                         model: requestedModel,
                         prompt: promptText,
@@ -3915,6 +3918,17 @@ window.cdpkSystemPlannerApp = function () {
                     })
                 });
                 const data = await resp.json();
+                if (resp.status === 401) {
+                    this.aiHistory.push({
+                        role: 'assistant',
+                        model: requestedModel,
+                        text: data.message || (this.lang === 'en'
+                            ? 'Your session has expired. Please sign in again.'
+                            : 'Sesi Anda telah berakhir. Silakan masuk kembali.'),
+                        time: new Date().toLocaleTimeString()
+                    });
+                    return;
+                }
                 this.lastExtractedParams = data.extracted_params || null;
                 this.aiHistory.push({
                     role: 'assistant',

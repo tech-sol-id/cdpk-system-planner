@@ -1445,7 +1445,8 @@ def query_ai_copilot(
     lang: str = "id",
     current_state: Optional[Dict[str, Any]] = None,
     knowledge: Optional[Dict[str, Any]] = None,
-    api_key_override: Optional[str] = None
+    api_key_override: Optional[str] = None,
+    restricted: bool = False,
 ) -> Dict[str, Any]:
     """
     Execute AI Copilot query:
@@ -1463,7 +1464,12 @@ def query_ai_copilot(
     extracted = extract_params_from_prompt(prompt, current_state)
 
     # Search local Markdown Knowledge Base
-    rag_context, citations = build_rag_context_for_prompt(prompt)
+    # Restricted (unauthenticated APK-transition) sessions never touch the
+    # confidential Citradata Knowledge Bank.
+    if restricted:
+        rag_context, citations = "", []
+    else:
+        rag_context, citations = build_rag_context_for_prompt(prompt)
 
     # Build local expert response with RAG citations
     expert_res = build_local_expert_response(
@@ -1512,7 +1518,7 @@ def query_ai_copilot(
     candidate_models = list(dict.fromkeys(raw_candidates))
     for cand in candidate_models:
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand}:generateContent?key={urllib.parse.quote(api_key)}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand}:generateContent"
             payload = {
                 "systemInstruction": {"parts": [{"text": sys_instruction}]},
                 "contents": [{"role": "user", "parts": [{"text": prompt}]}],
@@ -1525,7 +1531,7 @@ def query_ai_copilot(
                 url,
                 data=json.dumps(payload).encode("utf-8"),
                 method="POST",
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
             )
             with urllib.request.urlopen(req, timeout=25) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
