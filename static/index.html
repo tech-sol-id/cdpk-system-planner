@@ -264,7 +264,7 @@
                             :class="activeWorkspace === 'das' ? 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
                             class="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer">
                         <span>🏢</span>
-                        <span>RFoF DAS by FMTCS</span>
+                        <span>RFoF System</span>
                     </button>
                     <button @click="activeWorkspace = 'cctv'"
                             :class="activeWorkspace === 'cctv' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold shadow-sm' : 'text-sky-200 hover:text-white font-medium'"
@@ -867,7 +867,7 @@
                             </div>
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs font-black tracking-wide uppercase text-amber-300">RFoF DAS by FMTCS</span>
+                                    <span class="text-xs font-black tracking-wide uppercase text-amber-300">RFoF System</span>
                                     <span class="text-[9px] px-1.5 py-0.2 rounded bg-sky-400/20 text-sky-200 border border-sky-400/30 font-bold uppercase">RF over Fiber DAS</span>
                                 </div>
                                 <div class="text-[11px] text-sky-100 font-medium mt-0.5">
@@ -878,7 +878,7 @@
                         <button @click="expandDmrToRfofDas()"
                                 class="px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
                             <span>🏢</span>
-                            <span x-text="lang === 'en' ? '🏢 Expand to RFoF DAS by FMTCS' : '🏢 Perluas ke RFoF DAS by FMTCS'"></span>
+                            <span x-text="lang === 'en' ? '🏢 Expand to RFoF System' : '🏢 Perluas ke RFoF System'"></span>
                             <span>→</span>
                         </button>
                     </div>
@@ -2483,10 +2483,10 @@
                         </div>
                         <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
                             <span>🏢</span>
-                            <span>RFoF DAS by FMTCS</span>
+                            <span>RFoF System</span>
                         </h2>
                         <p class="text-xs sm:text-sm text-sky-200 font-semibold tracking-wide">
-                            RF over Fiber Distributed Antenna System
+                            RF over Fiber Distributed Antenna System by FMTCS
                         </p>
                         <p class="text-[11px] sm:text-xs text-slate-300 max-w-3xl leading-relaxed">
                             <span x-text="lang === 'en'
@@ -4176,7 +4176,330 @@
                     </div>
                 </div>
 
-                <!-- 3. Multi-Brand Camera Selector & Custom Builder Card -->
+                <!-- 3. Interoperability & System Integration Audit Card -->
+                <div x-data="{ auditOpen: true }" class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xl">🛡️</span>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="t('cctvAuditTitle') || 'Audit Interoperabilitas & Integrasi Multi-Merk'"></span>
+                                    <template x-if="getInteroperabilityAudit() && getInteroperabilityAudit().summary.isCompatible">
+                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            ✓ 100% Terintegrasi
+                                        </span>
+                                    </template>
+                                    <template x-if="getInteroperabilityAudit() && !getInteroperabilityAudit().summary.isCompatible">
+                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-100 text-rose-800 border border-rose-300">
+                                            ⚠ Perlu Penyesuaian
+                                        </span>
+                                    </template>
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Multi-Brand Compatibility, Licensing & AI Appliance Audit' : 'Verifikasi Kompatibilitas Multi-Brand, Lisensi & Kebutuhan AI Appliance'"></h3>
+                            </div>
+                        </div>
+                        <button type="button" @click="auditOpen = !auditOpen" class="text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer" x-text="auditOpen ? '▲ Tutup' : '▼ Buka Detail'"></button>
+                    </div>
+
+                    <div x-show="auditOpen" class="space-y-3">
+                        <!-- Reassurance Banner if 100% Compatible -->
+                        <template x-if="getInteroperabilityAudit() && getInteroperabilityAudit().alerts.length === 0">
+                            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-3">
+                                <span class="text-2xl">✅</span>
+                                <div class="space-y-1">
+                                    <div class="font-extrabold text-xs text-emerald-900" x-text="t('cctvAuditCompatible') || 'Armada Kamera & VMS Terintegrasi Sempurna (100% Siap Deploy)'"></div>
+                                    <p class="text-[11px] text-emerald-700 leading-relaxed" x-text="lang === 'en'
+                                        ? 'All selected cameras, codecs, VMS channel licensing, and PoE power budgets are fully compliant with CDPK industrial standards without protocol or bandwidth bottlenecks.'
+                                        : 'Seluruh kamera, kompresi codec, lisensi kanal VMS, serta alokasi daya switch PoE berada dalam kondisi optimal dan siap untuk di-deploy tanpa potensi konflik protokol atau bottleneck.'"></p>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Alert Items (Blockers, Warnings & Licensing Notices) -->
+                        <template x-if="getInteroperabilityAudit() && getInteroperabilityAudit().alerts.length > 0">
+                            <div class="space-y-3">
+                                <template x-for="al in getInteroperabilityAudit().alerts" :key="al.id">
+                                    <div class="p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                                         :class="al.level === 'blocker' ? 'bg-rose-50/80 border-rose-300 text-rose-950' : 'bg-amber-50/80 border-amber-300 text-amber-950'">
+                                        <div class="flex items-start gap-3">
+                                            <span class="text-2xl shrink-0" x-text="al.level === 'blocker' ? '⛔' : '⚠️'"></span>
+                                            <div class="space-y-1">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider"
+                                                          :class="al.level === 'blocker' ? 'bg-rose-600 text-white' : 'bg-amber-500 text-slate-950'"
+                                                          x-text="lang === 'en' ? al.badge_en : al.badge_id"></span>
+                                                    <span class="font-extrabold text-xs" x-text="lang === 'en' ? al.title_en : al.title_id"></span>
+                                                </div>
+                                                <p class="text-[11px] leading-relaxed"
+                                                   :class="al.level === 'blocker' ? 'text-rose-800' : 'text-amber-800'"
+                                                   x-text="lang === 'en' ? al.desc_en : al.desc_id"></p>
+                                            </div>
+                                        </div>
+
+                                        <!-- 1-Click Action Resolution Button -->
+                                        <template x-if="al.actionType">
+                                            <button type="button" @click="resolveInteroperabilityIssue(al.actionType, al.actionPayload)"
+                                                    class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-black shadow transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                                                    :class="al.level === 'blocker' ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-amber-500 hover:bg-amber-600 text-slate-950'"
+                                                    x-text="lang === 'en' ? al.actionLabel_en : al.actionLabel_id"></button>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 4. DORI Lens & Distance Calculator Card (EN 62676-4) -->
+                <div x-data="{ doriOpen: true }" class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xl">🎯</span>
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="t('cctvDoriTitle') || 'Kalkulator Standar DORI & Panjang Fokus Lensa (EN 62676-4)'"></span>
+                                <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Optical Lens Coverage & Pixel Density (PPM) Sizing' : 'Analisis Densitas Piksel (PPM) & Jarak Jangkau Lensa Optik'"></h3>
+                            </div>
+                        </div>
+                        <button type="button" @click="doriOpen = !doriOpen" class="text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer" x-text="doriOpen ? '▲ Tutup' : '▼ Buka Kalkulator'"></button>
+                    </div>
+
+                    <div x-show="doriOpen" class="space-y-4">
+                        <!-- Interactive Inputs Row -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvDoriTargetDistance') || 'Jarak Target ke Objek (m):'"></label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" step="0.5" min="1" max="500" x-model.number="cctv.dori.distanceMeters"
+                                           class="w-full p-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-900 focus:border-emerald-600" />
+                                    <span class="font-bold text-slate-500">m</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvDoriFocalLength') || 'Panjang Fokus Lensa (f mm):'"></label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" step="0.1" min="1.0" max="250.0" x-model.number="cctv.dori.focalLengthMm"
+                                           class="w-full p-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-900 focus:border-emerald-600" />
+                                    <span class="font-bold text-slate-500">mm</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvDoriSensorFormat') || 'Format Sensor Optik:'"></label>
+                                <select x-model="cctv.dori.sensorFormat"
+                                        class="w-full p-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-900 focus:border-emerald-600">
+                                    <template x-for="sf in (window.CDPK_CCTV_ENGINE ? window.CDPK_CCTV_ENGINE.sensorFormats : [])" :key="sf.id">
+                                        <option :value="sf.id" x-text="sf.label"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvDoriResolution') || 'Resolusi Kamera:'"></label>
+                                <select x-model="cctv.dori.resolution"
+                                        class="w-full p-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-900 focus:border-emerald-600">
+                                    <option value="1080p">1080p Full HD (1920 px)</option>
+                                    <option value="4MP">4MP QHD (2560 px)</option>
+                                    <option value="5MP">5MP Super HD (2592 px)</option>
+                                    <option value="4K">4K UHD 8MP (3840 px)</option>
+                                    <option value="12MP">12MP Panorama (4000 px)</option>
+                                    <option value="thermal">Thermal VGA (640 px)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Calculated DORI Output Metrics -->
+                        <template x-if="getDoriResult()">
+                            <div class="space-y-3">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div class="p-3.5 rounded-xl bg-slate-900 text-white space-y-1">
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-text="t('cctvDoriCurrentPpm') || 'Densitas Piksel di Target'"></div>
+                                        <div class="text-2xl font-black text-amber-400" x-text="getDoriResult().currentPpm + ' PPM'"></div>
+                                        <div class="text-[10px] text-slate-300">Pixels Per Meter (PPM)</div>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                                        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider" x-text="t('cctvDoriHfov') || 'Sudut Pandang (HFoV)'"></div>
+                                        <div class="text-2xl font-black text-slate-900" x-text="getDoriResult().hfovDeg + '°'"></div>
+                                        <div class="text-[10px] text-slate-500">Horizontal Field of View</div>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                                        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider" x-text="t('cctvDoriSceneWidth') || 'Lebar Bidang Pandang'"></div>
+                                        <div class="text-2xl font-black text-slate-900" x-text="getDoriResult().sceneWidthM + ' m'"></div>
+                                        <div class="text-[10px] text-slate-500" x-text="'Pada jarak ' + getDoriResult().distanceMeters + ' meter'"></div>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl border flex flex-col justify-between space-y-1"
+                                         :class="getDoriResult().tierClass">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider" x-text="t('cctvDoriActiveTier') || 'Klasifikasi Aktif'"></div>
+                                        <div class="text-sm font-black" x-text="lang === 'en' ? getDoriResult().currentTierLabel_en : getDoriResult().currentTierLabel_id"></div>
+                                        <div class="text-[10px] font-semibold">Standar EN 62676-4</div>
+                                    </div>
+                                </div>
+
+                                <!-- Maximum DORI Distances Table -->
+                                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead>
+                                            <tr class="bg-slate-100 text-slate-700 font-extrabold border-b border-slate-200">
+                                                <th class="p-2.5">Kategori Standar DORI</th>
+                                                <th class="p-2.5 w-24 text-center">Standar PPM</th>
+                                                <th class="p-2.5 w-32 text-center">Jarak Jangkau Maks.</th>
+                                                <th class="p-2.5">Deskripsi Teknis Kemampuan Identifikasi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                                            <tr class="hover:bg-slate-50/80">
+                                                <td class="p-2.5 font-bold text-blue-700">🔍 D - Deteksi Objek (Detection)</td>
+                                                <td class="p-2.5 text-center font-mono font-bold">25 PPM</td>
+                                                <td class="p-2.5 text-center font-mono font-black text-blue-900" x-text="getDoriResult().maxDetectM + ' meter'"></td>
+                                                <td class="p-2.5 text-slate-600 text-[11px]">Mendeteksi keberadaan orang atau kendaraan dalam area pengawasan.</td>
+                                            </tr>
+                                            <tr class="hover:bg-slate-50/80">
+                                                <td class="p-2.5 font-bold text-amber-700">👀 O - Observasi (Observation)</td>
+                                                <td class="p-2.5 text-center font-mono font-bold">62 PPM</td>
+                                                <td class="p-2.5 text-center font-mono font-black text-amber-900" x-text="getDoriResult().maxObserveM + ' meter'"></td>
+                                                <td class="p-2.5 text-slate-600 text-[11px]">Mengamati detail pakaian, arah langkah, dan aktivitas umum subjek.</td>
+                                            </tr>
+                                            <tr class="hover:bg-slate-50/80">
+                                                <td class="p-2.5 font-bold text-teal-700">👤 R - Pengenalan Wajah (Recognition)</td>
+                                                <td class="p-2.5 text-center font-mono font-bold">125 PPM</td>
+                                                <td class="p-2.5 text-center font-mono font-black text-teal-900" x-text="getDoriResult().maxRecognizeM + ' meter'"></td>
+                                                <td class="p-2.5 text-slate-600 text-[11px]">Memastikan apakah orang tersebut adalah individu yang pernah dikenal sebelumnya.</td>
+                                            </tr>
+                                            <tr class="hover:bg-slate-50/80">
+                                                <td class="p-2.5 font-bold text-emerald-700">🆔 I - Identifikasi Forensik (Identification)</td>
+                                                <td class="p-2.5 text-center font-mono font-bold">250 PPM</td>
+                                                <td class="p-2.5 text-center font-mono font-black text-emerald-900" x-text="getDoriResult().maxIdentifyM + ' meter'"></td>
+                                                <td class="p-2.5 text-slate-600 text-[11px]">Identifikasi positif wajah dan pelat nomor untuk kebutuhan bukti hukum & investigasi.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 5. Cat6 Cable Run Length & PoE Voltage Drop Calculator Card -->
+                <div x-data="{ cableOpen: true }" class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-xl">🔌</span>
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600" x-text="t('cctvCableTitle') || 'Kalkulator Jarak Kabel Cat6 & PoE Voltage Drop'"></span>
+                                <h3 class="text-base font-extrabold text-slate-900" x-text="lang === 'en' ? 'Ethernet Copper Transmission Distance & DC Voltage Drop Analysis' : 'Verifikasi Transmisi Kabel Tembaga & Penurunan Tegangan DC (PoE)'"></h3>
+                            </div>
+                        </div>
+                        <button type="button" @click="cableOpen = !cableOpen" class="text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer" x-text="cableOpen ? '▲ Tutup' : '▼ Buka Kalkulator'"></button>
+                    </div>
+
+                    <div x-show="cableOpen" class="space-y-4">
+                        <!-- Interactive Inputs Row -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvCableLength') || 'Panjang Tarikan Kabel (m):'"></label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" step="5" min="5" max="1000" x-model.number="cctv.cableDrop.cableLengthMeters"
+                                           class="w-full p-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-900 focus:border-emerald-600" />
+                                    <span class="font-bold text-slate-500">m</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvCableWatts') || 'Daya Kamera Beban Puncak (Watt):'"></label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" step="0.5" min="1.0" max="90.0" x-model.number="cctv.cableDrop.deviceWatts"
+                                           class="w-full p-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-900 focus:border-emerald-600" />
+                                    <span class="font-bold text-slate-500">W</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvCableCategory') || 'Kategori Kabel Jaringan:'"></label>
+                                <select x-model="cctv.cableDrop.cableCategory"
+                                        class="w-full p-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-900 focus:border-emerald-600">
+                                    <option value="cat6">Cat6 23 AWG Solid Copper (0.165 Ω/m)</option>
+                                    <option value="cat5e">Cat5e 24 AWG Solid Copper (0.188 Ω/m)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1" x-text="t('cctvCablePseVoltage') || 'Tegangan Switch (PSE Volt):'"></label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" step="1" min="44" max="57" x-model.number="cctv.cableDrop.pseVoltage"
+                                           class="w-full p-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-900 focus:border-emerald-600" />
+                                    <span class="font-bold text-slate-500">V</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Calculated Cable Drop Output Metrics -->
+                        <template x-if="getCableDropResult()">
+                            <div class="space-y-3">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                                        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider" x-text="t('cctvCableLoopRes') || 'Resistansi Loop Kabel'"></div>
+                                        <div class="text-2xl font-black text-slate-900" x-text="getCableDropResult().totalLoopResistance + ' Ω'"></div>
+                                        <div class="text-[10px] text-slate-500" x-text="'Cat' + (cctv.cableDrop.cableCategory === 'cat5e' ? '5e' : '6') + ' • ' + getCableDropResult().cableLengthMeters + 'm'"></div>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                                        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider" x-text="t('cctvCableVdrop') || 'Penurunan Tegangan'"></div>
+                                        <div class="text-2xl font-black text-rose-600" x-text="'-' + getCableDropResult().voltageDrop + ' V'"></div>
+                                        <div class="text-[10px] text-slate-500" x-text="'Loss: ' + getCableDropResult().powerLossCableWatts + ' Watt'"></div>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                                        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider" x-text="t('cctvCableVcam') || 'Tegangan di Kamera'"></div>
+                                        <div class="text-2xl font-black"
+                                             :class="getCableDropResult().isUnderVoltage ? 'text-rose-600' : 'text-emerald-700'"
+                                             x-text="getCableDropResult().voltageAtCamera + ' V'"></div>
+                                        <div class="text-[10px] text-slate-500" x-text="'Min: ' + getCableDropResult().minVoltsRequired + ' V'"></div>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl border flex flex-col justify-between space-y-1"
+                                         :class="getCableDropResult().statusClass">
+                                        <div class="text-[10px] font-bold uppercase tracking-wider">Status Transmisi</div>
+                                        <div class="text-xs font-black" x-text="lang === 'en' ? getCableDropResult().statusLabel_en : getCableDropResult().statusLabel_id"></div>
+                                        <div class="text-[10px] font-semibold" x-text="'Total: ' + getCableDropResult().totalDrawWatts + ' W'"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Recommendation & Hardware Fix Notice -->
+                                <div class="p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                                     :class="getCableDropResult().statusClass">
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-2xl shrink-0" x-text="getCableDropResult().status === 'normal' ? '✅' : (getCableDropResult().status === 'critical_fiber' || getCableDropResult().isUnderVoltage ? '⛔' : '⚠️')"></span>
+                                        <div class="space-y-1">
+                                            <div class="font-extrabold text-xs" x-text="lang === 'en' ? 'Engineering Recommendation & Signal Integrity Notice' : 'Rekomendasi Rekayasa & Integritas Sinyal Jaringan'"></div>
+                                            <p class="text-[11px] leading-relaxed" x-text="lang === 'en' ? getCableDropResult().recommendationText_en : getCableDropResult().recommendationText_id"></p>
+                                        </div>
+                                    </div>
+
+                                    <!-- 1-Click Hardware Inject Button -->
+                                    <template x-if="getCableDropResult().recommendedAccessory === 'poe_extender'">
+                                        <button type="button" @click="cctv.accessories.extenderQty = (cctv.accessories.extenderQty || 0) + 1; showToast(lang === 'en' ? 'Added 1x Long-Reach PoE Extender to accessories.' : 'Menambahkan 1x Long-Reach PoE Extender ke aksesoris.', 'success')"
+                                                class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-600 text-slate-950 shadow transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                                            <span>➕</span>
+                                            <span x-text="lang === 'en' ? 'Add PoE Extender to BoQ' : '➕ Tambah PoE Extender ke BoQ'"></span>
+                                        </button>
+                                    </template>
+                                    <template x-if="getCableDropResult().recommendedAccessory === 'fmc_poe'">
+                                        <button type="button" @click="cctv.accessories.fmcQty = (cctv.accessories.fmcQty || 0) + 1; showToast(lang === 'en' ? 'Added 1x Industrial PoE Fiber Media Converter to accessories.' : 'Menambahkan 1x Industrial PoE Fiber Media Converter ke aksesoris.', 'success')"
+                                                class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-700 text-white shadow transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                                            <span>➕</span>
+                                            <span x-text="lang === 'en' ? 'Add Fiber Converter to BoQ' : '➕ Tambah Fiber Converter ke BoQ'"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 6. Multi-Brand Camera Selector & Custom Builder Card -->
                 <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200 space-y-4">
                     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                         <div>
@@ -5022,7 +5345,7 @@
                             <span class="text-base">🏢</span>
                             <span class="text-xs font-bold">RFoF Distributed Antenna System</span>
                         </div>
-                        <span class="text-[9px] px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black w-fit uppercase">RFoF DAS by FMTCS</span>
+                        <span class="text-[9px] px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black w-fit uppercase">RFoF System</span>
                     </button>
                     <button @click="activeWorkspace = 'cctv'; mobileMenuOpen = false"
                             :class="activeWorkspace === 'cctv' ? 'bg-emerald-600 text-white font-black shadow-md border-2 border-emerald-300' : 'bg-white/10 text-sky-100 hover:bg-white/20 border border-white/10'"

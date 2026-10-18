@@ -113,9 +113,37 @@ window.cdpkSystemPlannerApp = function () {
             vmsBrand: 'pelco_videoxpert',
             switchReservePct: 20,
             catalogBrandFilter: 'all',
+            catalogTierFilter: 'all', // 'all' | 'official' | 'thirdparty'
+            catalogTypeFilter: 'all', // 'all' | 'bullet' | 'dome' | 'ptz' | 'multisensor' | 'thermal' | 'hazloc'
+            catalogEnvFilter: 'all', // 'all' | 'outdoor' | 'indoor' | 'ex' | 'marine'
+            catalogResolutionFilter: 'all', // 'all' | '1080p' | '4MP' | '5MP' | '4K' | '12MP' | 'thermal'
             catalogSearch: '',
             selectedPresetSku: 'PEL-CAM-SARIX-PRO4-DOME',
             presetQtyToAdd: 4,
+
+            // DORI Lens & Distance Calculator State
+            dori: {
+                distanceMeters: 15,
+                focalLengthMm: 4.0,
+                sensorFormat: '1_2_8',
+                resolution: '4MP'
+            },
+
+            // Cable Drop & PoE Transmission State
+            cableDrop: {
+                cableLengthMeters: 65,
+                deviceWatts: 15.0,
+                cableCategory: 'cat6',
+                pseVoltage: 54.0
+            },
+
+            // Interoperability & System Integration Accessories (BoQ Injectable)
+            accessories: {
+                aiApplianceQty: 0,
+                extenderQty: 0,
+                fmcQty: 0,
+                thirdPartyLicenseQty: 0
+            },
 
             customForm: {
                 brand: 'Generic ONVIF',
@@ -4415,8 +4443,8 @@ window.cdpkSystemPlannerApp = function () {
             this.dasActiveTab = 'boq';
             this.showToast(
                 this.lang === 'en'
-                    ? `Transferred ${floorsCount} floors, ${this.das.rep} repeater(s), and ${this.das.radio} users into RFoF DAS by FMTCS.`
-                    : `Berhasil mentransfer ${floorsCount} lantai, ${this.das.rep} repeater, dan ${this.das.radio} user ke RFoF DAS by FMTCS.`,
+                    ? `Transferred ${floorsCount} floors, ${this.das.rep} repeater(s), and ${this.das.radio} users into RFoF System.`
+                    : `Berhasil mentransfer ${floorsCount} lantai, ${this.das.rep} repeater, dan ${this.das.radio} user ke RFoF System.`,
                 'success'
             );
         },
@@ -4519,6 +4547,78 @@ window.cdpkSystemPlannerApp = function () {
                 return null;
             }
             return window.CDPK_CCTV_ENGINE.calcCctvBoq(this.cctv, this.exchangeRate);
+        },
+
+        getDoriResult() {
+            if (!window.CDPK_CCTV_ENGINE || typeof window.CDPK_CCTV_ENGINE.calcDori !== 'function') {
+                return null;
+            }
+            return window.CDPK_CCTV_ENGINE.calcDori(this.cctv.dori);
+        },
+
+        getCableDropResult() {
+            if (!window.CDPK_CCTV_ENGINE || typeof window.CDPK_CCTV_ENGINE.calcCableDrop !== 'function') {
+                return null;
+            }
+            return window.CDPK_CCTV_ENGINE.calcCableDrop(this.cctv.cableDrop);
+        },
+
+        getInteroperabilityAudit() {
+            if (!window.CDPK_CCTV_ENGINE || typeof window.CDPK_CCTV_ENGINE.auditInteroperability !== 'function') {
+                return null;
+            }
+            const poeRes = this.getCctvPoeResult();
+            return window.CDPK_CCTV_ENGINE.auditInteroperability(this.cctv.cameraGroups, this.cctv.vmsBrand, poeRes);
+        },
+
+        resolveInteroperabilityIssue(actionType, payload) {
+            if (actionType === 'add_avg_license') {
+                this.cctv.accessories.thirdPartyLicenseQty = parseInt(payload, 10) || 1;
+                this.showToast(
+                    this.lang === 'en'
+                        ? `Added ${payload}x Avigilon 3rd-party license(s) to accessories.`
+                        : `Menambahkan ${payload}x lisensi third-party Avigilon ke aksesoris.`,
+                    'success'
+                );
+            } else if (actionType === 'add_pelco_license') {
+                this.cctv.accessories.thirdPartyLicenseQty = parseInt(payload, 10) || 1;
+                this.showToast(
+                    this.lang === 'en'
+                        ? `Added ${payload}x Pelco ONVIF license(s) to accessories.`
+                        : `Menambahkan ${payload}x lisensi ONVIF Pelco ke aksesoris.`,
+                    'success'
+                );
+            } else if (actionType === 'add_ai_appliance') {
+                this.cctv.accessories.aiApplianceQty = parseInt(payload, 10) || 1;
+                this.showToast(
+                    this.lang === 'en'
+                        ? `Added ${payload}x Avigilon AI Appliance to system accessories.`
+                        : `Menambahkan ${payload}x Avigilon AI Appliance ke aksesoris sistem.`,
+                    'success'
+                );
+            } else if (actionType === 'switch_to_standard_h265') {
+                let count = 0;
+                this.cctv.cameraGroups.forEach(g => {
+                    if (g.codec === 'SmartCodec') {
+                        g.codec = 'H.265';
+                        count++;
+                    }
+                });
+                this.showToast(
+                    this.lang === 'en'
+                        ? `Switched ${count} camera(s) to standard H.265.`
+                        : `Mengubah ${count} kamera ke format kompresi H.265 standar.`,
+                    'info'
+                );
+            } else if (actionType === 'add_bt_switch') {
+                this.cctvActiveTab = 'poe';
+                this.showToast(
+                    this.lang === 'en'
+                        ? 'Switched to PoE tab. Please inspect 802.3bt Ultra PoE switch allocation.'
+                        : 'Membuka tab PoE. Silakan tinjau alokasi switch 802.3bt Ultra PoE.',
+                    'info'
+                );
+            }
         },
 
         addCameraGroupFromPreset(presetSku, qty) {
@@ -4718,6 +4818,12 @@ window.cdpkSystemPlannerApp = function () {
                     marginPct: 25.0
                 }
             ];
+            this.cctv.accessories = {
+                aiApplianceQty: 0,
+                extenderQty: 0,
+                fmcQty: 0,
+                thirdPartyLicenseQty: 0
+            };
             this.showToast(this.lang === 'en' ? 'Reset CCTV configuration to flagship standards.' : 'Konfigurasi CCTV direset ke standar flagship.', 'success');
         },
 
@@ -4841,6 +4947,45 @@ window.cdpkSystemPlannerApp = function () {
             } else {
                 alert(text);
             }
+        },
+
+        matchesCctvCatalogFilter(cam) {
+            if (!cam) return false;
+            const c = this.cctv;
+            if (c.catalogBrandFilter !== 'all' && cam.brand !== c.catalogBrandFilter) return false;
+            if (c.catalogTypeFilter !== 'all' && cam.formFactor !== c.catalogTypeFilter) return false;
+            if (c.catalogResolutionFilter !== 'all' && cam.resolution !== c.catalogResolutionFilter) return false;
+            if (c.catalogEnvFilter !== 'all') {
+                const feats = (cam.features || []).join(' ').toLowerCase();
+                const desc = ((cam.desc_id || '') + ' ' + (cam.desc_en || '')).toLowerCase();
+                if (c.catalogEnvFilter === 'outdoor') {
+                    if (cam.envClass === 'indoor') return false;
+                    if (cam.envClass !== 'outdoor' && !feats.includes('outdoor') && !feats.includes('ip66') && !feats.includes('ip67')) return false;
+                } else if (c.catalogEnvFilter === 'indoor') {
+                    if (cam.envClass === 'outdoor' || feats.includes('outdoor')) return false;
+                } else if (c.catalogEnvFilter === 'ex') {
+                    if (cam.formFactor !== 'hazloc' && !feats.includes('atex') && !feats.includes('explosion') && !desc.includes('anti-ledakan')) return false;
+                } else if (c.catalogEnvFilter === 'marine') {
+                    if (!feats.includes('316l') && !feats.includes('marine') && !desc.includes('316l')) return false;
+                }
+            }
+            if (c.catalogSearch) {
+                const query = c.catalogSearch.toLowerCase().trim();
+                const text = (cam.model + ' ' + cam.sku + ' ' + cam.brandName + ' ' + cam.resolution + ' ' + (cam.features || []).join(' ') + ' ' + (cam.desc_id || '') + ' ' + (cam.desc_en || '')).toLowerCase();
+                if (!text.includes(query)) return false;
+            }
+            return true;
+        },
+
+        resetCctvCatalogFilters() {
+            this.cctv.catalogBrandFilter = 'all';
+            this.cctv.catalogTierFilter = 'all';
+            this.cctv.catalogTypeFilter = 'all';
+            this.cctv.catalogEnvFilter = 'all';
+            this.cctv.catalogResolutionFilter = 'all';
+            this.cctv.catalogSearch = '';
+            this.showToast(this.lang === 'en' ? 'Catalog filters reset.' : 'Filter katalog direset.', 'info');
         }
     };
 };
+
