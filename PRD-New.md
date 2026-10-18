@@ -380,18 +380,21 @@ Project Calculator - CDPK/
 
 Berdasarkan keselarasan portofolio produk PT Citradata Purnakharisma (Motorola Solutions, FMTCS Fiber DAS, Pelco Video Security, Avigilon Unity/Alta, dan i.safe MOBILE HazLoc), berikut adalah 4 pilar usulan pengembangan terencana:
 
-### 12.1. Fase 1: Modul CCTV Pelco & Avigilon Planner (Video Security & NVR Sizing)
+### 12.1. Fase 1: Modul CCTV Surveillance & NVR Planner (Open Multi-Brand: Pelco, Avigilon & Third-Party)
 * **Status:** Disetujui untuk Pengerjaan Tahap Berikutnya (*Approved for Next Implementation*).
-* **Objektif:** Mengintegrasikan perencanaan sistem kamera pengawas industri (CCTV Surveillance) ke dalam ekosistem CDPK System Planner sehingga penawaran turnkey dapat menggabungkan Radio Komunikasi DMR, RFoF DAS, dan Video Security dalam satu proposal utuh.
+* **Objektif:** Mengintegrasikan perencanaan sistem kamera pengawas industri (CCTV Surveillance) ke dalam ekosistem CDPK System Planner dengan arsitektur **Open Multi-Brand & Universal ONVIF**. Selain mendukung katalog bawaan *flagship* CDPK (**Pelco** dan **Avigilon**), sistem juga terbuka untuk mereka pihak ketiga (**Axis, Hanwha Vision, Hikvision, Dahua, Bosch, Uniview**) maupun kamera kustom berbasis standar industri. Hal ini memastikan solusi turnkey CDPK dapat menyatukan Radio Komunikasi DMR, RFoF DAS, dan Video Security dari berbagai merk dalam satu proposal utuh.
 * **Fitur Utama:**
-  1. **Bandwidth & Storage NVR Estimator:**
-     * Menghitung throughput *network bandwidth* (Mbps) dan total *storage* (TB) berdasarkan jumlah kamera, resolusi (2MP, 4MP, 4K, Bispectral Thermal), frame rate (15/25/30 fps), format kompresi (H.264, H.265, Pelco SmartCompression / Avigilon HDSM), dan masa retensi rekaman (30, 60, 90 hari).
-     * Rekomendasi kapasitas NVR/VMS Server, konfigurasi RAID (RAID 5 / RAID 6), dan *storage overhead safety factor* 20%.
-  2. **Kalkulator Daya PoE & Industrial Network Switch Sizing:**
+  1. **Open Multi-Brand Camera Selector & Custom Camera Builder:**
+     * *Brand Presets:* Pilihan cepat merk terkemuka (**Pelco**, **Avigilon**, **Axis**, **Hanwha**, **Hikvision**, **Dahua**, **Bosch**, **Uniview**, serta **Generic ONVIF / Custom Brand**).
+     * *Custom Input:* Pengguna dapat mendefinisikan merk kustom, tipe model (Bullet, Dome, PTZ, Thermal), resolusi kustom, konsumsi watt PoE, serta harga satuan kustom (USD/IDR).
+  2. **Universal Bandwidth & Storage NVR Estimator:**
+     * Menghitung throughput *network bandwidth* (Mbps) dan total *storage* (TB) berdasarkan jumlah kamera gabungan multi-brand, resolusi (1080p 2MP, 4MP, 4K 8MP, 12MP, Bispectral Thermal), frame rate (10/15/25/30 fps), format kompresi (H.264, H.265, SmartCodec / Zipstream / WiseStream / HDSM, atau custom bitrate manual Mbps), dan masa retensi rekaman (30, 60, 90 hari).
+     * Rekomendasi kapasitas NVR/VMS Server (kompatibel VMS multi-brand Pelco VideoXpert / Avigilon Unity / Generic NVR), konfigurasi RAID (RAID 5 / RAID 6), dan *storage overhead safety factor* 20%.
+  3. **Kalkulator Daya PoE & Industrial Network Switch Sizing:**
      * Menghitung total daya konsumsi PoE (IEEE 802.3af 15.4W, 802.3at PoE+ 30W, dan 802.3bt PoE++ 60W/90W untuk kamera PTZ luar ruang dengan wiper & heater).
-     * Rekomendasi jumlah port dan tipe Industrial Core/Distribution PoE Switch yang dibutuhkan.
-  3. **Bridge ke Master BoQ CDPK:**
-     * Seluruh item kamera Pelco (Spectra Pro, Esprit, Sarix), Avigilon (Ava Compact Dome, Unity), lisensi VMS, NVR, dan Switch langsung di-inject ke BoQ gabungan bersama DMR & DAS dengan perhitungan live FX, COGS, dan margin guardrail.
+     * Rekomendasi jumlah port (8/16/24/48 ports) dan tipe Industrial Core/Distribution PoE Switch yang dibutuhkan.
+  4. **Bridge ke Master BoQ CDPK:**
+     * Seluruh item kamera (baik Pelco, Avigilon, maupun brand pihak ketiga), lisensi VMS (Channel Base License / VMS Extension), NVR, dan Industrial Switch langsung di-inject ke BoQ gabungan bersama DMR & DAS dengan perhitungan live FX, COGS, dan margin guardrail.
 
 ### 12.2. Fase 2: Formal Commercial Quotation Engine (Surat Penawaran Resmi PT CDPK)
 * **Objektif:** Menjembatani hasil kalkulasi engineering langsung menjadi dokumen komersial legal siap kirim ke meja direksi atau tim procurement pelanggan.
