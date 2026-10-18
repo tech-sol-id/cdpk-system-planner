@@ -67,6 +67,7 @@ from server.knowledge_sync import (
 )
 from server.knowledge_search import search_knowledge_base
 from server.fx_service import get_fx_status
+from server.commercial_rbac import has_commercial_access, mask_currency_amounts, redact_commercial
 
 logging.basicConfig(
     level=logging.INFO,
@@ -125,7 +126,7 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             return self._send_json({
                 "status": "healthy",
                 "app": "CDPK System Planner",
-                "version": "8.6.0",
+                "version": "8.7.0",
                 "google_client_id": os.environ.get("GOOGLE_CLIENT_ID", "423480156983-n52244lq61g7u3qub5p2khlfvtd3hs0f.apps.googleusercontent.com"),
                 "gdrive_folder_id": DEFAULT_FOLDER_ID,
                 "gdrive_output_subfolder_id": OUTPUT_SUBFOLDER_ID,
@@ -198,8 +199,15 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
         # ─── Knowledge & AI Models ────────────────────────────────────────
         if path == "/api/knowledge":
             qs = urllib.parse.parse_qs(parsed.query)
-            force = qs.get("force", ["0"])[0] in ("1", "true", "yes")
+            cur_user = self._get_auth_user()
+            commercial = has_commercial_access(cur_user)
+            # Only commercial roles may force a live Drive re-sync.
+            force = commercial and qs.get("force", ["0"])[0] in ("1", "true", "yes")
             sync_res = sync_from_gdrive(force=force)
+            if not commercial:
+                # Commercial RBAC: same shape, prices/COGS/margins/finance FX neutralised.
+                sync_res = redact_commercial(sync_res)
+            sync_res["commercial_access"] = commercial
             return self._send_json(sync_res)
 
         # ─── Google Drive Knowledge Bank (Markdown RAG) ────────────────────
@@ -208,8 +216,18 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
 
         if path == "/api/knowledge/bank/search":
             qs = urllib.parse.parse_qs(parsed.query)
+            cur_user = self._get_auth_user()
+            if not cur_user:
+                return self._send_json({"status": "unauthorized", "message": "Autentikasi diperlukan"}, status=401)
             q = qs.get("q", [""])[0]
             results = search_knowledge_base(q)
+            if not has_commercial_access(cur_user):
+                # Knowledge Bank holds past quotations: mask money amounts in snippets.
+                results = [
+                    {k: (mask_currency_amounts(v) if isinstance(v, str) else v) for k, v in r.items()}
+                    if isinstance(r, dict) else r
+                    for r in results
+                ]
             return self._send_json({"status": "ok", "query": q, "results": results})
 
         if path == "/api/ai/models":
@@ -275,6 +293,7 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             is_admin = cur_user.get("role") == "admin"
             is_overseer = cur_user.get("role") == "overseer"
             can_view_all = is_admin or is_overseer
+            commercial = has_commercial_access(cur_user)
 
             for f in raw_files:
                 name = f.get("name", "")
@@ -317,8 +336,8 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 f["collaborators"] = collaborators
                 f["is_creator"] = is_creator
                 f["is_collaborator"] = is_collab
-                f["margin_percent"] = margin_val
-                f["grand_total"] = grand_total_val
+                f["margin_percent"] = margin_val if commercial else None
+                f["grand_total"] = grand_total_val if commercial else None
                 f["currency"] = app_props.get("currency", "IDR")
 
                 # Access Control: Admin & Overseer get full team view; regular user sees their creations AND shared files
@@ -330,6 +349,7 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 "is_admin": is_admin,
                 "is_overseer": is_overseer,
                 "can_view_all": can_view_all,
+                "commercial_access": commercial,
                 "current_username": cur_user.get("username"),
                 "subfolder_id": OUTPUT_SUBFOLDER_ID,
                 "subfolder_url": f"https://drive.google.com/drive/folders/{OUTPUT_SUBFOLDER_ID}" if is_admin else "",
@@ -672,9 +692,23 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
 
         # ─── Cloud Sync ───────────────────────────────────────────────────
         if path == "/api/pricing/sync":
-            spreadsheet_id = body.get("spreadsheet_id") or DEFAULT_SPREADSHEET_ID
-            folder_id = body.get("folder_id") or DEFAULT_FOLDER_ID
+            cur_user = self._get_auth_user()
+            if not cur_user:
+                return self._send_json({"status": "unauthorized", "message": "Autentikasi diperlukan"}, status=401)
+            if not has_commercial_access(cur_user):
+                return self._send_json({
+                    "status": "forbidden",
+                    "message": "Akses ditolak: Sinkronisasi Master Pricelist hanya untuk Sales, Overseer, atau Admin."
+                }, status=403)
+            # A forced sync rewrites the shared pricelist cache for every user, so
+            # only an Administrator may point it at a non-default sheet/folder.
+            if cur_user.get("role") == "admin":
+                spreadsheet_id = body.get("spreadsheet_id") or DEFAULT_SPREADSHEET_ID
+                folder_id = body.get("folder_id") or DEFAULT_FOLDER_ID
+            else:
+                spreadsheet_id, folder_id = DEFAULT_SPREADSHEET_ID, DEFAULT_FOLDER_ID
             sync_res = sync_from_gdrive(force=True, spreadsheet_id=spreadsheet_id, folder_id=folder_id)
+            sync_res["commercial_access"] = True
             return self._send_json(sync_res)
 
         # ─── Global FX Refresh ────────────────────────────────────────────
@@ -838,6 +872,8 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 metadata={"file_id": file_id}
             )
 
+            if not has_commercial_access(cur_user):
+                proj_data = redact_commercial(proj_data)
             return self._send_json({"status": "ok", "project": proj_data})
 
         # ─── Client Audit Event Logger (PDF, Excel, Custom Activity) ───────
@@ -891,16 +927,36 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             prompt = body.get("prompt", "")
             lang = body.get("lang", "id")
             current_state = body.get("state", {})
+            audio_data = body.get("audio_data") or None
+            audio_mime = body.get("mime_type") or None
+            if not (isinstance(prompt, str) and prompt.strip()) and not audio_data:
+                return self._send_json({"status": "error", "message": "Prompt atau catatan suara wajib diisi."}, status=400)
+            commercial = has_commercial_access(cur_user)
             sync_res = {} if restricted else sync_from_gdrive(force=False)
             ai_res = query_ai_copilot(
                 model_id=model_id,
-                prompt=prompt,
+                prompt=prompt if isinstance(prompt, str) else "",
                 lang=lang,
                 current_state=current_state,
                 knowledge=sync_res.get("knowledge", {}),
                 restricted=restricted,
+                commercial_access=commercial,
+                audio_data=audio_data,
+                audio_mime_type=audio_mime,
             )
-            return self._send_json(ai_res)
+            if audio_data and cur_user:
+                log_audit_event(
+                    cur_user.get("username", ""),
+                    cur_user.get("name", ""),
+                    cur_user.get("role", "engineer"),
+                    "ai_voice_note",
+                    "Mengirim catatan survei suara ke AI Copilot"
+                    + (" (berhasil ditranskripsi)" if ai_res.get("transcript") else " (gagal)"),
+                    ip=self.address_string(),
+                )
+            ai_res["commercial_access"] = commercial
+            status = 422 if (audio_data and ai_res.get("status") == "error") else 200
+            return self._send_json(ai_res, status=status)
 
         self._send_json({"status": "error", "message": "Unknown endpoint"}, status=404)
 

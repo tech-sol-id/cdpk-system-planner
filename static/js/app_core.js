@@ -1,5 +1,8 @@
 // Main Alpine.js Application Controller for CDPK System Planner
 window.cdpkSystemPlannerApp = function () {
+    // Voice recorder runtime (MediaStream/MediaRecorder/AudioContext). Kept in this
+    // closure, NOT on the Alpine component, so it is never wrapped in a reactive proxy.
+    let voiceRt = null;
     return {
         // ─── Global UI & Bilingual State ─────────────────────────────────
         lang: localStorage.getItem('cdpk_lang') || 'id',
@@ -484,6 +487,14 @@ window.cdpkSystemPlannerApp = function () {
         aiPrompt: '',
         aiLoading: false,
         aiHistory: [],
+        // ─── Field Voice Note Transcriber (v8.7.0) ──────────────────────
+        voiceRec: {
+            state: 'idle', // 'idle' | 'requesting' | 'recording' | 'processing'
+            elapsed: 0,
+            maxSeconds: 60,
+            level: 0, // 0..1 live input level for the waveform indicator
+            error: ''
+        },
         lastExtractedParams: null,
         aiPendingActions: [],
         aiUndoStack: [],
@@ -885,6 +896,16 @@ window.cdpkSystemPlannerApp = function () {
             await this.fetchHealthConfig();
             await this.checkCurrentAuth();
             await this.loadCloudKnowledge(false);
+            this._enforceCommercialSlicing();
+            // Commercial RBAC: re-slice whenever the signed-in identity/role changes
+            // (login, logout, account switch) so prices never linger in memory.
+            this.$watch('currentUser', async (nu, old) => {
+                const key = (u) => (u ? `${u.username}|${u.role}` : '');
+                if (key(nu) === key(old)) return;
+                this._enforceCommercialSlicing();
+                await this.loadCloudKnowledge(false);
+                this.syncCloudPricesIntoBoq();
+            });
             await this.fetchKnowledgeBankStatus();
             await this.fetchFxStatus();
             this.syncBoqFromSizing();
@@ -2001,10 +2022,12 @@ window.cdpkSystemPlannerApp = function () {
         async loadCloudKnowledge(force = false) {
             this.isSyncing = true;
             try {
+                if (force && !this.canViewCommercial()) force = false; // server enforces 403 too
                 const url = force ? '/api/pricing/sync' : '/api/knowledge';
+                const authHdr = this.sessionToken ? { 'Authorization': `Bearer ${this.sessionToken}` } : {};
                 const opts = force
-                    ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ spreadsheet_id: this.masterSheetId, folder_id: this.driveFolderId }) }
-                    : { method: 'GET' };
+                    ? { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHdr }, body: JSON.stringify({ spreadsheet_id: this.masterSheetId, folder_id: this.driveFolderId }) }
+                    : { method: 'GET', headers: authHdr };
                 const resp = await fetch(url, opts);
                 const data = await resp.json();
                 if (data && data.knowledge) {
@@ -2026,6 +2049,11 @@ window.cdpkSystemPlannerApp = function () {
                     this.lastSyncTime = data.last_sync ? new Date(data.last_sync).toLocaleTimeString() : new Date().toLocaleTimeString();
                     this.folderFiles = data.folder_files || [];
 
+                    if (data.commercial_access === false) {
+                        // Sliced payload: drop any prices cached from an earlier commercial session.
+                        this.das.cloudPrices = {};
+                        this.das.cloudCogs = {};
+                    }
                     // Sync dedicated RFoF_DAS_FMTCS Google Sheet tab into DAS Engine & BoQ state
                     if (Array.isArray(k.rfof_das_catalog) && k.rfof_das_catalog.length > 0) {
                         this.das.cloudPrices = this.das.cloudPrices || {};
@@ -2054,8 +2082,18 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         async syncCloudPricelistNow() {
+            if (!this.canViewCommercial()) {
+                this.showToast(this.lang === 'en'
+                    ? 'Pricelist sync is available to Sales / Overseer / Admin only.'
+                    : 'Sinkronisasi pricelist hanya untuk Sales / Overseer / Admin.', 'error');
+                return;
+            }
             await this.loadCloudKnowledge(true);
-            // Refresh prices in current BoQ items from newly synced catalog
+            this.syncCloudPricesIntoBoq();
+        },
+
+        // Refresh prices in current BoQ items from the (role-sliced) catalog.
+        syncCloudPricesIntoBoq() {
             const skuMap = {};
             this.productsCatalog.forEach(p => { skuMap[p.sku] = p; });
             this.boqItems.forEach((item) => {
@@ -2564,6 +2602,7 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         formatCurrency(val) {
+            if (!this.canViewCommercial()) return this.commercialRedactedLabel();
             const n = Number(val || 0);
             if (this.currency === 'USD') {
                 return 'US$ ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -2694,6 +2733,7 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         formatDualPrice(priceIdr, priceUsd, showSubRate = false) {
+            if (!this.canViewCommercial()) return this.commercialRedactedLabel();
             const rate = this.fxConfig.effectiveRate || this.exchangeRate || 16200;
             let idr = Number(priceIdr || 0);
             let usd = Number(priceUsd || 0);
@@ -3884,7 +3924,6 @@ window.cdpkSystemPlannerApp = function () {
         async sendAiCopilotMessage() {
             const promptText = (this.aiPrompt || '').trim();
             if (!promptText || this.aiLoading) return;
-            const requestedModel = this.aiModel || 'gemini-3.8-pro';
 
             this.aiHistory.push({
                 role: 'user',
@@ -3892,8 +3931,14 @@ window.cdpkSystemPlannerApp = function () {
                 time: new Date().toLocaleTimeString()
             });
             this.aiPrompt = '';
-            this.aiLoading = true;
+            await this._postAiCopilot({ prompt: promptText });
+        },
 
+        // Shared request/response handler for typed prompts and voice notes.
+        // `userMsg` (voice only) is the placeholder bubble replaced by the transcript.
+        async _postAiCopilot(extraBody, userMsg = null) {
+            const requestedModel = this.aiModel || 'gemini-3.8-pro';
+            this.aiLoading = true;
             try {
                 const resp = await fetch('/api/ai/copilot', {
                     method: 'POST',
@@ -3903,7 +3948,8 @@ window.cdpkSystemPlannerApp = function () {
                     },
                     body: JSON.stringify({
                         model: requestedModel,
-                        prompt: promptText,
+                        prompt: '',
+                        ...extraBody,
                         lang: this.lang,
                         state: {
                             industry: this.industry,
@@ -3923,12 +3969,30 @@ window.cdpkSystemPlannerApp = function () {
                 });
                 const data = await resp.json();
                 if (resp.status === 401) {
+                    if (userMsg) userMsg.text = '🎙️ ' + (this.lang === 'en' ? 'Voice note not sent.' : 'Catatan suara tidak terkirim.');
                     this.aiHistory.push({
                         role: 'assistant',
                         model: requestedModel,
                         text: data.message || (this.lang === 'en'
                             ? 'Your session has expired. Please sign in again.'
                             : 'Sesi Anda telah berakhir. Silakan masuk kembali.'),
+                        time: new Date().toLocaleTimeString()
+                    });
+                    return;
+                }
+                if (userMsg) {
+                    if (data.transcript) {
+                        userMsg.text = '🎙️ ' + data.transcript;
+                    } else {
+                        userMsg.text = '🎙️ ' + (this.lang === 'en' ? 'Voice note could not be transcribed.' : 'Catatan suara tidak dapat ditranskripsi.');
+                    }
+                    userMsg.pending = false;
+                }
+                if (data.status === 'error') {
+                    this.aiHistory.push({
+                        role: 'assistant',
+                        model: requestedModel,
+                        text: '⚠️ ' + (data.message || (this.lang === 'en' ? 'Request failed.' : 'Permintaan gagal diproses.')),
                         time: new Date().toLocaleTimeString()
                     });
                     return;
@@ -3949,6 +4013,7 @@ window.cdpkSystemPlannerApp = function () {
                 // Human-in-the-Loop: expose proposals as pending Action Cards (shared object refs).
                 this.aiPendingActions = aiActions.filter(a => !a.applied && !a.rejected);
             } catch (e) {
+                if (userMsg) { userMsg.text = '🎙️ ' + (this.lang === 'en' ? 'Voice note not sent.' : 'Catatan suara tidak terkirim.'); userMsg.pending = false; }
                 this.aiHistory.push({
                     role: 'assistant',
                     model: this.aiModel,
@@ -3960,9 +4025,163 @@ window.cdpkSystemPlannerApp = function () {
             }
         },
 
+        // ─── Field Voice Note Transcriber (v8.7.0) ───────────────────────
+        _pickVoiceMimeType() {
+            if (typeof MediaRecorder === 'undefined') return '';
+            const prefs = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/wav'];
+            return prefs.find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
+        },
+
+        async startVoiceRecording() {
+            if (this.voiceRec.state !== 'idle' || this.aiLoading) return;
+            const isEn = this.lang === 'en';
+            this.voiceRec.error = '';
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
+                this.voiceRec.error = isEn
+                    ? 'Voice recording is not supported on this browser/device.'
+                    : 'Perekaman suara tidak didukung di browser/perangkat ini.';
+                return;
+            }
+            this.voiceRec.state = 'requesting';
+            let stream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 }
+                });
+            } catch (e) {
+                this.voiceRec.state = 'idle';
+                this.voiceRec.error = isEn
+                    ? 'Microphone access denied. Allow microphone permission and try again.'
+                    : 'Akses mikrofon ditolak. Izinkan mikrofon di pengaturan browser lalu coba lagi.';
+                return;
+            }
+            const mimeType = this._pickVoiceMimeType();
+            let recorder;
+            try {
+                // ~32 kbps Opus keeps 60 s well under 300 KB.
+                recorder = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 32000 } : undefined);
+            } catch (e) {
+                stream.getTracks().forEach(t => t.stop());
+                this.voiceRec.state = 'idle';
+                this.voiceRec.error = isEn ? 'Unable to start the recorder.' : 'Perekam suara gagal dimulai.';
+                return;
+            }
+            const rt = { stream, recorder, chunks: [], cancelled: false, startedAt: Date.now(), timer: null, raf: null, audioCtx: null };
+            voiceRt = rt;
+            recorder.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) rt.chunks.push(ev.data); };
+            recorder.onstop = () => this._finishVoiceRecording(rt);
+
+            // Live input level meter for the waveform animation.
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (Ctx) {
+                    rt.audioCtx = new Ctx();
+                    const analyser = rt.audioCtx.createAnalyser();
+                    analyser.fftSize = 256;
+                    rt.audioCtx.createMediaStreamSource(stream).connect(analyser);
+                    const buf = new Uint8Array(analyser.frequencyBinCount);
+                    const tick = () => {
+                        analyser.getByteTimeDomainData(buf);
+                        let peak = 0;
+                        for (let i = 0; i < buf.length; i++) peak = Math.max(peak, Math.abs(buf[i] - 128));
+                        this.voiceRec.level = Math.min(1, peak / 64);
+                        rt.raf = requestAnimationFrame(tick);
+                    };
+                    tick();
+                }
+            } catch (e) { /* level meter is cosmetic */ }
+
+            recorder.start(250);
+            this.voiceRec.elapsed = 0;
+            this.voiceRec.state = 'recording';
+            rt.timer = setInterval(() => {
+                this.voiceRec.elapsed = Math.floor((Date.now() - rt.startedAt) / 1000);
+                if (this.voiceRec.elapsed >= this.voiceRec.maxSeconds) this.stopVoiceRecording();
+            }, 200);
+        },
+
+        stopVoiceRecording() {
+            const rt = voiceRt;
+            if (!rt || this.voiceRec.state !== 'recording') return;
+            this.voiceRec.state = 'processing';
+            if (rt.recorder.state !== 'inactive') rt.recorder.stop();
+        },
+
+        cancelVoiceRecording() {
+            const rt = voiceRt;
+            if (!rt) return;
+            rt.cancelled = true;
+            if (rt.recorder.state !== 'inactive') rt.recorder.stop();
+            else this._finishVoiceRecording(rt);
+        },
+
+        _releaseVoiceRuntime(rt) {
+            if (rt.timer) clearInterval(rt.timer);
+            if (rt.raf) cancelAnimationFrame(rt.raf);
+            try { rt.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+            try { if (rt.audioCtx) rt.audioCtx.close(); } catch (e) {}
+            if (voiceRt === rt) voiceRt = null;
+            this.voiceRec.level = 0;
+        },
+
+        async _finishVoiceRecording(rt) {
+            this._releaseVoiceRuntime(rt);
+            const durationSec = Math.max(1, Math.round((Date.now() - rt.startedAt) / 1000));
+            if (rt.cancelled) {
+                this.voiceRec.state = 'idle';
+                return;
+            }
+            const mime = (rt.recorder.mimeType || (rt.chunks[0] && rt.chunks[0].type) || 'audio/webm').split(';')[0];
+            const blob = new Blob(rt.chunks, { type: mime });
+            if (blob.size < 1024 || durationSec < 1) {
+                this.voiceRec.state = 'idle';
+                this.voiceRec.error = this.lang === 'en' ? 'Recording too short.' : 'Rekaman terlalu pendek.';
+                return;
+            }
+            if (blob.size > 3 * 1024 * 1024) {
+                this.voiceRec.state = 'idle';
+                this.voiceRec.error = this.lang === 'en' ? 'Recording too large (max 60 s).' : 'Rekaman terlalu besar (maks. 60 detik).';
+                return;
+            }
+            let b64 = '';
+            try {
+                b64 = await new Promise((resolve, reject) => {
+                    const fr = new FileReader();
+                    fr.onload = () => resolve(String(fr.result || '').split(',')[1] || '');
+                    fr.onerror = () => reject(fr.error);
+                    fr.readAsDataURL(blob);
+                });
+            } catch (e) {
+                this.voiceRec.state = 'idle';
+                this.voiceRec.error = this.lang === 'en' ? 'Failed to encode audio.' : 'Gagal mengonversi audio.';
+                return;
+            }
+            const typed = (this.aiPrompt || '').trim();
+            this.aiPrompt = '';
+            this.aiHistory.push({
+                role: 'user',
+                isVoice: true,
+                pending: true,
+                text: '🎙️ ' + (this.lang === 'en'
+                    ? `Voice note (${durationSec}s) — transcribing...`
+                    : `Catatan suara (${durationSec} dtk) — mentranskripsi...`),
+                time: new Date().toLocaleTimeString()
+            });
+            const userMsg = this.aiHistory[this.aiHistory.length - 1];
+            this.voiceRec.state = 'idle';
+            await this._postAiCopilot({ prompt: typed, audio_data: b64, mime_type: mime }, userMsg);
+        },
+
+        formatVoiceElapsed() {
+            const s = Math.min(this.voiceRec.maxSeconds, this.voiceRec.elapsed || 0);
+            return `0:${String(s).padStart(2, '0')} / 1:00`;
+        },
+
         formatAiMarkdown(rawText) {
             if (!rawText) return '';
-            let html = String(rawText);
+            // Rendered via x-html: escape first so model output, RAG snippets or
+            // voice transcripts can never inject markup (markdown is re-applied below).
+            let html = String(rawText).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
             // 1. Code blocks ```...```
             html = html.replace(/```(?:[a-zA-Z0-9_]+)?\n([\s\S]*?)```/g, (match, code) => {
@@ -3998,7 +4217,7 @@ window.cdpkSystemPlannerApp = function () {
             html = html.replace(/^#### (.*$)/gim, '<div class="font-bold text-slate-900 mt-2 mb-0.5 text-xs flex items-center gap-1">$1</div>');
 
             // 4. Blockquotes
-            html = html.replace(/^> (.*$)/gim, '<div class="border-l-4 border-amber-500 pl-2.5 py-1 text-slate-700 bg-amber-50/70 my-1.5 rounded-r text-[11px]">$1</div>');
+            html = html.replace(/^&gt; (.*$)/gim, '<div class="border-l-4 border-amber-500 pl-2.5 py-1 text-slate-700 bg-amber-50/70 my-1.5 rounded-r text-[11px]">$1</div>');
 
             // 5. Bold & inline code
             html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900">$1</strong>');
@@ -5424,6 +5643,7 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         exportPdf() {
+            this._enforceCommercialSlicing();
             this.recordClientAuditEvent('export_pdf', `Ekspor Dokumen Penawaran PDF Resmi: "${this.projName}" (Klien: ${this.clientName})`, {
                 project: this.projName,
                 client: this.clientName,
@@ -5433,6 +5653,7 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         exportXlsx() {
+            this._enforceCommercialSlicing();
             this.recordClientAuditEvent('export_xlsx', `Ekspor Lembar Kerja BoQ Excel (.xlsx): "${this.projName}" (Klien: ${this.clientName})`, {
                 project: this.projName,
                 client: this.clientName,
@@ -5585,11 +5806,27 @@ window.cdpkSystemPlannerApp = function () {
             return {};
         },
 
+        // ─── Commercial RBAC (v8.7.0) ─────────────────────────────────────
+        // UI slicing only; the server independently redacts pricing for
+        // non-commercial roles (server/commercial_rbac.py).
+        canViewCommercial() {
+            const role = (this.currentUser && this.currentUser.role) ? this.currentUser.role : 'viewer';
+            return ['admin', 'overseer', 'sales'].includes(String(role).toLowerCase());
+        },
+
+        commercialRedactedLabel() {
+            return this.lang === 'en' ? '[Sales / Admin only]' : '[Hanya Sales / Admin]';
+        },
+
+        _enforceCommercialSlicing() {
+            if (!this.canViewCommercial()) {
+                this.exportMode = 'technical';
+            }
+        },
+
         canAccessDasEstimator() {
-            if (!this.currentUser) return false;
-            const role = (this.currentUser.role || '').toLowerCase();
             // Full Commercial BoQ & Estimator is open to Admin, Overseer, and Product Expert (Sales)
-            return role === 'admin' || role === 'overseer' || role === 'sales';
+            return this.canViewCommercial();
         },
 
         getDasItemPrice(it) {
@@ -5855,7 +6092,16 @@ window.cdpkSystemPlannerApp = function () {
             }
         },
 
+        _denyCommercialExport() {
+            if (this.canViewCommercial()) return false;
+            this.showToast(this.lang === 'en'
+                ? 'This export contains pricing and is available to Sales / Overseer / Admin only.'
+                : 'Ekspor ini memuat harga dan hanya tersedia untuk Sales / Overseer / Admin.', 'error');
+            return true;
+        },
+
         exportDasBoqCsv() {
+            if (this._denyCommercialExport()) return;
             if (window.CDPK_DAS_ENGINE && typeof window.CDPK_DAS_ENGINE.exportDasCsv === 'function') {
                 const state = {
                     proj: this.projName,
@@ -6419,6 +6665,7 @@ window.cdpkSystemPlannerApp = function () {
         },
 
         exportCctvCsv() {
+            if (this._denyCommercialExport()) return;
             const boq = this.getCctvBoqResult();
             if (!boq || !window.CDPK_CCTV_ENGINE) return;
             window.CDPK_CCTV_ENGINE.exportCctvCsv(this.cctv, boq, this.lang);
@@ -6427,7 +6674,11 @@ window.cdpkSystemPlannerApp = function () {
         copyCctvSummary() {
             const boq = this.getCctvBoqResult();
             if (!boq || !window.CDPK_CCTV_ENGINE) return;
-            const text = window.CDPK_CCTV_ENGINE.generateSummaryText(this.cctv, boq, this.lang);
+            let text = window.CDPK_CCTV_ENGINE.generateSummaryText(this.cctv, boq, this.lang);
+            if (!this.canViewCommercial()) {
+                // Technical summary only: drop subtotal / margin lines.
+                text = text.split('\n').filter(l => !/(\bUSD\b|\bIDR\b|Rp\s|US\$|Margin)/i.test(l)).join('\n');
+            }
             if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(() => {
                     this.showToast(

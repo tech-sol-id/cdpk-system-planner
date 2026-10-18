@@ -34,15 +34,15 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <!-- Modular App Scripts -->
-    <script src="/js/logo_b64.js?v=8.6.3"></script>
-    <script src="/js/i18n.js?v=8.6.3"></script>
-    <script src="/js/engines.js?v=8.6.3"></script>
-    <script src="/js/exporters.js?v=8.6.3"></script>
-    <script src="/js/gis_engine.js?v=8.6.3"></script>
-    <script src="/js/das_engine.js?v=8.6.3"></script>
-    <script src="/js/cctv_engine.js?v=8.6.3"></script>
-    <script src="/js/floorplan_engine.js?v=8.6.3"></script>
-    <script src="/js/app_core.js?v=8.6.3"></script>
+    <script src="/js/logo_b64.js?v=8.7.0"></script>
+    <script src="/js/i18n.js?v=8.7.0"></script>
+    <script src="/js/engines.js?v=8.7.0"></script>
+    <script src="/js/exporters.js?v=8.7.0"></script>
+    <script src="/js/gis_engine.js?v=8.7.0"></script>
+    <script src="/js/das_engine.js?v=8.7.0"></script>
+    <script src="/js/cctv_engine.js?v=8.7.0"></script>
+    <script src="/js/floorplan_engine.js?v=8.7.0"></script>
+    <script src="/js/app_core.js?v=8.7.0"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
     <style>
@@ -441,7 +441,7 @@
                 <!-- Mobile Only Controls (Smartphone: Compact FX, Gear Settings, Hamburger) -->
                 <div class="flex md:hidden items-center gap-1.5 shrink-0">
                     <!-- Compact FX Pill (Angka Saja) -->
-                    <button @click="fxModalOpen = true"
+                    <button @click="fxModalOpen = true" x-show="canViewCommercial()"
                             class="flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-bold transition shadow-xs cursor-pointer"
                             :class="{
                                 'bg-emerald-950/70 border-emerald-400 text-emerald-200': fxConfig.mode === 'live',
@@ -512,7 +512,7 @@
                 <!-- Left: Finance (FX Global), Sync Harga, Dashboard Arsip -->
                 <div class="flex items-center gap-2 sm:gap-2.5">
                     <!-- 💱 Global FX Rate & Multi-Currency Assistant Pill -->
-                    <button @click="fxModalOpen = true"
+                    <button @click="fxModalOpen = true" x-show="canViewCommercial()"
                             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition shadow-xs cursor-pointer"
                             :class="{
                                 'bg-emerald-950/70 hover:bg-emerald-900 border-emerald-400 text-emerald-200': fxConfig.mode === 'live',
@@ -531,7 +531,7 @@
                     </button>
 
                     <!-- Sync Cloud Pricelist Button -->
-                    <button @click="syncCloudPricelistNow()" :disabled="isSyncing"
+                    <button @click="syncCloudPricelistNow()" :disabled="isSyncing" x-show="canViewCommercial()"
                             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition text-sky-100 cursor-pointer"
                             :title="lang === 'en' ? 'Synchronize price list from Google Drive cloud' : 'Sinkronisasi daftar harga dari cloud Google Drive'">
                         <svg class="w-3.5 h-3.5" :class="isSyncing ? 'animate-spin' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1200,7 +1200,7 @@
                 </div>
 
                 <!-- Commercial Margin Guardrail Alert -->
-                <div x-show="isMarginAtRisk && exportMode === 'commercial'"
+                <div x-show="isMarginAtRisk && exportMode === 'commercial' && canViewCommercial()"
                      class="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-900 font-bold flex flex-wrap items-center justify-between gap-2">
                     <div class="flex items-center gap-2">
                         <span class="text-base">⚠️</span>
@@ -1216,8 +1216,10 @@
                     <div class="col-span-2">
                         <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('exportModeLabel')"></label>
                         <div class="grid grid-cols-2 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-bold">
-                            <button @click="exportMode = 'commercial'"
-                                    :class="exportMode === 'commercial' ? 'bg-blue-700 text-white shadow-sm' : 'text-slate-600'"
+                            <button @click="if (canViewCommercial()) exportMode = 'commercial'"
+                                    :disabled="!canViewCommercial()"
+                                    :title="canViewCommercial() ? '' : commercialRedactedLabel()"
+                                    :class="exportMode === 'commercial' ? 'bg-blue-700 text-white shadow-sm' : (canViewCommercial() ? 'text-slate-600' : 'text-slate-400 cursor-not-allowed')"
                                     class="py-1.5 px-2 rounded-md transition truncate" x-text="t('modeCommercial')"></button>
                             <button @click="exportMode = 'technical'"
                                     :class="exportMode === 'technical' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-600'"
@@ -1225,8 +1227,14 @@
                         </div>
                     </div>
 
+                    <!-- Commercial RBAC notice (non-commercial roles) -->
+                    <div x-show="!canViewCommercial()" class="col-span-2 sm:col-span-1 lg:col-span-4 p-2.5 rounded-lg bg-slate-100 border border-slate-200 text-[11px] text-slate-600 flex items-center gap-2">
+                        <span class="text-base">🔒</span>
+                        <span x-text="lang === 'en' ? 'Pricing, FX rate, margin, discount and tax are restricted to Sales / Overseer / Admin. Quantities, SKUs and specifications remain available.' : 'Harga, kurs, margin, diskon, dan pajak hanya untuk Sales / Overseer / Admin. Kuantitas, SKU, dan spesifikasi tetap tersedia.'"></span>
+                    </div>
+
                     <!-- Currency & Exchange Rate -->
-                    <div>
+                    <div x-show="canViewCommercial()">
                         <div class="flex items-center justify-between mb-1">
                             <label class="block text-[11px] font-bold uppercase text-slate-500" x-text="t('currencyLabel')"></label>
                             <span class="text-[9px] uppercase px-1 py-0.2 rounded font-black text-indigo-700 bg-indigo-50 border border-indigo-200 cursor-pointer"
@@ -1240,7 +1248,7 @@
                         </select>
                     </div>
 
-                    <div>
+                    <div x-show="canViewCommercial()">
                         <div class="flex items-center justify-between mb-1">
                             <label class="block text-[11px] font-bold uppercase text-slate-500" x-text="t('exchangeRateLabel')"></label>
                             <button type="button" @click="fxModalOpen = true" class="text-[10px] text-blue-700 font-bold hover:underline cursor-pointer">
@@ -1256,7 +1264,7 @@
                     </div>
 
                     <!-- Target Margin % -->
-                    <div>
+                    <div x-show="canViewCommercial()">
                         <div class="flex items-center justify-between mb-1">
                             <label class="block text-[11px] font-bold uppercase text-slate-500">Margin Target (%)</label>
                             <span x-show="Number(marginPercent || 0) < 15" class="text-[10px] text-amber-700 font-extrabold bg-amber-100 border border-amber-300 px-1 rounded">⚠️ &lt;15%</span>
@@ -1267,13 +1275,13 @@
                     </div>
 
                     <!-- Discount % & PPN % -->
-                    <div>
+                    <div x-show="canViewCommercial()">
                         <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('discountLabel')"></label>
                         <input type="number" min="0" max="80" step="0.5" x-model.number="discountPercent"
                                 class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300" />
                     </div>
 
-                    <div>
+                    <div x-show="canViewCommercial()">
                         <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('ppnLabel')"></label>
                         <select x-model.number="ppnPercent" class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-slate-50">
                             <option :value="11">PPN 11%</option>
@@ -1284,7 +1292,7 @@
                 </div>
 
                 <!-- Corporate Finance Policy & FX Disclaimer Banner -->
-                <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-2xs">
+                <div x-show="canViewCommercial()" class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-2xs">
                     <div class="flex items-start gap-2">
                         <span class="text-base shrink-0 mt-0.5">🏛️</span>
                         <div>
@@ -1301,7 +1309,7 @@
                 </div>
 
                 <!-- Margin Guardrail Warning Banner -->
-                <div x-show="Number(marginPercent || 0) < 15" class="mb-3 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center gap-2.5">
+                <div x-show="canViewCommercial() && Number(marginPercent || 0) < 15" class="mb-3 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center gap-2.5">
                     <span class="text-base shrink-0">⚠️</span>
                     <div class="flex-1">
                         <strong>Kebijakan Guardrail Margin CDPK:</strong> Target margin BoQ saat ini (<span x-text="marginPercent || 0"></span>%) berada di bawah standar minimum perusahaan (≥15%). Proyek dengan margin rendah memerlukan persetujuan Administrator atau Overseer sebelum diajukan ke klien.
@@ -1355,8 +1363,8 @@
                                 <th class="py-3 px-3" x-text="t('colItemName')"></th>
                                 <th class="py-3 px-3 w-24 text-center" x-text="t('colQty')"></th>
                                 <th class="py-3 px-3 w-20 text-center" x-text="t('colUnit')"></th>
-                                <th x-show="exportMode === 'commercial'" class="py-3 px-3 w-36 text-right" x-text="t('colUnitPrice')"></th>
-                                <th x-show="exportMode === 'commercial'" class="py-3 px-3 w-40 text-right" x-text="t('colTotalPrice')"></th>
+                                <th x-show="exportMode === 'commercial' && canViewCommercial()" class="py-3 px-3 w-36 text-right" x-text="t('colUnitPrice')"></th>
+                                <th x-show="exportMode === 'commercial' && canViewCommercial()" class="py-3 px-3 w-40 text-right" x-text="t('colTotalPrice')"></th>
                                 <th class="py-3 px-3 w-48" x-text="t('colNotes')"></th>
                                 <th class="py-3 px-3 w-14 text-center" x-text="t('colAction')"></th>
                             </tr>
@@ -1386,7 +1394,7 @@
                                                 <div x-show="item.expanded" class="mt-2.5 bg-slate-50 rounded-xl p-3 border border-slate-200/90 space-y-2">
                                                     <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex justify-between">
                                                         <span x-text="lang === 'en' ? 'Sub-Component (Per 1 System Set)' : 'Sub-Komponen Pembentuk (Per 1 Set Sistem)'"></span>
-                                                        <span x-show="exportMode === 'commercial'" x-text="lang === 'en' ? 'Sub-Item Price' : 'Harga Sub-Item'"></span>
+                                                        <span x-show="exportMode === 'commercial' && canViewCommercial()" x-text="lang === 'en' ? 'Sub-Item Price' : 'Harga Sub-Item'"></span>
                                                     </div>
                                                     <template x-for="(sub, sIdx) in item.children" :key="sub.sku + '-' + sIdx">
                                                         <div class="flex flex-wrap items-center justify-between gap-2 py-1.5 px-2.5 rounded-lg bg-white border border-slate-200 text-xs"
@@ -1402,7 +1410,7 @@
                                                                 <input type="number" min="1" x-model.number="sub.qtyPerBundle"
                                                                        class="w-16 px-2 py-1 text-center text-xs font-bold rounded border border-slate-300" />
                                                                 <span class="text-[11px] text-slate-500 w-12" x-text="sub.unit + '/set'"></span>
-                                                                <span x-show="exportMode === 'commercial'" class="font-bold text-slate-800 w-28 text-right"
+                                                                <span x-show="exportMode === 'commercial' && canViewCommercial()" class="font-bold text-slate-800 w-28 text-right"
                                                                       x-text="formatCurrency(convertPrice(sub.price_idr, sub.price_usd) * sub.qtyPerBundle)"></span>
                                                             </div>
                                                         </div>
@@ -1416,7 +1424,7 @@
                                                class="w-16 px-2 py-1.5 text-center font-extrabold text-slate-900 rounded-lg border border-slate-300 focus:border-blue-600" />
                                     </td>
                                     <td class="py-3 px-3 text-center font-medium text-slate-600" x-text="item.unit"></td>
-                                    <td x-show="exportMode === 'commercial'" class="py-3 px-3 text-right font-semibold text-slate-700">
+                                    <td x-show="exportMode === 'commercial' && canViewCommercial()" class="py-3 px-3 text-right font-semibold text-slate-700">
                                         <template x-if="!item.isBundle && currency === 'IDR'">
                                             <input type="number" step="50000" x-model.number="item.price_idr"
                                                    class="w-32 px-2 py-1 text-right font-semibold rounded border border-slate-200 hover:border-slate-400" />
@@ -1425,7 +1433,7 @@
                                             <span x-text="formatCurrency(getEffectiveUnitPrice(item))"></span>
                                         </template>
                                     </td>
-                                    <td x-show="exportMode === 'commercial'" class="py-3 px-3 text-right font-extrabold text-blue-900"
+                                    <td x-show="exportMode === 'commercial' && canViewCommercial()" class="py-3 px-3 text-right font-extrabold text-blue-900"
                                         x-text="formatCurrency(getLineTotal(item))"></td>
                                     <td class="py-3 px-3">
                                         <input type="text" x-model="item.notes"
@@ -1447,9 +1455,9 @@
                                 <td class="py-3 px-3 font-bold text-slate-800" x-text="t('serviceFeeRow')"></td>
                                 <td class="py-3 px-3 text-center font-extrabold text-emerald-900" x-text="mandaysResult.totalMandays"></td>
                                 <td class="py-3 px-3 text-center font-medium text-slate-600">Mandays</td>
-                                <td x-show="exportMode === 'commercial'" class="py-3 px-3 text-right font-semibold text-slate-700"
+                                <td x-show="exportMode === 'commercial' && canViewCommercial()" class="py-3 px-3 text-right font-semibold text-slate-700"
                                     x-text="formatCurrency(convertPrice(mandaysRateIdr, mandaysRateIdr / exchangeRate))"></td>
-                                <td x-show="exportMode === 'commercial'" class="py-3 px-3 text-right font-extrabold text-emerald-900"
+                                <td x-show="exportMode === 'commercial' && canViewCommercial()" class="py-3 px-3 text-right font-extrabold text-emerald-900"
                                     x-text="formatCurrency(serviceFeeTotal)"></td>
                                 <td class="py-3 px-3 text-xs text-slate-600" x-text="`${mandaysResult.calendarDays} Hari Kalender (Tim ${mdTeamSize} Engineer)`"></td>
                                 <td class="py-3 px-3 text-center">
@@ -1459,7 +1467,7 @@
                         </tbody>
 
                         <!-- Commercial Summary Footer -->
-                        <tfoot x-show="exportMode === 'commercial'" class="bg-slate-900 text-white text-xs">
+                        <tfoot x-show="exportMode === 'commercial' && canViewCommercial()" class="bg-slate-900 text-white text-xs">
                             <tr>
                                 <td colspan="6" class="py-2.5 px-4 text-right font-semibold text-slate-300" x-text="t('subtotalHardware')"></td>
                                 <td class="py-2.5 px-3 text-right font-bold" x-text="formatCurrency(hardwareSubtotal)"></td>
@@ -2585,7 +2593,7 @@
                                                 <input type="number" min="1" x-model.number="lic.qty"
                                                        class="w-16 px-2 py-1 rounded-lg border border-slate-300 font-bold text-center bg-white" />
                                             </div>
-                                            <div>
+                                            <div x-show="canViewCommercial()">
                                                 <label class="block text-[10px] text-slate-500 font-bold text-right">Harga Satuan</label>
                                                 <input type="number" min="0" x-model.number="currency === 'USD' ? lic.priceUsd : lic.priceIdr"
                                                        @input="if (currency === 'USD') lic.priceIdr = lic.priceUsd * exchangeRate; else lic.priceUsd = lic.priceIdr / exchangeRate;"
@@ -2650,7 +2658,7 @@
                                                 <input type="number" min="1" x-model.number="acc.qty"
                                                        class="w-16 px-2 py-1 rounded-lg border border-slate-300 font-bold text-center bg-white" />
                                             </div>
-                                            <div>
+                                            <div x-show="canViewCommercial()">
                                                 <label class="block text-[10px] text-slate-500 font-bold text-right">Harga Satuan</label>
                                                 <input type="number" min="0" x-model.number="currency === 'USD' ? acc.priceUsd : acc.priceIdr"
                                                        @input="if (currency === 'USD') acc.priceIdr = acc.priceUsd * exchangeRate; else acc.priceUsd = acc.priceIdr / exchangeRate;"
@@ -2704,7 +2712,7 @@
                             </div>
 
                             <!-- Margin Slider -->
-                            <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 space-y-2">
+                            <div x-show="canViewCommercial()" class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 space-y-2">
                                 <div class="flex justify-between items-center text-xs">
                                     <label class="font-extrabold text-amber-950" x-text="t('cfgTargetMargin')"></label>
                                     <div class="flex items-center gap-1">
@@ -2980,7 +2988,7 @@
                                                 <div x-show="pkg.slrOptions.duplexer" class="pl-6">
                                                     <label class="flex items-center gap-2 text-slate-600 font-medium cursor-pointer">
                                                         <input type="checkbox" x-model="pkg.slrOptions.cavityTuning" class="rounded text-blue-600" />
-                                                        <span x-text="t('cfgSlrTuningLabel')">Termasuk Jasa Engineering Tuning &amp; Kalibrasi Cavity Duplexer di Lab CDPK (+Rp 1.500.000)</span>
+                                                        <span x-text="canViewCommercial() ? t('cfgSlrTuningLabel') : t('cfgSlrTuningLabel').replace(/\s*\(\+?Rp[^)]*\)/, '')">Termasuk Jasa Engineering Tuning &amp; Kalibrasi Cavity Duplexer di Lab CDPK (+Rp 1.500.000)</span>
                                                     </label>
                                                 </div>
                                             </div>
@@ -3011,8 +3019,8 @@
                                                     <div>
                                                         <label class="block text-[11px] font-semibold text-slate-600 mb-1" x-text="t('cfgSlrFeederType')">Tipe Kabel</label>
                                                         <select x-model="pkg.slrOptions.feederType" class="w-full px-2.5 py-1.5 text-xs font-semibold rounded border border-slate-300">
-                                                            <option value="78">Heliax 7/8" Low-Loss Foam (Rp 165.000/m)</option>
-                                                            <option value="12">Superflex 1/2" Foam Low-Loss (Rp 85.000/m)</option>
+                                                            <option value="78" x-text="'Heliax 7/8&quot; Low-Loss Foam' + (canViewCommercial() ? ' (Rp 165.000/m)' : '')">Heliax 7/8" Low-Loss Foam</option>
+                                                            <option value="12" x-text="'Superflex 1/2&quot; Foam Low-Loss' + (canViewCommercial() ? ' (Rp 85.000/m)' : '')">Superflex 1/2" Foam Low-Loss</option>
                                                         </select>
                                                     </div>
                                                     <div>
@@ -3164,7 +3172,7 @@
                                 </template>
 
                                 <!-- Commercial Margin Override -->
-                                <div class="flex items-center justify-between p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs">
+                                <div x-show="canViewCommercial()" class="flex items-center justify-between p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs">
                                     <div class="flex items-center gap-1.5">
                                         <span class="font-bold text-amber-900" x-text="t('cfgMarginTarget')">Target Profit Margin Paket (%):</span>
                                         <span x-show="Number(pkg.marginPercent || 0) < 15" class="text-[10px] text-amber-700 font-extrabold bg-amber-100 border border-amber-300 px-1 rounded">⚠️ &lt;15%</span>
@@ -3598,8 +3606,8 @@
                                                 :class="currency === 'USD' ? 'bg-indigo-600 text-white font-extrabold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
                                                 class="px-2.5 py-1 rounded-md text-[11px] transition cursor-pointer">USD ($)</button>
                                     </div>
-                                    <span class="text-[11px] font-bold text-slate-600 ml-1" x-text="lang === 'en' ? 'Rate:' : 'Kurs USD:'"></span>
-                                    <input type="number" step="100" x-model.number="exchangeRate"
+                                    <span x-show="canViewCommercial()" class="text-[11px] font-bold text-slate-600 ml-1" x-text="lang === 'en' ? 'Rate:' : 'Kurs USD:'"></span>
+                                    <input x-show="canViewCommercial()" type="number" step="100" x-model.number="exchangeRate"
                                            class="w-24 px-2 py-1 rounded-lg border border-slate-300 bg-white font-bold text-right text-slate-800" />
                                 </div>
                             </div>
@@ -5819,13 +5827,13 @@
                                            class="w-full p-2 rounded-lg border border-slate-300 font-semibold focus:border-emerald-600" />
                                 </div>
 
-                                <div>
+                                <div x-show="canViewCommercial()">
                                     <label class="block font-bold text-slate-600 mb-1">Harga Satuan (USD):</label>
                                     <input type="number" step="10" x-model.number="cctv.customForm.unitPriceUsd"
                                            @input="cctv.customForm.unitPriceIdr = Math.round(cctv.customForm.unitPriceUsd * (fxConfig.effectiveRate || exchangeRate || 16200)); cctv.customForm.cogsUsd = Math.round(cctv.customForm.unitPriceUsd * 0.75)"
                                            class="w-full p-2 rounded-lg border border-slate-300 font-bold focus:border-emerald-600" />
                                 </div>
-                                <div>
+                                <div x-show="canViewCommercial()">
                                     <label class="block font-bold text-slate-600 mb-1">Harga Satuan (IDR):</label>
                                     <input type="number" step="100000" x-model.number="cctv.customForm.unitPriceIdr"
                                            @input="cctv.customForm.unitPriceUsd = Math.round((cctv.customForm.unitPriceIdr / (fxConfig.effectiveRate || exchangeRate || 16200)) * 100) / 100; cctv.customForm.cogsUsd = Math.round(cctv.customForm.unitPriceUsd * 0.75)"
@@ -6118,9 +6126,18 @@
                                     <th class="p-2.5">Deskripsi Perangkat</th>
                                     <th class="p-2.5 w-16 text-center">Kuantitas</th>
                                     <th class="p-2.5 w-16 text-center">Satuan</th>
-                                    <th class="p-2.5 text-right" :class="fxConfig && fxConfig.displayMode === 'dual' ? 'w-44' : 'w-28'" x-text="lang === 'en' ? 'Unit Price' : 'Harga Satuan'"></th>
-                                    <th class="p-2.5 text-right" :class="fxConfig && fxConfig.displayMode === 'dual' ? 'w-48' : 'w-32'" x-text="lang === 'en' ? 'Total Amount' : 'Total Harga'"></th>
-                                    <th class="p-2.5 w-24 text-right">Margin Target</th>
+                                    <template x-if="canViewCommercial()">
+                                        <th class="p-2.5 text-right" :class="fxConfig && fxConfig.displayMode === 'dual' ? 'w-44' : 'w-28'" x-text="lang === 'en' ? 'Unit Price' : 'Harga Satuan'"></th>
+                                    </template>
+                                    <template x-if="canViewCommercial()">
+                                        <th class="p-2.5 text-right" :class="fxConfig && fxConfig.displayMode === 'dual' ? 'w-48' : 'w-32'" x-text="lang === 'en' ? 'Total Amount' : 'Total Harga'"></th>
+                                    </template>
+                                    <template x-if="canViewCommercial()">
+                                        <th class="p-2.5 w-24 text-right">Margin Target</th>
+                                    </template>
+                                    <template x-if="!canViewCommercial()">
+                                        <th class="p-2.5 w-40 text-right" x-text="lang === 'en' ? 'Commercial' : 'Komersial'"></th>
+                                    </template>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
@@ -6134,20 +6151,29 @@
                                         </td>
                                         <td class="p-2.5 text-center font-black text-slate-900" x-text="it.qty"></td>
                                         <td class="p-2.5 text-center font-semibold text-slate-600" x-text="it.unit"></td>
-                                        <td class="p-2.5 text-right font-bold text-slate-800">
-                                            <div x-text="formatDualPrice(it.unitPriceIdr, it.unitPriceUsd)"></div>
-                                            <div x-show="fxConfig && fxConfig.displayMode === 'dual' && it.unitPriceUsd" class="text-[9px] text-slate-400 font-mono">
-                                                Ref: USD Basis
-                                            </div>
-                                        </td>
-                                        <td class="p-2.5 text-right font-black text-emerald-800">
-                                            <div x-text="formatDualPrice(it.unitPriceIdr * it.qty, it.unitPriceUsd * it.qty)"></div>
-                                        </td>
-                                        <td class="p-2.5 text-right font-bold text-emerald-700" x-text="it.marginPct + '%'"></td>
+                                        <template x-if="canViewCommercial()">
+                                            <td class="p-2.5 text-right font-bold text-slate-800">
+                                                <div x-text="formatDualPrice(it.unitPriceIdr, it.unitPriceUsd)"></div>
+                                                <div x-show="fxConfig && fxConfig.displayMode === 'dual' && it.unitPriceUsd" class="text-[9px] text-slate-400 font-mono">
+                                                    Ref: USD Basis
+                                                </div>
+                                            </td>
+                                        </template>
+                                        <template x-if="canViewCommercial()">
+                                            <td class="p-2.5 text-right font-black text-emerald-800">
+                                                <div x-text="formatDualPrice(it.unitPriceIdr * it.qty, it.unitPriceUsd * it.qty)"></div>
+                                            </td>
+                                        </template>
+                                        <template x-if="canViewCommercial()">
+                                            <td class="p-2.5 text-right font-bold text-emerald-700" x-text="it.marginPct + '%'"></td>
+                                        </template>
+                                        <template x-if="!canViewCommercial()">
+                                            <td class="p-2.5 text-right text-[10px] font-bold text-slate-400 italic" x-text="commercialRedactedLabel()"></td>
+                                        </template>
                                     </tr>
                                 </template>
                             </tbody>
-                            <tfoot class="bg-slate-50 border-t-2 border-slate-200 text-xs font-black text-slate-900">
+                            <tfoot x-show="canViewCommercial()" class="bg-slate-50 border-t-2 border-slate-200 text-xs font-black text-slate-900">
                                 <tr>
                                     <td colspan="5" class="p-3 text-right uppercase tracking-wider" x-text="lang === 'en' ? 'Estimated Total CCTV Subtotal:' : 'Estimasi Subtotal CCTV:'"></td>
                                     <td colspan="2" class="p-3 text-right text-sm text-emerald-900 font-black">
@@ -6161,7 +6187,7 @@
                     </div>
 
                     <!-- CCTV FX & Finance Advisory Notice Banner -->
-                    <div class="mt-4 p-3.5 rounded-xl bg-amber-50/90 border border-amber-200 flex items-start gap-3 text-xs text-amber-950">
+                    <div x-show="canViewCommercial()" class="mt-4 p-3.5 rounded-xl bg-amber-50/90 border border-amber-200 flex items-start gap-3 text-xs text-amber-950">
                         <span class="text-base shrink-0 mt-0.5">⚠️</span>
                         <div class="space-y-1">
                             <div class="font-extrabold flex flex-wrap items-center gap-2">
@@ -7202,7 +7228,7 @@
                             class="w-full p-2.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 font-bold flex items-center gap-2 text-left cursor-pointer">
                         <span>🔄</span> <span x-text="lang === 'en' ? 'New Project / Reset' : 'Proyek Baru / Reset Isian'"></span>
                     </button>
-                    <button @click="syncCloudPricelistNow(); mobileMenuOpen = false"
+                    <button @click="syncCloudPricelistNow(); mobileMenuOpen = false" x-show="canViewCommercial()"
                             class="w-full p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold text-slate-700 flex items-center gap-2 text-left cursor-pointer">
                         <span>☁️</span> <span x-text="t('syncBtn')"></span>
                     </button>
@@ -7435,7 +7461,7 @@
                 </template>
 
                 <template x-for="(msg, mIdx) in aiHistory" :key="mIdx">
-                    <div :class="msg.role === 'user' ? 'ml-8 bg-blue-700 text-white' : 'mr-4 bg-white text-slate-800 border border-slate-200'"
+                    <div :class="(msg.role === 'user' ? 'ml-8 bg-blue-700 text-white' : 'mr-4 bg-white text-slate-800 border border-slate-200') + (msg.pending ? ' opacity-70 animate-pulse' : '')"
                          class="p-3.5 rounded-xl shadow-xs text-xs space-y-2">
                         <div class="flex items-center justify-between text-[10px] opacity-75 font-bold">
                             <span x-text="msg.role === 'user' ? 'You' : msg.model"></span>
@@ -7572,11 +7598,53 @@
                         <span class="text-[10px] opacity-70" x-text="'(' + aiUndoStack.length + ')'"></span>
                     </button>
                 </template>
+                <!-- 🎙️ Field Voice Note: live recording bar -->
+                <template x-if="voiceRec.state === 'recording' || voiceRec.state === 'processing' || voiceRec.state === 'requesting'">
+                    <div class="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-rose-200 bg-rose-50" role="status" aria-live="polite">
+                        <span class="relative flex h-3 w-3 shrink-0">
+                            <span x-show="voiceRec.state === 'recording'" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3" :class="voiceRec.state === 'recording' ? 'bg-rose-600' : 'bg-slate-400'"></span>
+                        </span>
+                        <!-- Waveform driven by live input level -->
+                        <div class="flex items-center gap-[3px] h-6 flex-1 min-w-0" aria-hidden="true">
+                            <template x-for="b in [0.55, 0.85, 1, 0.7, 0.95, 0.6, 0.8, 1, 0.65, 0.9, 0.5, 0.75]">
+                                <span class="w-1 rounded-full bg-rose-500 transition-all duration-100"
+                                      :style="'height:' + Math.max(12, Math.round((voiceRec.state === 'recording' ? voiceRec.level : 0) * b * 100)) + '%'"></span>
+                            </template>
+                        </div>
+                        <span class="text-[11px] font-mono font-bold text-rose-800 shrink-0"
+                              x-text="voiceRec.state === 'requesting' ? (lang === 'en' ? 'Mic...' : 'Mikrofon...') : (voiceRec.state === 'processing' ? (lang === 'en' ? 'Processing...' : 'Memproses...') : formatVoiceElapsed())"></span>
+                        <button type="button" @click="cancelVoiceRecording()" :disabled="voiceRec.state !== 'recording'"
+                                class="px-2 py-1 rounded-lg text-[11px] font-bold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition cursor-pointer disabled:opacity-50"
+                                :title="lang === 'en' ? 'Discard recording' : 'Batalkan rekaman'"
+                                x-text="lang === 'en' ? 'Cancel' : 'Batal'"></button>
+                        <button type="button" @click="stopVoiceRecording()" :disabled="voiceRec.state !== 'recording'"
+                                class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-600 hover:bg-rose-700 text-white transition cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                                :title="lang === 'en' ? 'Stop and send to AI' : 'Stop & kirim ke AI'">
+                            <span class="inline-block w-2 h-2 bg-white rounded-[2px]"></span>
+                            <span x-text="lang === 'en' ? 'Stop & Send' : 'Stop & Kirim'"></span>
+                        </button>
+                    </div>
+                </template>
+                <template x-if="voiceRec.error">
+                    <div class="flex items-start justify-between gap-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-900">
+                        <span x-text="'⚠️ ' + voiceRec.error"></span>
+                        <button type="button" @click="voiceRec.error = ''" class="font-bold text-amber-700 hover:text-amber-900 cursor-pointer" aria-label="Tutup">✕</button>
+                    </div>
+                </template>
                 <div class="flex gap-2">
                     <input type="text" x-model="aiPrompt" @keydown.enter="sendAiCopilotMessage()"
                            :placeholder="lang === 'en' ? 'Ask Gemini 3.8 to size, calculate or cite knowledge...' : 'Tulis skenario proyek atau minta rekomendasi teknis...'"
-                           class="flex-1 px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none" />
-                    <button @click="sendAiCopilotMessage()" :disabled="aiLoading"
+                           class="flex-1 min-w-0 px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:border-blue-600 focus:outline-none" />
+                    <button type="button" @click="startVoiceRecording()"
+                            :disabled="aiLoading || voiceRec.state !== 'idle'"
+                            :title="lang === 'en' ? 'Record a field voice note (max 60 s)' : 'Rekam catatan survei suara (maks. 60 detik)'"
+                            :aria-label="lang === 'en' ? 'Record voice note' : 'Rekam catatan suara'"
+                            class="px-3 py-2 rounded-xl border text-sm transition flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            :class="voiceRec.state === 'recording' ? 'bg-rose-600 border-rose-600 text-white' : 'bg-white border-slate-300 hover:bg-rose-50 hover:border-rose-300 text-slate-700'">
+                        🎙️
+                    </button>
+                    <button @click="sendAiCopilotMessage()" :disabled="aiLoading || voiceRec.state !== 'idle'"
                             class="px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold transition flex items-center gap-1">
                         <span x-text="aiLoading ? '...' : (lang === 'en' ? 'Send' : 'Kirim')"></span>
                     </button>
@@ -7586,7 +7654,7 @@
     </div>
 
     <!-- ═══════════════════ MODAL: GLOBAL FX & FINANCE ADVISORY CONTROLLER ═══════════════════ -->
-    <div x-show="fxModalOpen"
+    <div x-show="fxModalOpen && canViewCommercial()"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
