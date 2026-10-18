@@ -11,3 +11,4 @@ android/app/build/
 android/local.properties
 *.apk
 !static/download/*.apk
+data/fx_cache.json

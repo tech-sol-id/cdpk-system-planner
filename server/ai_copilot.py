@@ -27,6 +27,7 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
 
+from server.fx_service import FINANCE_DISCLAIMER_EN, FINANCE_DISCLAIMER_ID
 from server.knowledge_search import build_rag_context_for_prompt, search_knowledge_base
 
 logger = logging.getLogger("cdpk.ai_copilot")
@@ -1159,6 +1160,21 @@ def build_local_expert_response(
     est_ppn = round(est_subtotal * 0.11)
     est_grand_total = est_subtotal + est_ppn
 
+    fx_rate = 16200.0
+    if isinstance(current_state, dict):
+        fx_cfg = current_state.get("fxConfig", {})
+        if isinstance(fx_cfg, dict) and fx_cfg.get("effectiveRate"):
+            try:
+                fx_rate = float(fx_cfg.get("effectiveRate"))
+            except (ValueError, TypeError):
+                pass
+        elif current_state.get("exchangeRate"):
+            try:
+                fx_rate = float(current_state.get("exchangeRate"))
+            except (ValueError, TypeError):
+                pass
+    est_grand_total_usd = round(est_grand_total / fx_rate, 2) if fx_rate > 0 else 0.0
+
     def fmt_idr(v: float) -> str:
         return "Rp " + f"{int(round(v)):,}".replace(",", ".")
 
@@ -1271,7 +1287,8 @@ def build_local_expert_response(
             f"- **RF Repeater & Fiber DAS Infrastructure:** `{fmt_idr(est_infra_idr)}`\n"
             f"- **Subscriber Radios & Terminals ({users} Units):** `{fmt_idr(est_terms_idr)}`\n"
             f"- **Work Execution Statement / Engineering Services:** `{fmt_idr(est_svc_idr)}` (~{est_mandays} Mandays)\n"
-            f"- **Estimated Grand Total (incl. 11% VAT):** **`{fmt_idr(est_grand_total)}`**\n"
+            f"- **Estimated Grand Total (incl. 11% VAT):** **`{fmt_idr(est_grand_total)}`** (approx. **`US$ {est_grand_total_usd:,.2f}`** @ Rp {int(round(fx_rate)):,}/USD)\n\n"
+            f"> ⚖️ **Commercial & FX Reference Advisory:** Converted amounts are indicative based on active reference exchange rate of **Rp {int(round(fx_rate)):,}/USD**. _{FINANCE_DISCLAIMER_EN}_\n"
         )
     else:
         header = (
@@ -1366,7 +1383,8 @@ def build_local_expert_response(
             f"- **Paket Infrastruktur Repeater & Fiber DAS:** `{fmt_idr(est_infra_idr)}`\n"
             f"- **Perangkat Radio Pengguna ({users} Unit):** `{fmt_idr(est_terms_idr)}`\n"
             f"- **Jasa Implementasi Engineering (WES):** `{fmt_idr(est_svc_idr)}` (~{est_mandays} Mandays: FAT, SAT, Duplexer Tuning, Grounding < 5 Ohm)\n"
-            f"- **Estimasi Grand Total (Termasuk PPN 11%):** **`{fmt_idr(est_grand_total)}`**\n"
+            f"- **Estimasi Grand Total (Termasuk PPN 11%):** **`{fmt_idr(est_grand_total)}`** (setara **`US$ {est_grand_total_usd:,.2f}`** @ Rp {int(round(fx_rate)):,}/USD)\n\n"
+            f"> ⚖️ **Pedoman Acuan Kurs & Komersial Finance:** Seluruh estimasi valuta asing dihitung berdasarkan acuan kurs aktif **Rp {int(round(fx_rate)):,}/USD**. _{FINANCE_DISCLAIMER_ID}_\n"
         )
 
     # Attach interactive missing parameter questions if needed
@@ -1409,7 +1427,10 @@ def build_local_expert_response(
             "link_budget": lb,
             "solar_sizing": solar_sizing,
             "cctv_sizing": cctv_sizing,
-            "estimated_grand_total_idr": est_grand_total
+            "estimated_grand_total_idr": est_grand_total,
+            "fx_rate_used": fx_rate,
+            "estimated_grand_total_usd": est_grand_total_usd,
+            "finance_disclaimer": FINANCE_DISCLAIMER_EN if is_en else FINANCE_DISCLAIMER_ID
         }
     }
 
@@ -1476,7 +1497,8 @@ def query_ai_copilot(
         f"8. TENDER PROPOSAL STRUCTURE: Format responses with Executive Summary, Operational Topology, Link Budget Table, Specification Compliance Matrix (Compliance Sheet with COMPLY status), BoQ Pricing, and Engineering Implementation Plan (FAT/SAT, grounding < 5 Ohm, duplexer tuning, DAS VSWR & RSSI commissioning).\n"
         f"9. PROACTIVE INTERVIEW: If the user's requirements lack critical sizing details, formulate 2-3 focused clarification questions.\n"
         f"10. CITATIONS (STRICT ZERO-LINK POLICY): Reference the pre-calculated engineering metrics: {json.dumps(expert_res['summary_metrics'])}. "
-        f"Mention verified document titles by name only from the Citradata Knowledge Bank below. NEVER output any URLs, Google Drive links, or clickable hyperlinks.\n\n"
+        f"Mention verified document titles by name only from the Citradata Knowledge Bank below. NEVER output any URLs, Google Drive links, or clickable hyperlinks.\n"
+        f"11. MULTI-CURRENCY & FX COMMERCIAL ADVISORY: When discussing prices, USD-denominated components, or BoQ summaries, explicitly state the active reference exchange rate (e.g. @ Rp 16.200/USD). Always append the mandatory Finance Disclaimer: All USD-denominated estimates and foreign exchange (FX) conversions are indicative technical assistance and subject to formal written verification and sign-off by the Finance Department of PT Citradata Purnakharisma prior to official quotation or PO issuance.\n\n"
         f"{rag_context}"
     )
 

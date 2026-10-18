@@ -419,68 +419,78 @@ extracted_at: "{datetime.now(timezone.utc).isoformat()}"
 
 def crawl_drive_knowledge_tree(token: str) -> List[Dict[str, Any]]:
     """
-    Recursively traverse Google Drive root folder and shortcuts.
+    Recursively traverse Google Drive root folder and shortcuts all the way
+    to the deepest leaf, handling nested shortcuts and pagination with nextPageToken.
     Returns list of discovered documents eligible for extraction.
     """
     visited_folders: Set[str] = set()
     discovered_files: List[Dict[str, Any]] = []
 
     def _traverse(folder_id: str, path_prefix: str, depth: int = 0):
-        if folder_id in visited_folders or depth > 4:
+        if folder_id in visited_folders or depth > 8:
             return
         visited_folders.add(folder_id)
 
-        q = urllib.parse.quote(f"'{folder_id}' in parents and trashed = false")
-        url = (
-            f"https://www.googleapis.com/drive/v3/files?q={q}"
-            f"&fields=files(id,name,mimeType,modifiedTime,size,shortcutDetails)"
-            f"&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives&pageSize=100"
-        )
+        page_token = None
+        while True:
+            q = urllib.parse.quote(f"'{folder_id}' in parents and trashed = false")
+            url = (
+                f"https://www.googleapis.com/drive/v3/files?q={q}"
+                f"&fields=nextPageToken,files(id,name,mimeType,modifiedTime,size,shortcutDetails)"
+                f"&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives&pageSize=100"
+            )
+            if page_token:
+                url += f"&pageToken={page_token}"
 
-        try:
-            data = drive_api_get(url, token)
-            items = data.get("files", [])
-        except Exception as e:
-            logger.warning(f"Error traversing folder {folder_id} ({path_prefix}): {e}")
-            return
+            try:
+                data = drive_api_get(url, token)
+                items = data.get("files", [])
+                page_token = data.get("nextPageToken")
+            except Exception as e:
+                logger.warning(f"Error traversing folder {folder_id} ({path_prefix}): {e}")
+                break
 
-        for it in items:
-            name = it.get("name", "")
-            mime = it.get("mimeType", "")
-            fid = it.get("id", "")
+            for it in items:
+                name = it.get("name", "")
+                mime = it.get("mimeType", "")
+                fid = it.get("id", "")
 
-            # Exclude output subfolder and photo gallery directories
-            if name == MARKDOWN_SUBFOLDER_NAME or fid == MARKDOWN_SUBFOLDER_ID:
-                continue
-            if any(w in name.lower() for w in ["foto produk", "gallery", "photos"]):
-                continue
+                # Exclude output subfolder and photo gallery directories
+                if name == MARKDOWN_SUBFOLDER_NAME or fid == MARKDOWN_SUBFOLDER_ID:
+                    continue
+                if any(w in name.lower() for w in ["foto produk", "gallery", "photos"]):
+                    continue
 
-            if mime == "application/vnd.google-apps.shortcut":
-                details = it.get("shortcutDetails", {})
-                target_id = details.get("targetId")
-                target_mime = details.get("targetMimeType")
-                if target_mime == "application/vnd.google-apps.folder" and target_id:
-                    _traverse(target_id, f"{path_prefix}{name}/", depth + 1)
-                elif target_id and target_mime in SUPPORTED_MIME_TYPES:
+                if mime == "application/vnd.google-apps.shortcut":
+                    details = it.get("shortcutDetails", {})
+                    target_id = details.get("targetId")
+                    target_mime = details.get("targetMimeType")
+                    if target_mime == "application/vnd.google-apps.folder" and target_id:
+                        # Follow shortcut into target folder all the way to the deepest leaf
+                        _traverse(target_id, f"{path_prefix}{name}/", depth + 1)
+                    elif target_id and target_mime in SUPPORTED_MIME_TYPES:
+                        discovered_files.append({
+                            "id": target_id,
+                            "name": name,
+                            "mimeType": target_mime,
+                            "path": path_prefix,
+                            "modifiedTime": it.get("modifiedTime"),
+                            "size": it.get("size")
+                        })
+                elif mime == "application/vnd.google-apps.folder":
+                    _traverse(fid, f"{path_prefix}{name}/", depth + 1)
+                elif mime in SUPPORTED_MIME_TYPES:
                     discovered_files.append({
-                        "id": target_id,
+                        "id": fid,
                         "name": name,
-                        "mimeType": target_mime,
+                        "mimeType": mime,
                         "path": path_prefix,
                         "modifiedTime": it.get("modifiedTime"),
                         "size": it.get("size")
                     })
-            elif mime == "application/vnd.google-apps.folder":
-                _traverse(fid, f"{path_prefix}{name}/", depth + 1)
-            elif mime in SUPPORTED_MIME_TYPES:
-                discovered_files.append({
-                    "id": fid,
-                    "name": name,
-                    "mimeType": mime,
-                    "path": path_prefix,
-                    "modifiedTime": it.get("modifiedTime"),
-                    "size": it.get("size")
-                })
+
+            if not page_token:
+                break
 
     _traverse(ROOT_KNOWLEDGE_FOLDER_ID, "AI Bank Knowledge/")
     return discovered_files

@@ -274,8 +274,29 @@
                     </button>
                 </div>
 
-                <!-- Pojok Kanan Atas: (2) Pilihan Bahasa di sebelah kiri (1) Info Login User & Logout -->
-                <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                <!-- Pojok Kanan Atas: (1) Global FX Pill (2) Pilihan Bahasa (3) Info Login User & Logout -->
+                <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                    <!-- 💱 Global FX Rate & Multi-Currency Assistant Pill -->
+                    <button @click="fxModalOpen = true"
+                            class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg border text-xs font-bold transition shadow-xs cursor-pointer"
+                            :class="{
+                                'bg-slate-900/60 hover:bg-slate-900/90 border-white/25 text-sky-100': fxConfig.mode === 'finance',
+                                'bg-emerald-950/70 hover:bg-emerald-900 border-emerald-400 text-emerald-200': fxConfig.mode === 'live',
+                                'bg-amber-950/70 hover:bg-amber-900 border-amber-400 text-amber-200': fxConfig.mode === 'manual'
+                            }"
+                            :title="lang === 'en' ? 'Click to open Global FX Controller & Finance Advisory' : 'Klik untuk membuka Pengaturan Kurs Valas & Asisten Finansial Global'">
+                        <span class="text-sm">💱</span>
+                        <span class="hidden xl:inline text-[11px] opacity-80" x-text="fxConfig.mode === 'finance' ? 'Finance:' : (fxConfig.mode === 'live' ? 'Live:' : 'Buffer:')"></span>
+                        <span class="font-extrabold tracking-tight text-[11px] sm:text-xs" x-text="'Rp ' + (fxConfig.effectiveRate || exchangeRate).toLocaleString('id-ID')"></span>
+                        <span class="text-[9px] px-1 py-0.2 rounded font-black uppercase"
+                              :class="{
+                                  'bg-blue-400 text-slate-950': fxConfig.mode === 'finance',
+                                  'bg-emerald-400 text-slate-950': fxConfig.mode === 'live',
+                                  'bg-amber-400 text-slate-950': fxConfig.mode === 'manual'
+                              }"
+                              x-text="fxConfig.mode === 'finance' ? 'SSOT' : (fxConfig.mode === 'live' ? 'Live' : 'Custom')"></span>
+                    </button>
+
                     <!-- 2. Pilihan Bahasa (ID / EN) -->
                     <div class="flex items-center bg-slate-900/60 p-0.5 rounded-lg border border-white/20 text-xs font-bold shadow-inner">
                         <button @click="setLang('id')"
@@ -1082,7 +1103,13 @@
 
                     <!-- Currency & Exchange Rate -->
                     <div>
-                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('currencyLabel')"></label>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-[11px] font-bold uppercase text-slate-500" x-text="t('currencyLabel')"></label>
+                            <span class="text-[9px] uppercase px-1 py-0.2 rounded font-black text-indigo-700 bg-indigo-50 border border-indigo-200 cursor-pointer"
+                                  @click="fxModalOpen = true" title="Atur Mode Kurs">
+                                <span x-text="fxConfig.mode"></span> ⚙️
+                            </span>
+                        </div>
                         <select x-model="currency" class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 bg-slate-50">
                             <option value="IDR">IDR (Rupiah)</option>
                             <option value="USD">USD (US Dollar)</option>
@@ -1090,9 +1117,18 @@
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('exchangeRateLabel')"></label>
-                        <input type="number" step="50" x-model.number="exchangeRate"
-                               class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300" />
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-[11px] font-bold uppercase text-slate-500" x-text="t('exchangeRateLabel')"></label>
+                            <button type="button" @click="fxModalOpen = true" class="text-[10px] text-blue-700 font-bold hover:underline cursor-pointer">
+                                💱 Detail
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <input type="number" step="50" x-model.number="exchangeRate"
+                                   @input="setManualFxRate(exchangeRate); fxConfig.mode = 'manual'"
+                                   class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300 pr-10" />
+                            <span class="absolute right-2 top-2 text-[10px] font-bold text-slate-400">/ USD</span>
+                        </div>
                     </div>
 
                     <!-- Target Margin % -->
@@ -1102,15 +1138,15 @@
                             <span x-show="Number(marginPercent || 0) < 15" class="text-[10px] text-amber-700 font-extrabold bg-amber-100 border border-amber-300 px-1 rounded">⚠️ &lt;15%</span>
                         </div>
                         <input type="number" min="0" max="80" step="1" x-model.number="marginPercent"
-                               class="w-full px-3 py-2 text-xs font-bold rounded-lg border focus:ring-2 focus:ring-blue-200"
-                               :class="Number(marginPercent || 0) < 15 ? 'border-amber-400 bg-amber-50/50 text-amber-900' : 'border-slate-300'" />
+                                class="w-full px-3 py-2 text-xs font-bold rounded-lg border focus:ring-2 focus:ring-blue-200"
+                                :class="Number(marginPercent || 0) < 15 ? 'border-amber-400 bg-amber-50/50 text-amber-900' : 'border-slate-300'" />
                     </div>
 
                     <!-- Discount % & PPN % -->
                     <div>
                         <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1" x-text="t('discountLabel')"></label>
                         <input type="number" min="0" max="80" step="0.5" x-model.number="discountPercent"
-                               class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300" />
+                                class="w-full px-3 py-2 text-xs font-bold rounded-lg border border-slate-300" />
                     </div>
 
                     <div>
@@ -1121,6 +1157,23 @@
                             <option :value="0">0% (Tax Exempt / Non-PKP)</option>
                         </select>
                     </div>
+                </div>
+
+                <!-- Corporate Finance Policy & FX Disclaimer Banner -->
+                <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-2xs">
+                    <div class="flex items-start gap-2">
+                        <span class="text-base shrink-0 mt-0.5">🏛️</span>
+                        <div>
+                            <span class="font-extrabold text-amber-900">Catatan Finansial Valuta Asing:</span>
+                            <span class="text-amber-800 ml-1"
+                                  x-text="'Estimasi harga dikonversi dengan kurs acuan Rp ' + (fxConfig.effectiveRate || exchangeRate).toLocaleString('id-ID') + '/USD (' + (fxConfig.mode === 'finance' ? 'Kurs Resmi Finance' : (fxConfig.mode === 'live' ? 'Live Spot Pasar' : 'Manual Project Buffer')) + '). Seluruh nilai penawaran komersial wajib dikonfirmasi ke Divisi Finance sebelum penerbitan quotation resmi.'"></span>
+                        </div>
+                    </div>
+                    <button type="button" @click="fxModalOpen = true"
+                            class="px-2.5 py-1 rounded-lg bg-amber-200/90 hover:bg-amber-300 text-amber-900 font-extrabold text-[11px] shrink-0 transition cursor-pointer flex items-center gap-1">
+                        <span>⚙️</span>
+                        <span>Opsi Kurs Valas</span>
+                    </button>
                 </div>
 
                 <!-- Margin Guardrail Warning Banner -->
@@ -4522,7 +4575,7 @@
                             <select x-model="cctv.selectedPresetSku"
                                     class="w-full p-2 text-xs rounded-xl border border-slate-300 bg-white font-semibold focus:border-emerald-600 focus:outline-none">
                                 <template x-for="p in (window.CDPK_CCTV_ENGINE ? window.CDPK_CCTV_ENGINE.presets : [])" :key="p.sku">
-                                    <option :value="p.sku" x-text="'[' + p.brandName + '] ' + p.model + ' (' + p.resolution + ' • ' + (currency === 'USD' ? '$' + p.unitPriceUsd : 'Rp ' + p.unitPriceIdr.toLocaleString()) + ')'"></option>
+                                    <option :value="p.sku" x-text="'[' + p.brandName + '] ' + p.model + ' (' + p.resolution + ' • ' + formatDualPrice(p.unitPriceIdr, p.unitPriceUsd) + ')'"></option>
                                 </template>
                             </select>
                         </div>
@@ -4628,13 +4681,13 @@
                                 <div>
                                     <label class="block font-bold text-slate-600 mb-1">Harga Satuan (USD):</label>
                                     <input type="number" step="10" x-model.number="cctv.customForm.unitPriceUsd"
-                                           @input="cctv.customForm.unitPriceIdr = Math.round(cctv.customForm.unitPriceUsd * exchangeRate); cctv.customForm.cogsUsd = Math.round(cctv.customForm.unitPriceUsd * 0.75)"
+                                           @input="cctv.customForm.unitPriceIdr = Math.round(cctv.customForm.unitPriceUsd * (fxConfig.effectiveRate || exchangeRate || 16200)); cctv.customForm.cogsUsd = Math.round(cctv.customForm.unitPriceUsd * 0.75)"
                                            class="w-full p-2 rounded-lg border border-slate-300 font-bold focus:border-emerald-600" />
                                 </div>
                                 <div>
                                     <label class="block font-bold text-slate-600 mb-1">Harga Satuan (IDR):</label>
                                     <input type="number" step="100000" x-model.number="cctv.customForm.unitPriceIdr"
-                                           @input="cctv.customForm.unitPriceUsd = Math.round((cctv.customForm.unitPriceIdr / exchangeRate) * 100) / 100; cctv.customForm.cogsUsd = Math.round(cctv.customForm.unitPriceUsd * 0.75)"
+                                           @input="cctv.customForm.unitPriceUsd = Math.round((cctv.customForm.unitPriceIdr / (fxConfig.effectiveRate || exchangeRate || 16200)) * 100) / 100; cctv.customForm.cogsUsd = Math.round(cctv.customForm.unitPriceUsd * 0.75)"
                                            class="w-full p-2 rounded-lg border border-slate-300 font-bold focus:border-emerald-600" />
                                 </div>
                                 <div>
@@ -4723,7 +4776,7 @@
                                                 </div>
                                             </td>
                                             <td class="p-2.5 text-right font-bold text-slate-800">
-                                                <span x-text="currency === 'USD' ? '$' + grp.unitPriceUsd : 'Rp ' + (grp.unitPriceIdr || Math.round(grp.unitPriceUsd * exchangeRate)).toLocaleString()"></span>
+                                                <span x-text="formatDualPrice(grp.unitPriceIdr, grp.unitPriceUsd)"></span>
                                             </td>
                                             <td class="p-2.5 text-center">
                                                 <button type="button" @click="removeCameraGroup(gIdx)"
@@ -4849,7 +4902,7 @@
                                 <div class="flex flex-wrap items-center justify-between pt-2 border-t border-slate-200 text-xs font-bold text-slate-800">
                                     <span>PoE Budget: <strong class="text-emerald-700" x-text="sw.poeBudgetWatts + 'W'"></strong></span>
                                     <span>Uplink: <strong class="text-indigo-700">10G SFP+</strong></span>
-                                    <span>Harga: <strong class="text-slate-900" x-text="currency === 'USD' ? '$' + sw.unitPriceUsd : 'Rp ' + (sw.unitPriceIdr || Math.round(sw.unitPriceUsd * exchangeRate)).toLocaleString()"></strong></span>
+                                    <span>Harga: <strong class="text-slate-900" x-text="formatDualPrice(sw.unitPriceIdr, sw.unitPriceUsd)"></strong></span>
                                 </div>
                             </div>
                         </template>
@@ -4924,8 +4977,8 @@
                                     <th class="p-2.5">Deskripsi Perangkat</th>
                                     <th class="p-2.5 w-16 text-center">Kuantitas</th>
                                     <th class="p-2.5 w-16 text-center">Satuan</th>
-                                    <th class="p-2.5 w-28 text-right">Harga Satuan</th>
-                                    <th class="p-2.5 w-32 text-right">Total Harga</th>
+                                    <th class="p-2.5 text-right" :class="fxConfig && fxConfig.displayMode === 'dual' ? 'w-44' : 'w-28'" x-text="lang === 'en' ? 'Unit Price' : 'Harga Satuan'"></th>
+                                    <th class="p-2.5 text-right" :class="fxConfig && fxConfig.displayMode === 'dual' ? 'w-48' : 'w-32'" x-text="lang === 'en' ? 'Total Amount' : 'Total Harga'"></th>
                                     <th class="p-2.5 w-24 text-right">Margin Target</th>
                                 </tr>
                             </thead>
@@ -4935,16 +4988,19 @@
                                         <td class="p-2.5 text-center font-bold text-slate-400" x-text="idx + 1"></td>
                                         <td class="p-2.5 font-mono text-[11px] font-bold text-slate-700" x-text="it.sku"></td>
                                         <td class="p-2.5">
-                                            <div class="font-extrabold text-slate-900" x-text="lang === 'en' ? (it.name_en || it.name_id) : (it.name_id || it.name_en)"></div>
-                                            <div class="text-[10px] text-slate-500 mt-0.5" x-text="lang === 'en' ? it.notes_en : it.notes_id"></div>
+                                             <div class="font-extrabold text-slate-900" x-text="lang === 'en' ? (it.name_en || it.name_id) : (it.name_id || it.name_en)"></div>
+                                             <div class="text-[10px] text-slate-500 mt-0.5" x-text="lang === 'en' ? it.notes_en : it.notes_id"></div>
                                         </td>
                                         <td class="p-2.5 text-center font-black text-slate-900" x-text="it.qty"></td>
                                         <td class="p-2.5 text-center font-semibold text-slate-600" x-text="it.unit"></td>
                                         <td class="p-2.5 text-right font-bold text-slate-800">
-                                            <span x-text="currency === 'USD' ? ('$' + it.unitPriceUsd.toLocaleString()) : ('Rp ' + it.unitPriceIdr.toLocaleString())"></span>
+                                            <div x-text="formatDualPrice(it.unitPriceIdr, it.unitPriceUsd)"></div>
+                                            <div x-show="fxConfig && fxConfig.displayMode === 'dual' && it.unitPriceUsd" class="text-[9px] text-slate-400 font-mono">
+                                                Ref: USD Basis
+                                            </div>
                                         </td>
                                         <td class="p-2.5 text-right font-black text-emerald-800">
-                                            <span x-text="currency === 'USD' ? ('$' + (it.unitPriceUsd * it.qty).toLocaleString()) : ('Rp ' + (it.unitPriceIdr * it.qty).toLocaleString())"></span>
+                                            <div x-text="formatDualPrice(it.unitPriceIdr * it.qty, it.unitPriceUsd * it.qty)"></div>
                                         </td>
                                         <td class="p-2.5 text-right font-bold text-emerald-700" x-text="it.marginPct + '%'"></td>
                                     </tr>
@@ -4952,15 +5008,28 @@
                             </tbody>
                             <tfoot class="bg-slate-50 border-t-2 border-slate-200 text-xs font-black text-slate-900">
                                 <tr>
-                                    <td colspan="6" class="p-3 text-right uppercase tracking-wider" x-text="lang === 'en' ? 'Estimated Total CCTV Subtotal:' : 'Estimasi Subtotal CCTV:'"></td>
-                                    <td class="p-3 text-right text-sm text-emerald-900">
-                                        <span x-text="getCctvBoqResult() && getCctvBoqResult().totals ? (currency === 'USD' ? '$' + getCctvBoqResult().totals.subtotalUsd.toLocaleString() : 'Rp ' + getCctvBoqResult().totals.subtotalIdr.toLocaleString()) : '-'"></span>
+                                    <td colspan="5" class="p-3 text-right uppercase tracking-wider" x-text="lang === 'en' ? 'Estimated Total CCTV Subtotal:' : 'Estimasi Subtotal CCTV:'"></td>
+                                    <td colspan="2" class="p-3 text-right text-sm text-emerald-900 font-black">
+                                        <span x-text="getCctvBoqResult() && getCctvBoqResult().totals ? formatDualPrice(getCctvBoqResult().totals.subtotalIdr, getCctvBoqResult().totals.subtotalUsd) : '-'"></span>
                                     </td>
                                     <td class="p-3 text-right text-emerald-800"
                                         x-text="getCctvBoqResult() && getCctvBoqResult().totals ? ('Avg ' + getCctvBoqResult().totals.marginPct + '%') : ''"></td>
                                 </tr>
                             </tfoot>
                         </table>
+                    </div>
+
+                    <!-- CCTV FX & Finance Advisory Notice Banner -->
+                    <div class="mt-4 p-3.5 rounded-xl bg-amber-50/90 border border-amber-200 flex items-start gap-3 text-xs text-amber-950">
+                        <span class="text-base shrink-0 mt-0.5">⚠️</span>
+                        <div class="space-y-1">
+                            <div class="font-extrabold flex flex-wrap items-center gap-2">
+                                <span x-text="lang === 'en' ? 'Official Commercial & FX Reference Advisory' : 'Pedoman Acuan Kurs Valas & Konfirmasi Harga Finance'"></span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-200 text-amber-950 uppercase"
+                                      x-text="'KURS: Rp ' + Number(fxConfig.effectiveRate || exchangeRate || 16200).toLocaleString('id-ID') + ' (' + (fxConfig.mode || 'finance').toUpperCase() + ')'"></span>
+                            </div>
+                            <p class="text-[11px] text-amber-800 leading-relaxed" x-text="getFxDisclaimerText()"></p>
+                        </div>
                     </div>
                 </div>
 
@@ -5109,7 +5178,7 @@
                                     <div>
                                         <div class="text-[10px] text-slate-400 font-semibold" x-text="cam.poeClass.toUpperCase() + ' (' + cam.poeWatts + 'W)'"></div>
                                         <div class="font-black text-slate-900 text-sm"
-                                             x-text="currency === 'USD' ? ('$' + cam.unitPriceUsd.toLocaleString()) : ('Rp ' + (cam.unitPriceIdr || Math.round(cam.unitPriceUsd * exchangeRate)).toLocaleString())"></div>
+                                             x-text="formatDualPrice(cam.unitPriceIdr, cam.unitPriceUsd)"></div>
                                     </div>
                                     <button type="button" @click="addCameraGroupFromPreset(cam.sku, 1); showToast(lang === 'en' ? 'Added to camera sizing planner' : 'Ditambahkan ke planner kamera', 'success')"
                                             class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow transition flex items-center gap-1 cursor-pointer">
@@ -5166,7 +5235,7 @@
                                     <div>
                                         <div class="text-[10px] text-slate-400 font-semibold" x-text="cam.poeClass.toUpperCase() + ' (' + cam.poeWatts + 'W)'"></div>
                                         <div class="font-black text-slate-900 text-sm"
-                                             x-text="currency === 'USD' ? ('$' + cam.unitPriceUsd.toLocaleString()) : ('Rp ' + (cam.unitPriceIdr || Math.round(cam.unitPriceUsd * exchangeRate)).toLocaleString())"></div>
+                                             x-text="formatDualPrice(cam.unitPriceIdr, cam.unitPriceUsd)"></div>
                                     </div>
                                     <button type="button" @click="addCameraGroupFromPreset(cam.sku, 1); showToast(lang === 'en' ? 'Added to camera sizing planner' : 'Ditambahkan ke planner kamera', 'success')"
                                             class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition flex items-center gap-1 cursor-pointer">
@@ -5862,6 +5931,240 @@
                         <span x-text="aiLoading ? '...' : (lang === 'en' ? 'Send' : 'Kirim')"></span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════ MODAL: GLOBAL FX & FINANCE ADVISORY CONTROLLER ═══════════════════ -->
+    <div x-show="fxModalOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
+        <div @click.away="fxModalOpen = false"
+             class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 my-auto">
+            <!-- Modal Header -->
+            <div class="cdpk-gradient text-white p-4 sm:p-5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-xl shrink-0">💱</div>
+                    <div>
+                        <h3 class="text-base font-extrabold flex items-center gap-2">
+                            <span>Asisten Valas &amp; Pengaturan Nilai Tukar</span>
+                            <span class="text-[10px] uppercase px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black">Global FX</span>
+                        </h3>
+                        <p class="text-xs text-sky-100/90 mt-0.5">
+                            Pusat Kontrol Multi-Mata Uang (USD/IDR), Acuan Resmi Finance &amp; Buffer Tender Proyek
+                        </p>
+                    </div>
+                </div>
+                <button @click="fxModalOpen = false" class="text-white/80 hover:text-white font-bold text-xl p-1 cursor-pointer">✕</button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-4 sm:p-6 space-y-5 max-h-[80vh] overflow-y-auto text-xs text-slate-700">
+                <!-- 1. Display Mode Toggle -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="font-extrabold text-slate-900 text-xs">Format Tampilan Mata Uang (Global Display Mode)</div>
+                        <div class="text-[11px] text-slate-500">Pilih bagaimana harga ditampilkan di seluruh modul (DMR, DAS, CCTV &amp; BoQ)</div>
+                    </div>
+                    <div class="inline-flex bg-slate-200/80 p-0.5 rounded-lg text-xs font-bold shrink-0">
+                        <button type="button" @click="setFxDisplayMode('dual')"
+                                :class="fxConfig.displayMode === 'dual' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-700 hover:text-slate-900'"
+                                class="px-2.5 py-1.5 rounded-md transition cursor-pointer">
+                            🪙 Dual (Rp + $)
+                        </button>
+                        <button type="button" @click="setFxDisplayMode('idr')"
+                                :class="fxConfig.displayMode === 'idr' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-700 hover:text-slate-900'"
+                                class="px-2.5 py-1.5 rounded-md transition cursor-pointer">
+                            🇮🇩 IDR Saja
+                        </button>
+                        <button type="button" @click="setFxDisplayMode('usd')"
+                                :class="fxConfig.displayMode === 'usd' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-700 hover:text-slate-900'"
+                                class="px-2.5 py-1.5 rounded-md transition cursor-pointer">
+                            🇺🇸 USD Saja
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. Three FX Mode Cards -->
+                <div>
+                    <label class="block font-extrabold text-slate-900 text-xs mb-2">
+                        Pilih Sumber Acuan Nilai Tukar (Active FX Mode):
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <!-- Mode 1: Kurs Resmi Finance (SSOT) -->
+                        <div @click="setFxMode('finance')"
+                             :class="fxConfig.mode === 'finance' ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'"
+                             class="p-3.5 rounded-xl border transition cursor-pointer flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-black text-blue-950 flex items-center gap-1">
+                                        <span>🏛️</span>
+                                        <span>Kurs Finance</span>
+                                    </span>
+                                    <span class="text-[9px] font-black px-1.5 py-0.2 rounded uppercase bg-blue-200 text-blue-900">SSOT</span>
+                                </div>
+                                <div class="text-base font-black text-slate-900" x-text="'Rp ' + (fxConfig.financeRate || 16200).toLocaleString('id-ID')"></div>
+                                <p class="text-[10px] text-slate-500 mt-1 leading-snug">
+                                    Kurs patokan resmi Finance PT Citradata Purnakharisma dari Master Google Sheets. Aman &amp; tidak fluktuatif.
+                                </p>
+                            </div>
+                            <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                                <span class="font-bold text-blue-700" x-show="fxConfig.mode === 'finance'">● Aktif Digunakan</span>
+                                <span class="text-slate-400" x-show="fxConfig.mode !== 'finance'">Klik untuk pilih</span>
+                            </div>
+                        </div>
+
+                        <!-- Mode 2: Kurs Pasar Spot Realtime -->
+                        <div @click="setFxMode('live')"
+                             :class="fxConfig.mode === 'live' ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'"
+                             class="p-3.5 rounded-xl border transition cursor-pointer flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-black text-emerald-950 flex items-center gap-1">
+                                        <span>🌐</span>
+                                        <span>Pasar Realtime</span>
+                                    </span>
+                                    <span class="text-[9px] font-black px-1.5 py-0.2 rounded uppercase bg-emerald-200 text-emerald-900">Spot</span>
+                                </div>
+                                <div class="text-base font-black text-slate-900" x-text="'Rp ' + (fxConfig.liveRate || 16200).toLocaleString('id-ID')"></div>
+                                <div class="text-[10px] font-bold mt-1"
+                                     :class="fxConfig.variancePct >= 0 ? 'text-amber-700' : 'text-emerald-700'"
+                                     x-text="(fxConfig.variancePct >= 0 ? '+' : '') + fxConfig.variancePct + '% vs Finance (' + (fxConfig.varianceIdr >= 0 ? '+' : '') + 'Rp ' + Math.round(fxConfig.varianceIdr).toLocaleString('id-ID') + ')'">
+                                </div>
+                                <p class="text-[9px] text-slate-500 mt-1 leading-snug truncate" :title="fxConfig.sourceName" x-text="fxConfig.sourceName"></p>
+                            </div>
+                            <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                                <span class="font-bold text-emerald-700" x-show="fxConfig.mode === 'live'">● Aktif Digunakan</span>
+                                <span class="text-slate-400" x-show="fxConfig.mode !== 'live'">Klik untuk pilih</span>
+                                <button type="button" @click.stop="refreshLiveFxRate()"
+                                        :disabled="fxConfig.isLoading"
+                                        class="px-1.5 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-[9px] transition cursor-pointer"
+                                        title="Refresh kurs spot dari API">
+                                    <span x-text="fxConfig.isLoading ? '...' : '🔄 Refresh'"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Mode 3: Kurs Khusus Proyek (Manual Override) -->
+                        <div @click="setFxMode('manual')"
+                             :class="fxConfig.mode === 'manual' ? 'border-amber-600 bg-amber-50/70 ring-2 ring-amber-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'"
+                             class="p-3.5 rounded-xl border transition cursor-pointer flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-black text-amber-950 flex items-center gap-1">
+                                        <span>✏️</span>
+                                        <span>Manual Proyek</span>
+                                    </span>
+                                    <span class="text-[9px] font-black px-1.5 py-0.2 rounded uppercase bg-amber-200 text-amber-900">Custom</span>
+                                </div>
+                                <div class="text-base font-black text-slate-900" x-text="'Rp ' + (fxConfig.manualRate || 16500).toLocaleString('id-ID')"></div>
+                                <p class="text-[10px] text-slate-500 mt-1 leading-snug">
+                                    Nilai tukar khusus untuk buffer risiko tender atau audit PO lampau. Hanya berlaku di sesi proyek ini.
+                                </p>
+                            </div>
+                            <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                                <span class="font-bold text-amber-700" x-show="fxConfig.mode === 'manual'">● Aktif Digunakan</span>
+                                <span class="text-slate-400" x-show="fxConfig.mode !== 'manual'">Klik untuk pilih</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Manual Rate Input & Quick Buffer Tools -->
+                <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="font-bold text-slate-800 text-xs">Input Kurs Kustom / Buffer Tender:</span>
+                            <span class="text-[11px] text-slate-500 block">Ketik angka langsung atau gunakan tombol pengaman fluktuasi valas cepat</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 w-full sm:w-auto">
+                            <span class="text-xs font-bold text-slate-600">Rp</span>
+                            <input type="number" step="50" min="1000" x-model.number="fxConfig.manualRate"
+                                   @input="setManualFxRate(fxConfig.manualRate)"
+                                   class="w-32 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-black text-right text-slate-900 text-sm focus:border-indigo-600 focus:outline-none" />
+                            <span class="text-xs font-bold text-slate-600">/ USD</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Risk Buffers -->
+                    <div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-200/70">
+                        <span class="text-[10px] font-bold text-slate-500">Quick Buffer:</span>
+                        <button type="button" @click="applyQuickFxBuffer(1)"
+                                class="px-2 py-1 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[10px] transition cursor-pointer">
+                            +1% Buffer (Rp <span x-text="Math.round((fxConfig.liveRate || fxConfig.financeRate) * 1.01).toLocaleString('id-ID')"></span>)
+                        </button>
+                        <button type="button" @click="applyQuickFxBuffer(2)"
+                                class="px-2 py-1 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[10px] transition cursor-pointer">
+                            +2% Tender Shield (Rp <span x-text="Math.round((fxConfig.liveRate || fxConfig.financeRate) * 1.02).toLocaleString('id-ID')"></span>)
+                        </button>
+                        <button type="button" @click="applyQuickFxBuffer(5)"
+                                class="px-2 py-1 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[10px] transition cursor-pointer">
+                            +5% Safe Margin (Rp <span x-text="Math.round((fxConfig.liveRate || fxConfig.financeRate) * 1.05).toLocaleString('id-ID')"></span>)
+                        </button>
+                        <button type="button" @click="setManualFxRate(fxConfig.financeRate); setFxMode('finance')"
+                                class="px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-[10px] transition cursor-pointer ml-auto">
+                            Reset ke Kurs Finance
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4. FX Stress Test & Margin Sensitivity Simulator -->
+                <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-extrabold text-indigo-950 text-xs flex items-center gap-1.5">
+                            <span>📊</span>
+                            <span>Simulasi Sensitivitas Margin Proyek (FX Stress Test)</span>
+                        </span>
+                        <span class="text-[10px] text-indigo-700 font-bold"
+                              x-text="'Kurs Aktif: Rp ' + (fxConfig.effectiveRate || exchangeRate).toLocaleString('id-ID')"></span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs">
+                        <div class="bg-white p-2.5 rounded-lg border border-indigo-100">
+                            <span class="text-[10px] font-bold text-slate-500 block">Skenario Kurs Naik (+2%)</span>
+                            <span class="font-black text-slate-900" x-text="'Rp ' + Math.round((fxConfig.effectiveRate || exchangeRate) * 1.02).toLocaleString('id-ID')"></span>
+                            <span class="text-[9px] text-amber-700 block mt-0.5">Potensi tergerus margin ~1.8% jika harga jual IDR terkunci</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-indigo-100">
+                            <span class="text-[10px] font-bold text-slate-500 block">Skenario Kurs Naik (+5%)</span>
+                            <span class="font-black text-slate-900" x-text="'Rp ' + Math.round((fxConfig.effectiveRate || exchangeRate) * 1.05).toLocaleString('id-ID')"></span>
+                            <span class="text-[9px] text-rose-700 block mt-0.5">Risiko margin jatuh di bawah batas aman 15%</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-indigo-100">
+                            <span class="text-[10px] font-bold text-slate-500 block">Rekomendasi Proteksi</span>
+                            <span class="font-black text-emerald-800">Klausul Penyesuaian</span>
+                            <span class="text-[9px] text-slate-600 block mt-0.5">Cantumkan klausul deviasi > 2% pada proposal tender</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Corporate Finance Policy Disclaimer -->
+                <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 space-y-1.5">
+                    <div class="font-extrabold flex items-center gap-1.5 text-xs text-amber-900">
+                        <span>⚠️</span>
+                        <span>Kebijakan Finansial &amp; Konfirmasi Kurs PT Citradata Purnakharisma:</span>
+                    </div>
+                    <p class="text-[11px] leading-relaxed text-amber-900/90" x-text="getFxDisclaimerText()"></p>
+                    <div class="text-[10px] font-semibold text-amber-800 pt-1 border-t border-amber-200/70 flex items-center justify-between">
+                        <span>Sumber Data: <strong x-text="fxConfig.sourceName"></strong></span>
+                        <span x-text="fxConfig.lastUpdated ? ('Update: ' + new Date(fxConfig.lastUpdated).toLocaleString('id-ID')) : 'Tersinkronisasi'"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-3.5 bg-slate-100 border-t border-slate-200 flex items-center justify-between">
+                <div class="text-[11px] text-slate-600">
+                    Kurs Aktif Kalkulasi: <strong class="text-slate-900" x-text="'Rp ' + (fxConfig.effectiveRate || exchangeRate).toLocaleString('id-ID') + ' / USD'"></strong>
+                </div>
+                <button type="button" @click="fxModalOpen = false"
+                        class="px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-xs transition cursor-pointer">
+                    Terapkan &amp; Tutup
+                </button>
             </div>
         </div>
     </div>

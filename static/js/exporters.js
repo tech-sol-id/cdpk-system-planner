@@ -209,7 +209,22 @@ window.CDPK_EXPORTERS = {
             doc.setFont('helvetica', 'normal');
             doc.text(
                 isEn ? `Terms: ${app.commercialConfig.payment_terms_en || '30% DP, 60% Delivery, 10% Commissioning'}` : `Syarat Pembayaran: ${app.commercialConfig.payment_terms_id || 'DP 30%, 60% Delivery, 10% BAST'}`,
-                12, finalY - 6
+                12, finalY - 14
+            );
+
+            const fxModeLabel = app.fxConfig ? (app.fxConfig.mode === 'finance' ? 'Finance SSOT' : (app.fxConfig.mode === 'live' ? 'Live Spot' : 'Manual Buffer')) : 'Finance SSOT';
+            const fxRateVal = (app.fxConfig ? (app.fxConfig.effectiveRate || app.exchangeRate) : app.exchangeRate) || 16200;
+            const fxSourceVal = (app.fxConfig ? app.fxConfig.sourceName : 'PT Citradata Purnakharisma') || 'PT Citradata Purnakharisma';
+
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(7.5);
+            doc.text(
+                isEn ? `* Indicative FX Rate: USD 1.00 = IDR ${fxRateVal.toLocaleString('en-US')} (Ref: ${fxModeLabel} - ${fxSourceVal})` : `* Acuan Kurs Indikatif: USD 1.00 = IDR ${fxRateVal.toLocaleString('id-ID')} (Ref: ${fxModeLabel} - ${fxSourceVal})`,
+                12, finalY - 8
+            );
+            doc.text(
+                isEn ? `* Disclaimer: Final pricing and USD components are subject to written confirmation by Finance Division prior to PO.` : `* Disclaimer: Harga final & komponen berbasis valas wajib dikonfirmasi ke Divisi Finance sebelum penerbitan PO.`,
+                12, finalY - 3
             );
         }
 
@@ -297,6 +312,13 @@ window.CDPK_EXPORTERS = {
             }
             boqAoA.push(["", "", `PPN / VAT (${app.ppnPercent}%)`, "", "", "", "", Math.round(app.ppnAmount)]);
             boqAoA.push(["", "", `GRAND TOTAL (${app.currency})`, "", "", "", "", Math.round(app.grandTotal)]);
+            boqAoA.push([]);
+            const fxModeLabel = app.fxConfig ? (app.fxConfig.mode === 'finance' ? 'Finance SSOT' : (app.fxConfig.mode === 'live' ? 'Live Spot' : 'Manual Buffer')) : 'Finance SSOT';
+            const fxRateVal = (app.fxConfig ? (app.fxConfig.effectiveRate || app.exchangeRate) : app.exchangeRate) || 16200;
+            const fxSourceVal = (app.fxConfig ? app.fxConfig.sourceName : 'PT Citradata Purnakharisma') || 'PT Citradata Purnakharisma';
+            boqAoA.push(["Catatan Finansial Valuta Asing:"]);
+            boqAoA.push(["Acuan Kurs", `USD 1.00 = IDR ${fxRateVal.toLocaleString('id-ID')}`, `Ref: ${fxModeLabel} - ${fxSourceVal}`]);
+            boqAoA.push(["Disclaimer Finance", app.getFxDisclaimerText ? app.getFxDisclaimerText() : "Harga indikatif, konfirmasi Finance sebelum PO."]);
         }
 
         const wsBoq = window.XLSX.utils.aoa_to_sheet(boqAoA);

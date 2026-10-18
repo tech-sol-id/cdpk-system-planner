@@ -66,6 +66,7 @@ from server.knowledge_sync import (
     get_knowledge_status
 )
 from server.knowledge_search import search_knowledge_base
+from server.fx_service import get_fx_status
 
 logging.basicConfig(
     level=logging.INFO,
@@ -213,6 +214,12 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
                 "status": "ok",
                 "models": list(ALLOWED_MODELS.values())
             })
+
+        # ─── Global FX & Multi-Currency Engine ────────────────────────────
+        if path == "/api/fx/status":
+            qs = urllib.parse.parse_qs(parsed.query)
+            force = qs.get("force", ["0"])[0] in ("1", "true", "yes")
+            return self._send_json(get_fx_status(force_refresh=force))
 
         # ─── In-App Notifications ─────────────────────────────────────────
         if path == "/api/notifications":
@@ -658,6 +665,10 @@ class CDPKRequestHandler(BaseHTTPRequestHandler):
             folder_id = body.get("folder_id") or DEFAULT_FOLDER_ID
             sync_res = sync_from_gdrive(force=True, spreadsheet_id=spreadsheet_id, folder_id=folder_id)
             return self._send_json(sync_res)
+
+        # ─── Global FX Refresh ────────────────────────────────────────────
+        if path == "/api/fx/refresh":
+            return self._send_json(get_fx_status(force_refresh=True))
 
         # ─── Save Calculation Directly to Google Drive Subfolder ──────────
         if path == "/api/project/save-to-drive":

@@ -307,6 +307,30 @@ window.cdpkSystemPlannerApp = function () {
         exportMode: 'commercial', // 'commercial' | 'technical'
         currency: 'IDR', // 'IDR' | 'USD'
         exchangeRate: 16200,
+        fxModalOpen: false,
+        fxConfig: {
+            baseCurrency: 'USD',
+            targetCurrency: 'IDR',
+            displayMode: localStorage.getItem('cdpk_fx_display_mode') || 'dual', // 'dual' ($ + Rp) | 'idr' | 'usd'
+            mode: localStorage.getItem('cdpk_fx_mode') || 'finance', // 'finance' (SSOT) | 'live' (Spot Market) | 'manual' (Project Override)
+            financeRate: 16200,
+            liveRate: 16200,
+            manualRate: 16500,
+            effectiveRate: 16200,
+            varianceIdr: 0,
+            variancePct: 0.0,
+            isVarianceSignificant: false,
+            lastUpdated: null,
+            sourceName: 'Finance Master (Google Sheets)',
+            cacheStatus: 'finance',
+            isLoading: false,
+            customBufferPercent: 0,
+            stressTestRate: 16800,
+            financeDisclaimer: {
+                id: 'Seluruh estimasi konversi valas (USD/IDR) bersifat indikatif teknis. Nilai tukar resmi, HPP modal, dan penawaran komersial final wajib dikonfirmasi ke Divisi Finance PT Citradata Purnakharisma sebelum rilis penawaran resmi atau penandatanganan Kontrak/PO.',
+                en: 'All foreign exchange conversions (USD/IDR) are indicative technical references. Official exchange rates, baseline COGS, and commercial terms must be confirmed in writing with PT Citradata Purnakharisma Finance Division prior to formal quotation issuance or PO signing.'
+            }
+        },
         discountPercent: 0,
         marginPercent: 0,
         ppnPercent: 11,
@@ -715,6 +739,7 @@ window.cdpkSystemPlannerApp = function () {
             await this.checkCurrentAuth();
             await this.loadCloudKnowledge(false);
             await this.fetchKnowledgeBankStatus();
+            await this.fetchFxStatus();
             this.syncBoqFromSizing();
             if (this.currentUser) {
                 this.fetchNotifications();
@@ -1825,7 +1850,12 @@ window.cdpkSystemPlannerApp = function () {
                     this.systemBundles = k.system_bundles || [];
                     this.industryParams = k.industry_rf_params || [];
                     this.commercialConfig = k.commercial_config || this.commercialConfig;
-                    this.exchangeRate = Number(this.commercialConfig.usd_to_idr || 16200);
+                    const sheetFinanceRate = Number(this.commercialConfig.usd_to_idr || 16200);
+                    this.fxConfig.financeRate = sheetFinanceRate;
+                    if (this.fxConfig.mode === 'finance') {
+                        this.fxConfig.effectiveRate = sheetFinanceRate;
+                        this.exchangeRate = sheetFinanceRate;
+                    }
                     this.ppnPercent = Number(this.commercialConfig.ppn_percent || 11);
                     this.mandaysRateIdr = Number(this.commercialConfig.mandays_rate_idr || 3500000);
                     this.syncStatus = data.status || 'ok';
@@ -2374,6 +2404,176 @@ window.cdpkSystemPlannerApp = function () {
                 return 'US$ ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
             return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+        },
+
+        // ─── Module: Global FX & Multi-Currency Engine Methods ───────────
+        async fetchFxStatus(force = false) {
+            this.fxConfig.isLoading = true;
+            try {
+                const url = force ? '/api/fx/status?force=1' : '/api/fx/status';
+                const resp = await fetch(url);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data && data.status === 'ok') {
+                        this.fxConfig.financeRate = Number(data.finance_rate || this.fxConfig.financeRate);
+                        this.fxConfig.liveRate = Number(data.live_rate || this.fxConfig.liveRate);
+                        this.fxConfig.varianceIdr = Number(data.variance_idr || 0);
+                        this.fxConfig.variancePct = Number(data.variance_pct || 0);
+                        this.fxConfig.isVarianceSignificant = !!data.is_variance_significant;
+                        this.fxConfig.lastUpdated = data.last_updated;
+                        this.fxConfig.sourceName = data.source || this.fxConfig.sourceName;
+                        this.fxConfig.cacheStatus = data.cache_status || 'cached';
+
+                        this.applyFxRateByMode();
+                    }
+                }
+            } catch (err) {
+                console.warn('[FX Service] Failed fetching status, falling back to Finance rate:', err);
+                this.applyFxRateByMode();
+            } finally {
+                this.fxConfig.isLoading = false;
+            }
+        },
+
+        async refreshLiveFxRate() {
+            this.fxConfig.isLoading = true;
+            try {
+                const resp = await fetch('/api/fx/refresh', { method: 'POST' });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data && data.status === 'ok') {
+                        this.fxConfig.liveRate = Number(data.live_rate || this.fxConfig.liveRate);
+                        this.fxConfig.varianceIdr = Number(data.variance_idr || 0);
+                        this.fxConfig.variancePct = Number(data.variance_pct || 0);
+                        this.fxConfig.isVarianceSignificant = !!data.is_variance_significant;
+                        this.fxConfig.lastUpdated = data.last_updated;
+                        this.fxConfig.sourceName = data.source;
+                        this.fxConfig.cacheStatus = 'live';
+
+                        if (this.fxConfig.mode === 'live') {
+                            this.applyFxRateByMode();
+                        }
+                        this.showToast(
+                            this.lang === 'en'
+                                ? `Live FX Rate updated: Rp ${this.fxConfig.liveRate.toLocaleString('id-ID')} / USD (${data.source})`
+                                : `Kurs pasar realtime berhasil diupdate: Rp ${this.fxConfig.liveRate.toLocaleString('id-ID')} / USD (${data.source})`,
+                            'success'
+                        );
+                    }
+                }
+            } catch (err) {
+                this.showToast(this.lang === 'en' ? 'Failed refreshing live rate' : 'Gagal memperbarui kurs realtime', 'error');
+            } finally {
+                this.fxConfig.isLoading = false;
+            }
+        },
+
+        applyFxRateByMode() {
+            if (this.fxConfig.mode === 'finance') {
+                this.fxConfig.effectiveRate = this.fxConfig.financeRate;
+            } else if (this.fxConfig.mode === 'live') {
+                this.fxConfig.effectiveRate = this.fxConfig.liveRate;
+            } else if (this.fxConfig.mode === 'manual') {
+                this.fxConfig.effectiveRate = this.fxConfig.manualRate || this.fxConfig.financeRate;
+            }
+            this.exchangeRate = this.fxConfig.effectiveRate;
+        },
+
+        setFxMode(mode) {
+            this.fxConfig.mode = mode;
+            try {
+                localStorage.setItem('cdpk_fx_mode', mode);
+            } catch (e) {}
+            this.applyFxRateByMode();
+            const modeLabels = {
+                finance: this.lang === 'en' ? 'Finance SSOT Master Rate' : 'Kurs Resmi Finance (Master SSOT)',
+                live: this.lang === 'en' ? 'Live Market Spot Rate' : 'Kurs Pasar Realtime (Spot Market)',
+                manual: this.lang === 'en' ? 'Project Custom Override Rate' : 'Kurs Khusus Proyek (Manual Override)'
+            };
+            this.showToast(
+                this.lang === 'en'
+                    ? `Active FX Mode: ${modeLabels[mode]} (Rp ${this.fxConfig.effectiveRate.toLocaleString('id-ID')})`
+                    : `Mode Kurs Aktif: ${modeLabels[mode]} (Rp ${this.fxConfig.effectiveRate.toLocaleString('id-ID')})`,
+                'info'
+            );
+        },
+
+        setFxDisplayMode(dispMode) {
+            this.fxConfig.displayMode = dispMode;
+            try {
+                localStorage.setItem('cdpk_fx_display_mode', dispMode);
+            } catch (e) {}
+        },
+
+        setManualFxRate(newRate) {
+            const val = Math.max(1000, Number(newRate) || 16200);
+            this.fxConfig.manualRate = val;
+            if (this.fxConfig.mode === 'manual') {
+                this.fxConfig.effectiveRate = val;
+                this.exchangeRate = val;
+            }
+        },
+
+        applyQuickFxBuffer(bufferPct) {
+            const baseRate = this.fxConfig.liveRate || this.fxConfig.financeRate || 16200;
+            const buffered = Math.round(baseRate * (1 + (bufferPct / 100.0)));
+            this.fxConfig.manualRate = buffered;
+            this.fxConfig.customBufferPercent = bufferPct;
+            this.setFxMode('manual');
+            this.showToast(
+                this.lang === 'en'
+                    ? `Applied +${bufferPct}% FX buffer: Rp ${buffered.toLocaleString('id-ID')}/USD`
+                    : `Buffer kurs +${bufferPct}% diterapkan: Rp ${buffered.toLocaleString('id-ID')}/USD`,
+                'success'
+            );
+        },
+
+        formatDualPrice(priceIdr, priceUsd, showSubRate = false) {
+            const rate = this.fxConfig.effectiveRate || this.exchangeRate || 16200;
+            let idr = Number(priceIdr || 0);
+            let usd = Number(priceUsd || 0);
+
+            if (!idr && usd) {
+                idr = Math.round(usd * rate);
+            } else if (!usd && idr) {
+                usd = Math.round((idr / rate) * 100) / 100;
+            }
+
+            const idrFormatted = 'Rp ' + Math.round(idr).toLocaleString('id-ID');
+            const usdFormatted = 'US$ ' + usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            if (this.fxConfig.displayMode === 'idr') {
+                return idrFormatted;
+            }
+            if (this.fxConfig.displayMode === 'usd') {
+                return usdFormatted;
+            }
+            // Dual mode (Default)
+            if (showSubRate) {
+                return `${idrFormatted} (${usdFormatted}) @ Rp ${rate.toLocaleString('id-ID')}`;
+            }
+            return `${idrFormatted} (${usdFormatted})`;
+        },
+
+        getFxDisclaimerText() {
+            if (this.lang === 'en') {
+                return this.fxConfig.financeDisclaimer.en;
+            }
+            return this.fxConfig.financeDisclaimer.id;
+        },
+
+        getFxSensitivityMetrics() {
+            const activeRate = this.fxConfig.effectiveRate || 16200;
+            const simRate = Number(this.fxConfig.stressTestRate) || (activeRate * 1.03);
+            const deltaRate = simRate - activeRate;
+            const pctShift = ((deltaRate / activeRate) * 100).toFixed(2);
+            return {
+                activeRate: activeRate,
+                simRate: simRate,
+                deltaRate: deltaRate,
+                pctShift: pctShift,
+                isIncrease: deltaRate > 0
+            };
         },
 
         // ─── Module 3: Smart Catalog Search & Filtering ──────────────────
