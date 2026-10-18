@@ -345,6 +345,177 @@ def calculate_fmtcs_das_sizing(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 2C. CCTV SURVEILLANCE & NVR STORAGE SIZING ENGINE
+# ─────────────────────────────────────────────────────────────────────────────
+
+def calculate_cctv_sizing(
+    camera_count: int = 16,
+    resolution: str = "4MP",
+    retention_days: int = 30,
+    fps: int = 25,
+    codec: str = "H.265",
+    vms_brand: str = "pelco",
+    brand_primary: str = "pelco",
+    has_third_party: bool = False,
+    has_ptz_bt: bool = False,
+    cable_distance_m: float = 65.0
+) -> Dict[str, Any]:
+    """
+    Calculate CCTV Universal Bandwidth, RAID 5/6 Storage Sizing, PoE Power Budget,
+    Cat6 Voltage Drop, DORI forensik metrics (EN 62676-4), and Interoperability Audit.
+    """
+    count = max(1, camera_count)
+    res_clean = resolution.upper()
+
+    # Nominal Bitrate (Mbps per camera)
+    bitrate_map = {
+        "1080P": {"H.264": 4.0, "H.265": 2.0, "SmartCodec": 1.2},
+        "2MP": {"H.264": 4.0, "H.265": 2.0, "SmartCodec": 1.2},
+        "4MP": {"H.264": 7.0, "H.265": 3.5, "SmartCodec": 2.0},
+        "5MP": {"H.264": 9.0, "H.265": 4.5, "SmartCodec": 2.6},
+        "4K": {"H.264": 15.0, "H.265": 7.5, "SmartCodec": 4.2},
+        "8MP": {"H.264": 15.0, "H.265": 7.5, "SmartCodec": 4.2},
+        "12MP": {"H.264": 22.0, "H.265": 11.0, "SmartCodec": 6.0},
+        "THERMAL": {"H.264": 3.0, "H.265": 1.5, "SmartCodec": 1.0}
+    }
+    cur_res = "4MP"
+    for k in bitrate_map:
+        if k in res_clean:
+            cur_res = k
+            break
+    codec_key = codec if codec in ("H.264", "H.265", "SmartCodec") else "H.265"
+    unit_bitrate = bitrate_map.get(cur_res, bitrate_map["4MP"]).get(codec_key, 3.5)
+
+    # Total Throughput Mbps
+    total_mbps = round(unit_bitrate * count, 2)
+    peak_mbps = round(total_mbps * 1.20, 2)
+
+    # Daily Data GB
+    daily_gb = round(total_mbps * 10.8, 1)
+
+    # Storage Sizing (TB)
+    days = max(1, retention_days)
+    raid_overhead = 0.20  # RAID 5 overhead
+    safety_margin = 1.20  # +20% safety factor
+    total_tb = round((daily_gb * days / 1000.0) * (1.0 + raid_overhead) * safety_margin, 2)
+
+    # HDD count and HDD size
+    hdd_size_tb = 16 if total_tb > 60 else (12 if total_tb > 30 else (8 if total_tb > 14 else 4))
+    hdd_qty = max(2, math.ceil(total_tb / hdd_size_tb))
+    if hdd_qty <= 4:
+        nvr_chassis = "Universal Enterprise 4-Bay 1U NVR / Pelco VideoXpert"
+        nvr_bays = 4
+    elif hdd_qty <= 8:
+        nvr_chassis = "Universal Enterprise 8-Bay 2U Rackmount NVR"
+        nvr_bays = 8
+    elif hdd_qty <= 16:
+        nvr_chassis = "Avigilon AI NVR 2 / Pelco VideoXpert 16-Bay 3U Server"
+        nvr_bays = 16
+    else:
+        nvr_chassis = "Enterprise High-Density 24-Bay 4U Storage Array SAN"
+        nvr_bays = 24
+
+    # PoE Power Calculation
+    poe_w_per_cam = 71.0 if has_ptz_bt else (25.5 if "4K" in cur_res or "MULTI" in cur_res else 12.0)
+    poe_total_w = round(poe_w_per_cam * count, 1)
+    rec_poe_budget = round(poe_total_w * 1.20, 1)
+
+    # Switch sizing
+    ports_needed = math.ceil(count * 1.20) + 2  # spare + uplink
+    if ports_needed <= 8:
+        sw_model = "Industrial 8-Port Gigabit Managed PoE+ Switch (120W Budget)"
+        sw_qty = 1
+    elif ports_needed <= 16:
+        sw_model = "Industrial 16-Port Gigabit Managed PoE+ Switch (250W Budget)"
+        sw_qty = 1
+    elif ports_needed <= 24:
+        sw_model = "Industrial 24-Port Gigabit Managed PoE+ Switch (370W Budget)"
+        sw_qty = 1
+    elif ports_needed <= 48:
+        sw_model = "Industrial 48-Port Gigabit Managed PoE+ Switch (740W Budget)"
+        sw_qty = 1
+    else:
+        sw_qty = math.ceil(ports_needed / 24)
+        sw_model = f"{sw_qty}× Industrial 24-Port Managed PoE+ Switch (370W Budget)"
+
+    # Cable Voltage Drop (Cat6 0.165 Ohm/m)
+    dist_m = max(1.0, cable_distance_m)
+    r_loop = round(dist_m * 0.165, 3)
+    v_pse = 54.0
+    i_amp = poe_w_per_cam / v_pse
+    v_drop = round(i_amp * r_loop, 2)
+    v_cam = round(v_pse - v_drop, 2)
+    p_loss = round((i_amp ** 2) * r_loop, 2)
+    v_min_safe = 42.5 if poe_w_per_cam > 15.4 else 37.0
+    is_undervoltage = v_cam < v_min_safe
+
+    # Cable Extension Hardware
+    cable_hardware = "Kabel Cat6 STP Outdoor Langsung (Normal)"
+    if dist_m > 250:
+        cable_hardware = "Industrial Gigabit PoE+ Fiber Media Converter (FMC-IND-POE-SFP) + Single-Mode FO"
+    elif dist_m > 100:
+        cable_hardware = "Industrial Long-Reach PoE Extender 250m IP67 (EXT-POE-IND-250M)"
+
+    # DORI forensik metrics (EN 62676-4)
+    f_mm = 4.0
+    w_sensor = 5.12
+    w_px = 3840 if cur_res == "4K" else (2560 if cur_res in ("4MP", "5MP") else 1920)
+    d_detect = round((w_px * f_mm) / (w_sensor * 25.0), 1)
+    d_observe = round((w_px * f_mm) / (w_sensor * 62.0), 1)
+    d_recognize = round((w_px * f_mm) / (w_sensor * 125.0), 1)
+    d_identify = round((w_px * f_mm) / (w_sensor * 250.0), 1)
+
+    # Interoperability audit
+    blockers = []
+    reminders = []
+    if vms_brand == "avigilon" and has_third_party:
+        blockers.append("Memerlukan Avigilon AI Appliance (AVG-AI-APPLIANCE-8P) untuk analitik AI Appearance Search pada kamera pihak ketiga.")
+        reminders.append(f"Memerlukan {count}x Avigilon Camera Channel License (AVG-COMM-CAM-LIC).")
+    elif vms_brand == "pelco" and has_third_party:
+        reminders.append(f"Memerlukan {count}x Pelco VideoXpert Channel License (PEL-VX-1C-COMM).")
+    if codec == "SmartCodec" and vms_brand in ("pelco", "avigilon") and has_third_party:
+        reminders.append("Kamera non-partner disarankan menggunakan standar H.265 murni untuk mencegah stuttering/frame dropping.")
+    if has_ptz_bt:
+        reminders.append("Kamera daya tinggi 802.3bt Ultra PoE dialokasikan unit switch khusus 802.3bt 480W.")
+
+    return {
+        "camera_count": count,
+        "resolution": cur_res,
+        "codec": codec_key,
+        "fps": fps,
+        "unit_bitrate_mbps": unit_bitrate,
+        "total_throughput_mbps": total_mbps,
+        "peak_bandwidth_mbps": peak_mbps,
+        "daily_data_gb": daily_gb,
+        "retention_days": days,
+        "total_storage_tb": total_tb,
+        "hdd_qty": hdd_qty,
+        "hdd_size_tb": hdd_size_tb,
+        "nvr_chassis": nvr_chassis,
+        "nvr_bays": nvr_bays,
+        "poe_total_w": poe_total_w,
+        "rec_poe_budget_w": rec_poe_budget,
+        "switch_model": sw_model,
+        "switch_qty": sw_qty,
+        "bt_switch_needed": has_ptz_bt,
+        "cable_distance_m": dist_m,
+        "cable_hardware": cable_hardware,
+        "v_drop": v_drop,
+        "v_camera": v_cam,
+        "p_loss_w": p_loss,
+        "is_undervoltage": is_undervoltage,
+        "dori": {
+            "detection_m": d_detect,
+            "observation_m": d_observe,
+            "recognition_m": d_recognize,
+            "identification_m": d_identify
+        },
+        "blockers": blockers,
+        "reminders": reminders
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 3. ATEX / INTRINSIC SAFETY HAZARDOUS AREA VALIDATOR
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -550,6 +721,54 @@ def extract_params_from_prompt(prompt: str, current_state: Dict[str, Any]) -> Di
         if m_sqm:
             extracted["dasFloorAreaM2"] = float(m_sqm.group(1).replace(",", "."))
 
+    # CCTV Surveillance & Video Security Detection
+    cctv_keywords = [
+        "cctv", "kamera", "camera", "nvr", "vms", "surveillance", "dori", "ppm",
+        "pelco", "avigilon", "ava", "milesight", "vigi", "hikvision", "dahua", "axis",
+        "hanwha", "bosch", "uniview", "videoxpert", "rekaman cctv", "retensi cctv"
+    ]
+    if any(w in p_low for w in cctv_keywords):
+        extracted["needCctv"] = True
+        m_cam = re.search(r"(\d+)\s*(?:titik|unit|buah)?\s*(?:kamera|camera|cam|cctv)", p_low)
+        if m_cam:
+            extracted["cctvCameraCount"] = int(m_cam.group(1))
+        else:
+            m_cam_alt = re.search(r"(?:kamera|camera|cctv)\s*(\d+)\s*(?:titik|unit)?", p_low)
+            if m_cam_alt:
+                extracted["cctvCameraCount"] = int(m_cam_alt.group(1))
+
+        # Resolution
+        if "4k" in p_low or "8mp" in p_low:
+            extracted["cctvResolution"] = "4K"
+        elif "5mp" in p_low:
+            extracted["cctvResolution"] = "5MP"
+        elif "1080p" in p_low or "2mp" in p_low:
+            extracted["cctvResolution"] = "1080p"
+        elif "thermal" in p_low:
+            extracted["cctvResolution"] = "Thermal"
+        else:
+            extracted["cctvResolution"] = "4MP"
+
+        # Retention Days
+        m_ret = re.search(r"(\d+)\s*(?:hari|days?)\s*(?:retensi|rekaman|penyimpanan|storage)?", p_low)
+        if m_ret:
+            extracted["cctvRetentionDays"] = int(m_ret.group(1))
+        else:
+            extracted["cctvRetentionDays"] = 30
+
+        # Brand / VMS
+        if "avigilon" in p_low or "unity" in p_low:
+            extracted["cctvVmsBrand"] = "avigilon"
+        elif "pelco" in p_low or "videoxpert" in p_low:
+            extracted["cctvVmsBrand"] = "pelco"
+        else:
+            extracted["cctvVmsBrand"] = "open_vms"
+
+        # Cable Distance
+        m_dist = re.search(r"(\d+)\s*(?:meter|m)\s*(?:kabel|tarikan|jarak|cat6|panjang)", p_low)
+        if m_dist:
+            extracted["cctvCableDistM"] = float(m_dist.group(1))
+
     # 10. Proactive Missing Parameter Detection
     missing_questions = []
     if "areaInput" not in extracted and "buildingFloors" not in extracted and "dasAntennas" not in extracted:
@@ -682,7 +901,9 @@ def build_local_expert_response(
         "dasAntennas" in extracted or
         "dasFloorAreaM2" in extracted or
         extracted.get("needFiberDas") or
-        any(k in p_low for k in ["sizing", "kalkulasi", "hitung", "boq", "biaya", "harga", "anggaran", "budget", "penawaran", "tender", "proposal", "link budget", "das", "fmtcs"])
+        extracted.get("needCctv") or
+        "cctvCameraCount" in extracted or
+        any(k in p_low for k in ["sizing", "kalkulasi", "hitung", "boq", "biaya", "harga", "anggaran", "budget", "penawaran", "tender", "proposal", "link budget", "das", "fmtcs", "cctv", "kamera", "camera", "nvr", "vms", "surveillance", "dori"])
     )
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -697,7 +918,7 @@ def build_local_expert_response(
         )
         body = (
             f"{header}\n"
-            f"Berdasarkan penelusuran dokumen teknis terverifikasi pada **Bank Knowledge Internal PT Citra Data Purnama Karya**:\n\n"
+            f"Berdasarkan penelusuran dokumen teknis terverifikasi pada **Bank Knowledge Internal PT Citradata Purnakharisma**:\n\n"
             if not is_en else
             f"{header}\n"
             f"Based on verified engineering documentation from the **Internal Citradata Knowledge Bank**:\n\n"
@@ -887,13 +1108,49 @@ def build_local_expert_response(
         )
         solar_sys_idr = total_outdoor_rpt * 32000000  # Solar package unit estimate
 
+    # CCTV Video Security Calculation (if requested)
+    need_cctv = bool(extracted.get("needCctv", False)) or any(k in p_low for k in ["cctv", "kamera", "camera", "nvr", "vms", "surveillance"])
+    cctv_sizing = None
+    cctv_sys_idr = 0
+    if need_cctv:
+        cctv_cams = int(extracted.get("cctvCameraCount", 16) or 16)
+        cctv_res = str(extracted.get("cctvResolution", "4MP"))
+        cctv_ret = int(extracted.get("cctvRetentionDays", 30) or 30)
+        cctv_vms = str(extracted.get("cctvVmsBrand", "pelco"))
+        cctv_dist = float(extracted.get("cctvCableDistM", 65.0) or 65.0)
+        has_3rd = any(b in p_low for b in ["hikvision", "dahua", "vigi", "milesight", "axis", "hanwha", "third", "pihak ketiga"])
+        has_bt = any(b in p_low for b in ["ptz", "thermal", "speed dome", "802.3bt", "ultra poe", "60w", "90w"])
+        cctv_sizing = calculate_cctv_sizing(
+            camera_count=cctv_cams,
+            resolution=cctv_res,
+            retention_days=cctv_ret,
+            vms_brand=cctv_vms,
+            has_third_party=has_3rd,
+            has_ptz_bt=has_bt,
+            cable_distance_m=cctv_dist
+        )
+        cam_unit_idr = 14500000 if cctv_res in ("4K", "THERMAL") else (6500000 if cctv_res == "5MP" else 3800000)
+        cctv_sys_idr = (
+            (cctv_cams * cam_unit_idr) +
+            (cctv_sizing["hdd_qty"] * 3800000) +
+            (cctv_sizing["switch_qty"] * 7200000) +
+            (48000000 if cctv_cams > 16 else 24000000)
+        )
+        if has_bt:
+            cctv_sys_idr += 9400000
+        if cctv_dist > 250:
+            cctv_sys_idr += (cctv_cams * 2350000)
+        elif cctv_dist > 100:
+            cctv_sys_idr += (cctv_cams * 1550000)
+
     est_infra_idr = (
         (total_outdoor_rpt * rpt_sys_unit_idr) +
         das_sys_idr +
         p2p_link_idr +
         dispatch_sys_idr +
         wave_ptx_gw_idr +
-        solar_sys_idr
+        solar_sys_idr +
+        cctv_sys_idr
     )
     est_terms_idr = (ht_qty * ht_price) + (mob_qty * 11500000)
     est_mandays = max(4, (est_sites * 4) + (das_nodes * 3) + (2 if need_dispatch else 0) + 3)
@@ -980,6 +1237,23 @@ def build_local_expert_response(
                 f"(EIRP +{das_sizing['eirp_dbm']} dBm | Status: {das_sizing['ant_health']} | Radius: ~{das_sizing['cov_radius_m']} m/ant)\n"
             )
         body += f"```\n\n"
+
+        if cctv_sizing:
+            body += (
+                f"#### Video Security, DORI Forensic Metrics & NVR Storage Architecture\n"
+                f"- **Camera Fleet Deployment:** **{cctv_sizing['camera_count']}× {cctv_sizing['resolution']} Cameras** ({cctv_sizing['codec']} @ {cctv_sizing['fps']} fps, ~{cctv_sizing['unit_bitrate_mbps']} Mbps/cam) managed by **{cctv_sizing['nvr_chassis']}**.\n"
+                f"- **Throughput & Storage Sizing:** Clean Throughput: **{cctv_sizing['total_throughput_mbps']} Mbps** (Peak Surge: **{cctv_sizing['peak_bandwidth_mbps']} Mbps**), Daily Data: **{cctv_sizing['daily_data_gb']} GB/day**, Usable Storage: **{cctv_sizing['total_storage_tb']} TB** ({cctv_sizing['retention_days']} Days Retention with RAID 5 +20% & +20% Safety Factor) across **{cctv_sizing['hdd_qty']}× {cctv_sizing['hdd_size_tb']}TB Enterprise HDDs**.\n"
+                f"- **PoE Power Budget & Industrial Switching:** Total Load: **{cctv_sizing['poe_total_w']}W** (Recommended Budget: **{cctv_sizing['rec_poe_budget_w']}W**), Hardware: **{cctv_sizing['switch_model']}**{' + Dedicated 802.3bt Ultra PoE Switch (480W)' if cctv_sizing['bt_switch_needed'] else ''}.\n"
+                f"- **Cat6 Transmission & Voltage Drop:** Run distance: **{cctv_sizing['cable_distance_m']}m**, Drop: **{cctv_sizing['v_drop']}V**, Terminal Voltage: **{cctv_sizing['v_camera']}V DC** ({'⚠️ UNDERVOLTAGE ALARM' if cctv_sizing['is_undervoltage'] else '✅ IEEE Standard Normal'}), Hardware: `{cctv_sizing['cable_hardware']}`.\n"
+                f"- **EN 62676-4 DORI Forensic Coverage:** Detection (≥25 PPM): **{cctv_sizing['dori']['detection_m']}m**, Observation (≥62 PPM): **{cctv_sizing['dori']['observation_m']}m**, Recognition (≥125 PPM): **{cctv_sizing['dori']['recognition_m']}m**, Identification (≥250 PPM): **{cctv_sizing['dori']['identification_m']}m**.\n"
+            )
+            if cctv_sizing['blockers'] or cctv_sizing['reminders']:
+                body += f"- **Interoperability & Integration Audit:**\n"
+                for b in cctv_sizing['blockers']:
+                    body += f"  - ⛔ **BLOCKER:** {b}\n"
+                for r in cctv_sizing['reminders']:
+                    body += f"  - ⚠️ **REMINDER:** {r}\n"
+            body += "\n"
         if is_pro:
             body += (
                 f"#### 3. Tender Specification Compliance Matrix (Compliance Sheet)\n\n"
@@ -1058,6 +1332,23 @@ def build_local_expert_response(
                 f"(EIRP +{das_sizing['eirp_dbm']} dBm | Status: {das_sizing['ant_health']} | Radius: ~{das_sizing['cov_radius_m']} m/antena)\n"
             )
         body += f"```\n\n"
+
+        if cctv_sizing:
+            body += (
+                f"#### Arsitektur Video Security CCTV, Forensik DORI & Storage NVR\n"
+                f"- **Armada Kamera & VMS:** **{cctv_sizing['camera_count']} Unit Kamera {cctv_sizing['resolution']}** ({cctv_sizing['codec']} @ {cctv_sizing['fps']} fps, ~{cctv_sizing['unit_bitrate_mbps']} Mbps/kamera) dikelola oleh **{cctv_sizing['nvr_chassis']}**.\n"
+                f"- **Estimasi Throughput & Storage:** Throughput Bersih: **{cctv_sizing['total_throughput_mbps']} Mbps** (Peak: **{cctv_sizing['peak_bandwidth_mbps']} Mbps**), Laju Data Harian: **{cctv_sizing['daily_data_gb']} GB/hari**, Kapasitas Terproteksi: **{cctv_sizing['total_storage_tb']} TB** (Retensi {cctv_sizing['retention_days']} Hari, RAID 5 +20% & Safety Margin +20%) menggunakan **{cctv_sizing['hdd_qty']}× {cctv_sizing['hdd_size_tb']}TB Enterprise Surveillance HDDs**.\n"
+                f"- **Catu Daya PoE & Switch Industri:** Beban Kamera: **{cctv_sizing['poe_total_w']}W** (Rekomendasi Power Headroom: **{cctv_sizing['rec_poe_budget_w']}W**), Switch: **{cctv_sizing['switch_model']}**{' + Unit Khusus Industrial 802.3bt Ultra PoE Switch (480W)' if cctv_sizing['bt_switch_needed'] else ''}.\n"
+                f"- **Transmisi Kabel Cat6 & Drop Tegangan:** Jarak Tarikan: **{cctv_sizing['cable_distance_m']}m**, Drop: **{cctv_sizing['v_drop']}V**, Tegangan Terminal: **{cctv_sizing['v_camera']}V DC** ({'⚠️ PERINGATAN UNDERVOLTAGE' if cctv_sizing['is_undervoltage'] else '✅ Normal Stabil IEEE'}), Rekomendasi: `{cctv_sizing['cable_hardware']}`.\n"
+                f"- **Metrik Forensik DORI (EN 62676-4):** Deteksi (≥25 PPM): **{cctv_sizing['dori']['detection_m']}m**, Observasi (≥62 PPM): **{cctv_sizing['dori']['observation_m']}m**, Pengenalan Wajah (≥125 PPM): **{cctv_sizing['dori']['recognition_m']}m**, Identifikasi Forensik (≥250 PPM): **{cctv_sizing['dori']['identification_m']}m**.\n"
+            )
+            if cctv_sizing['blockers'] or cctv_sizing['reminders']:
+                body += f"- **Audit Integrasi & Interoperabilitas Sistem:**\n"
+                for b in cctv_sizing['blockers']:
+                    body += f"  - ⛔ **BLOCKER:** {b}\n"
+                for r in cctv_sizing['reminders']:
+                    body += f"  - ⚠️ **REMINDER:** {r}\n"
+            body += "\n"
         if is_pro:
             body += (
                 f"#### 3. Matriks Kepatuhan Spesifikasi Teknis (Compliance Sheet Tender)\n\n"
@@ -1091,7 +1382,7 @@ def build_local_expert_response(
     # Attach citations from Internal Bank Knowledge (Title & Category only — NO external links)
     if citations:
         body += (
-            f"\n#### 📚 Referensi Bank Knowledge Terverifikasi (Internal PT Citra Data Purnama Karya)\n"
+            f"\n#### 📚 Referensi Bank Knowledge Terverifikasi (Internal PT Citradata Purnakharisma)\n"
         )
         for c in citations[:3]:
             body += f"- 📄 **{c['title']}** (`{c.get('folder', 'Knowledge Base')}`)\n"
@@ -1117,6 +1408,7 @@ def build_local_expert_response(
             "mandays": est_mandays,
             "link_budget": lb,
             "solar_sizing": solar_sizing,
+            "cctv_sizing": cctv_sizing,
             "estimated_grand_total_idr": est_grand_total
         }
     }
@@ -1170,7 +1462,7 @@ def query_ai_copilot(
 
     # Prepare Gemini Live Call with High-Level Senior Solutions Architect Persona
     sys_instruction = (
-        f"You are the Lead Senior RF Telecom & Critical Communications Solutions Architect at PT Citra Data Purnama Karya (Motorola Solutions Platinum Channel Partner, i.safe MOBILE Partner, & FMTCS Fiber DAS Systems Integrator in Indonesia). "
+        f"You are the Lead Senior RF Telecom & Critical Communications Solutions Architect at PT Citradata Purnakharisma (Motorola Solutions Platinum Channel Partner, i.safe MOBILE Partner, & FMTCS Fiber DAS Systems Integrator in Indonesia). "
         f"Active Model: {ALLOWED_MODELS[model_id]['name']} ({model_id}). "
         f"Language: {'English' if lang == 'en' else 'Indonesian'}. "
         f"\n=== ARCHITECTURAL & ENGINEERING DIRECTIVES ===\n"
@@ -1180,9 +1472,10 @@ def query_ai_copilot(
         f"4. RF PROPAGATION & LINK BUDGET: Provide rigorous link budget analysis including Free Space Path Loss (FSPL), Okumura-Hata loss, Receiver Sensitivity (-118 dBm), Fade Margin (target ≥ 15 dB for commercial, ≥ 20 dB for mission-critical), and DAS RFoF chain losses.\n"
         f"5. GREEN POWER & OFF-GRID: If solar/off-grid is mentioned, calculate daily Wh load, Solar PV Watt-peak, and LiFePO4 battery bank with 3 days of autonomy.\n"
         f"6. HYBRID CONVERGENCE & POC: For broadband or LTE/5G integration, design Motorola WAVE PTX RoIP gateways and SmartPTT Enterprise dispatch console.\n"
-        f"7. TENDER PROPOSAL STRUCTURE: Format responses with Executive Summary, Operational Topology, Link Budget Table, Specification Compliance Matrix (Compliance Sheet with COMPLY status), BoQ Pricing, and Engineering Implementation Plan (FAT/SAT, grounding < 5 Ohm, duplexer tuning, DAS VSWR & RSSI commissioning).\n"
-        f"8. PROACTIVE INTERVIEW: If the user's requirements lack critical sizing details, formulate 2-3 focused clarification questions.\n"
-        f"9. CITATIONS (STRICT ZERO-LINK POLICY): Reference the pre-calculated engineering metrics: {json.dumps(expert_res['summary_metrics'])}. "
+        f"7. CCTV SURVEILLANCE & VIDEO SECURITY (OPEN MULTI-BRAND): Prioritize Flagship Partners (Pelco Sarix/Spectra/ExSite/Esprit, Avigilon Unity H5A/AI NVR, Ava Security Cloud AI). Support Open Third-Party brands (Milesight, VIGI by TP-Link, Axis, Hanwha, Hikvision, Dahua, Bosch, Uniview). Apply EN 62676-4 DORI standard (Detection ≥25, Observation ≥62, Recognition ≥125, Identification ≥250 PPM). Verify Cat6 loop resistance (0.165 Ohm/m; require EXT-POE-IND-250M extender for >100m, FMC-IND-POE-SFP fiber media converter for >250m, and undervoltage cutoff alerts). Sizing storage: Daily GB = 10.8 * Mbps with RAID 5 +20% and +20% safety headroom. Enforce Interoperability rules: Avigilon AI Appliance (AVG-AI-APPLIANCE-8P) and camera licenses for 3rd-party cameras on Avigilon Unity; Pelco VideoXpert channel licenses; recommend standard H.265 instead of proprietary SmartCodecs; allocate 802.3bt Ultra PoE switches for high-power PTZ/thermal.\n"
+        f"8. TENDER PROPOSAL STRUCTURE: Format responses with Executive Summary, Operational Topology, Link Budget Table, Specification Compliance Matrix (Compliance Sheet with COMPLY status), BoQ Pricing, and Engineering Implementation Plan (FAT/SAT, grounding < 5 Ohm, duplexer tuning, DAS VSWR & RSSI commissioning).\n"
+        f"9. PROACTIVE INTERVIEW: If the user's requirements lack critical sizing details, formulate 2-3 focused clarification questions.\n"
+        f"10. CITATIONS (STRICT ZERO-LINK POLICY): Reference the pre-calculated engineering metrics: {json.dumps(expert_res['summary_metrics'])}. "
         f"Mention verified document titles by name only from the Citradata Knowledge Bank below. NEVER output any URLs, Google Drive links, or clickable hyperlinks.\n\n"
         f"{rag_context}"
     )

@@ -9,7 +9,7 @@
  * Exposes: window.CDPK_CCTV_ENGINE
  * Supported Languages: English ('en') & Bahasa Indonesia ('id') strictly.
  *
- * (c) 2026 PT Citra Data Purnama Karya (CDPK). All Rights Reserved.
+ * (c) 2026 PT Citradata Purnakharisma (CDPK). All Rights Reserved.
  */
 (function (global) {
     "use strict";

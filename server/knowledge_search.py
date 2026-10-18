@@ -108,6 +108,41 @@ def extract_key_specs_snapshot(text: str, filename: str) -> Dict[str, str]:
     elif m_pwr:
         snapshot["tx_power"] = m_pwr.group(1).strip()
 
+    # 5. CCTV Resolution & Hardware Specifications
+    if any(k in f_low for k in ["cctv", "camera", "pelco", "avigilon", "ava", "milesight", "vigi", "axis", "hanwha", "hikvision", "dahua"]):
+        t_low = t_raw.lower()
+        if "4k" in t_low or "8mp" in t_low:
+            snapshot["cctv_resolution"] = "4K UHD (8MP, 3840x2160)"
+        elif "5mp" in t_low:
+            snapshot["cctv_resolution"] = "5MP Super HD"
+        elif "4mp" in t_low:
+            snapshot["cctv_resolution"] = "4MP QHD (2560x1440)"
+        elif "1080p" in t_low or "2mp" in t_low:
+            snapshot["cctv_resolution"] = "1080p Full HD (2MP)"
+        elif "thermal" in t_low:
+            snapshot["cctv_resolution"] = "Thermal Radiometrik VOx"
+
+        if "802.3bt" in t_low or "ultra poe" in t_low:
+            snapshot["cctv_poe"] = "IEEE 802.3bt Ultra PoE (60W-90W)"
+        elif "802.3at" in t_low or "poe+" in t_low:
+            snapshot["cctv_poe"] = "IEEE 802.3at PoE+ (25.5W-30W)"
+        elif "802.3af" in t_low or "poe" in t_low:
+            snapshot["cctv_poe"] = "IEEE 802.3af PoE (15.4W)"
+
+        if "ptz" in t_low or "speed dome" in t_low:
+            snapshot["cctv_form_factor"] = "PTZ Speed Dome"
+        elif "dome" in t_low:
+            snapshot["cctv_form_factor"] = "Vandal Dome"
+        elif "bullet" in t_low:
+            snapshot["cctv_form_factor"] = "Outdoor Bullet"
+        elif "multi-sensor" in t_low or "panoramic" in t_low:
+            snapshot["cctv_form_factor"] = "Multi-Sensor Panorama 180°/360°"
+        elif "thermal" in t_low:
+            snapshot["cctv_form_factor"] = "Bispectral Thermal"
+
+        if "en 62676-4" in t_low or "dori" in t_low:
+            snapshot["dori_standard"] = "EN 62676-4 (D≥25, O≥62, R≥125, I≥250 PPM)"
+
     return snapshot
 
 
@@ -230,7 +265,19 @@ def normalize_query_entities(query: str) -> Tuple[List[str], Dict[str, Any]]:
         ("dsgq400c", [r"\bdsgq[\s_-]*400\w*\b", r"\bfmtcs[\s_-]*sgq\b"]),
         ("anti400r", [r"\banti[\s_-]*400\w*\b", r"\bfmtcs[\s_-]*anti\b", r"\bindoor\s*antenna\b", r"\bantena\s*indoor\b"]),
         ("antg400r", [r"\bantg[\s_-]*400\w*\b", r"\bantd[\s_-]*400\w*\b", r"\bfmtcs[\s_-]*ant[gd]\b"]),
-        ("fmtcs_das", [r"\bfmtcs\b", r"\brfof\b", r"\bfiber\s*das\b", r"\bdas\b", r"\bcommissioning\b", r"\bvswr\b"])
+        ("fmtcs_das", [r"\bfmtcs\b", r"\brfof\b", r"\bfiber\s*das\b", r"\bdas\b", r"\bcommissioning\b", r"\bvswr\b"]),
+        ("pelco", [r"\bpelco\b", r"\bsarix\b", r"\bspectra\b", r"\bexsite\b", r"\besprit\b", r"\bvideoxpert\b"]),
+        ("avigilon", [r"\bavigilon\b", r"\bh5a\b", r"\bunity\b", r"\bappearance\s*search\b", r"\bai\s*nvr\b", r"\bai\s*appliance\b"]),
+        ("ava", [r"\bava\s*security\b", r"\bava\b", r"\balta\s*cloud\b"]),
+        ("milesight", [r"\bmilesight\b", r"\bc8165\b", r"\bc5375\b", r"\bc4472\b", r"\bc2966\b"]),
+        ("vigi", [r"\bvigi\b", r"\btp[\s_-]*link\b", r"\bc340\b", r"\bc440\b", r"\bc540\b", r"\bc385\b"]),
+        ("axis", [r"\baxis\b", r"\bp1468\b", r"\bm3088\b", r"\bq6075\b", r"\bq1656\b", r"\bzipstream\b"]),
+        ("hanwha", [r"\bhanwha\b", r"\bwisenet\b", r"\bxno[\s_-]*8080\b", r"\bxnv[\s_-]*8081\b", r"\bxnp[\s_-]*6400\b"]),
+        ("hikvision", [r"\bhikvision\b", r"\bcolorvu\b", r"\bdarkfighter\b", r"\b2cd2047\b", r"\b2df8c442\b"]),
+        ("dahua", [r"\bdahua\b", r"\bwizmind\b", r"\bhfw5442\b", r"\bsd5a432\b"]),
+        ("cctv_dori", [r"\bdori\b", r"\ben\s*62676\b", r"\bppm\b", r"\bpixel\s*density\b", r"\bfocal\s*length\b", r"\blens\b", r"\bhfov\b"]),
+        ("cctv_poe", [r"\bpoe\s*drop\b", r"\bvoltage\s*drop\b", r"\bcat6\s*drop\b", r"\bultra\s*poe\b", r"\b802\.3bt\b", r"\bpoe\s*extender\b"]),
+        ("cctv_nvr", [r"\bcctv\b", r"\bnvr\b", r"\bvms\b", r"\bsurveillance\b", r"\bretensi\b", r"\bstorage\s*cctv\b", r"\braid\s*5\b", r"\braid\s*6\b"])
     ]
 
     for model_key, patterns in model_patterns:

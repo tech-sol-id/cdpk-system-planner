@@ -6,7 +6,7 @@
  * Exposes: window.CDPK_DAS_ENGINE
  * Supported Languages: English ('en') & Bahasa Indonesia ('id') strictly. (Chinese 'zh' excluded).
  *
- * (c) 2026 PT Citra Data Purnama Karya (CDPK). All Rights Reserved.
+ * (c) 2026 PT Citradata Purnakharisma (CDPK). All Rights Reserved.
  */
 (function(global) {
     "use strict";
@@ -4473,7 +4473,7 @@ var qrcode = function() {
     }
 
     /**
-     * Export Official PT Citra Data Purnama Karya / FMTCS Commissioning Acceptance PDF
+     * Export Official PT Citradata Purnakharisma / FMTCS Commissioning Acceptance PDF
      * Generates a signable formal test report using jsPDF and autoTable
      */
     function exportCommissioningPdf(commState, projectMeta, lang) {
@@ -4509,7 +4509,7 @@ var qrcode = function() {
         doc.setFont("helvetica", "bold");
         var docTitle = isEn
             ? "FMTCS FIBER DAS — COMMISSIONING & ACCEPTANCE REPORT"
-            : "PT CITRA DATA PURNAMA KARYA — BERITA ACARA UJI TERIMA DAS";
+            : "PT CITRADATA PURNAKHARISMA — BERITA ACARA UJI TERIMA DAS";
         doc.text(docTitle, 50, 12);
 
         doc.setFontSize(8.5);
@@ -4666,7 +4666,7 @@ var qrcode = function() {
         // Left: Certified Engineer
         doc.text(isEn ? "TESTED & COMMISSIONED BY:" : "DISERAHKAN OLEH (PELAKSANA PENGUJIAN):", 18, signY);
         doc.setFont("helvetica", "normal");
-        doc.text("PT Citra Data Purnama Karya", 18, signY + 5);
+        doc.text("PT Citradata Purnakharisma", 18, signY + 5);
         doc.line(18, signY + 28, 85, signY + 28);
         doc.text((meta.technician || "Lead RF Engineer") + " (Signature & Date)", 18, signY + 33);
 
@@ -4681,7 +4681,7 @@ var qrcode = function() {
         // Footer note
         doc.setFontSize(7.5);
         doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
-        doc.text("CDPK System Planner Enterprise • PT Citra Data Purnama Karya • FMTCS Distributed Antenna Systems", 105, 287, { align: "center" });
+        doc.text("CDPK System Planner Enterprise • PT Citradata Purnakharisma • FMTCS Distributed Antenna Systems", 105, 287, { align: "center" });
 
         var filename = (meta.projectName || "FMTCS_Commissioning").replace(/[^\w\-]+/g, "_") + "_SAT_Report.pdf";
         doc.save(filename);

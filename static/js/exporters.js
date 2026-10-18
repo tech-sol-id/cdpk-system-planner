@@ -31,7 +31,7 @@ window.CDPK_EXPORTERS = {
         doc.setFontSize(9.5);
         doc.setFont('helvetica', 'normal');
         doc.text(
-            `PT Citra Data Purnama Karya  |  ${isEn ? 'Project' : 'Proyek'}: ${app.projName || 'Radio & Security System'}  |  ${isEn ? 'Client' : 'Klien'}: ${app.clientName || '-'}  |  ${new Date().toLocaleDateString()}`,
+            `PT Citradata Purnakharisma  |  ${isEn ? 'Project' : 'Proyek'}: ${app.projName || 'Radio & Security System'}  |  ${isEn ? 'Client' : 'Klien'}: ${app.clientName || '-'}  |  ${new Date().toLocaleDateString()}`,
             52, 20
         );
 
@@ -336,7 +336,7 @@ window.CDPK_EXPORTERS = {
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text('PT CITRA DATA PURNAMA KARYA — CITRADATA GROUP', 50, 11);
+        doc.text('PT CITRADATA PURNAKHARISMA — CITRADATA GROUP', 50, 11);
 
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
@@ -459,7 +459,7 @@ window.CDPK_EXPORTERS = {
 
         const aoa = [
             ["CDPK SYSTEM PLANNER — PAKET PRODUK & SISTEM TERKONFIGURASI"],
-            ["PT Citra Data Purnama Karya | Citradata Group"],
+            ["PT Citradata Purnakharisma | Citradata Group"],
             [],
             ["Informasi Proyek:"],
             ["Nama Proyek", app.projName || "-"],

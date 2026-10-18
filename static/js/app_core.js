@@ -352,6 +352,104 @@ window.cdpkSystemPlannerApp = function () {
         aiLoading: false,
         aiHistory: [],
         lastExtractedParams: null,
+        aiScenarioCategory: 'all', // 'all' | 'dmr' | 'das' | 'cctv' | 'turnkey'
+        aiScenarioTemplates: [
+            // ─── DMR RADIO SCENARIOS ───
+            {
+                id: 'dmr-p2p',
+                category: 'dmr',
+                icon: '📡',
+                title: 'Point-to-Point Conv (39 User)',
+                desc: '3 Talkgroup • Radius 5 km • MOTOTRBO Tier 2 SLR 5300 & R2',
+                prompt: 'proyek point to point 3 group dengan 39 user, radius coverage 5 km, butuh repeater MOTOTRBO SLR 5300 dan HT R2'
+            },
+            {
+                id: 'dmr-mining',
+                category: 'dmr',
+                icon: '⛏️',
+                title: 'Mining Open-Pit (160 User)',
+                desc: 'Area 4.500 Ha • Kontur Berbukit • Capacity Plus Trunking & AVL',
+                prompt: 'Tambang batubara 4500 hektar, 160 user, kontur berbukit, butuh repeater Capacity Plus trunking dan konsol dispatch AVL'
+            },
+            {
+                id: 'dmr-atex',
+                category: 'dmr',
+                icon: '🔥',
+                title: 'Migas & Petrokimia ATEX (90 User)',
+                desc: 'Area 12 km² • TIA-4950/UL913 IS • Redundansi 1+1 Repeater',
+                prompt: 'Kilang Oil & Gas 12 km2, 90 user, wajib HT ATEX Intrinsically Safe Tia-4950 / UL913, redundansi repeater 1+1'
+            },
+
+            // ─── RFOF DAS SCENARIOS ───
+            {
+                id: 'das-datacenter',
+                category: 'das',
+                icon: '🏢',
+                title: 'Gedung Data Center (6 Lt, 80 User)',
+                desc: 'Digital Master DOMU400C + Remote DORU400CH • Optical Star',
+                prompt: 'Gedung Data Center 6 lantai & basement, 80 user, butuh sistem RFoF DAS FMTCS Digital DOMU400C + DORU400CH'
+            },
+            {
+                id: 'das-tunnel',
+                category: 'das',
+                icon: '🚇',
+                title: 'Terowongan & Underground (4 Zona)',
+                desc: '120 User • Topologi Ring Optik Redundan • Antena DAS FMTCS',
+                prompt: 'Terowongan bawah tanah & fasilitas basement 4 lantai, 120 user, butuh RFoF Fiber DAS FMTCS topologi Ring Optik'
+            },
+
+            // ─── CCTV SURVEILLANCE SCENARIOS ───
+            {
+                id: 'cctv-avigilon-ai',
+                category: 'cctv',
+                icon: '📹',
+                title: 'Perimeter AI Avigilon Unity (32 Cam)',
+                desc: '32 Kamera 4K/4MP • SmartCodec H.265 • Retensi 30 Hari RAID 5',
+                prompt: 'Sistem CCTV perimeter dan fasilitas 32 kamera Avigilon Unity 4K dan 4MP Bullet, retensi 30 hari H.265 SmartCodec, NVR RAID 5, PoE switch industri'
+            },
+            {
+                id: 'cctv-pelco-atex',
+                category: 'cctv',
+                icon: '💥',
+                title: 'Hazardous Migas ATEX Pelco (16 Cam)',
+                desc: 'Zone 1/21 Ex-Proof • Pelco ExSite PTZ & Dome • VideoXpert 60 Hari',
+                prompt: 'Pengawasan CCTV area berbahaya Oil & Gas Zone 1/21, butuh 8 kamera Pelco ExSite Enhanced PTZ ATEX dan 8 fixed dome explosion-proof, VideoXpert VMS retensi 60 hari'
+            },
+            {
+                id: 'cctv-multibrand-fac',
+                category: 'cctv',
+                icon: '🏭',
+                title: 'Pabrik & Gudang VIGI + Milesight (48 Cam)',
+                desc: '32 Dome Milesight + 16 VIGI • NVR 64-Ch RAID 6 • Retensi 45 Hari',
+                prompt: 'Pengawasan gudang & pabrik 48 kamera: 32 dome Milesight 4MP dan 16 bullet TP-Link VIGI 4MP, NVR 64-ch RAID 6 retensi 45 hari, interop ONVIF Profile S/G/T'
+            },
+            {
+                id: 'cctv-longrange-ptz',
+                category: 'cctv',
+                icon: '🔭',
+                title: 'Perimeter Jarak Jauh 800m Fiber (12 Cam)',
+                desc: 'Pelco Spectra PTZ 30x • Jarak 800m • Media Converter SFP + PoE Extender',
+                prompt: 'Pengawasan perimeter bandara / pelabuhan 12 kamera Pelco Spectra Enhanced PTZ jarak kabel 800 meter dari control room, butuh Fiber Media Converter dan PoE switch industri'
+            },
+
+            // ─── TURNKEY INTEGRATED SCENARIOS ───
+            {
+                id: 'turnkey-mining-port',
+                category: 'turnkey',
+                icon: '🌐',
+                title: 'Turnkey Tambang & Pelabuhan Terpadu',
+                desc: '120 Radio DMR + RFoF DAS 2 Gedung + 32 CCTV Avigilon AI',
+                prompt: 'Proyek turnkey terpadu pelabuhan & tambang: 120 user radio MOTOTRBO Capacity Plus, RFoF DAS FMTCS untuk 2 gedung operasional, dan 32 kamera CCTV Avigilon Unity + AI NVR retensi 30 hari'
+            },
+            {
+                id: 'turnkey-oilgas-atex',
+                category: 'turnkey',
+                icon: '🛡️',
+                title: 'Turnkey Kilang Migas ATEX Terpadu',
+                desc: '60 Radio ATEX R7 + DAS FMTCS 3 Lt + 16 CCTV Pelco ExSite ATEX',
+                prompt: 'Fasilitas Kilang Migas terpadu: 60 user radio MOTOTRBO ATEX R7/XiR P8668Ex, sistem RFoF DAS FMTCS 3 lantai, dan 16 kamera CCTV explosion proof Pelco ExSite VMS VideoXpert'
+            }
+        ],
         knowledgeBankStatus: {
             total_documents: 0,
             is_syncing: false,
@@ -2784,6 +2882,13 @@ window.cdpkSystemPlannerApp = function () {
             this.aiPrompt = '';
         },
 
+        get filteredAiScenarioTemplates() {
+            if (!this.aiScenarioCategory || this.aiScenarioCategory === 'all') {
+                return this.aiScenarioTemplates || [];
+            }
+            return (this.aiScenarioTemplates || []).filter(t => t.category === this.aiScenarioCategory);
+        },
+
         setQuickAiPrompt(text) {
             this.aiPrompt = text;
             this.sendAiCopilotMessage();
@@ -2963,10 +3068,169 @@ window.cdpkSystemPlannerApp = function () {
                 this.das.radio = ext.dasRadios || this.userCount || 40;
             }
 
+            // AI Copilot Auto-Fill Bridge to CCTV Surveillance & NVR Planner
+            if (ext.needCctv || ext.cctvCameraCount || ext.cctvCams || ext.cctv_sizing || targetTab === 'cctv') {
+                if (ext.cctvRetentionDays) {
+                    this.cctv.retentionDays = parseInt(ext.cctvRetentionDays, 10);
+                }
+                if (ext.cctvVmsBrand) {
+                    const vb = String(ext.cctvVmsBrand).toLowerCase();
+                    if (vb.includes('pelco')) this.cctv.vmsBrand = 'pelco_videoxpert';
+                    else if (vb.includes('avigilon') || vb.includes('unity')) this.cctv.vmsBrand = 'avigilon_unity';
+                    else this.cctv.vmsBrand = 'generic_onvif';
+                }
+                if (ext.cctvCableDistM || ext.cctvCableDistance) {
+                    this.cctv.cableDrop.cableLengthMeters = parseInt(ext.cctvCableDistM || ext.cctvCableDistance, 10);
+                }
+                const camCount = parseInt(ext.cctvCameraCount || ext.cctvCams, 10) || 16;
+                const vms = this.cctv.vmsBrand;
+
+                if (vms === 'pelco_videoxpert') {
+                    this.cctv.cameraGroups = [
+                        {
+                            id: 'cg-' + Date.now().toString(36).slice(-4),
+                            sku: 'PEL-CAM-SARIX-PRO4-DOME',
+                            brand: 'pelco',
+                            brandName: 'Pelco',
+                            model: 'Sarix Professional 4 Dome 4MP IR',
+                            formFactor: 'dome',
+                            resolution: '4MP',
+                            qty: Math.max(1, Math.ceil(camCount * 0.7)),
+                            fps: 25,
+                            codec: 'SmartCodec',
+                            sceneMotion: 'medium',
+                            customBitrate: 0,
+                            poeClass: 'af',
+                            poeWatts: 12.0,
+                            unitPriceUsd: 680,
+                            unitPriceIdr: 10880000,
+                            cogsUsd: 510,
+                            marginPct: 25.0
+                        },
+                        {
+                            id: 'cg-' + (Date.now() + 1).toString(36).slice(-4),
+                            sku: 'PEL-CAM-SPECTRA-ENH7-PTZ',
+                            brand: 'pelco',
+                            brandName: 'Pelco',
+                            model: 'Spectra Enhanced 7 PTZ 2MP 30x',
+                            formFactor: 'ptz',
+                            resolution: '1080p',
+                            qty: Math.max(1, Math.floor(camCount * 0.3)),
+                            fps: 30,
+                            codec: 'SmartCodec',
+                            sceneMotion: 'high',
+                            customBitrate: 0,
+                            poeClass: 'bt',
+                            poeWatts: 51.0,
+                            unitPriceUsd: 3100,
+                            unitPriceIdr: 49600000,
+                            cogsUsd: 2325,
+                            marginPct: 25.0
+                        }
+                    ];
+                } else if (vms === 'avigilon_unity') {
+                    this.cctv.cameraGroups = [
+                        {
+                            id: 'cg-' + Date.now().toString(36).slice(-4),
+                            sku: 'AVG-CAM-H6X-DOME5',
+                            brand: 'avigilon',
+                            brandName: 'Avigilon',
+                            model: 'Avigilon Unity H6X Dome 5MP',
+                            formFactor: 'dome',
+                            resolution: '5MP',
+                            qty: Math.max(1, Math.ceil(camCount * 0.65)),
+                            fps: 25,
+                            codec: 'SmartCodec',
+                            sceneMotion: 'medium',
+                            customBitrate: 0,
+                            poeClass: 'at',
+                            poeWatts: 13.0,
+                            unitPriceUsd: 790,
+                            unitPriceIdr: 12640000,
+                            cogsUsd: 592.5,
+                            marginPct: 25.0
+                        },
+                        {
+                            id: 'cg-' + (Date.now() + 1).toString(36).slice(-4),
+                            sku: 'AVG-CAM-H6X-BUL8',
+                            brand: 'avigilon',
+                            brandName: 'Avigilon',
+                            model: 'Avigilon Unity H6X Bullet 8MP 4K',
+                            formFactor: 'bullet',
+                            resolution: '4K',
+                            qty: Math.max(1, Math.floor(camCount * 0.35)),
+                            fps: 25,
+                            codec: 'SmartCodec',
+                            sceneMotion: 'medium',
+                            customBitrate: 0,
+                            poeClass: 'at',
+                            poeWatts: 14.0,
+                            unitPriceUsd: 1150,
+                            unitPriceIdr: 18400000,
+                            cogsUsd: 862.5,
+                            marginPct: 25.0
+                        }
+                    ];
+                } else {
+                    this.cctv.cameraGroups = [
+                        {
+                            id: 'cg-' + Date.now().toString(36).slice(-4),
+                            sku: 'MLS-CAM-ND73-DOME',
+                            brand: 'milesight',
+                            brandName: 'Milesight',
+                            model: 'Milesight Pro Dome 4MP AI Motorized',
+                            formFactor: 'dome',
+                            resolution: '4MP',
+                            qty: Math.max(1, Math.ceil(camCount * 0.6)),
+                            fps: 25,
+                            codec: 'H.265',
+                            sceneMotion: 'medium',
+                            customBitrate: 0,
+                            poeClass: 'af',
+                            poeWatts: 8.5,
+                            unitPriceUsd: 280,
+                            unitPriceIdr: 4480000,
+                            cogsUsd: 210,
+                            marginPct: 25.0
+                        },
+                        {
+                            id: 'cg-' + (Date.now() + 1).toString(36).slice(-4),
+                            sku: 'VIG-CAM-C340-BUL',
+                            brand: 'vigi',
+                            brandName: 'VIGI by TP-Link',
+                            model: 'VIGI C340 Outdoor Bullet 4MP ColorPro',
+                            formFactor: 'bullet',
+                            resolution: '4MP',
+                            qty: Math.max(1, Math.floor(camCount * 0.4)),
+                            fps: 25,
+                            codec: 'H.265',
+                            sceneMotion: 'medium',
+                            customBitrate: 0,
+                            poeClass: 'af',
+                            poeWatts: 7.5,
+                            unitPriceUsd: 160,
+                            unitPriceIdr: 2560000,
+                            cogsUsd: 120,
+                            marginPct: 25.0
+                        }
+                    ];
+                }
+            }
+
             this.syncBoqFromSizing();
             this.runCoverageSimulation();
             this.aiModalOpen = false;
-            if (targetTab === 'das') {
+
+            if (targetTab === 'cctv') {
+                this.activeWorkspace = 'cctv';
+                this.cctvActiveTab = 'planner';
+                this.showToast(
+                    this.lang === 'en'
+                        ? 'Applied AI Copilot scenario directly to Video Security & CCTV Planner.'
+                        : 'Skenario AI Copilot berhasil diterapkan langsung ke CCTV Surveillance & NVR Planner.',
+                    'success'
+                );
+            } else if (targetTab === 'das') {
                 this.activeWorkspace = 'das';
                 this.dasActiveTab = 'boq';
                 this.showToast(
@@ -3483,7 +3747,7 @@ window.cdpkSystemPlannerApp = function () {
             bodyLines.push(`${this.clientName ? this.clientName : ''}`);
             bodyLines.push(``);
             bodyLines.push(`Dengan hormat,`);
-            bodyLines.push(`Bersama ini kami dari PT Citra Data Purnama Karya (Citradata Group) menyampaikan rincian penawaran konfigurasi produk & paket sistem radio telekomunikasi:`);
+            bodyLines.push(`Bersama ini kami dari PT Citradata Purnakharisma (Citradata Group) menyampaikan rincian penawaran konfigurasi produk & paket sistem radio telekomunikasi:`);
             bodyLines.push(``);
             bodyLines.push(`• Nama Proyek: ${this.projName || 'Radio & Security System'}`);
             bodyLines.push(`• Lokasi: ${this.projLocation || '-'}`);
@@ -3519,7 +3783,7 @@ window.cdpkSystemPlannerApp = function () {
             bodyLines.push(``);
             bodyLines.push(`Hormat kami,`);
             bodyLines.push(`${this.salesPic || (this.currentUser ? this.currentUser.name : 'Presales & Solutions Architect')}`);
-            bodyLines.push(`PT Citra Data Purnama Karya (Citradata Group)`);
+            bodyLines.push(`PT Citradata Purnakharisma (Citradata Group)`);
             bodyLines.push(`Motorola Solutions & Avigilon Elite Partner`);
 
             const fullBody = bodyLines.join('\n');

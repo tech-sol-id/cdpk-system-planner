@@ -1,5 +1,5 @@
 # CDPK System Planner (v8.0 Cloud)
-**Solution Sizing, RF Simulation & Commercial Suite — PT Citra Data Purnama Karya**
+**Solution Sizing, RF Simulation & Commercial Suite — PT Citradata Purnakharisma**
 
 Aplikasi perencanaan solusi terpadu **Dwi-Bahasa (ID 🇮🇩 & EN 🇬🇧)** untuk rekayasa sistem radio komunikasi **Motorola Solutions (MOTOTRBO DMR)**, antena **Avanti**, serta sistem keamanan video AI **Avigilon**, lengkap dengan sinkronisasi harga real-time dari **Google Drive / Google Sheets** dan **Multi-Model AI Copilot (Google Gemini 3.8 Flash & Gemini 3.8 Pro)**.
 

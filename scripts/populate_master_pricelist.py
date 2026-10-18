@@ -1154,7 +1154,7 @@ COMMERCIAL_CONFIG = {
     "default_discount_percent": 0,
     "mandays_rate_idr": 3500000,
     "mandays_rate_usd": 216,
-    "company_name": "PT Citra Data Purnama Karya (CDPK)",
+    "company_name": "PT Citradata Purnakharisma (CDPK)",
     "quotation_validity_days": 30,
     "payment_terms_id": "DP 30% saat PO, 60% saat pengiriman barang (Delivery), 10% setelah BAST / Commissioning.",
     "payment_terms_en": "30% Down Payment upon PO, 60% upon Hardware Delivery, 10% upon Commissioning & Handover (BAST).",
