@@ -7,7 +7,7 @@
  *  - Network-Only for /api/*, /health, and Google Auth (Zero stale project data)
  */
 
-const CACHE_NAME = 'cdpk-pwa-v8.6.0';
+const CACHE_NAME = 'cdpk-pwa-v8.6.1';
 
 const STATIC_PRECACHE = [
   '/',
@@ -19,13 +19,15 @@ const STATIC_PRECACHE = [
   '/apple-touch-icon.png',
   '/favicon.png',
   '/favicon.ico',
-  '/js/logo_b64.js?v=8.6.0',
-  '/js/i18n.js?v=8.6.0',
-  '/js/engines.js?v=8.6.0',
-  '/js/exporters.js?v=8.6.0',
-  '/js/das_engine.js?v=8.6.0',
-  '/js/cctv_engine.js?v=8.6.0',
-  '/js/app_core.js?v=8.6.0'
+  '/js/logo_b64.js?v=8.6.1',
+  '/js/i18n.js?v=8.6.1',
+  '/js/engines.js?v=8.6.1',
+  '/js/exporters.js?v=8.6.1',
+  '/js/gis_engine.js?v=8.6.1',
+  '/js/das_engine.js?v=8.6.1',
+  '/js/cctv_engine.js?v=8.6.1',
+  '/js/floorplan_engine.js?v=8.6.1',
+  '/js/app_core.js?v=8.6.1'
 ];
 
 // Install: Cache critical app shell
